@@ -1,0 +1,256 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`evaluate — determinism (same input + same ruleVersion -> same output) > matches a snapshot for a representative profile (regression guard) 1`] = `
+{
+  "outcomes": [
+    {
+      "applicabilityReason": "転入したすべての世帯が対象の手続きです",
+      "applicable": "applicable",
+      "dueDate": "2026-08-15",
+      "priority": "urgent",
+      "procedureId": "procedure_resident_registration",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "18歳未満の児童がいる世帯が対象の特例手続きです",
+      "applicable": "applicable",
+      "dueDate": "2026-08-16",
+      "priority": "high",
+      "procedureId": "procedure_child_allowance_special",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "マイナンバーカードを継続利用する場合の手続きです",
+      "applicable": "applicable",
+      "dueDate": "2026-10-30",
+      "priority": "normal",
+      "procedureId": "procedure_mynumber_card_continued_use",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "犬を飼っている世帯が対象の登録手続きです",
+      "applicable": "not_applicable",
+      "dueDate": "2026-08-31",
+      "priority": "normal",
+      "procedureId": "procedure_dog_registration",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "マイクロチップ登録済みの犬を飼っている世帯が対象です",
+      "applicable": "not_applicable",
+      "dueDescription": "マイクロチップ登録済みの場合は30日以内に環境省データベースの届出変更が必要です",
+      "priority": "normal",
+      "procedureId": "procedure_dog_microchip_registration",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "4人以上の世帯向けの生活案内です",
+      "applicable": "applicable",
+      "dueDescription": "特に期限はありませんが、転入後early対応が推奨されます",
+      "priority": "optional",
+      "procedureId": "procedure_large_household_guidance",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "外国籍世帯向け案内、または単身世帯向けの複合条件例です",
+      "applicable": "not_applicable",
+      "dueDate": "2026-08-08",
+      "priority": "high",
+      "procedureId": "procedure_complex_condition_demo",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+  ],
+  "ruleVersion": "2026-07-01.1",
+}
+`;
+
+exports[`evaluate — determinism (same input + same ruleVersion -> same output) > matches a snapshot for the inside-Tokyo move profile 1`] = `
+{
+  "outcomes": [
+    {
+      "applicabilityReason": "転入したすべての世帯が対象の手続きです",
+      "applicable": "applicable",
+      "dueDate": "2027-01-03",
+      "priority": "urgent",
+      "procedureId": "procedure_resident_registration",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "18歳未満の児童がいる世帯が対象の特例手続きです",
+      "applicable": "not_applicable",
+      "dueDate": "2027-01-04",
+      "priority": "high",
+      "procedureId": "procedure_child_allowance_special",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "マイナンバーカードを継続利用する場合の手続きです",
+      "applicable": "applicable",
+      "dueDate": "2027-03-20",
+      "priority": "normal",
+      "procedureId": "procedure_mynumber_card_continued_use",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "犬を飼っている世帯が対象の登録手続きです",
+      "applicable": "not_applicable",
+      "dueDate": "2027-01-19",
+      "priority": "normal",
+      "procedureId": "procedure_dog_registration",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "マイクロチップ登録済みの犬を飼っている世帯が対象です",
+      "applicable": "not_applicable",
+      "dueDescription": "マイクロチップ登録済みの場合は30日以内に環境省データベースの届出変更が必要です",
+      "priority": "normal",
+      "procedureId": "procedure_dog_microchip_registration",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "4人以上の世帯向けの生活案内です",
+      "applicable": "not_applicable",
+      "dueDescription": "特に期限はありませんが、転入後early対応が推奨されます",
+      "priority": "optional",
+      "procedureId": "procedure_large_household_guidance",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "外国籍世帯向け案内、または単身世帯向けの複合条件例です",
+      "applicable": "applicable",
+      "dueDate": "2026-12-27",
+      "priority": "high",
+      "procedureId": "procedure_complex_condition_demo",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+  ],
+  "ruleVersion": "2026-07-01.1",
+}
+`;
+
+exports[`evaluate — determinism (same input + same ruleVersion -> same output) > matches a snapshot for the needs_confirmation-heavy dog-owner profile 1`] = `
+{
+  "outcomes": [
+    {
+      "applicabilityReason": "転入したすべての世帯が対象の手続きです",
+      "applicable": "applicable",
+      "dueDate": "2026-08-15",
+      "priority": "urgent",
+      "procedureId": "procedure_resident_registration",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "18歳未満の児童がいる世帯が対象の特例手続きです",
+      "applicable": "not_applicable",
+      "dueDate": "2026-08-16",
+      "priority": "high",
+      "procedureId": "procedure_child_allowance_special",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "マイナンバーカードを継続利用する場合の手続きです",
+      "applicable": "not_applicable",
+      "dueDate": "2026-10-30",
+      "priority": "normal",
+      "procedureId": "procedure_mynumber_card_continued_use",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "犬を飼っている世帯が対象の登録手続きです",
+      "applicable": "applicable",
+      "dueDate": "2026-08-31",
+      "priority": "normal",
+      "procedureId": "procedure_dog_registration",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "マイクロチップの装着有無が未確認のため、該当するか確認が必要です",
+      "applicable": "needs_confirmation",
+      "dueDescription": "マイクロチップ登録済みの場合は30日以内に環境省データベースの届出変更が必要です",
+      "priority": "normal",
+      "procedureId": "procedure_dog_microchip_registration",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "4人以上の世帯向けの生活案内です",
+      "applicable": "not_applicable",
+      "dueDescription": "特に期限はありませんが、転入後early対応が推奨されます",
+      "priority": "optional",
+      "procedureId": "procedure_large_household_guidance",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "外国籍世帯向け案内、または単身世帯向けの複合条件例です",
+      "applicable": "not_applicable",
+      "dueDate": "2026-08-08",
+      "priority": "high",
+      "procedureId": "procedure_complex_condition_demo",
+      "sourceIds": [
+        "source_dummy_official_page",
+      ],
+      "warnings": [],
+    },
+  ],
+  "ruleVersion": "2026-07-01.1",
+}
+`;

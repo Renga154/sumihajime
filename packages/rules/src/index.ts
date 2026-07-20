@@ -1,5 +1,8 @@
-// @tmn/rules — deterministic rule evaluator (pure functions) + due-date utilities.
-// Stub only. The evaluator and JST due-date utils are implemented in task T-003.
+// @tmn/rules — deterministic rule evaluator (pure functions) + due-date utilities (T-003).
 
-/** Placeholder package version. Replaced by the real evaluator exports in T-003. */
-export const RULES_PACKAGE_VERSION = '0.0.1';
+export { evaluate, evaluateRule, evaluateCondition } from './evaluate.js';
+export type { EvaluationResult, TriBool } from './evaluate.js';
+export { addCalendarDays, resolveDueRule } from './dates.js';
+export type { ResolvedDue } from './dates.js';
+export { sortOutcomesByDue } from './sort.js';
+export { MunicipalityScopeMismatchError } from './errors.js';
