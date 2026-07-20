@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tokyo-move-navi",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-21",
+  "assets": {
+    // The SPA build output from apps/web. Non-/api/* requests fall back to
+    // index.html (client-side routing). Build apps/web before deploying.
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    // API routes hit the Worker first; everything else is served from assets.
+    "run_worker_first": ["/api/*"],
+  },
+}
