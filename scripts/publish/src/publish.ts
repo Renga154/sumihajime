@@ -5,15 +5,16 @@ import { fileURLToPath } from 'node:url';
 import { buildSeed } from './seed.js';
 
 /**
- * なぜ: ローカルD1へ承認済みデータを投入する publish CLI(T-006)。
+ * なぜ: D1へ承認済みデータを投入する publish CLI(T-006/T-011)。
  *   1. load → 公開ゲート(承認済みのみ)→ シードSQL生成
- *   2. migrations 適用(--local)
- *   3. シードSQLを --local で流し込み
+ *   2. migrations 適用
+ *   3. シードSQLを流し込み
  * ゲートに通らなければ 2 以降には進まない(非承認ソース混入時はここで異常終了)。
  *
  * 使い方:
- *   pnpm --filter @tmn/publish publish:local            # migrations適用 + シード投入
- *   pnpm --filter @tmn/publish publish:local -- --dry-run   # SQL生成とゲートのみ(wrangler不実行)
+ *   pnpm --filter @tmn/publish publish:local             # ローカルD1(--local)へ
+ *   pnpm --filter @tmn/publish publish:local -- --remote # 本番D1(--remote)へ(T-011。Cloudflare認証必須)
+ *   pnpm --filter @tmn/publish publish:local -- --dry-run    # SQL生成とゲートのみ(wrangler不実行)
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -24,6 +25,8 @@ const DB_NAME = 'tokyo-move-navi';
 
 function main(): void {
   const dryRun = process.argv.includes('--dry-run');
+  const remote = process.argv.includes('--remote');
+  const targetFlag = remote ? '--remote' : '--local';
 
   const { data, statements } = buildSeed(repoRoot);
 
@@ -44,7 +47,7 @@ function main(): void {
 
   const seedDir = resolve(apiDir, '.wrangler');
   mkdirSync(seedDir, { recursive: true });
-  const seedFile = resolve(seedDir, 'seed.local.sql');
+  const seedFile = resolve(seedDir, remote ? 'seed.remote.sql' : 'seed.local.sql');
   writeFileSync(seedFile, statements.map((s) => `${s};`).join('\n') + '\n', 'utf-8');
   console.log(`[publish] wrote seed SQL: ${seedFile}`);
 
@@ -53,14 +56,14 @@ function main(): void {
     return;
   }
 
-  console.log('[publish] applying migrations (--local)…');
-  execFileSync(wranglerBin, ['d1', 'migrations', 'apply', DB_NAME, '--local'], {
+  console.log(`[publish] applying migrations (${targetFlag})…`);
+  execFileSync(wranglerBin, ['d1', 'migrations', 'apply', DB_NAME, targetFlag], {
     cwd: apiDir,
     stdio: 'inherit',
   });
 
-  console.log('[publish] seeding local D1 (--local)…');
-  execFileSync(wranglerBin, ['d1', 'execute', DB_NAME, '--local', '--file', seedFile], {
+  console.log(`[publish] seeding D1 (${targetFlag})…`);
+  execFileSync(wranglerBin, ['d1', 'execute', DB_NAME, targetFlag, '--file', seedFile], {
     cwd: apiDir,
     stdio: 'inherit',
   });

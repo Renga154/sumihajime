@@ -12,13 +12,13 @@
     "run_worker_first": ["/api/*"],
   },
   // D1: チェックリスト/手続き/施設/ごみ/台帳の読み取り元(T-006)。
-  // database_id はローカル開発用のプレースホルダ。本番は `wrangler d1 create` で採番した
-  // 実IDに差し替える(secrets/環境分離はT-011)。ローカルは --local で .wrangler 配下に作成される。
+  // database_id は 2026-07-22 に `wrangler d1 create tokyo-move-navi` で採番した本番ID(T-011)。
+  // ローカル開発は --local で .wrangler 配下のSQLiteが使われ、このIDには接続しない。
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "tokyo-move-navi",
-      "database_id": "local-placeholder-0000-0000-0000-000000000000",
+      "database_id": "b78ed049-7fbb-4ca5-a909-51397a18587c",
       "migrations_dir": "migrations",
     },
   ],
