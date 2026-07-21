@@ -170,13 +170,17 @@ export function loadFacilities(repoRoot: string): Facility[] {
     municipalityCode: string;
     facilities: unknown[];
   };
-  return raw.facilities.map((f, i) => {
-    const parsed = facilitySchema.parse(f);
-    return {
-      ...parsed,
-      facilityId: `${parsed.municipalityCode}-fac-${String(i + 1).padStart(3, '0')}`,
-    };
-  });
+  const parsedAll = raw.facilities.map((f) => facilitySchema.parse(f));
+  // なぜ: 出典データに「倉庫」「集会所」を含む非窓口施設(防災資材倉庫・区民集会所等)が
+  // 混入しており、手続き窓口一覧には不適切なため除外する。
+  // 「マイナンバーカード特設窓口」等、正規の窓口名は「倉庫」「集会所」を含まないため誤除外しない。
+  const filtered = parsedAll.filter((f) => !/倉庫|集会所/.test(f.name));
+  const excludedCount = parsedAll.length - filtered.length;
+  console.log(`[publish] excluded ${excludedCount} non-counter facilities (倉庫/集会所).`);
+  return filtered.map((parsed, i) => ({
+    ...parsed,
+    facilityId: `${parsed.municipalityCode}-fac-${String(i + 1).padStart(3, '0')}`,
+  }));
 }
 
 interface WasteJson {

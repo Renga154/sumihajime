@@ -196,6 +196,7 @@ function TaskCard({
           <p className="mt-2">
             <Link
               to={`/procedures/${encodeURIComponent(task.procedureId)}`}
+              state={{ task }}
               className="text-sm font-semibold text-blue-700 underline"
             >
               詳細・必要書類・公式根拠を見る

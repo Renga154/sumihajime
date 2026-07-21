@@ -1,4 +1,5 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
+import type { GeneratedTask } from '@tmn/schemas';
 import { getProcedure } from '../api/client';
 import { useAppState } from '../state/AppState';
 import { useAsync } from '../lib/useAsync';
@@ -10,10 +11,18 @@ import { SourceCard } from '../components/SourceCard';
 /**
  * タスク詳細(§7.4/§10)。必要書類(unknownは「公式ページで要確認」)・方法(channels)・
  * 場所・注意事項・根拠カード(FR-008)・dataStatusバッジ(verified/partial/stale)を表示する。
+ *
+ * 期限表示: ProcedureVersion自体はdueRuleを持たず期限を計算できないため、チェックリスト画面
+ * (ChecklistPage)から遷移した場合はルール評価済みのGeneratedTask(state)を受け取り、その
+ * dueDateを表示する。直接URLで訪問された場合(stateなし)は、公式文言(dueDescription)のみの
+ * 現行表示にフォールバックする。
  */
 export function ProcedureDetailPage() {
   const { id } = useParams();
   const { municipalityCode } = useAppState();
+  const location = useLocation();
+  const stateTask = (location.state as { task?: GeneratedTask } | null)?.task;
+  const stateDueDate = stateTask && stateTask.procedureId === id ? stateTask.dueDate : undefined;
 
   const state = useAsync(async () => {
     if (!municipalityCode || !id) return null;
@@ -55,10 +64,12 @@ export function ProcedureDetailPage() {
 
           <Card className="space-y-2">
             <p className="text-sm">
-              {state.data.procedure.dueDate ? (
+              {(stateDueDate ?? state.data.procedure.dueDate) ? (
                 <span>
                   <span className="text-slate-500">期限：</span>
-                  <span className="font-semibold">{formatDate(state.data.procedure.dueDate)}</span>
+                  <span className="font-semibold">
+                    {formatDate(stateDueDate ?? state.data.procedure.dueDate!)}
+                  </span>
                 </span>
               ) : (
                 <span className="font-semibold text-amber-800">期限は要確認</span>

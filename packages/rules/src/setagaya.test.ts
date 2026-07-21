@@ -102,12 +102,12 @@ describe('Setagaya (13112) — schema validation (来歴・型検証; CI gate)',
     expect(setagayaRuleSet.rules.length).toBe(8);
   });
 
-  it('procedures.json — all 8 ProcedureVersions parse; every one is partial + has sourceIds + lastVerifiedAt', () => {
+  it('procedures.json — all 8 ProcedureVersions parse; every one is verified + has sourceIds + lastVerifiedAt', () => {
     const procedures = parseProcedures();
     expect(procedures.length).toBe(8);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(MUNICIPALITY);
-      expect(pv.dataStatus).toBe('partial'); // pending human review
+      expect(pv.dataStatus).toBe('verified'); // 2026-07-21 人手レビュー承認済み
       expect(pv.sourceIds.length).toBeGreaterThan(0);
       expect(pv.lastVerifiedAt).toBe('2026-07-21T11:44:00Z');
       // 期限は dueDate(算定式) ではなく dueDescription(公式文言) を静的に保持する

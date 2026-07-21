@@ -35,21 +35,18 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13115',
     name: '杉並区',
     supported: false,
-    note: '未対応',
     officialUrl: 'https://www.city.suginami.tokyo.jp/',
   },
   {
     code: '13101',
     name: '千代田区',
     supported: false,
-    note: '未対応',
     officialUrl: 'https://www.city.chiyoda.lg.jp/',
   },
   {
     code: '13201',
     name: '八王子市',
     supported: false,
-    note: '未対応',
     officialUrl: 'https://www.city.hachioji.tokyo.jp/',
   },
 ];
