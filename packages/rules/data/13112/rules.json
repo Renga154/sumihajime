@@ -1,0 +1,100 @@
+{
+  "municipalityCode": "13112",
+  "ruleVersion": "2026-07-21.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "引越しをしてきた日(世田谷区に住み始めた日)から14日以内。",
+      "sourceIds": ["src-13112-resident_registration-001"],
+      "applicabilityReasonTemplate": "他の市区町村や外国から世田谷区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "転入届(転入日から14日以内、かつ転出予定日から30日以内)と同時に手続きが必要。期限を過ぎると継続利用ができずカードが失効します。",
+      "sourceIds": ["src-13112-my_number-001", "src-13112-resident_registration-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "加入すべき事由が発生した日(転入した日)から14日以内。",
+      "sourceIds": ["src-13112-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険等に加入していない方は、世田谷区の国民健康保険への加入手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "マイナンバーと基礎年金番号が連携済みの場合は原則届出不要(住民票の届出により自動変更)。連携していない場合等は届出が必要。期限は公式ページに記載なし。",
+      "sourceIds": ["src-13112-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金(第1号)に加入している方の住所変更に関する案内です。マイナンバーと基礎年金番号が連携済みの場合は原則届出不要です(連携状況は年金事務所へ要確認)。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 15 },
+      "dueDescription": "転出予定日(前住所地)の翌日から15日以内に申請すると申請月から支給(15日特例)。閉庁日を含めて数えます。",
+      "sourceIds": ["src-13112-child_benefits-001"],
+      "applicabilityReasonTemplate": "0歳〜高校生相当世代までの児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "資格発生日は原則申請月の初日から。転入日から3か月以内に申請すると転入日にさかのぼって助成対象になります。",
+      "sourceIds": ["src-13112-child_medical-001"],
+      "applicabilityReasonTemplate": "0歳〜18歳到達後最初の3月31日までの児童がいる世帯が対象です(国民健康保険または社会保険に加入していること)。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転入届とは別に、速やかに区窓口で登録事項変更の手続きが必要です(明確な日数の期限は公式ページに記載なし)。",
+      "sourceIds": ["src-13112-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していないため、区窓口での飼い犬の登録事項変更の届出が必要です。",
+      "needsConfirmationReason": "犬のマイクロチップ装着有無が未確認のため、届出先(区窓口 または 環境省データベース)が確定できません。装着状況をご確認ください(装着・環境省DB登録済みなら区への届出は不要です)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの町丁目の収集曜日を確認してください)。",
+      "sourceIds": ["src-13112-waste_guide-001"],
+      "applicabilityReasonTemplate": "お住まいの町丁目の資源・ごみ収集曜日を確認してください(祝日・年末年始は変更の可能性あり)。"
+    }
+  ]
+}

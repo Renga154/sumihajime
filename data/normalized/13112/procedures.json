@@ -1,0 +1,273 @@
+{
+  "municipalityCode": "13112",
+  "version": "2026-07-21.1",
+  "note": "T-005 世田谷区 縦切りデータ。全手続きは公式ページ記載の範囲のみを要約・データ化(推測なし)。dataStatusは全件 partial(人手レビュー前=pending review)。dueDateは実行時にルールエンジンがmoveDateから算定するため、静的なProcedureVersionにはdueDescription(公式文言)のみを保持する。",
+  "procedures": [
+    {
+      "id": "procedure_resident_registration",
+      "version": "2026-07-21.1",
+      "municipalityCode": "13112",
+      "canonicalType": "resident_registration",
+      "title": "転入届(区外・国外から世田谷区への引越し)",
+      "shortDescription": "他の市区町村や外国から世田谷区に引越してきたときの住民登録の届出。窓口でのみ受付(郵送不可)。",
+      "applicabilityReason": "他の市区町村や外国から世田谷区に転入したすべての方に必要な届出です。",
+      "priority": "urgent",
+      "dueDescription": "引越しをしてきた日(世田谷区に住み始めた日)から14日以内。",
+      "requiredDocuments": [
+        {
+          "label": "転出証明書(前住所の市区町村が発行。マイナンバーカードで特例の転出届をした場合は不要)",
+          "status": "conditional"
+        },
+        {
+          "label": "届出する方の本人確認書類(官公署発行の顔写真入り証明書など。有効期限内・コピー不可)",
+          "status": "required"
+        },
+        {
+          "label": "(外国人の方)引越した方全員分の在留カードまたは特別永住者証明書",
+          "status": "conditional"
+        },
+        {
+          "label": "(お持ちの方)全員分のマイナンバーカード(継続利用の手続きが必要)",
+          "status": "conditional"
+        },
+        {
+          "label": "(国外から転入)全員分のパスポート(帰国日の証印がない場合は搭乗券の半券等)",
+          "status": "conditional"
+        }
+      ],
+      "channels": ["counter"],
+      "locations": ["各総合支所くみん窓口", "各出張所の受付窓口(10か所)"],
+      "contact": "受付窓口(各総合支所くみん窓口・各出張所)。お問い合わせセンター「せたがやコール」電話 03-5432-3333",
+      "sourceIds": ["src-13112-resident_registration-001"],
+      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "窓口でのみ受付。規定により郵送等での届出はできません。",
+        "受付時間は月曜日〜金曜日の午前8時30分〜午後5時(土曜日は取扱いが異なります)。手数料は無料。",
+        "マイナンバーカードをお持ちの方は、転出(予定)日から30日以内、かつ転入日から14日以内に転入届をしないと継続利用ができずカードが失効します。",
+        "pending human review (T-005): 掲載内容は2026-07-21取得の公式ページに基づく要約です。"
+      ]
+    },
+    {
+      "id": "procedure_mynumber_continued_use",
+      "version": "2026-07-21.1",
+      "municipalityCode": "13112",
+      "canonicalType": "my_number",
+      "title": "マイナンバーカードの継続利用・電子証明書の手続き(住所変更に伴う)",
+      "shortDescription": "転入に伴うマイナンバーカードの継続利用(券面の住所書換)と、失効する署名用電子証明書の再発行の手続き。転入届と同時に窓口で行います。",
+      "applicabilityReason": "マイナンバーカードをお持ちの方は、転入に伴い継続利用の手続きと電子証明書の再発行が必要です。",
+      "priority": "high",
+      "dueDescription": "転入届(転出予定日から30日以内、かつ転入日から14日以内)と同時に手続きが必要。期限を過ぎると継続利用ができずカードが失効します。",
+      "requiredDocuments": [
+        { "label": "全員分のマイナンバーカード(継続利用の手続き)", "status": "required" },
+        {
+          "label": "設定済みの暗証番号(不明な場合は暗証番号の再設定が必要)",
+          "status": "conditional"
+        },
+        { "label": "(本人・同一世帯員以外が手続きする場合)委任状", "status": "conditional" }
+      ],
+      "channels": ["counter"],
+      "locations": ["各総合支所くみん窓口", "各出張所の受付窓口(10か所)"],
+      "contact": "地域行政部 住民記録・戸籍課 電話 03-5432-2236 / 各くみん窓口・出張所",
+      "sourceIds": ["src-13112-my_number-001", "src-13112-resident_registration-001"],
+      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "署名用電子証明書は転入に伴い失効するため、改めて発行の手続きが必要です。転入届出と同時に、同一世帯員・法定代理人に限り手続きを完了できます。",
+        "継続利用の期限(転入日から14日以内)は転入届の期限に一致します(出典: 転入届ページ)。世田谷区の公式ページに『90日以内』等の記載はありません。",
+        "pending human review (T-005): マイナンバーカードの継続利用の期限は転入届ページ(src-13112-resident_registration-001)、電子証明書の発行手続きは電子証明書ページ(src-13112-my_number-001)を根拠としています。"
+      ]
+    },
+    {
+      "id": "procedure_national_health_insurance",
+      "version": "2026-07-21.1",
+      "municipalityCode": "13112",
+      "canonicalType": "national_health_insurance",
+      "title": "国民健康保険の加入の届出",
+      "shortDescription": "職場の健康保険等に加入していない方の国民健康保険への加入手続き。加入は自動では行われません。転入時は転入手続きの際に加入を申し出ます。",
+      "applicabilityReason": "職場の健康保険等に加入していない方は、世田谷区の国民健康保険への加入手続きが必要です。",
+      "priority": "high",
+      "dueDescription": "加入すべき事由が発生した日(転入した日)から14日以内。",
+      "requiredDocuments": [
+        {
+          "label": "届出する方の本人確認書類(官公署発行の顔写真つき証明書など)",
+          "status": "required"
+        },
+        {
+          "label": "世帯主及び該当者本人の個人番号確認書類(マイナンバーカードまたは通知カード)",
+          "status": "required"
+        },
+        {
+          "label": "(加入事由別)健康保険資格喪失証明書、保護廃止決定通知書、在留カード 等",
+          "status": "conditional"
+        }
+      ],
+      "channels": ["counter", "online", "mail"],
+      "locations": [
+        "国保・年金課資格賦課(区役所第2庁舎2階26番窓口)",
+        "各総合支所くみん窓口",
+        "各出張所"
+      ],
+      "contact": "国保・年金課資格賦課(区役所第2庁舎2階26番窓口)",
+      "sourceIds": ["src-13112-national_health_insurance-001"],
+      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "郵送・オンライン(ぴったりサービス)での届出は、加入事由が『職場の健康保険や国保組合から脱退したとき』に限られます。転入に伴う加入は、転入手続きの際に窓口で加入を申し出てください。",
+        "『加入すべき事由が発生した日』とは、職場の健康保険等の資格喪失日等を指し、証明書の発行日ではありません。",
+        "pending human review (T-005)。"
+      ]
+    },
+    {
+      "id": "procedure_national_pension_address",
+      "version": "2026-07-21.1",
+      "municipalityCode": "13112",
+      "canonicalType": "national_pension",
+      "title": "国民年金(第1号)の住所変更手続き",
+      "shortDescription": "国民年金第1号被保険者の住所変更。マイナンバーと基礎年金番号が連携済みの場合は原則届出不要で、住民票の届出により自動的に変更されます。",
+      "applicabilityReason": "国民年金(第1号)に加入している方の住所変更に関する案内です。マイナンバーと基礎年金番号が連携済みの場合は原則届出は不要です。",
+      "priority": "normal",
+      "dueDescription": "マイナンバーと基礎年金番号が連携済みの場合は原則届出不要(住民票の届出により概ね1〜2か月後に自動変更)。連携していない場合や旧住所での郵送物が届く場合は届出が必要。期限は公式ページに記載なし(unknown)。",
+      "requiredDocuments": [
+        {
+          "label": "(連携済みで原則不要。手続きする場合)本人確認書類・基礎年金番号がわかるもの",
+          "status": "conditional"
+        }
+      ],
+      "channels": ["counter"],
+      "locations": [
+        "国保・年金課国民年金係(区役所第2庁舎2階24番窓口)",
+        "各総合支所くみん窓口",
+        "各出張所",
+        "世田谷年金事務所"
+      ],
+      "contact": "保健福祉政策部 国保・年金課 国民年金係 電話 03-5432-2356",
+      "sourceIds": ["src-13112-national_pension-001"],
+      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "マイナンバーと基礎年金番号が結びついているかどうかで届出要否が変わります。連携状況は年金事務所へお問い合わせください(判定はneeds_confirmation相当)。",
+        "本ページは住所・氏名変更手続きのページです。国外からの転入や第1号加入そのものの手続きは別ページです。",
+        "pending human review (T-005): 現行DSLではマイナンバー連携状況を needs_confirmation として表現できないため、要否の不確実性は本cautionsに記載しています。"
+      ]
+    },
+    {
+      "id": "procedure_child_allowance",
+      "version": "2026-07-21.1",
+      "municipalityCode": "13112",
+      "canonicalType": "child_benefits",
+      "title": "児童手当の認定請求(転入・出生等)",
+      "shortDescription": "0歳〜高校生相当世代(18歳到達後最初の3月31日まで)の児童を養育している方への手当。他区市町村から転入した場合も新たに申請が必要です。",
+      "applicabilityReason": "0歳〜高校生相当世代までの児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。",
+      "priority": "high",
+      "dueDescription": "転出予定日(前住所地)の翌日から15日以内に申請すると申請月から支給されます(15日特例)。申請が遅れると受給できない月が発生します。",
+      "requiredDocuments": [
+        { "label": "児童手当認定請求書(または額改定請求書)", "status": "required" },
+        {
+          "label": "請求者・配偶者のマイナンバー(個人番号)カードの表面・裏面の写し",
+          "status": "required"
+        },
+        {
+          "label": "(該当する方のみ)監護相当・生計費の負担についての確認書 / 別居監護の申立書 / 健康保険情報を確認できるものの写し 等",
+          "status": "conditional"
+        }
+      ],
+      "channels": ["counter", "online", "mail"],
+      "locations": ["子ども家庭課 子ども医療・手当担当", "各総合支所 子ども家庭支援課"],
+      "contact": "子ども・若者部 子ども家庭課 子ども医療・手当担当",
+      "sourceIds": ["src-13112-child_benefits-001"],
+      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "15日の数え方: 翌日から数え、閉庁日(土日・祝日・年末年始等)を含めますが、15日目が閉庁日の場合は翌開庁日が15日目です。",
+        "生計中心者(所得の高い方)が請求者です。公務員(独立行政法人等を除く)の方は勤務先へ請求してください。",
+        "令和6年10月分より所得制限が撤廃され、支給期間が高校生相当世代(18歳年度末)まで延長されています。",
+        "pending human review (T-005)。"
+      ]
+    },
+    {
+      "id": "procedure_child_medical",
+      "version": "2026-07-21.1",
+      "municipalityCode": "13112",
+      "canonicalType": "child_medical",
+      "title": "子ども等医療費助成制度の受給資格申請",
+      "shortDescription": "0歳から18歳到達後最初の3月31日までの児童の医療費の一部を助成する制度の受給資格申請。",
+      "applicabilityReason": "0歳〜18歳到達後最初の3月31日までの児童がいて、国民健康保険または社会保険に加入している世帯が対象です。",
+      "priority": "high",
+      "dueDescription": "資格発生日は原則申請月の初日から。転入の場合は転入日から3か月以内に申請すると転入日にさかのぼって助成対象になります。",
+      "requiredDocuments": [
+        { "label": "本人確認書類(マイナンバーカード、運転免許証等)", "status": "required" },
+        {
+          "label": "お子さまが加入している/加入予定(父・母等)の健康保険情報を確認できるもの",
+          "status": "required"
+        },
+        { "label": "(出生直後の場合)出生届出済みの記載のある母子健康手帳", "status": "conditional" }
+      ],
+      "channels": ["counter", "online", "mail"],
+      "locations": ["子ども家庭課 子ども医療・手当担当", "各総合支所 子ども家庭支援課"],
+      "contact": "子ども・若者部 子ども家庭課 子ども医療・手当担当",
+      "sourceIds": ["src-13112-child_medical-001"],
+      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "対象は0歳〜18歳到達後最初の3月31日まで、かつ国民健康保険または社会保険に加入していること(生活保護受給者等は対象外)。",
+        "医療証は東京都外の医療機関等では使用できません。",
+        "pending human review (T-005)。"
+      ]
+    },
+    {
+      "id": "procedure_dog_registration_transfer",
+      "version": "2026-07-21.1",
+      "municipalityCode": "13112",
+      "canonicalType": "dog_registration",
+      "title": "飼い犬の登録事項変更届(他区市町村から世田谷区への転入)",
+      "shortDescription": "他の区市町村から犬を連れて転入したときの登録事項の変更届。前住所地の犬鑑札を持参し区窓口で世田谷区の鑑札に無償交換します。転入届とは別の手続きです。",
+      "applicabilityReason": "犬を飼っており、マイクロチップを装着していない場合は、区窓口での飼い犬の登録事項変更の届出が必要です。",
+      "priority": "normal",
+      "dueDescription": "転入届とは別に、速やかに区窓口で登録事項変更の手続きが必要です(明確な日数の期限は公式ページに記載なし)。",
+      "requiredDocuments": [
+        {
+          "label": "前住所地の市区町村で交付された犬鑑札(持参できない場合は再交付手数料1,600円)",
+          "status": "required"
+        },
+        { "label": "飼い犬の登録事項変更届", "status": "required" }
+      ],
+      "channels": ["counter"],
+      "locations": ["世田谷保健所生活保健課の受付窓口"],
+      "contact": "世田谷保健所生活保健課",
+      "sourceIds": ["src-13112-dog_registration-001"],
+      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "マイクロチップを装着し、環境省データベース『犬と猫のマイクロチップ情報登録』に所有者情報を登録済みの場合は、区への届出は不要です。環境省データベースで住所変更の届出を行ってください。",
+        "マイクロチップを装着していない場合は、従来どおり区への届出が必要です。",
+        "転入に伴う登録事項の変更届はオンライン手続きができません(窓口のみ)。",
+        "pending human review (T-005): マイクロチップ装着有無で届出先が分岐(C-10)。装着有無が不明な場合はneeds_confirmationになります。"
+      ]
+    },
+    {
+      "id": "procedure_waste_check",
+      "version": "2026-07-21.1",
+      "municipalityCode": "13112",
+      "canonicalType": "waste_schedule",
+      "title": "資源・ごみ収集日の確認",
+      "shortDescription": "お住まいの町丁目の資源・ごみ(資源/可燃ごみ/不燃ごみ/ペットボトル)の収集曜日を確認します。区公式LINEやアプリ『さんあ〜る』でも確認できます。",
+      "applicabilityReason": "転入したすべての方に、生活開始にあたって収集曜日の確認をおすすめします。",
+      "priority": "normal",
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの町丁目の収集曜日を確認してください)。",
+      "requiredDocuments": [],
+      "channels": ["online"],
+      "locations": ["管轄清掃事務所(世田谷・玉川・砧)"],
+      "contact": "お住まいの地域の管轄清掃事務所(世田谷・玉川・砧)",
+      "sourceIds": ["src-13112-waste_guide-001", "src-13112-waste_schedule-001"],
+      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "祝日・年末年始は収集日が変更になる場合があります。区の公式収集カレンダー・区公式LINE・アプリ『さんあ〜る』で最新の日程を必ず確認してください(例外日は本データに展開していません: C-9)。",
+        "収集日一覧の粒度は町名＋丁目の範囲単位(例: 赤堤1・3〜5丁目)で、番地単位ではありません。",
+        "資源とごみは収集日の午前8時までに出してください。",
+        "pending human review (T-005)。"
+      ]
+    }
+  ]
+}
