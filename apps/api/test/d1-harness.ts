@@ -40,7 +40,12 @@ export interface TestDb {
   dispose: () => Promise<void>;
 }
 
-export async function createTestDb(): Promise<TestDb> {
+/**
+ * @param municipalityCodes シード対象の自治体コード。省略時は buildSeed の既定
+ *   (DEFAULT_PUBLISH_CODES = 世田谷13112 のみ)。複数指定すると複数自治体を同一D1へ載せ、
+ *   越境混線の回帰テスト(世田谷13112 + 江東13108)に使える。
+ */
+export async function createTestDb(municipalityCodes?: readonly string[]): Promise<TestDb> {
   const mf = new Miniflare({
     modules: true,
     // D1ストレージ専用のダミーWorker(dispatchはしない。getD1Databaseのみ使う)。
@@ -58,7 +63,7 @@ export async function createTestDb(): Promise<TestDb> {
   }
 
   // 2) 承認ゲートを通したシード(load→gate→SQL)。ゲート未通過なら buildSeed が例外。
-  const { statements } = buildSeed(repoRoot);
+  const { statements } = buildSeed(repoRoot, municipalityCodes);
   await db.batch(statements.map((s) => db.prepare(s)));
 
   return {
