@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { profileSchema } from './profile.js';
 import { generatedTaskSchema } from './task.js';
-import { municipalityCodeSchema } from './municipality.js';
+import { municipalityCodeSchema, municipalitySchema, coverageSchema } from './municipality.js';
+import { procedureVersionSchema } from './procedure.js';
+import { sourceSchema } from './source.js';
+import { facilitySchema, wasteAreaSchema, wasteScheduleSchema } from './facility.js';
 
 /**
  * なぜ: REQUIREMENTS §14 API契約(初期案) + 計画§8.2。境界層(HTTPリクエスト/
@@ -15,6 +18,51 @@ import { municipalityCodeSchema } from './municipality.js';
  */
 export const checklistRequestSchema = profileSchema;
 export type ChecklistRequest = z.infer<typeof checklistRequestSchema>;
+
+/**
+ * なぜ: 計画§8.2「GET /api/municipalities → {code,name,supported,officialUrl,coverage[]}」
+ * (FR-001/021)。municipalitySchema(officialUrl含む)にカテゴリ別カバレッジを合成した
+ * 応答契約。coverageは自治体×カテゴリの対応状況(FR-024)。T-006で追加。
+ */
+export const municipalityWithCoverageSchema = municipalitySchema.extend({
+  coverage: z.array(coverageSchema),
+});
+export type MunicipalityWithCoverage = z.infer<typeof municipalityWithCoverageSchema>;
+
+export const municipalitiesResponseSchema = z.array(municipalityWithCoverageSchema);
+export type MunicipalitiesResponse = z.infer<typeof municipalitiesResponseSchema>;
+
+/**
+ * なぜ: 計画§8.2「GET /api/procedures/:id → ProcedureVersion全fields+sources」。
+ * sourcesは根拠カード用に台帳の公開ビュー(Source)をそのまま返す。T-006で追加。
+ */
+export const procedureDetailResponseSchema = z.strictObject({
+  procedure: procedureVersionSchema,
+  sources: z.array(sourceSchema),
+});
+export type ProcedureDetailResponse = z.infer<typeof procedureDetailResponseSchema>;
+
+/**
+ * なぜ: 計画§8.2「GET /api/facilities → Facility[]」。T-006で追加。
+ */
+export const facilitiesResponseSchema = z.array(facilitySchema);
+export type FacilitiesResponse = z.infer<typeof facilitiesResponseSchema>;
+
+/**
+ * なぜ: 計画§8.2「GET /api/waste-schedules?municipality=&area= → WasteSchedule[]+areas[]。
+ * area未指定なら地区一覧」。cautionはC-9「祝日・年末年始等の例外日は展開せず注意書きで
+ * 公式カレンダーへ誘導」を必ず応答に含めるため必須。schedulesはarea指定時のみ返す。T-006で追加。
+ */
+export const wasteSchedulesResponseSchema = z.strictObject({
+  municipalityCode: municipalityCodeSchema,
+  areas: z.array(wasteAreaSchema),
+  schedules: z.array(wasteScheduleSchema).optional(),
+  caution: z.string().min(1),
+  granularityNote: z.string().optional(),
+  effectiveFrom: z.iso.date().optional(),
+  effectiveTo: z.iso.date().optional(),
+});
+export type WasteSchedulesResponse = z.infer<typeof wasteSchedulesResponseSchema>;
 
 /**
  * なぜ: 計画§8.2の応答形状。tasksは生成された全GeneratedTask、ruleVersionは
@@ -75,6 +123,9 @@ export const errorResponseSchema = z.strictObject({
     code: z.string().min(1),
     message: z.string().min(1),
     requestId: z.string().min(1).optional(),
+    // なぜ: FR-021。未対応自治体などで「次の行動(公式サイトを見る)」を示すため、
+    // 該当時のみ公式トップURLを添える追加的optionalフィールド(T-006で追加)。
+    officialUrl: z.url().optional(),
   }),
 });
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;

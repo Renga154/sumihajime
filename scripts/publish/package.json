@@ -1,0 +1,24 @@
+{
+  "name": "@tmn/publish",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Publish pipeline: validate approved sources/data with @tmn/schemas, enforce the approved-only publish gate, and seed local D1 (T-006).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "publish:local": "tsx src/publish.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tmn/schemas": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2"
+  }
+}

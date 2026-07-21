@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { requiredDocumentSchema, channelSchema, dataStatusSchema } from './procedure.js';
-import { prioritySchema } from './rule.js';
+import { prioritySchema, applicabilitySchema } from './rule.js';
 
 /**
  * なぜ: REQUIREMENTS §14.2 タスク出力例、§13.1 GeneratedTask。ルール評価器
@@ -38,5 +38,10 @@ export const generatedTaskSchema = z.strictObject({
   dataStatus: dataStatusSchema,
   ruleVersion: z.string().min(1),
   procedureVersion: z.string().min(1),
+  // なぜ: REQUIREMENTS §9.3 の applicable を表示側へ伝える追加的optionalフィールド(T-006)。
+  // API は applicable / needs_confirmation の両方を返すため、UIが「要確認」バッジを出せるよう
+  // applicable を、要確認の理由・注意を warnings を通じて渡す(§14.2の例には無い後方互換な拡張)。
+  applicable: applicabilitySchema.optional(),
+  warnings: z.array(z.string()).optional(),
 });
 export type GeneratedTask = z.infer<typeof generatedTaskSchema>;

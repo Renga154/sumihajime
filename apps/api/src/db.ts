@@ -1,0 +1,331 @@
+import type {
+  Coverage,
+  Facility,
+  MunicipalityWithCoverage,
+  ProcedureVersion,
+  RuleSet,
+  Source,
+  WasteArea,
+  WasteSchedule,
+} from '@tmn/schemas';
+import {
+  coverageSchema,
+  facilitySchema,
+  municipalityWithCoverageSchema,
+  procedureVersionSchema,
+  ruleSetSchema,
+  sourceSchema,
+  wasteAreaSchema,
+  wasteScheduleSchema,
+} from '@tmn/schemas';
+
+/**
+ * なぜ: D1(SQLite)の行 → ドメインオブジェクトへの変換層。JSON列のparse・0/1のbool化・
+ * NULL→undefined を一手に引き受け、返す前に必ず @tmn/schemas で検証する(境界での型保証)。
+ * 自治体スコープはSQLのWHERE municipality_code=? でサーバー側強制(原則4)。
+ */
+
+export interface Bindings {
+  DB: D1Database;
+}
+
+type Row = Record<string, unknown>;
+
+function asString(v: unknown): string {
+  return v == null ? '' : String(v);
+}
+function optString(v: unknown): string | undefined {
+  return v == null ? undefined : String(v);
+}
+function optNumber(v: unknown): number | undefined {
+  return v == null ? undefined : Number(v);
+}
+function parseJson<T>(v: unknown): T {
+  return JSON.parse(asString(v)) as T;
+}
+function optJson<T>(v: unknown): T | undefined {
+  return v == null ? undefined : (JSON.parse(String(v)) as T);
+}
+
+/** ---- municipalities (+ coverage) ---- */
+
+export async function getMunicipalitiesWithCoverage(
+  db: D1Database,
+): Promise<MunicipalityWithCoverage[]> {
+  const [munis, cov] = await Promise.all([
+    db
+      .prepare('SELECT code, name, supported, note, official_url FROM municipalities ORDER BY code')
+      .all<Row>(),
+    db
+      .prepare('SELECT municipality_code, category, status, last_verified_at FROM coverage')
+      .all<Row>(),
+  ]);
+
+  const coverageByMunicipality = new Map<string, Coverage[]>();
+  for (const row of cov.results) {
+    const c = coverageSchema.parse({
+      municipalityCode: asString(row.municipality_code),
+      category: asString(row.category),
+      status: asString(row.status),
+      lastVerifiedAt: asString(row.last_verified_at),
+    });
+    const list = coverageByMunicipality.get(c.municipalityCode) ?? [];
+    list.push(c);
+    coverageByMunicipality.set(c.municipalityCode, list);
+  }
+
+  return munis.results.map((row) => {
+    const code = asString(row.code);
+    return municipalityWithCoverageSchema.parse({
+      code,
+      name: asString(row.name),
+      supported: Number(row.supported) === 1,
+      note: optString(row.note),
+      officialUrl: optString(row.official_url),
+      coverage: coverageByMunicipality.get(code) ?? [],
+    });
+  });
+}
+
+export interface MunicipalityRow {
+  code: string;
+  name: string;
+  supported: boolean;
+  officialUrl?: string;
+}
+
+export async function getMunicipality(
+  db: D1Database,
+  code: string,
+): Promise<MunicipalityRow | null> {
+  const row = await db
+    .prepare('SELECT code, name, supported, official_url FROM municipalities WHERE code = ?')
+    .bind(code)
+    .first<Row>();
+  if (!row) return null;
+  return {
+    code: asString(row.code),
+    name: asString(row.name),
+    supported: Number(row.supported) === 1,
+    officialUrl: optString(row.official_url),
+  };
+}
+
+/** ---- rule_sets ---- */
+
+export async function getRuleSet(db: D1Database, code: string): Promise<RuleSet | null> {
+  const row = await db
+    .prepare(
+      'SELECT municipality_code, rule_version, rules FROM rule_sets WHERE municipality_code = ?',
+    )
+    .bind(code)
+    .first<Row>();
+  if (!row) return null;
+  return ruleSetSchema.parse({
+    municipalityCode: asString(row.municipality_code),
+    ruleVersion: asString(row.rule_version),
+    rules: parseJson(row.rules),
+  });
+}
+
+/** ---- procedure_versions ---- */
+
+function rowToProcedureVersion(row: Row): ProcedureVersion {
+  return procedureVersionSchema.parse({
+    id: asString(row.procedure_id),
+    version: asString(row.version),
+    municipalityCode: asString(row.municipality_code),
+    canonicalType: asString(row.canonical_type),
+    title: asString(row.title),
+    shortDescription: asString(row.short_description),
+    applicabilityReason: asString(row.applicability_reason),
+    priority: asString(row.priority),
+    dueDate: optString(row.due_date),
+    dueDescription: optString(row.due_description),
+    requiredDocuments: parseJson(row.required_documents),
+    channels: parseJson(row.channels),
+    locations: optJson(row.locations),
+    onlineUrl: optString(row.online_url),
+    contact: optString(row.contact),
+    sourceIds: parseJson(row.source_ids),
+    lastVerifiedAt: asString(row.last_verified_at),
+    dataStatus: asString(row.data_status),
+    cautions: optJson(row.cautions),
+  });
+}
+
+export async function getProcedureVersions(
+  db: D1Database,
+  code: string,
+): Promise<Map<string, ProcedureVersion>> {
+  const res = await db
+    .prepare('SELECT * FROM procedure_versions WHERE municipality_code = ?')
+    .bind(code)
+    .all<Row>();
+  const map = new Map<string, ProcedureVersion>();
+  for (const row of res.results) {
+    const pv = rowToProcedureVersion(row);
+    map.set(pv.id, pv);
+  }
+  return map;
+}
+
+export async function getProcedureVersion(
+  db: D1Database,
+  code: string,
+  procedureId: string,
+): Promise<ProcedureVersion | null> {
+  const row = await db
+    .prepare('SELECT * FROM procedure_versions WHERE municipality_code = ? AND procedure_id = ?')
+    .bind(code, procedureId)
+    .first<Row>();
+  return row ? rowToProcedureVersion(row) : null;
+}
+
+/** ---- sources ---- */
+
+function rowToSource(row: Row): Source {
+  return sourceSchema.parse({
+    sourceId: asString(row.source_id),
+    sourceTitle: asString(row.source_title),
+    ownerOrganization: asString(row.owner_organization),
+    municipalityCode: optString(row.municipality_code),
+    category: asString(row.category),
+    sourceUrl: asString(row.source_url),
+    sourceType: asString(row.source_type),
+    license: asString(row.license),
+    attributionText: asString(row.attribution_text),
+    fetchMethod: asString(row.fetch_method),
+    updateFrequency: asString(row.update_frequency),
+    lastFetchedAt: optString(row.last_fetched_at),
+    lastVerifiedAt: optString(row.last_verified_at),
+    sourceLastModifiedAt: optString(row.source_last_modified_at),
+    contentHash: optString(row.content_hash),
+    reviewStatus: asString(row.review_status),
+    reviewer: optString(row.reviewer),
+    effectiveFrom: optString(row.effective_from),
+    effectiveTo: optString(row.effective_to),
+    notes: optString(row.notes),
+  });
+}
+
+export async function getSourcesByIds(db: D1Database, ids: string[]): Promise<Map<string, Source>> {
+  const map = new Map<string, Source>();
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return map;
+  const placeholders = unique.map(() => '?').join(',');
+  const res = await db
+    .prepare(`SELECT * FROM sources WHERE source_id IN (${placeholders})`)
+    .bind(...unique)
+    .all<Row>();
+  for (const row of res.results) {
+    const s = rowToSource(row);
+    map.set(s.sourceId, s);
+  }
+  return map;
+}
+
+/** ---- facilities ---- */
+
+export async function getFacilities(
+  db: D1Database,
+  code: string,
+  category?: string,
+): Promise<Facility[]> {
+  const res = category
+    ? await db
+        .prepare(
+          'SELECT * FROM facilities WHERE municipality_code = ? AND category = ? ORDER BY facility_id',
+        )
+        .bind(code, category)
+        .all<Row>()
+    : await db
+        .prepare('SELECT * FROM facilities WHERE municipality_code = ? ORDER BY facility_id')
+        .bind(code)
+        .all<Row>();
+  return res.results.map((row) =>
+    facilitySchema.parse({
+      facilityId: asString(row.facility_id),
+      municipalityCode: asString(row.municipality_code),
+      name: asString(row.name),
+      category: asString(row.category),
+      address: asString(row.address),
+      lat: optNumber(row.lat) ?? null,
+      lng: optNumber(row.lng) ?? null,
+      hours: optString(row.hours),
+      sourceId: asString(row.source_id),
+    }),
+  );
+}
+
+/** ---- waste ---- */
+
+export interface WasteDatasetRow {
+  municipalityCode: string;
+  sourceId: string;
+  caution: string;
+  granularityNote?: string;
+  effectiveFrom?: string;
+  effectiveTo?: string;
+}
+
+export async function getWasteDataset(
+  db: D1Database,
+  code: string,
+): Promise<WasteDatasetRow | null> {
+  const row = await db
+    .prepare(
+      'SELECT municipality_code, source_id, caution, granularity_note, effective_from, effective_to FROM waste_datasets WHERE municipality_code = ?',
+    )
+    .bind(code)
+    .first<Row>();
+  if (!row) return null;
+  return {
+    municipalityCode: asString(row.municipality_code),
+    sourceId: asString(row.source_id),
+    caution: asString(row.caution),
+    granularityNote: optString(row.granularity_note),
+    effectiveFrom: optString(row.effective_from),
+    effectiveTo: optString(row.effective_to),
+  };
+}
+
+export async function getWasteAreas(db: D1Database, code: string): Promise<WasteArea[]> {
+  const res = await db
+    .prepare(
+      'SELECT area_id, municipality_code, area_label FROM waste_areas WHERE municipality_code = ? ORDER BY area_id',
+    )
+    .bind(code)
+    .all<Row>();
+  return res.results.map((row) =>
+    wasteAreaSchema.parse({
+      areaId: asString(row.area_id),
+      municipalityCode: asString(row.municipality_code),
+      areaLabel: asString(row.area_label),
+    }),
+  );
+}
+
+export async function getWasteSchedules(
+  db: D1Database,
+  code: string,
+  areaId: string,
+): Promise<WasteSchedule[]> {
+  const res = await db
+    .prepare(
+      'SELECT area_id, waste_type, weekday, week_of_month, source_id, effective_from, effective_to FROM waste_schedules WHERE municipality_code = ? AND area_id = ? ORDER BY id',
+    )
+    .bind(code, areaId)
+    .all<Row>();
+  return res.results.map((row) =>
+    wasteScheduleSchema.parse({
+      areaId: asString(row.area_id),
+      wasteType: asString(row.waste_type),
+      weekday: asString(row.weekday),
+      weekOfMonth: optJson(row.week_of_month),
+      sourceId: asString(row.source_id),
+      effectiveFrom: asString(row.effective_from),
+      effectiveTo: optString(row.effective_to),
+    }),
+  );
+}

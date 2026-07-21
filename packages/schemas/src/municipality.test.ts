@@ -36,6 +36,27 @@ describe('municipalitySchema', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it('accepts an optional officialUrl (FR-021 公式導線)', () => {
+    const result = municipalitySchema.safeParse({
+      code: '13115',
+      name: '杉並区',
+      supported: false,
+      note: '未対応',
+      officialUrl: 'https://www.city.suginami.tokyo.jp/',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a non-URL officialUrl', () => {
+    const result = municipalitySchema.safeParse({
+      code: '13115',
+      name: '杉並区',
+      supported: false,
+      officialUrl: 'not-a-url',
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('coverageSchema', () => {

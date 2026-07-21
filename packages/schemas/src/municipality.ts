@@ -18,6 +18,10 @@ export const municipalitySchema = z.strictObject({
   name: z.string().min(1),
   supported: z.boolean(),
   note: z.string().optional(),
+  // なぜ: FR-021「未対応自治体でも公式サイトへの導線を必ず示す」。GET /api/municipalities と
+  // POST /api/checklists の非対応エラーで公式トップURLを返すための追加的optionalフィールド
+  // (T-006で追加。既存の {code,name,supported,note} を壊さない後方互換な拡張)。
+  officialUrl: z.url().optional(),
 });
 export type Municipality = z.infer<typeof municipalitySchema>;
 
