@@ -1,0 +1,4 @@
+municipality_code,municipality_name,resident_registration,my_number,national_health_insurance,national_pension,child_benefits,school_childcare,dog_registration,facilities,waste_schedule,waste_sorting,rag,overall_status,last_verified_at,notes
+13112,世田谷区,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,2026-07-21,MVP対象A(D-1決裁2026-07-21)。T-005で整備予定。目標: 全カテゴリverified
+13108,江東区,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,2026-07-21,MVP対象B(D-1決裁2026-07-21)。T-015で整備予定。国保・年金・マイナンバーは個別ページ再監査が必要(audit-koto-13108.md R-2)
+13104,新宿区,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,unavailable,2026-07-21,MVP対象C(D-1決裁2026-07-21)。T-016で整備予定。収集曜日はHTML表パース(要検証)
