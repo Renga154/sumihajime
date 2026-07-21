@@ -144,29 +144,39 @@ export function loadCoverage(repoRoot: string): Coverage[] {
   return rows;
 }
 
-/** 世田谷(13112)の正規化手続きJSON → ProcedureVersion[]。 */
-export function loadProcedures(repoRoot: string): ProcedureVersion[] {
-  const raw = readJson(repoRoot, 'data/normalized/13112/procedures.json') as {
+/**
+ * なぜ: publish は「supportedな全自治体」を対象に走らせ、承認ゲートが未承認ソース参照を
+ * 拒否するのが本来の運用(T-015)。一方、CI/統合テストのシード(d1-harness の buildSeed)は
+ * 「承認済みで公開可能な自治体集合」だけを載せたい。両者を1関数で満たすため、
+ * loadPublishData/buildSeed は対象自治体コードを引数化し、デフォルトは公開可能な世田谷のみ
+ * (DEFAULT_PUBLISH_CODES)とする。CLI(publish.ts)は MUNICIPALITIES.supported を渡し、
+ * 江東区(pending)を含めることでゲートを実際に発火させる。
+ */
+export const DEFAULT_PUBLISH_CODES = ['13112'] as const;
+
+/** 正規化手続きJSON → ProcedureVersion[](自治体コード指定)。 */
+export function loadProceduresFor(repoRoot: string, code: string): ProcedureVersion[] {
+  const raw = readJson(repoRoot, `data/normalized/${code}/procedures.json`) as {
     procedures: unknown[];
   };
   return raw.procedures.map((p) => procedureVersionSchema.parse(p));
 }
 
-/** ルールJSON → RuleSet[]。 */
-export function loadRuleSets(repoRoot: string): RuleSet[] {
-  const raw = readJson(repoRoot, 'packages/rules/data/13112/rules.json');
-  return [ruleSetSchema.parse(raw)];
+/** ルールJSON → RuleSet(自治体コード指定)。 */
+export function loadRuleSetFor(repoRoot: string, code: string): RuleSet {
+  const raw = readJson(repoRoot, `packages/rules/data/${code}/rules.json`);
+  return ruleSetSchema.parse(raw);
 }
 
 /**
- * 施設JSON → Facility[]。
- * なぜ: 出典CSVのExcel汚損により facilityId が全行同一の壊れた値("...E+11")に潰れている
- * (data/normalized/13112/facilities.json の dataQualityNotes 参照)。data/ は書き換えない方針の
- * ため、publish時に municipalityCode + 連番で一意な facility_id を決定論的に採番する
- * (D1のPK制約を満たしUIでキー化可能にする。捏造ではなく壊れたIDの機械的置換)。
+ * 施設JSON → Facility[](自治体コード指定)。
+ * なぜ: 出典CSVのExcel汚損により facilityId が壊れる自治体(世田谷)があるため、
+ * data/ は書き換えず publish時に municipalityCode + 連番で一意な facility_id を
+ * 決定論的に採番する(D1のPK制約を満たしUIでキー化可能にする。捏造ではなく機械的置換)。
+ * 既に正規のIDを持つ自治体(江東)でも同じ規則で再採番するため一貫する。
  */
-export function loadFacilities(repoRoot: string): Facility[] {
-  const raw = readJson(repoRoot, 'data/normalized/13112/facilities.json') as {
+export function loadFacilitiesFor(repoRoot: string, code: string): Facility[] {
+  const raw = readJson(repoRoot, `data/normalized/${code}/facilities.json`) as {
     municipalityCode: string;
     facilities: unknown[];
   };
@@ -194,12 +204,15 @@ interface WasteJson {
   wasteSchedules: unknown[];
 }
 
-export function loadWaste(repoRoot: string): {
+export function loadWasteFor(
+  repoRoot: string,
+  code: string,
+): {
   areas: WasteArea[];
   schedules: WasteSchedule[];
   dataset: WasteDataset;
 } {
-  const raw = readJson(repoRoot, 'data/normalized/13112/waste.json') as WasteJson;
+  const raw = readJson(repoRoot, `data/normalized/${code}/waste.json`) as WasteJson;
   return {
     areas: raw.wasteAreas.map((a) => wasteAreaSchema.parse(a)),
     schedules: raw.wasteSchedules.map((s) => wasteScheduleSchema.parse(s)),
@@ -217,46 +230,82 @@ export function loadWaste(repoRoot: string): {
 /**
  * すべての公開データを読み込み・スキーマ検証し、ゲート入力(references)まで組み立てる。
  * SQL生成やゲート判定はここでは行わない(呼び出し側が assertPublishGate → buildSeedStatements)。
+ *
+ * @param municipalityCodes 公開対象の自治体コード。省略時は公開可能な世田谷のみ
+ *   (DEFAULT_PUBLISH_CODES)。CLIは MUNICIPALITIES.supported を渡し、江東(pending)を
+ *   含めることで承認ゲートを発火させる(T-015)。
  */
-export function loadPublishData(repoRoot: string): PublishData {
+export function loadPublishData(
+  repoRoot: string,
+  municipalityCodes: readonly string[] = DEFAULT_PUBLISH_CODES,
+): PublishData {
   const sources = loadSources(repoRoot);
   const approvedSources = sources.filter((s) => s.reviewStatus === 'approved');
   const approvedSourceIds = new Set(approvedSources.map((s) => s.sourceId));
 
-  const procedures = loadProcedures(repoRoot);
-  const ruleSets = loadRuleSets(repoRoot);
-  const facilities = loadFacilities(repoRoot);
-  const waste = loadWaste(repoRoot);
-  const coverage = loadCoverage(repoRoot);
+  // なぜ: municipalities.ts の静的 supported は「MVP整備対象」という product意図を表す
+  // (T-015で江東=13108をtrueに)。ただし API/DB で実際に supported として公開するのは
+  // 「承認済みソースを1件以上持つ自治体」だけとする(municipalities.ts のコメント
+  // 『レビュー承認後に有効』の実装)。江東は全ソースが pending/candidate のため、静的に
+  // supported=true でも公開ビュー(seed→D1→API)では supported=false になる。これにより
+  // 未レビューの自治体が「対応済み」に見えること(CLAUDE.md原則9)を構造的に防ぐ。
+  const approvedMunicipalityCodes = new Set(
+    approvedSources
+      .map((s) => s.municipalityCode)
+      .filter((code): code is string => code !== undefined),
+  );
+  const municipalities = MUNICIPALITIES.map((m) => ({
+    ...m,
+    supported: m.supported && approvedMunicipalityCodes.has(m.code),
+  }));
 
+  const procedures: ProcedureVersion[] = [];
+  const ruleSets: RuleSet[] = [];
+  const facilities: Facility[] = [];
+  const wasteAreas: WasteArea[] = [];
+  const wasteSchedules: WasteSchedule[] = [];
+  const wasteDatasets: WasteDataset[] = [];
   const references: SourceRef[] = [];
-  for (const p of procedures) {
-    references.push({ owner: `procedure_version ${p.id}@${p.version}`, sourceIds: p.sourceIds });
-  }
-  for (const rs of ruleSets) {
-    for (const rule of rs.rules) {
+
+  for (const code of municipalityCodes) {
+    const procs = loadProceduresFor(repoRoot, code);
+    const ruleSet = loadRuleSetFor(repoRoot, code);
+    const facs = loadFacilitiesFor(repoRoot, code);
+    const waste = loadWasteFor(repoRoot, code);
+
+    procedures.push(...procs);
+    ruleSets.push(ruleSet);
+    facilities.push(...facs);
+    wasteAreas.push(...waste.areas);
+    wasteSchedules.push(...waste.schedules);
+    wasteDatasets.push(waste.dataset);
+
+    for (const p of procs) {
+      references.push({ owner: `procedure_version ${p.id}@${p.version}`, sourceIds: p.sourceIds });
+    }
+    for (const rule of ruleSet.rules) {
       references.push({
-        owner: `rule ${rs.municipalityCode}/${rule.procedureId}`,
+        owner: `rule ${ruleSet.municipalityCode}/${rule.procedureId}`,
         sourceIds: rule.sourceIds,
       });
     }
+    // 施設・ごみも公開物なので参照ソースをゲート対象に含める(distinctで冗長を避ける)。
+    const facilitySourceIds = [...new Set(facs.map((f) => f.sourceId))];
+    references.push({ owner: `facilities (${code})`, sourceIds: facilitySourceIds });
+    references.push({ owner: `waste dataset (${code})`, sourceIds: [waste.dataset.sourceId] });
   }
-  // 施設・ごみも公開物なので参照ソースをゲート対象に含める(distinctで冗長を避ける)。
-  const facilitySourceIds = [...new Set(facilities.map((f) => f.sourceId))];
-  references.push({ owner: 'facilities (13112)', sourceIds: facilitySourceIds });
-  references.push({ owner: 'waste dataset (13112)', sourceIds: [waste.dataset.sourceId] });
 
   return {
-    municipalities: MUNICIPALITIES,
-    coverage,
+    municipalities,
+    coverage: loadCoverage(repoRoot),
     approvedSources,
     approvedSourceIds,
     procedures,
     ruleSets,
     facilities,
-    wasteAreas: waste.areas,
-    wasteSchedules: waste.schedules,
-    wasteDatasets: [waste.dataset],
+    wasteAreas,
+    wasteSchedules,
+    wasteDatasets,
     references,
   };
 }

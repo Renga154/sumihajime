@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSeed } from './seed.js';
+import { MUNICIPALITIES } from './municipalities.js';
 
 /**
  * なぜ: D1へ承認済みデータを投入する publish CLI(T-006/T-011)。
@@ -28,7 +29,12 @@ function main(): void {
   const remote = process.argv.includes('--remote');
   const targetFlag = remote ? '--remote' : '--local';
 
-  const { data, statements } = buildSeed(repoRoot);
+  // なぜ: CLIは supported な全自治体を公開対象にする。承認ゲート(buildSeed内)が
+  // 未承認ソース(江東=pending/candidate 等)を参照する自治体を拒否し、publishを止める。
+  // これが「未レビューデータをD1へ載せない」構造的関門の実運用挙動(T-015)。
+  const supportedCodes = MUNICIPALITIES.filter((m) => m.supported).map((m) => m.code);
+  console.log(`[publish] target supported municipalities: ${supportedCodes.join(', ')}`);
+  const { data, statements } = buildSeed(repoRoot, supportedCodes);
 
   const counts = {
     municipalities: data.municipalities.length,

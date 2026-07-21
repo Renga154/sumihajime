@@ -1,0 +1,123 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Koto (13108) — provenance integrity & scope safety > 決定論: 同一入力で同一結果 + スナップショット(回帰ガード) 1`] = `
+{
+  "outcomes": [
+    {
+      "applicabilityReason": "他の区市町村や国外から江東区に転入したすべての方に必要な届出です。",
+      "applicable": "applicable",
+      "dueDate": "2026-08-15",
+      "priority": "urgent",
+      "procedureId": "procedure_resident_registration",
+      "sourceIds": [
+        "src-13108-resident_registration-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "マイナンバーカードをお持ちの方は、転入に伴う継続利用(券面記載事項変更)の手続きが必要です。",
+      "applicable": "applicable",
+      "dueDescription": "江東区に住み始めた日から14日以内かつ転出予定日から30日以内に転入届をし、その転入届を行った日から90日以内に継続利用(券面記載事項変更)の手続きを行うこと。期限を過ぎるとカードが自動失効します。",
+      "priority": "high",
+      "procedureId": "procedure_mynumber_continued_use",
+      "sourceIds": [
+        "src-13108-my_number-001",
+        "src-13108-resident_registration-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "職場の健康保険等に加入していない方は、江東区の国民健康保険への加入手続きが必要です。",
+      "applicable": "applicable",
+      "dueDate": "2026-08-15",
+      "priority": "high",
+      "procedureId": "procedure_national_health_insurance",
+      "sourceIds": [
+        "src-13108-national_health_insurance-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "国民年金に加入している方の住所変更等の届出に関する案内です(具体的な期限・窓口は項目別ページで要確認)。",
+      "applicable": "not_applicable",
+      "dueDescription": "本ページ(国民年金の届出)は届出種別の総合案内で日数期限の記載はありません。転入に伴う手続きの要否・期限は該当項目別ページおよび年金事務所でご確認ください。",
+      "priority": "normal",
+      "procedureId": "procedure_national_pension_address",
+      "sourceIds": [
+        "src-13108-national_pension-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "高校生年代までの児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。",
+      "applicable": "applicable",
+      "dueDescription": "出生または転入した日(転出予定日)の翌日から数えて15日以内に申請すると要件発生月から支給(15日特例)。起算日が前住所地の転出予定日のため引越し日からは算定できません。早めの申請を推奨します。",
+      "priority": "high",
+      "procedureId": "procedure_child_allowance",
+      "sourceIds": [
+        "src-13108-child_benefits-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "18歳到達後最初の3月31日までの児童がいて、国民健康保険または社会保険等に加入している世帯が対象です。",
+      "applicable": "applicable",
+      "dueDescription": "助成を受けるには医療証の交付申請が必要です。江東区公式ページには転入に伴う申請の日数の期限の記載がないため、転入後は速やかに申請してください。",
+      "priority": "high",
+      "procedureId": "procedure_child_medical",
+      "sourceIds": [
+        "src-13108-child_medical-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "小・中学生(義務教育の学齢)のお子さまがいる世帯、または就学・保育のニーズがある世帯が対象の、区立小・中学校への転入学手続きです。",
+      "applicable": "applicable",
+      "dueDescription": "住民票の異動(転入)手続き時に転入学通知書が交付されます。転入届(住み始めた日から14日以内)にあわせて手続きしてください。在籍していた学校で在学証明書・教科書給与証明書の交付を受けてから転入学(転校)する学校へ提出します。",
+      "priority": "high",
+      "procedureId": "procedure_school_transfer",
+      "sourceIds": [
+        "src-13108-school_transfer-001",
+        "src-13108-school_transfer-002",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "未就学のお子さまがいる、または就学・保育のニーズがある世帯で、江東区の保育園等の利用を希望する方向けの入口案内です。",
+      "applicable": "applicable",
+      "dueDescription": "受付締切日までに必要書類が届いている必要があり、入園希望月の前月末日までに江東区へ転入(住民票異動)が書類で確認できることが条件です。受付期間は入園のしおりでご確認ください(月・年度により異なるため日数固定の期限は設定していません)。",
+      "priority": "normal",
+      "procedureId": "procedure_childcare_application",
+      "sourceIds": [
+        "src-13108-childcare-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "犬のマイクロチップ装着有無が未確認のため、届出先(区保健所の窓口 または 犬と猫のマイクロチップ情報登録サイト)が確定できません。装着・指定登録機関(日本獣医師会)への登録状況をご確認ください(装着・登録済みなら区への届出は不要です)。",
+      "applicable": "needs_confirmation",
+      "dueDescription": "転入届とは別に、江東区保健所生活衛生課の窓口で登録事項の変更手続きが必要です(明確な日数の期限は公式ページに記載なし)。旧所在地の犬鑑札を持参し引換交付を受けます。",
+      "priority": "normal",
+      "procedureId": "procedure_dog_registration_transfer",
+      "sourceIds": [
+        "src-13108-dog_registration-001",
+        "src-13108-dog_microchip-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "お住まいの町名(地区)の資源・ごみ収集曜日を確認してください(祝日・年末年始は変更の可能性あり)。",
+      "applicable": "applicable",
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの町名(地区)の収集曜日を確認してください)。「燃やさないごみ」は隔週で、第何週かは出典CSVに無いため区の検索ツール・カレンダーで要確認です。",
+      "priority": "normal",
+      "procedureId": "procedure_waste_check",
+      "sourceIds": [
+        "src-13108-waste_schedule-001",
+        "src-13108-waste_guide-001",
+      ],
+      "warnings": [],
+    },
+  ],
+  "ruleVersion": "2026-07-22.1",
+}
+`;

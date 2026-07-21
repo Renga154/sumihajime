@@ -1,0 +1,2333 @@
+{
+  "municipalityCode": "13108",
+  "sourceId": "src-13108-waste_schedule-001",
+  "effectiveFrom": "2024-11-30",
+  "caution": "祝日・年末年始等は収集日が変更になる場合があります。区の「ごみ収集日の検索」ツール・収集カレンダー・アプリ等で最新の日程を必ずご確認ください（出典CSVに例外日は含まれません: C-9）。",
+  "biweeklyNote": "「燃やさないごみ」は隔週（2週間に1回）収集です。出典CSVは『（隔週）＋曜日』のみを保持し、第何週かは含まれないため、本データでは曜日のみを保持し週指定（weekOfMonth）は付与していません（推測回避）。実際の収集週は区の「ごみ収集日の検索」ツール・収集カレンダーで必ずご確認ください。",
+  "granularityNote": "出典CSVの粒度は町名（一部は丁目範囲。例: 大島1〜2丁目/大島3〜7丁目）単位で、番地単位ではありません。",
+  "effectiveNote": "出典CSV(収集日)のresource最終更新は2024-11-30。令和8年度(2026-04以降)版への追従は未確認のためeffectiveTo(有効期限)は設定していません(R-1)。最新の収集日は必ず区公式の検索ツール/カレンダーで確認してください。",
+  "wasteAreas": [
+    {
+      "areaId": "area-13108-001",
+      "municipalityCode": "13108",
+      "areaLabel": "青海"
+    },
+    {
+      "areaId": "area-13108-002",
+      "municipalityCode": "13108",
+      "areaLabel": "有明"
+    },
+    {
+      "areaId": "area-13108-003",
+      "municipalityCode": "13108",
+      "areaLabel": "石島"
+    },
+    {
+      "areaId": "area-13108-004",
+      "municipalityCode": "13108",
+      "areaLabel": "海辺"
+    },
+    {
+      "areaId": "area-13108-005",
+      "municipalityCode": "13108",
+      "areaLabel": "海の森"
+    },
+    {
+      "areaId": "area-13108-006",
+      "municipalityCode": "13108",
+      "areaLabel": "永代"
+    },
+    {
+      "areaId": "area-13108-007",
+      "municipalityCode": "13108",
+      "areaLabel": "枝川"
+    },
+    {
+      "areaId": "area-13108-008",
+      "municipalityCode": "13108",
+      "areaLabel": "越中島"
+    },
+    {
+      "areaId": "area-13108-009",
+      "municipalityCode": "13108",
+      "areaLabel": "扇橋"
+    },
+    {
+      "areaId": "area-13108-010",
+      "municipalityCode": "13108",
+      "areaLabel": "大島1〜2丁目"
+    },
+    {
+      "areaId": "area-13108-011",
+      "municipalityCode": "13108",
+      "areaLabel": "大島3〜7丁目"
+    },
+    {
+      "areaId": "area-13108-012",
+      "municipalityCode": "13108",
+      "areaLabel": "大島8〜9丁目"
+    },
+    {
+      "areaId": "area-13108-013",
+      "municipalityCode": "13108",
+      "areaLabel": "亀戸1〜3丁目"
+    },
+    {
+      "areaId": "area-13108-014",
+      "municipalityCode": "13108",
+      "areaLabel": "亀戸4〜9丁目"
+    },
+    {
+      "areaId": "area-13108-015",
+      "municipalityCode": "13108",
+      "areaLabel": "北砂1〜5丁目"
+    },
+    {
+      "areaId": "area-13108-016",
+      "municipalityCode": "13108",
+      "areaLabel": "北砂6〜7丁目"
+    },
+    {
+      "areaId": "area-13108-017",
+      "municipalityCode": "13108",
+      "areaLabel": "木場"
+    },
+    {
+      "areaId": "area-13108-018",
+      "municipalityCode": "13108",
+      "areaLabel": "清澄"
+    },
+    {
+      "areaId": "area-13108-019",
+      "municipalityCode": "13108",
+      "areaLabel": "佐賀"
+    },
+    {
+      "areaId": "area-13108-020",
+      "municipalityCode": "13108",
+      "areaLabel": "猿江"
+    },
+    {
+      "areaId": "area-13108-021",
+      "municipalityCode": "13108",
+      "areaLabel": "塩浜1丁目"
+    },
+    {
+      "areaId": "area-13108-022",
+      "municipalityCode": "13108",
+      "areaLabel": "塩浜2丁目"
+    },
+    {
+      "areaId": "area-13108-023",
+      "municipalityCode": "13108",
+      "areaLabel": "潮見"
+    },
+    {
+      "areaId": "area-13108-024",
+      "municipalityCode": "13108",
+      "areaLabel": "東雲"
+    },
+    {
+      "areaId": "area-13108-025",
+      "municipalityCode": "13108",
+      "areaLabel": "白河1〜3丁目"
+    },
+    {
+      "areaId": "area-13108-026",
+      "municipalityCode": "13108",
+      "areaLabel": "白河4丁目"
+    },
+    {
+      "areaId": "area-13108-027",
+      "municipalityCode": "13108",
+      "areaLabel": "新大橋"
+    },
+    {
+      "areaId": "area-13108-028",
+      "municipalityCode": "13108",
+      "areaLabel": "新木場"
+    },
+    {
+      "areaId": "area-13108-029",
+      "municipalityCode": "13108",
+      "areaLabel": "新砂"
+    },
+    {
+      "areaId": "area-13108-030",
+      "municipalityCode": "13108",
+      "areaLabel": "住吉"
+    },
+    {
+      "areaId": "area-13108-031",
+      "municipalityCode": "13108",
+      "areaLabel": "千石"
+    },
+    {
+      "areaId": "area-13108-032",
+      "municipalityCode": "13108",
+      "areaLabel": "千田"
+    },
+    {
+      "areaId": "area-13108-033",
+      "municipalityCode": "13108",
+      "areaLabel": "高橋"
+    },
+    {
+      "areaId": "area-13108-034",
+      "municipalityCode": "13108",
+      "areaLabel": "辰巳"
+    },
+    {
+      "areaId": "area-13108-035",
+      "municipalityCode": "13108",
+      "areaLabel": "東陽"
+    },
+    {
+      "areaId": "area-13108-036",
+      "municipalityCode": "13108",
+      "areaLabel": "常盤"
+    },
+    {
+      "areaId": "area-13108-037",
+      "municipalityCode": "13108",
+      "areaLabel": "富岡"
+    },
+    {
+      "areaId": "area-13108-038",
+      "municipalityCode": "13108",
+      "areaLabel": "豊洲"
+    },
+    {
+      "areaId": "area-13108-039",
+      "municipalityCode": "13108",
+      "areaLabel": "東砂1〜5丁目"
+    },
+    {
+      "areaId": "area-13108-040",
+      "municipalityCode": "13108",
+      "areaLabel": "東砂6〜8丁目"
+    },
+    {
+      "areaId": "area-13108-041",
+      "municipalityCode": "13108",
+      "areaLabel": "平野1〜3丁目"
+    },
+    {
+      "areaId": "area-13108-042",
+      "municipalityCode": "13108",
+      "areaLabel": "平野4丁目"
+    },
+    {
+      "areaId": "area-13108-043",
+      "municipalityCode": "13108",
+      "areaLabel": "深川1丁目"
+    },
+    {
+      "areaId": "area-13108-044",
+      "municipalityCode": "13108",
+      "areaLabel": "深川2丁目"
+    },
+    {
+      "areaId": "area-13108-045",
+      "municipalityCode": "13108",
+      "areaLabel": "福住"
+    },
+    {
+      "areaId": "area-13108-046",
+      "municipalityCode": "13108",
+      "areaLabel": "冬木"
+    },
+    {
+      "areaId": "area-13108-047",
+      "municipalityCode": "13108",
+      "areaLabel": "古石場"
+    },
+    {
+      "areaId": "area-13108-048",
+      "municipalityCode": "13108",
+      "areaLabel": "牡丹"
+    },
+    {
+      "areaId": "area-13108-049",
+      "municipalityCode": "13108",
+      "areaLabel": "南砂1・5丁目"
+    },
+    {
+      "areaId": "area-13108-050",
+      "municipalityCode": "13108",
+      "areaLabel": "南砂2〜4・6〜7丁目"
+    },
+    {
+      "areaId": "area-13108-051",
+      "municipalityCode": "13108",
+      "areaLabel": "三好1〜3丁目"
+    },
+    {
+      "areaId": "area-13108-052",
+      "municipalityCode": "13108",
+      "areaLabel": "三好4丁目"
+    },
+    {
+      "areaId": "area-13108-053",
+      "municipalityCode": "13108",
+      "areaLabel": "毛利"
+    },
+    {
+      "areaId": "area-13108-054",
+      "municipalityCode": "13108",
+      "areaLabel": "森下1〜4丁目"
+    },
+    {
+      "areaId": "area-13108-055",
+      "municipalityCode": "13108",
+      "areaLabel": "森下5丁目"
+    },
+    {
+      "areaId": "area-13108-056",
+      "municipalityCode": "13108",
+      "areaLabel": "門前仲町"
+    },
+    {
+      "areaId": "area-13108-057",
+      "municipalityCode": "13108",
+      "areaLabel": "夢の島"
+    },
+    {
+      "areaId": "area-13108-058",
+      "municipalityCode": "13108",
+      "areaLabel": "若洲"
+    }
+  ],
+  "wasteSchedules": [
+    {
+      "areaId": "area-13108-001",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-001",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-001",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-001",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-001",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-002",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-002",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-002",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-002",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-002",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-003",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-003",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-003",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-003",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-003",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-004",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-004",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-004",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-004",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-004",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-005",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-005",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-005",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-005",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-005",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-006",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-006",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-006",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-006",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-006",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-007",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-007",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-007",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-007",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-007",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-008",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-008",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-008",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-008",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-008",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-009",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-009",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-009",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-009",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-009",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-010",
+      "wasteType": "資源",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-010",
+      "wasteType": "プラスチック",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-010",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-010",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-010",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-011",
+      "wasteType": "資源",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-011",
+      "wasteType": "プラスチック",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-011",
+      "wasteType": "燃やすごみ",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-011",
+      "wasteType": "燃やすごみ",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-011",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-012",
+      "wasteType": "資源",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-012",
+      "wasteType": "プラスチック",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-012",
+      "wasteType": "燃やすごみ",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-012",
+      "wasteType": "燃やすごみ",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-012",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-013",
+      "wasteType": "資源",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-013",
+      "wasteType": "プラスチック",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-013",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-013",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-013",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-014",
+      "wasteType": "資源",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-014",
+      "wasteType": "プラスチック",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-014",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-014",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-014",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-015",
+      "wasteType": "資源",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-015",
+      "wasteType": "プラスチック",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-015",
+      "wasteType": "燃やすごみ",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-015",
+      "wasteType": "燃やすごみ",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-015",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-016",
+      "wasteType": "資源",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-016",
+      "wasteType": "プラスチック",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-016",
+      "wasteType": "燃やすごみ",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-016",
+      "wasteType": "燃やすごみ",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-016",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-017",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-017",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-017",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-017",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-017",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-018",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-018",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-018",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-018",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-018",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-019",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-019",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-019",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-019",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-019",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-020",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-020",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-020",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-020",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-020",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-021",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-021",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-021",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-021",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-021",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-022",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-022",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-022",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-022",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-022",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-023",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-023",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-023",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-023",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-023",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-024",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-024",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-024",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-024",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-024",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-025",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-025",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-025",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-025",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-025",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-026",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-026",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-026",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-026",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-026",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-027",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-027",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-027",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-027",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-027",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-028",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-028",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-028",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-028",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-028",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-029",
+      "wasteType": "資源",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-029",
+      "wasteType": "プラスチック",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-029",
+      "wasteType": "燃やすごみ",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-029",
+      "wasteType": "燃やすごみ",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-029",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-030",
+      "wasteType": "資源",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-030",
+      "wasteType": "プラスチック",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-030",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-030",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-030",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-031",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-031",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-031",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-031",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-031",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-032",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-032",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-032",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-032",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-032",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-033",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-033",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-033",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-033",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-033",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-034",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-034",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-034",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-034",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-034",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-035",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-035",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-035",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-035",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-035",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-036",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-036",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-036",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-036",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-036",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-037",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-037",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-037",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-037",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-037",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-038",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-038",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-038",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-038",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-038",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-039",
+      "wasteType": "資源",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-039",
+      "wasteType": "プラスチック",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-039",
+      "wasteType": "燃やすごみ",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-039",
+      "wasteType": "燃やすごみ",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-039",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-040",
+      "wasteType": "資源",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-040",
+      "wasteType": "プラスチック",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-040",
+      "wasteType": "燃やすごみ",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-040",
+      "wasteType": "燃やすごみ",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-040",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-041",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-041",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-041",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-041",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-041",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-042",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-042",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-042",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-042",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-042",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-043",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-043",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-043",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-043",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-043",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-044",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-044",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-044",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-044",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-044",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-045",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-045",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-045",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-045",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-045",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-046",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-046",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-046",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-046",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-046",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-047",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-047",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-047",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-047",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-047",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-048",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-048",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-048",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-048",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-048",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-049",
+      "wasteType": "資源",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-049",
+      "wasteType": "プラスチック",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-049",
+      "wasteType": "燃やすごみ",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-049",
+      "wasteType": "燃やすごみ",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-049",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-050",
+      "wasteType": "資源",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-050",
+      "wasteType": "プラスチック",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-050",
+      "wasteType": "燃やすごみ",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-050",
+      "wasteType": "燃やすごみ",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-050",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-051",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-051",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-051",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-051",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-051",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-052",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-052",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-052",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-052",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-052",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-053",
+      "wasteType": "資源",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-053",
+      "wasteType": "プラスチック",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-053",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-053",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-053",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-054",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-054",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-054",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-054",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-054",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-055",
+      "wasteType": "資源",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-055",
+      "wasteType": "プラスチック",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-055",
+      "wasteType": "燃やすごみ",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-055",
+      "wasteType": "燃やすごみ",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-055",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-056",
+      "wasteType": "資源",
+      "weekday": "tuesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-056",
+      "wasteType": "プラスチック",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-056",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-056",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-056",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-057",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-057",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-057",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-057",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-057",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-058",
+      "wasteType": "資源",
+      "weekday": "friday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-058",
+      "wasteType": "プラスチック",
+      "weekday": "wednesday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-058",
+      "wasteType": "燃やすごみ",
+      "weekday": "monday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-058",
+      "wasteType": "燃やすごみ",
+      "weekday": "thursday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    },
+    {
+      "areaId": "area-13108-058",
+      "wasteType": "燃やさないごみ（隔週）",
+      "weekday": "saturday",
+      "sourceId": "src-13108-waste_schedule-001",
+      "effectiveFrom": "2024-11-30"
+    }
+  ]
+}

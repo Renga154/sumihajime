@@ -12,8 +12,8 @@ export interface Seed {
   statements: string[];
 }
 
-export function buildSeed(repoRoot: string): Seed {
-  const data = loadPublishData(repoRoot);
+export function buildSeed(repoRoot: string, municipalityCodes?: readonly string[]): Seed {
+  const data = loadPublishData(repoRoot, municipalityCodes);
   assertPublishGate({
     approvedSourceIds: data.approvedSourceIds,
     references: data.references,
