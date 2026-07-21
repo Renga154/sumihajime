@@ -184,9 +184,12 @@ describe('Setagaya (13112) — persona evaluations (該当タスクの増減を�
     });
     const added = applicableIds(family).filter((id) => !applicableIds(single).includes(id));
     expect(added.sort()).toEqual(['procedure_child_allowance', 'procedure_child_medical'].sort());
-    // 児童手当は 15日特例 → moveDate+15日
-    expect(outcomeFor(family, 'procedure_child_allowance').dueDate).toBe('2026-08-16');
-    expect(outcomeFor(family, 'procedure_child_allowance').priority).toBe('high');
+    // 児童手当の15日特例は前住所地の転出予定日起算のため moveDate からは算定不可 →
+    // 日付を出さず公式文言のみ表示(遅い期限を示して特例月を逃させないための安全側判断、レビュー承認済み)
+    const allowance = outcomeFor(family, 'procedure_child_allowance');
+    expect(allowance.dueDate).toBeUndefined();
+    expect(allowance.dueDescription).toContain('15日以内');
+    expect(allowance.priority).toBe('high');
     // 子ども医療は 3か月(暦月)のため offsetDays 化せず dueDescription のみ
     const med = outcomeFor(family, 'procedure_child_medical');
     expect(med.dueDate).toBeUndefined();

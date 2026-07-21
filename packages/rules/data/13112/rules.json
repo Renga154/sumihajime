@@ -52,8 +52,8 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 15 },
-      "dueDescription": "転出予定日(前住所地)の翌日から15日以内に申請すると申請月から支給(15日特例)。閉庁日を含めて数えます。",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転出予定日(前住所地)の翌日から15日以内に申請すると申請月から支給(15日特例)。閉庁日を含めて数えます。起算日は前住所地の転出予定日のため引越し日からは算定できません。早めの申請を推奨します。",
       "sourceIds": ["src-13112-child_benefits-001"],
       "applicabilityReasonTemplate": "0歳〜高校生相当世代までの児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。"
     },
