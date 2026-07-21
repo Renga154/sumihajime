@@ -12,6 +12,7 @@ import {
 import { evaluate } from '@tmn/rules';
 import { logEvent } from './log.js';
 import { buildTasks } from './checklist.js';
+import { handleChat, handleChatAvailability } from './chat.js';
 import type { Bindings } from './db.js';
 import {
   getFacilities,
@@ -78,6 +79,13 @@ function requireMunicipalityQuery(c: Context<Env>): string | null {
 }
 
 app.get('/api/health', (c) => c.json({ ok: true, version: '0.0.1' } as const));
+
+/**
+ * POST /api/chat: 自治体スコープ付きRAGチャット(T-013)。実装は chat.ts。
+ * RAG_ENABLED!=='true' なら 503 {disabled:true} を返す(UIはパネルを隠す)。
+ */
+app.get('/api/chat/availability', handleChatAvailability);
+app.post('/api/chat', handleChat);
 
 /** FR-001/021: 対応自治体一覧 + 公式導線 + カバレッジ。 */
 app.get('/api/municipalities', async (c) => {

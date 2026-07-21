@@ -72,7 +72,12 @@ const DETAIL_RESPONSE: ProcedureDetailResponse = {
 
 vi.mock('../api/client', () => ({
   ApiError: class ApiError extends Error {},
+  ChatDisabledError: class ChatDisabledError extends Error {},
   getProcedure: vi.fn(async () => DETAIL_RESPONSE),
+  // RAGはこのテストのスコープ外。無効(false)にしてチャットパネルを非表示にする。
+  getChatAvailability: vi.fn(async () => false),
+  getMunicipalities: vi.fn(async () => []),
+  postChat: vi.fn(),
 }));
 
 import { ProcedureDetailPage } from './ProcedureDetailPage';

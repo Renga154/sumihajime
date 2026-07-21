@@ -9,6 +9,7 @@ import { formatDate } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
 import { Card, ErrorMessage, Loading } from '../components/ui';
 import { NeedsConfirmationBadge, PriorityBadge } from '../components/Badge';
+import { ChatPanel } from '../components/ChatPanel';
 
 /**
  * チェックリスト画面(§7.4)。ヘッダー(自治体・転入日・条件修正)、進捗(完了n/全m)、
@@ -138,6 +139,8 @@ export function ChecklistPage() {
               </ul>
             </section>
           ))}
+
+          <ChatPanel municipalityCode={municipalityCode} municipalityName={state.data.muniName} />
         </>
       )}
     </div>

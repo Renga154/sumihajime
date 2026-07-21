@@ -1,10 +1,13 @@
 import {
   checklistResponseSchema,
+  chatResponseSchema,
   errorResponseSchema,
   facilitiesResponseSchema,
   municipalitiesResponseSchema,
   procedureDetailResponseSchema,
   wasteSchedulesResponseSchema,
+  type ChatRequest,
+  type ChatResponse,
   type ChecklistResponse,
   type FacilitiesResponse,
   type MunicipalitiesResponse,
@@ -118,4 +121,81 @@ export async function getWaste(
   const q = new URLSearchParams({ municipality: municipalityCode });
   if (areaId) q.set('area', areaId);
   return wasteSchedulesResponseSchema.parse(await request(`/waste-schedules?${q.toString()}`));
+}
+
+/**
+ * なぜ: RAGチャットが有効か(RAG_ENABLED)を軽量に判定する。無効時(または到達不可時)は
+ * UIがチャットパネルを一切描画しないための入口(FR-016〜019の縮退。既存機能は無傷)。
+ */
+export async function getChatAvailability(): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE}/chat/availability`);
+    if (!res.ok) return false;
+    const json = (await res.json()) as { enabled?: boolean } | null;
+    return json?.enabled === true;
+  } catch {
+    return false;
+  }
+}
+
+/** RAGが無効(503 disabled)であることを表す例外。UIはパネルを隠すために使う。 */
+export class ChatDisabledError extends Error {
+  constructor() {
+    super('chat disabled');
+    this.name = 'ChatDisabledError';
+  }
+}
+
+/**
+ * POST /api/chat。RAG無効時は ChatDisabledError、その他失敗は ApiError を投げる。
+ * 成功時は chatResponseSchema で境界検証してから返す(想定外形状をUIへ流さない)。
+ */
+export async function postChat(req: ChatRequest): Promise<ChatResponse> {
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req),
+    });
+  } catch {
+    throw new ApiError(
+      0,
+      'network_error',
+      'サーバーに接続できませんでした。通信環境をご確認のうえ、もう一度お試しください。',
+    );
+  }
+
+  const text = await res.text();
+  let json: unknown = undefined;
+  if (text) {
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = undefined;
+    }
+  }
+
+  if (res.status === 503 && json && (json as { disabled?: boolean }).disabled === true) {
+    throw new ChatDisabledError();
+  }
+
+  if (!res.ok) {
+    const parsed = errorResponseSchema.safeParse(json);
+    if (parsed.success) {
+      throw new ApiError(
+        res.status,
+        parsed.data.error.code,
+        parsed.data.error.message,
+        parsed.data.error.officialUrl,
+      );
+    }
+    throw new ApiError(
+      res.status,
+      'unexpected_error',
+      '予期しないエラーが発生しました。時間をおいて再度お試しください。',
+    );
+  }
+
+  return chatResponseSchema.parse(json);
 }

@@ -22,4 +22,24 @@
       "migrations_dir": "migrations",
     },
   ],
+  // Vectorize: 自治体スコープ付きRAGの検索先(T-013)。dims=1536/metric=cosine、
+  // metadata index(municipalityCode/category)は投入前に作成済み。
+  // remote:true で `wrangler dev` のローカル実行時も本物の索引へ接続する(Vectorizeにローカル模擬なし)。
+  "vectorize": [
+    {
+      "binding": "VECTORIZE",
+      "index_name": "tokyo-move-navi-rag",
+      "remote": true,
+    },
+  ],
+  // RAG設定(T-013)。RAG_ENABLED=false の間 /api/chat は 503 を返し、UIはチャットパネルを隠す
+  // (既存機能は無傷)。OPENAI_API_KEY は wrangler secret(値はコミット/ログ禁止)。
+  // .dev.vars 作成後に RAG_ENABLED=true へ切替え、索引投入してから本番反映する。
+  "vars": {
+    "RAG_ENABLED": "false",
+    "OPENAI_BASE_URL": "https://api.openai.com/v1",
+    "OPENAI_CHAT_MODEL": "gpt-4o-mini",
+    "OPENAI_EMBED_MODEL": "text-embedding-3-small",
+    "RAG_MIN_SCORE": "0.30",
+  },
 }

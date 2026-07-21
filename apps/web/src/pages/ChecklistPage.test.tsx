@@ -66,10 +66,14 @@ const FIXTURE: ChecklistResponse = {
 
 vi.mock('../api/client', () => ({
   ApiError: class ApiError extends Error {},
+  ChatDisabledError: class ChatDisabledError extends Error {},
   getMunicipalities: vi.fn(async () => [
     { code: '13112', name: '世田谷区', supported: true, coverage: [] },
   ]),
   postChecklist: vi.fn(async () => FIXTURE),
+  // RAGはこのテストのスコープ外。無効(false)にしてチャットパネルを非表示にする。
+  getChatAvailability: vi.fn(async () => false),
+  postChat: vi.fn(),
 }));
 
 import { ChecklistPage } from './ChecklistPage';

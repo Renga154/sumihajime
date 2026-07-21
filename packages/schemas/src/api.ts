@@ -86,7 +86,8 @@ export type ChecklistResponse = z.infer<typeof checklistResponseSchema>;
  */
 export const chatRequestSchema = z.strictObject({
   municipalityCode: municipalityCodeSchema,
-  question: z.string().min(1),
+  // なぜ: 質問は最大500字(T-013。過大入力・コスト・インジェクション面を抑える)。
+  question: z.string().min(1).max(500),
   procedureId: z.string().min(1).optional(),
   category: z.string().min(1).optional(),
 });

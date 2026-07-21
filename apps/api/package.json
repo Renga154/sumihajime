@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@tmn/rag": "workspace:*",
     "@tmn/rules": "workspace:*",
     "@tmn/schemas": "workspace:*",
     "hono": "^4.6.16"

@@ -12,8 +12,10 @@ export interface LogEvent {
   latencyMs?: number;
   /** HTTPステータス(非PII)。 */
   status?: number;
-  /** 件数(生成タスク数など。非PII)。 */
+  /** 件数(生成タスク数・引用数など。非PII)。 */
   count?: number;
+  /** RAG保留フラグ(§13。質問本文・回答本文は残さず、保留したか否かのみ記録)。 */
+  abstained?: boolean;
 }
 
 const ALLOWED_KEYS: (keyof LogEvent)[] = [
@@ -23,6 +25,7 @@ const ALLOWED_KEYS: (keyof LogEvent)[] = [
   'latencyMs',
   'status',
   'count',
+  'abstained',
 ];
 
 /**

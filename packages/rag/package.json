@@ -1,9 +1,9 @@
 {
   "name": "@tmn/rag",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "RAG module: chunking / retrieval / answer generation / output validation. Implemented in T-013.",
+  "description": "Municipality-scoped RAG: chunking / retrieval helpers / answer generation / output validation / rate limiting (T-013).",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -11,6 +11,9 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5"
   }
 }

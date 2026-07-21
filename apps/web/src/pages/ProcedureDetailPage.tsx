@@ -7,6 +7,7 @@ import { channelLabel, documentStatusLabel, formatDate } from '../lib/format';
 import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
 import { DataStatusBadge, PriorityBadge } from '../components/Badge';
 import { SourceCard } from '../components/SourceCard';
+import { ChatPanel } from '../components/ChatPanel';
 
 /**
  * タスク詳細(§7.4/§10)。必要書類(unknownは「公式ページで要確認」)・方法(channels)・
@@ -169,6 +170,12 @@ export function ProcedureDetailPage() {
               ))}
             </div>
           </Section>
+
+          <ChatPanel
+            municipalityCode={municipalityCode}
+            procedureId={state.data.procedure.id}
+            category={state.data.procedure.canonicalType}
+          />
         </article>
       )}
     </div>

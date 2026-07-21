@@ -12,6 +12,10 @@ build/
 .dev.vars
 .dev.vars.*
 
+# RAG build artifacts (reproducible via `pnpm --filter @tmn/rag-index build:index`).
+# Chunk manifest is derived from committed snapshots; vectors.ndjson holds embeddings.
+data/rag/
+
 # Env / secrets
 .env
 .env.*

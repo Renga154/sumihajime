@@ -25,11 +25,73 @@ import {
  * 自治体スコープはSQLのWHERE municipality_code=? でサーバー側強制(原則4)。
  */
 
+import type { VectorizeQueryable } from '@tmn/rag';
+
 export interface Bindings {
   DB: D1Database;
+  // RAG(T-013)。RAG_ENABLED!=='true' の間は /api/chat が 503 を返すため、以下は未設定でも動く。
+  VECTORIZE?: VectorizeQueryable;
+  RAG_ENABLED?: string;
+  /** wrangler secret。値はログ・レスポンスに出さない。 */
+  OPENAI_API_KEY?: string;
+  OPENAI_BASE_URL?: string;
+  OPENAI_CHAT_MODEL?: string;
+  OPENAI_EMBED_MODEL?: string;
+  RAG_MIN_SCORE?: string;
 }
 
 type Row = Record<string, unknown>;
+
+/** ---- rag_chunks (T-013) ---- */
+
+export interface RagChunkRow {
+  chunkId: string;
+  municipalityCode: string;
+  sourceId: string;
+  procedureId?: string;
+  category: string;
+  title: string;
+  url: string;
+  lastVerifiedAt: string;
+  text: string;
+}
+
+/**
+ * なぜ: Vectorizeが返した chunk_id 群の本文を D1 から取得する。municipality_code を SQL 側でも
+ * 強制フィルタし、スコープ外のチャンク(万一の混入)を構造的に排除する(§11.3 重大障害の二重防御)。
+ */
+export async function getRagChunks(
+  db: D1Database,
+  code: string,
+  chunkIds: string[],
+): Promise<Map<string, RagChunkRow>> {
+  const map = new Map<string, RagChunkRow>();
+  const unique = [...new Set(chunkIds)];
+  if (unique.length === 0) return map;
+  const placeholders = unique.map(() => '?').join(',');
+  const res = await db
+    .prepare(
+      `SELECT chunk_id, municipality_code, source_id, procedure_id, category, title, url, ` +
+        `last_verified_at, text FROM rag_chunks ` +
+        `WHERE municipality_code = ? AND chunk_id IN (${placeholders})`,
+    )
+    .bind(code, ...unique)
+    .all<Row>();
+  for (const row of res.results) {
+    map.set(asString(row.chunk_id), {
+      chunkId: asString(row.chunk_id),
+      municipalityCode: asString(row.municipality_code),
+      sourceId: asString(row.source_id),
+      procedureId: optString(row.procedure_id),
+      category: asString(row.category),
+      title: asString(row.title),
+      url: asString(row.url),
+      lastVerifiedAt: asString(row.last_verified_at),
+      text: asString(row.text),
+    });
+  }
+  return map;
+}
 
 function asString(v: unknown): string {
   return v == null ? '' : String(v);

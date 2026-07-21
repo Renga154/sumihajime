@@ -32,6 +32,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@tmn/rag':
+        specifier: workspace:*
+        version: link:../../packages/rag
       '@tmn/rules':
         specifier: workspace:*
         version: link:../../packages/rules
@@ -118,7 +121,11 @@ importers:
 
   packages/domain: {}
 
-  packages/rag: {}
+  packages/rag:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.1
 
   packages/rules:
     dependencies:
@@ -163,6 +170,25 @@ importers:
 
   scripts/publish:
     dependencies:
+      '@tmn/schemas':
+        specifier: workspace:*
+        version: link:../../packages/schemas
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.1
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.1
+
+  scripts/rag:
+    dependencies:
+      '@tmn/ingest':
+        specifier: workspace:*
+        version: link:../ingest
+      '@tmn/rag':
+        specifier: workspace:*
+        version: link:../../packages/rag
       '@tmn/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
