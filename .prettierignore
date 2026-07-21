@@ -4,3 +4,5 @@ build
 coverage
 .wrangler
 pnpm-lock.yaml
+# 原文スナップショット(不変・SHA-256を台帳に記録)。整形するとcontent_hashが無効化するため除外。
+data/sources
