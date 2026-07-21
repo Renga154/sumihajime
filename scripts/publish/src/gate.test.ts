@@ -98,42 +98,30 @@ describe('publish gate — real repository data (13112)', () => {
   });
 });
 
-describe('publish gate — Koto (13108) pending sources are rejected (T-015)', () => {
-  // なぜ: 江東区データは整備済みだが全ソースが pending/candidate(人手レビュー未承認)。
-  // supportedな全自治体を対象にする実運用publish(publish.ts と同じ引数)では、承認ゲートが
-  // 江東の参照を拒否し buildSeed が例外になる=未レビューデータをD1へ載せない構造的関門。
-  // これが本タスクの「dry-runが13108起因で失敗する挙動が正」の機械検証。
+describe('publish gate — Koto (13108) after human review approval (T-015)', () => {
+  // なぜ: 2026-07-22 に人手レビュー承認済み(台帳の全13108ソースがapproved)。
+  // 承認前は本describeが「supported全件のbuildSeedがPublishGateErrorで止まる」ことを
+  // 検証していた(承認ゲートの機械検証はfixtureベースの上記describeで恒久的に担保)。
+  // 承認後は逆に、実データでの公開が両自治体で成立することを固定する。
   const SUPPORTED = ['13112', '13108'];
 
-  it('江東を含めた公開(supported全件)は PublishGateError で止まる', () => {
-    expect(() => buildSeed(repoRoot, SUPPORTED)).toThrow(PublishGateError);
-  });
-
-  it('違反は全て 13108 のソース(procedure/rule/facilities/waste)で、13112 由来の違反は無い', () => {
+  it('承認後: 江東を含めた公開(supported全件)がゲートを通過する', () => {
+    expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
     const data = loadPublishData(repoRoot, SUPPORTED);
     const violations = findGateViolations({
       approvedSourceIds: data.approvedSourceIds,
       references: data.references,
     });
-    expect(violations.length).toBeGreaterThan(0);
-    for (const v of violations) {
-      expect(v.sourceId.startsWith('src-13108-'), `unexpected violation: ${v.sourceId}`).toBe(true);
-      expect(v.reason).toBe('not_approved');
-    }
-    // 江東の主要な pending/candidate ソースが確かに拒否されている。
-    const rejected = new Set(violations.map((v) => v.sourceId));
-    for (const sid of [
-      'src-13108-resident_registration-001',
-      'src-13108-my_number-001',
-      'src-13108-school_transfer-001',
-      'src-13108-facilities-001',
-      'src-13108-waste_schedule-001',
-    ]) {
-      expect(rejected.has(sid), `expected ${sid} to be rejected by the gate`).toBe(true);
-    }
+    expect(violations).toEqual([]);
   });
 
-  it('デフォルト(世田谷のみ)の buildSeed は従来どおり成功する(江東の追加が既存公開を壊さない)', () => {
+  it('承認後のseedは両自治体のルールセットを含む', () => {
+    const { data } = buildSeed(repoRoot, SUPPORTED);
+    const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
+    expect(codes).toEqual(['13108', '13112']);
+  });
+
+  it('デフォルト(世田谷のみ)の buildSeed は従来どおり成功する', () => {
     // d1-harness / CI は引数なし buildSeed を使うため、この不変条件を固定する。
     expect(() => buildSeed(repoRoot)).not.toThrow();
     const { data } = buildSeed(repoRoot);

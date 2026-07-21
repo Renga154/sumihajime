@@ -111,13 +111,13 @@ describe('Koto (13108) — schema validation (来歴・型検証; CI gate)', () 
     expect(kotoRuleSet.rules.length).toBe(10);
   });
 
-  it('procedures.json — 10 ProcedureVersions parse; every one is partial (pending review) + has sourceIds + lastVerifiedAt', () => {
+  it('procedures.json — 10 ProcedureVersions parse; every one is verified (human-reviewed) + has sourceIds + lastVerifiedAt', () => {
     const procedures = parseProcedures();
     expect(procedures.length).toBe(10);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(KOTO);
-      // 全件 partial(人手レビュー未承認)。verifiedにしていないことをCIで固定する。
-      expect(pv.dataStatus).toBe('partial');
+      // 2026-07-22 人手レビュー承認済み(台帳の全13108ソースがapproved)。
+      expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
       expect(pv.lastVerifiedAt).toBe('2026-07-22T00:00:00Z');
       expect(pv.dueDate).toBeUndefined();
