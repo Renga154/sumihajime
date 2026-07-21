@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --filter api exec wrangler *)",
+      "Bash(pnpm --filter @tmn/publish exec tsx src/publish.ts *)"
+    ]
+  }
+}
