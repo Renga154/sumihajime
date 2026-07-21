@@ -1,0 +1,101 @@
+{
+  "municipalityCode": "13108",
+  "sourceId": "src-13108-facilities-001",
+  "extractionNote": "窓口系抽出フィルタ: 出典GIF施設CSVの『大区分』='区役所ほか' かつ『小区分'∈{'庁舎・防災センター','出張所'}。『江東区防災センター』(窓口ではない)は名称に'防災'を含むため除外。区民館・シビックセンター・男女共同参画推進センター等は転入手続き窓口ではないため対象外(R-4検証済み: 大区分14種/小区分の値セットを実データで確認)。本庁舎1 + 出張所7(白河/富岡/小松橋/亀戸/大島/砂町/南砂) + 特別出張所1(豊洲) = 9件。",
+  "dataQualityNotes": [
+    "住所は出典CSVの『所在地_連結表記』列(汚損なし)を採用。番地の捏造補完はしていない。",
+    "受付時間はCSVに窓口手続き用の値が無いため hours は設定していない(各手続きの受付時間はprocedures.json参照)。"
+  ],
+  "facilities": [
+    {
+      "facilityId": "13108-fac-001",
+      "municipalityCode": "13108",
+      "name": "江東区役所",
+      "category": "本庁舎",
+      "address": "東京都江東区東陽4-11-28",
+      "sourceId": "src-13108-facilities-001",
+      "lat": 35.672614,
+      "lng": 139.817331
+    },
+    {
+      "facilityId": "13108-fac-002",
+      "municipalityCode": "13108",
+      "name": "白河出張所",
+      "category": "出張所",
+      "address": "東京都江東区白河1-3-28深川江戸資料館内",
+      "sourceId": "src-13108-facilities-001",
+      "lat": 35.68095,
+      "lng": 139.800612
+    },
+    {
+      "facilityId": "13108-fac-003",
+      "municipalityCode": "13108",
+      "name": "富岡出張所",
+      "category": "出張所",
+      "address": "東京都江東区富岡1-16-12",
+      "sourceId": "src-13108-facilities-001",
+      "lat": 35.671785,
+      "lng": 139.798591
+    },
+    {
+      "facilityId": "13108-fac-004",
+      "municipalityCode": "13108",
+      "name": "小松橋出張所",
+      "category": "出張所",
+      "address": "東京都江東区扇橋2-1-5",
+      "sourceId": "src-13108-facilities-001",
+      "lat": 35.682694,
+      "lng": 139.814281
+    },
+    {
+      "facilityId": "13108-fac-005",
+      "municipalityCode": "13108",
+      "name": "亀戸出張所",
+      "category": "出張所",
+      "address": "東京都江東区亀戸2-19-1カメリアプラザ1階",
+      "sourceId": "src-13108-facilities-001",
+      "lat": 35.697633,
+      "lng": 139.824556
+    },
+    {
+      "facilityId": "13108-fac-006",
+      "municipalityCode": "13108",
+      "name": "大島出張所",
+      "category": "出張所",
+      "address": "東京都江東区大島4-5-1総合区民センター2階",
+      "sourceId": "src-13108-facilities-001",
+      "lat": 35.689145,
+      "lng": 139.826996
+    },
+    {
+      "facilityId": "13108-fac-007",
+      "municipalityCode": "13108",
+      "name": "砂町出張所",
+      "category": "出張所",
+      "address": "東京都江東区北砂4-7-3",
+      "sourceId": "src-13108-facilities-001",
+      "lat": 35.677468,
+      "lng": 139.828457
+    },
+    {
+      "facilityId": "13108-fac-008",
+      "municipalityCode": "13108",
+      "name": "南砂出張所",
+      "category": "出張所",
+      "address": "東京都江東区南砂6-8-3",
+      "sourceId": "src-13108-facilities-001",
+      "lat": 35.671228,
+      "lng": 139.834852
+    },
+    {
+      "facilityId": "13108-fac-009",
+      "municipalityCode": "13108",
+      "name": "豊洲特別出張所",
+      "category": "特別出張所",
+      "address": "東京都江東区豊洲2-2-18",
+      "sourceId": "src-13108-facilities-001",
+      "lat": 35.65419,
+      "lng": 139.79524
+    }
+  ]
+}

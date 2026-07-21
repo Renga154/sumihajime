@@ -18,10 +18,14 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.setagaya.lg.jp/',
   },
   {
+    // なぜ: T-015で江東区データ(手続き10件/窓口施設9件/収集日)を整備しsupportedへ。
+    // ただし全ソースは pending/candidate(人手レビュー未承認)のため、publishゲートが
+    // 参照を拒否し実データはD1へ載らない(=レビュー承認後に初めて実効的に有効)。
+    // supported=true は coverage/Wizard 表示(FR-021)上の整備状況を反映するもの。
     code: '13108',
     name: '江東区',
-    supported: false,
-    note: '対応準備中(MVP対象)',
+    supported: true,
+    note: '対応準備中(MVP対象。データ整備済み・人手レビュー承認後に有効)',
     officialUrl: 'https://www.city.koto.lg.jp/',
   },
   {

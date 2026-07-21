@@ -97,3 +97,35 @@ describe('publish gate — real repository data (13112)', () => {
     expect(() => assertPublishGate(input)).toThrow(PublishGateError);
   });
 });
+
+describe('publish gate — Koto (13108) after human review approval (T-015)', () => {
+  // なぜ: 2026-07-22 に人手レビュー承認済み(台帳の全13108ソースがapproved)。
+  // 承認前は本describeが「supported全件のbuildSeedがPublishGateErrorで止まる」ことを
+  // 検証していた(承認ゲートの機械検証はfixtureベースの上記describeで恒久的に担保)。
+  // 承認後は逆に、実データでの公開が両自治体で成立することを固定する。
+  const SUPPORTED = ['13112', '13108'];
+
+  it('承認後: 江東を含めた公開(supported全件)がゲートを通過する', () => {
+    expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    const violations = findGateViolations({
+      approvedSourceIds: data.approvedSourceIds,
+      references: data.references,
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('承認後のseedは両自治体のルールセットを含む', () => {
+    const { data } = buildSeed(repoRoot, SUPPORTED);
+    const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
+    expect(codes).toEqual(['13108', '13112']);
+  });
+
+  it('デフォルト(世田谷のみ)の buildSeed は従来どおり成功する', () => {
+    // d1-harness / CI は引数なし buildSeed を使うため、この不変条件を固定する。
+    expect(() => buildSeed(repoRoot)).not.toThrow();
+    const { data } = buildSeed(repoRoot);
+    expect(data.ruleSets).toHaveLength(1);
+    expect(data.ruleSets[0]?.municipalityCode).toBe('13112');
+  });
+});
