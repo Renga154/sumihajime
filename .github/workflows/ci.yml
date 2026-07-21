@@ -38,5 +38,8 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Validate data (offline)
+        run: pnpm --filter @tmn/ingest validate
+
       - name: Build web
         run: pnpm --filter web build

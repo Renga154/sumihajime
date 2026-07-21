@@ -1,0 +1,26 @@
+{
+  "name": "@tmn/ingest",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Ingest pipeline: re-fetch official sources with encoding auto-detection, SHA-256 diff detection against the registry, versioned snapshots, and offline registry validation for CI (T-012).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "ingest": "tsx src/ingest.ts",
+    "validate": "tsx src/validate.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tmn/publish": "workspace:*",
+    "@tmn/schemas": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2"
+  }
+}
