@@ -1,0 +1,128 @@
+{
+  "municipalityCode": "13104",
+  "ruleVersion": "2026-07-22.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "引越ししてきた日から14日以内(引越す前(住み始める前)には届出できません)。",
+      "sourceIds": ["src-13104-resident_registration-001"],
+      "applicabilityReasonTemplate": "新宿区以外の市区町村から新宿区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "引越してきた日から14日以内かつ転出予定日から30日以内(期限を過ぎるとカードの継続利用ができません)。署名用電子証明書は住所変更により失効するため、必要な方は改めて発行手続きが必要です。",
+      "sourceIds": ["src-13104-my_number-001", "src-13104-my_number-002"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用手続きおよび失効する署名用電子証明書の発行手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "加入すべき事実(新宿区への転入)が発生してから14日以内。会社等の健康保険の資格がある間は加入の届出はできません。",
+      "sourceIds": ["src-13104-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険等の資格がない方は、新宿区の国民健康保険への加入の届出が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "本ページ(加入・喪失の届出)には日数の期限の記載はありません。退職して第1号被保険者になったとき等は区役所本庁舎4階9番窓口(医療保険年金課年金係)又は特別出張所へ届出してください。転入に伴う住所変更の届出の要否はこのページには記載がないため年金係へご確認ください。",
+      "sourceIds": ["src-13104-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金(第1号被保険者)の加入・種別変更等の届出に関する案内です(具体的な期限・要否は年金係で要確認)。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生・転入等、その日の翌日から15日以内に請求すれば事由発生のあった日の翌月分から支給できることがあります(15日特例)。起算日が『その日の翌日』のため引越し日からは日付を確定できません。請求期限が閉庁日なら翌開庁日。早めの請求を推奨します。",
+      "sourceIds": ["src-13104-child_benefits-001"],
+      "applicabilityReasonTemplate": "高校生年代まで(18歳到達後最初の3月31日まで)の児童を養育している世帯が対象です。転入した場合は新たに認定請求が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "助成開始は原則として交付申請をした月の1日から。ただし出生または新宿区に転入された場合で、その翌日から3ヶ月以内に交付申請をしたときは、出生または転入された日から助成開始となります(手続きが遅れると資格を遡れません)。",
+      "sourceIds": ["src-13104-child_medical-001"],
+      "applicabilityReasonTemplate": "新宿区に住民登録があり、18歳到達後最初の3月31日までの子を養育している保護者が対象です(所得制限なし)。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "前籍学校で転退学届を提出し在学証明書・教科用図書給与証明書を受け取り、区役所本庁舎・特別出張所での転入手続き時に発行される入学通知書とあわせて指定校へ提出します。転入手続きにあわせて行ってください。",
+      "sourceIds": ["src-13104-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯、または就学・保育のニーズがある世帯が対象の、区立小・中学校への転入学手続きです。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "入園希望月ごとに申込締切日が定められています(例: 令和8年5月入園は4月6日締切)。締切日までに必要書類を提出してください(月・年度により異なるため日数固定の期限は設定していません)。詳細は令和8年度版の申込みの手引きでご確認ください。",
+      "sourceIds": ["src-13104-childcare-001"],
+      "applicabilityReasonTemplate": "就労・病気・出産等で保育を必要とする未就学のお子さまがいる、または就学・保育のニーズがある世帯で、新宿区の認可保育園等の利用を希望する方向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 30 },
+      "dueDescription": "狂犬病予防法により、飼い犬に関する事項に変更があった場合には30日以内に届出が必要です。前住所地の鑑札を持参し無料で新宿区の鑑札と交換します(紛失時は再交付手数料1,600円)。",
+      "sourceIds": ["src-13104-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着・環境省登録していないため、新宿区保健所衛生課での飼い犬の登録事項変更(新宿区の鑑札の交付)手続きが必要です。",
+      "needsConfirmationReason": "犬のマイクロチップの装着・環境省(指定登録機関)への登録状況が未確認のため、届出先(新宿区保健所衛生課の窓口/オンライン、または『犬と猫のマイクロチップ情報登録』サイト)が確定できません。装着・登録済みなら区窓口での手続きは不要です。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの町名(地区)の収集日を確認してください)。金属・陶器・ガラスごみは月2回(1・3番目又は2・4番目の各曜日)で、月の5番目の曜日に収集はありません。収集日欄が『*』の商業地区は管轄の清掃事務所へ要確認です。",
+      "sourceIds": ["src-13104-waste_schedule-001"],
+      "applicabilityReasonTemplate": "お住まいの町名(地区)の資源・ごみ収集日を確認してください(祝日は曜日どおり。日曜・年末年始は除く)。"
+    }
+  ]
+}

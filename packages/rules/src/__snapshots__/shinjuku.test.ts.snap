@@ -1,0 +1,120 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Shinjuku (13104) — provenance integrity & scope safety > 決定論: 同一入力で同一結果 + スナップショット(回帰ガード) 1`] = `
+{
+  "outcomes": [
+    {
+      "applicabilityReason": "新宿区以外の市区町村から新宿区に転入したすべての方に必要な届出です。",
+      "applicable": "applicable",
+      "dueDate": "2026-08-15",
+      "priority": "urgent",
+      "procedureId": "procedure_resident_registration",
+      "sourceIds": [
+        "src-13104-resident_registration-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "マイナンバーカードをお持ちの方は、転入に伴う継続利用手続きおよび失効する署名用電子証明書の発行手続きが必要です。",
+      "applicable": "applicable",
+      "dueDate": "2026-08-15",
+      "priority": "high",
+      "procedureId": "procedure_mynumber_continued_use",
+      "sourceIds": [
+        "src-13104-my_number-001",
+        "src-13104-my_number-002",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "職場の健康保険等の資格がない方は、新宿区の国民健康保険への加入の届出が必要です。",
+      "applicable": "applicable",
+      "dueDate": "2026-08-15",
+      "priority": "high",
+      "procedureId": "procedure_national_health_insurance",
+      "sourceIds": [
+        "src-13104-national_health_insurance-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "国民年金(第1号被保険者)の加入・種別変更等の届出に関する案内です(具体的な期限・要否は年金係で要確認)。",
+      "applicable": "not_applicable",
+      "dueDescription": "本ページ(加入・喪失の届出)には日数の期限の記載はありません。退職して第1号被保険者になったとき等は区役所本庁舎4階9番窓口(医療保険年金課年金係)又は特別出張所へ届出してください。転入に伴う住所変更の届出の要否はこのページには記載がないため年金係へご確認ください。",
+      "priority": "normal",
+      "procedureId": "procedure_national_pension_address",
+      "sourceIds": [
+        "src-13104-national_pension-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "高校生年代まで(18歳到達後最初の3月31日まで)の児童を養育している世帯が対象です。転入した場合は新たに認定請求が必要です。",
+      "applicable": "applicable",
+      "dueDescription": "出生・転入等、その日の翌日から15日以内に請求すれば事由発生のあった日の翌月分から支給できることがあります(15日特例)。起算日が『その日の翌日』のため引越し日からは日付を確定できません。請求期限が閉庁日なら翌開庁日。早めの請求を推奨します。",
+      "priority": "high",
+      "procedureId": "procedure_child_allowance",
+      "sourceIds": [
+        "src-13104-child_benefits-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "新宿区に住民登録があり、18歳到達後最初の3月31日までの子を養育している保護者が対象です(所得制限なし)。",
+      "applicable": "applicable",
+      "dueDescription": "助成開始は原則として交付申請をした月の1日から。ただし出生または新宿区に転入された場合で、その翌日から3ヶ月以内に交付申請をしたときは、出生または転入された日から助成開始となります(手続きが遅れると資格を遡れません)。",
+      "priority": "high",
+      "procedureId": "procedure_child_medical",
+      "sourceIds": [
+        "src-13104-child_medical-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "小・中学生(義務教育の学齢)のお子さまがいる世帯、または就学・保育のニーズがある世帯が対象の、区立小・中学校への転入学手続きです。",
+      "applicable": "applicable",
+      "dueDescription": "前籍学校で転退学届を提出し在学証明書・教科用図書給与証明書を受け取り、区役所本庁舎・特別出張所での転入手続き時に発行される入学通知書とあわせて指定校へ提出します。転入手続きにあわせて行ってください。",
+      "priority": "high",
+      "procedureId": "procedure_school_transfer",
+      "sourceIds": [
+        "src-13104-school_transfer-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "就労・病気・出産等で保育を必要とする未就学のお子さまがいる、または就学・保育のニーズがある世帯で、新宿区の認可保育園等の利用を希望する方向けの案内です。",
+      "applicable": "applicable",
+      "dueDescription": "入園希望月ごとに申込締切日が定められています(例: 令和8年5月入園は4月6日締切)。締切日までに必要書類を提出してください(月・年度により異なるため日数固定の期限は設定していません)。詳細は令和8年度版の申込みの手引きでご確認ください。",
+      "priority": "normal",
+      "procedureId": "procedure_childcare_application",
+      "sourceIds": [
+        "src-13104-childcare-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "犬のマイクロチップの装着・環境省(指定登録機関)への登録状況が未確認のため、届出先(新宿区保健所衛生課の窓口/オンライン、または『犬と猫のマイクロチップ情報登録』サイト)が確定できません。装着・登録済みなら区窓口での手続きは不要です。",
+      "applicable": "needs_confirmation",
+      "dueDate": "2026-08-31",
+      "priority": "normal",
+      "procedureId": "procedure_dog_registration_transfer",
+      "sourceIds": [
+        "src-13104-dog_registration-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "お住まいの町名(地区)の資源・ごみ収集日を確認してください(祝日は曜日どおり。日曜・年末年始は除く)。",
+      "applicable": "applicable",
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの町名(地区)の収集日を確認してください)。金属・陶器・ガラスごみは月2回(1・3番目又は2・4番目の各曜日)で、月の5番目の曜日に収集はありません。収集日欄が『*』の商業地区は管轄の清掃事務所へ要確認です。",
+      "priority": "normal",
+      "procedureId": "procedure_waste_check",
+      "sourceIds": [
+        "src-13104-waste_schedule-001",
+      ],
+      "warnings": [],
+    },
+  ],
+  "ruleVersion": "2026-07-22.1",
+}
+`;
