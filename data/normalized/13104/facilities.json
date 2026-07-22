@@ -1,0 +1,122 @@
+{
+  "municipalityCode": "13104",
+  "sourceId": "src-13104-facilities-001",
+  "reviewStatus": "approved",
+  "extractionNote": "窓口系抽出: 出典GIF施設CSV(UTF-16LE)を scripts/ingest のエンコーディング自動判定(decodeBuffer)で復号し、施設_名称が「新宿区役所」(本庁舎)または「〜特別出張所」の行を採用。本庁舎1 + 特別出張所9(四谷/箪笥町/榎町/大久保/戸塚/落合第一/落合第二/柏木/角筈)= 10件。重複行(箪笥町/落合第一/角筈が各2行)は施設_名称で一意化。住所・緯度経度は出典CSVの「住所_連結表記」「住所_緯度/経度」列をそのまま採用(捏造補完なし)。若松町特別出張所(fac-011)のみ出典CSVに行が無いため公式サイトの特別出張所一覧ページ(src-13104-facilities-002)から名称・住所を補完。",
+  "dataQualityNotes": [
+    "新宿区の特別出張所は公式には10箇所(四谷/箪笥町/榎町/若松町/大久保/戸塚/落合第一/落合第二/柏木/角筈)。出典CSV(624行)には「若松町特別出張所」の行が存在しなかったため(オープンデータの欠落。docs/research/opendata-gaps.md参照)、2026-07-22の人手レビュー時に区公式サイトの特別出張所一覧ページ(src-13104-facilities-002)から名称・住所を補完した(fac-011)。緯度経度は同ページに記載がないため未設定(捏造回避)。",
+    "「新宿区役所第一分庁舎」(歌舞伎町1-5-1)は本庁舎とは別棟で、転入・住民異動の主窓口(戸籍住民課)ではないため窓口系一覧には含めていない。",
+    "受付時間はCSVの窓口手続き用の値として一貫しないため hours は設定していない(各手続きの受付窓口・時間は procedures.json / 公式ページ参照)。",
+    "2026-07-22 人手レビュー承認済み(maintainer)。"
+  ],
+  "facilities": [
+    {
+      "facilityId": "13104-fac-001",
+      "municipalityCode": "13104",
+      "name": "新宿区役所",
+      "category": "本庁舎",
+      "address": "東京都新宿区歌舞伎町1-4-1",
+      "sourceId": "src-13104-facilities-001",
+      "lat": 35.693887,
+      "lng": 139.703437
+    },
+    {
+      "facilityId": "13104-fac-002",
+      "municipalityCode": "13104",
+      "name": "四谷特別出張所",
+      "category": "特別出張所",
+      "address": "東京都新宿区内藤町87",
+      "sourceId": "src-13104-facilities-001",
+      "lat": 35.687585,
+      "lng": 139.714609
+    },
+    {
+      "facilityId": "13104-fac-003",
+      "municipalityCode": "13104",
+      "name": "箪笥町特別出張所",
+      "category": "特別出張所",
+      "address": "東京都新宿区箪笥町15",
+      "sourceId": "src-13104-facilities-001",
+      "lat": 35.700537,
+      "lng": 139.734208
+    },
+    {
+      "facilityId": "13104-fac-004",
+      "municipalityCode": "13104",
+      "name": "榎町特別出張所",
+      "category": "特別出張所",
+      "address": "東京都新宿区早稲田町85",
+      "sourceId": "src-13104-facilities-001",
+      "lat": 35.705408,
+      "lng": 139.726689
+    },
+    {
+      "facilityId": "13104-fac-005",
+      "municipalityCode": "13104",
+      "name": "大久保特別出張所",
+      "category": "特別出張所",
+      "address": "東京都新宿区大久保2-12-7",
+      "sourceId": "src-13104-facilities-001",
+      "lat": 35.701626,
+      "lng": 139.7068
+    },
+    {
+      "facilityId": "13104-fac-006",
+      "municipalityCode": "13104",
+      "name": "戸塚特別出張所",
+      "category": "特別出張所",
+      "address": "東京都新宿区高田馬場2-18-1",
+      "sourceId": "src-13104-facilities-001",
+      "lat": 35.714402,
+      "lng": 139.705072
+    },
+    {
+      "facilityId": "13104-fac-007",
+      "municipalityCode": "13104",
+      "name": "落合第一特別出張所",
+      "category": "特別出張所",
+      "address": "東京都新宿区下落合4-6-7",
+      "sourceId": "src-13104-facilities-001",
+      "lat": 35.718663,
+      "lng": 139.694991
+    },
+    {
+      "facilityId": "13104-fac-008",
+      "municipalityCode": "13104",
+      "name": "落合第二特別出張所",
+      "category": "特別出張所",
+      "address": "東京都新宿区中落合4-17-13",
+      "sourceId": "src-13104-facilities-001",
+      "lat": 35.719885,
+      "lng": 139.683035
+    },
+    {
+      "facilityId": "13104-fac-009",
+      "municipalityCode": "13104",
+      "name": "柏木特別出張所",
+      "category": "特別出張所",
+      "address": "東京都新宿区北新宿2-3-7",
+      "sourceId": "src-13104-facilities-001",
+      "lat": 35.698548,
+      "lng": 139.690244
+    },
+    {
+      "facilityId": "13104-fac-010",
+      "municipalityCode": "13104",
+      "name": "角筈特別出張所",
+      "category": "特別出張所",
+      "address": "東京都新宿区西新宿4-33-7",
+      "sourceId": "src-13104-facilities-001",
+      "lat": 35.686226,
+      "lng": 139.689065
+    },
+    {
+      "facilityId": "13104-fac-011",
+      "municipalityCode": "13104",
+      "name": "若松町特別出張所",
+      "category": "特別出張所",
+      "address": "東京都新宿区若松町12-6",
+      "sourceId": "src-13104-facilities-002"
+    }
+  ]
+}

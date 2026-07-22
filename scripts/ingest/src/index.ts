@@ -25,3 +25,17 @@ export type { RegistryTable, RegistryRowResult } from './registry.js';
 export { runValidations } from './validate-core.js';
 export type { ValidateInput, ValidateResult } from './validate-core.js';
 export { tokyoToday, daysBetween } from './dates.js';
+export {
+  parseWeekday,
+  parseWeekdayList,
+  parseWeekOfMonthWeekday,
+  extractGreenTableRows,
+  buildShinjukuWaste,
+} from './waste-table.js';
+export type {
+  WeekOfMonthWeekday,
+  GreenTableRow,
+  WasteType,
+  BuildWasteOptions,
+  BuiltWaste,
+} from './waste-table.js';

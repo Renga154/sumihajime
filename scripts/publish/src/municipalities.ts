@@ -29,10 +29,15 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.koto.lg.jp/',
   },
   {
+    // なぜ: T-016で新宿区データ(手続き10件/窓口施設10件/収集日HTML表→171地区)を整備しsupportedへ。
+    // ただし全ソースは pending(人手レビュー未承認)のため、loadPublishDataの
+    // 「承認済みソース保有」ガードにより supported は公開ビュー(seed→D1→API)では false に
+    // 落ちる(江東と同一挙動)。publish CLI では supported対象に含まれ、承認ゲートが
+    // 未承認ソース参照を拒否して publish を止める(=未レビューデータをD1へ載せない)。
     code: '13104',
     name: '新宿区',
-    supported: false,
-    note: '対応準備中(MVP対象)',
+    supported: true,
+    note: '対応準備中(MVP対象。データ整備済み・人手レビュー承認後に有効)',
     officialUrl: 'https://www.city.shinjuku.lg.jp/',
   },
   {
