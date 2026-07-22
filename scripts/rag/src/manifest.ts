@@ -15,8 +15,8 @@ import {
  * embeddings/Vectorize投入は build.ts が担う。
  */
 
-/** 索引対象 = 人手レビュー承認済みの対応自治体(世田谷13112・江東13108)。C追加時に拡張する。 */
-export const RAG_MUNICIPALITIES = ['13112', '13108'] as const;
+/** 索引対象 = 人手レビュー承認済みの対応自治体(世田谷13112・江東13108・新宿13104)。 */
+export const RAG_MUNICIPALITIES = ['13112', '13108', '13104'] as const;
 
 function toDateTime(v: string): string {
   const s = (v ?? '').trim();
