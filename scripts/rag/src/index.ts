@@ -2,8 +2,7 @@
 // reuse and testing; build.ts is the CLI entrypoint.
 
 export {
-  RAG_MUNICIPALITY,
-  RAG_MUNICIPALITY_NAME,
+  RAG_MUNICIPALITIES,
   loadApprovedHtmlSources,
   buildChunkManifest,
   buildRagChunksSql,

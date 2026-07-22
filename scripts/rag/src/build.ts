@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { embedText } from '@tmn/rag';
 import {
-  RAG_MUNICIPALITY,
+  RAG_MUNICIPALITIES,
   buildChunkManifest,
   buildRagChunksSql,
   toVectorLine,
@@ -59,10 +59,10 @@ async function main(): Promise<void> {
 
   const manifest = buildChunkManifest(repoRoot);
   console.log(
-    `[rag-index] built ${manifest.chunkCount} chunks from ${manifest.sourceCount} approved HTML sources (municipality ${RAG_MUNICIPALITY}).`,
+    `[rag-index] built ${manifest.chunkCount} chunks from ${manifest.sourceCount} approved HTML sources (municipalities ${RAG_MUNICIPALITIES.join(', ')}).`,
   );
 
-  const outDir = resolve(repoRoot, `data/rag/${RAG_MUNICIPALITY}`);
+  const outDir = resolve(repoRoot, `data/rag/index`);
   mkdirSync(outDir, { recursive: true });
 
   const manifestPath = resolve(outDir, 'chunks.json');

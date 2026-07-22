@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  RAG_MUNICIPALITY,
+  RAG_MUNICIPALITIES,
   buildChunkManifest,
   buildRagChunksSql,
   loadApprovedHtmlSources,
@@ -18,11 +18,13 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 
 describe('loadApprovedHtmlSources', () => {
-  it('世田谷区の承認済みHTMLソース8件のみを返す(CSV/candidateは除外)', () => {
+  it('世田谷8件+江東13件の承認済みHTMLソースを返す(CSV/candidateは除外)', () => {
     const sources = loadApprovedHtmlSources(repoRoot);
-    expect(sources).toHaveLength(8);
+    expect(sources).toHaveLength(21);
+    expect(sources.filter((s) => s.municipalityCode === '13112')).toHaveLength(8);
+    expect(sources.filter((s) => s.municipalityCode === '13108')).toHaveLength(13);
     for (const s of sources) {
-      expect(s.sourceId).toMatch(/^src-13112-/);
+      expect(s.sourceId).toMatch(/^src-131(12|08)-/);
       expect(s.url).toMatch(/^https:\/\//);
       expect(s.lastVerifiedAt).toMatch(/T\d{2}:\d{2}:\d{2}/); // datetimeに正規化
     }
@@ -37,14 +39,15 @@ describe('loadApprovedHtmlSources', () => {
 describe('buildChunkManifest', () => {
   const manifest = buildChunkManifest(repoRoot);
 
-  it('全チャンクが municipality 13112 スコープで、id/メタデータが健全', () => {
-    expect(manifest.municipalityCode).toBe(RAG_MUNICIPALITY);
-    expect(manifest.sourceCount).toBe(8);
-    expect(manifest.chunkCount).toBeGreaterThan(8);
+  it('全チャンクが対象自治体スコープ内で、id/メタデータが健全', () => {
+    expect(manifest.municipalityCodes).toEqual([...RAG_MUNICIPALITIES]);
+    expect(manifest.sourceCount).toBe(21);
+    expect(manifest.chunkCount).toBeGreaterThan(21);
 
     const ids = new Set<string>();
     for (const c of manifest.chunks) {
-      expect(c.metadata.municipalityCode).toBe('13112');
+      expect(['13112', '13108']).toContain(c.metadata.municipalityCode);
+      expect(c.metadata.sourceId.startsWith(`src-${c.metadata.municipalityCode}-`)).toBe(true);
       expect(c.id).toBe(`${c.metadata.sourceId}#${c.seq}`);
       expect(ids.has(c.id)).toBe(false); // idは一意
       ids.add(c.id);

@@ -36,7 +36,7 @@
   // (既存機能は無傷)。OPENAI_API_KEY は wrangler secret(値はコミット/ログ禁止)。
   // .dev.vars 作成後に RAG_ENABLED=true へ切替え、索引投入してから本番反映する。
   "vars": {
-    "RAG_ENABLED": "false",
+    "RAG_ENABLED": "true",
     "OPENAI_BASE_URL": "https://api.openai.com/v1",
     "OPENAI_CHAT_MODEL": "gpt-4o-mini",
     "OPENAI_EMBED_MODEL": "text-embedding-3-small",

@@ -15,9 +15,8 @@ import {
  * embeddings/Vectorize投入は build.ts が担う。
  */
 
-/** 現時点の索引対象は世田谷区(VS1)。B/C追加時にここを拡張する。 */
-export const RAG_MUNICIPALITY = '13112';
-export const RAG_MUNICIPALITY_NAME = '世田谷区';
+/** 索引対象 = 人手レビュー承認済みの対応自治体(世田谷13112・江東13108)。C追加時に拡張する。 */
+export const RAG_MUNICIPALITIES = ['13112', '13108'] as const;
 
 function toDateTime(v: string): string {
   const s = (v ?? '').trim();
@@ -25,6 +24,7 @@ function toDateTime(v: string): string {
 }
 
 export interface ApprovedHtmlSource {
+  municipalityCode: string;
   sourceId: string;
   category: string;
   title: string;
@@ -40,9 +40,10 @@ export function loadApprovedHtmlSources(repoRoot: string): ApprovedHtmlSource[] 
       (r) =>
         r.review_status === 'approved' &&
         r.source_type === 'html' &&
-        r.municipality_code === RAG_MUNICIPALITY,
+        (RAG_MUNICIPALITIES as readonly string[]).includes(r.municipality_code ?? ''),
     )
     .map((r) => ({
+      municipalityCode: r.municipality_code!,
       sourceId: r.source_id!,
       category: r.category!,
       title: r.source_title!,
@@ -52,9 +53,9 @@ export function loadApprovedHtmlSources(repoRoot: string): ApprovedHtmlSource[] 
 }
 
 /** canonicalType(=category) → procedureId(対応する手続きがあれば)。 */
-function categoryToProcedure(repoRoot: string): Map<string, string> {
+function categoryToProcedure(repoRoot: string, municipalityCode: string): Map<string, string> {
   const raw = JSON.parse(
-    readFileSync(resolve(repoRoot, `data/normalized/${RAG_MUNICIPALITY}/procedures.json`), 'utf-8'),
+    readFileSync(resolve(repoRoot, `data/normalized/${municipalityCode}/procedures.json`), 'utf-8'),
   ) as { procedures: { id: string; canonicalType: string }[] };
   const map = new Map<string, string>();
   for (const p of raw.procedures) map.set(p.canonicalType, p.id);
@@ -62,7 +63,7 @@ function categoryToProcedure(repoRoot: string): Map<string, string> {
 }
 
 export interface ChunkManifest {
-  municipalityCode: string;
+  municipalityCodes: string[];
   generatedAt: string;
   sourceCount: number;
   chunkCount: number;
@@ -75,21 +76,23 @@ export interface ChunkManifest {
  */
 export function buildChunkManifest(repoRoot: string, opts?: ChunkOptions): ChunkManifest {
   const sources = loadApprovedHtmlSources(repoRoot);
-  const catToProc = categoryToProcedure(repoRoot);
+  const catToProcByMuni = new Map<string, Map<string, string>>(
+    RAG_MUNICIPALITIES.map((code) => [code, categoryToProcedure(repoRoot, code)]),
+  );
   const chunks: RagChunk[] = [];
 
   for (const s of sources) {
     const snapshotPath = resolve(
       repoRoot,
-      `data/sources/${RAG_MUNICIPALITY}/snapshots/${s.sourceId}.html`,
+      `data/sources/${s.municipalityCode}/snapshots/${s.sourceId}.html`,
     );
     const html = readFileSync(snapshotPath, 'utf-8');
     const lines = extractTextLines(html);
     const metadata: RagChunkMetadata = {
-      municipalityCode: RAG_MUNICIPALITY,
+      municipalityCode: s.municipalityCode,
       category: s.category,
       sourceId: s.sourceId,
-      procedureId: catToProc.get(s.category),
+      procedureId: catToProcByMuni.get(s.municipalityCode)?.get(s.category),
       title: s.title,
       url: s.url,
       lastVerifiedAt: s.lastVerifiedAt,
@@ -98,7 +101,7 @@ export function buildChunkManifest(repoRoot: string, opts?: ChunkOptions): Chunk
   }
 
   return {
-    municipalityCode: RAG_MUNICIPALITY,
+    municipalityCodes: [...RAG_MUNICIPALITIES],
     generatedAt: new Date().toISOString(),
     sourceCount: sources.length,
     chunkCount: chunks.length,
