@@ -91,7 +91,9 @@ describe('publish gate — real repository data (13112)', () => {
       approvedSourceIds: data.approvedSourceIds,
       references: [
         ...data.references,
-        { owner: 'procedure_injected', sourceIds: ['src-13104-waste_schedule-001'] }, // candidate
+        // なぜ: 江東(13108)・新宿(13104)は2026-07-22承認済みのため、未承認ソースの
+        // fixtureとして杉並(13115、未整備・candidateのまま)の登録行を使う。
+        { owner: 'procedure_injected', sourceIds: ['src-13115-facilities-001'] }, // candidate
       ],
     };
     expect(() => assertPublishGate(input)).toThrow(PublishGateError);
@@ -127,5 +129,28 @@ describe('publish gate — Koto (13108) after human review approval (T-015)', ()
     const { data } = buildSeed(repoRoot);
     expect(data.ruleSets).toHaveLength(1);
     expect(data.ruleSets[0]?.municipalityCode).toBe('13112');
+  });
+});
+
+describe('publish gate — Shinjuku (13104) after human review approval (T-016)', () => {
+  // なぜ: 2026-07-22 に人手レビュー承認済み(台帳の全13104ソースがapproved。若松町特別
+  // 出張所は公式ページから補完しsrc-13104-facilities-002として追加承認)。3自治体
+  // (世田谷/江東/新宿)がそろって公開ゲートを通過することを固定する。
+  const SUPPORTED = ['13112', '13108', '13104'];
+
+  it('承認後: 新宿を含めた3自治体の公開(supported全件)がゲートを通過する', () => {
+    expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    const violations = findGateViolations({
+      approvedSourceIds: data.approvedSourceIds,
+      references: data.references,
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('承認後のseedは3自治体分のルールセットを含む', () => {
+    const { data } = buildSeed(repoRoot, SUPPORTED);
+    const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
+    expect(codes).toEqual(['13104', '13108', '13112']);
   });
 });

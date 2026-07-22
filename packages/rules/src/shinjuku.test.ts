@@ -17,7 +17,7 @@ import { MunicipalityScopeMismatchError } from './errors.js';
  * なぜ: T-016 新宿区(13104)縦切りデータ(第3のデータ形式=HTML表収集曜日)の来歴・型・
  * 決定論・自治体差分をCIで機械検証する。
  * (a) rules/procedures/facilities/waste が全て @tmn/schemas でparse成功
- * (b) 全手続きが人手レビュー未承認(dataStatus=partial)であることの回帰ガード
+ * (b) 2026-07-22 人手レビュー承認済み(dataStatus=verified)であることの回帰ガード
  * (c) ペルソナ別評価で子育て世帯の該当増加を明示アサート
  * (d) 3自治体差分: 同一プロフィールで 13112/13108/13104 のマイナンバー期限・子ども医療費・
  *     犬の届出期限が異なることの実証(デモの根拠)
@@ -118,13 +118,13 @@ describe('Shinjuku (13104) — schema validation (来歴・型検証; CI gate)',
     expect(shinjukuRuleSet.rules.length).toBe(10);
   });
 
-  it('procedures.json — 10 ProcedureVersions parse; 全件が人手レビュー未承認(partial)+ sourceIds + lastVerifiedAt', () => {
+  it('procedures.json — 10 ProcedureVersions parse; 2026-07-22人手レビュー承認済み(verified)+ sourceIds + lastVerifiedAt', () => {
     const procedures = parseProcedures();
     expect(procedures.length).toBe(10);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(SHINJUKU);
-      // T-016時点では未承認。承認前は必ず partial(公開ゲートが非承認ソースを弾く)。
-      expect(pv.dataStatus).toBe('partial');
+      // 2026-07-22 人手レビュー承認済み(公開ゲートは approved ソースのみ通過)。
+      expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
       expect(pv.lastVerifiedAt).toBe('2026-07-22T00:00:00Z');
       expect(pv.dueDate).toBeUndefined();
@@ -140,20 +140,21 @@ describe('Shinjuku (13104) — schema validation (来歴・型検証; CI gate)',
     expect(ruleIds).toEqual(procIds);
   });
 
-  it('facilities.json — 窓口系10件(本庁舎1+特別出張所9)parse; 第一分庁舎・非窓口は非混入', () => {
+  it('facilities.json — 窓口系11件(本庁舎1+特別出張所10、若松町込み)parse; 第一分庁舎・非窓口は非混入', () => {
     const facilities = parseFacilities();
-    expect(facilities.length).toBe(10);
+    expect(facilities.length).toBe(11);
     for (const f of facilities) expect(f.municipalityCode).toBe(SHINJUKU);
     const cats = new Set(facilities.map((f) => f.category));
     expect(cats.has('本庁舎')).toBe(true);
     expect(cats.has('特別出張所')).toBe(true);
-    // 本庁舎はちょうど1件(新宿区役所)。特別出張所は出典CSVに存在する9件。
+    // 本庁舎はちょうど1件(新宿区役所)。特別出張所は出典CSVの9件+公式ページ補完の若松町1件=10件。
     expect(facilities.filter((f) => f.category === '本庁舎')).toHaveLength(1);
-    expect(facilities.filter((f) => f.category === '特別出張所')).toHaveLength(9);
+    expect(facilities.filter((f) => f.category === '特別出張所')).toHaveLength(10);
     // 第一分庁舎(転入主窓口でない)・区民館・倉庫・集会所等が混入していないこと。
     expect(facilities.some((f) => /分庁舎|区民館|倉庫|集会所|ホール/.test(f.name))).toBe(false);
-    // 若松町特別出張所は出典CSVに無いため含めない(捏造回避の回帰ガード)。
-    expect(facilities.some((f) => /若松/.test(f.name))).toBe(false);
+    // 若松町特別出張所は出典CSVに欠落していたため、2026-07-22人手レビュー時に区公式サイトの
+    // 特別出張所一覧ページから補完済み(docs/research/opendata-gaps.md参照)。
+    expect(facilities.some((f) => /若松/.test(f.name))).toBe(true);
   });
 
   it('waste.json — 171地区 / 665収集レコード(HTML表由来)parse; 令和8年度で effectiveTo を明示', () => {
