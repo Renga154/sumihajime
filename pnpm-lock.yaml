@@ -152,6 +152,25 @@ importers:
         specifier: workspace:*
         version: link:../schemas
 
+  scripts/eval:
+    dependencies:
+      '@tmn/rag-index':
+        specifier: workspace:*
+        version: link:../rag
+      '@tmn/schemas':
+        specifier: workspace:*
+        version: link:../../packages/schemas
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.1
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.1
+
   scripts/ingest:
     dependencies:
       '@tmn/publish':
