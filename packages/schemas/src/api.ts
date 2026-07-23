@@ -54,6 +54,34 @@ export const facilitiesResponseSchema = z.array(facilitySchema);
 export type FacilitiesResponse = z.infer<typeof facilitiesResponseSchema>;
 
 /**
+ * なぜ: 計画§8.2で予約済みの「GET /api/sources(データソース台帳の公開ビュー)」(Wave3)。
+ * CLAUDE.md原則2「公開する全タスクに承認済み公式ソースと最終確認日」/ 原則10「ライセンスと
+ * 帰属を追跡」を利用者・審査員へ可視化するための台帳ビュー。sourceSchema から公開に必要な
+ * 列だけを pick し、内部レビュー用メタ(reviewStatus/reviewer/contentHash/fetchMethod/
+ * lastFetchedAt/sourceLastModifiedAt/notes)は公開ビューに含めない(approvedのみを返す前提で
+ * reviewStatus自体も出さない)。API側は review_status='approved' をSQLで強制フィルタする。
+ */
+export const sourceLedgerEntrySchema = sourceSchema.pick({
+  sourceId: true,
+  sourceTitle: true,
+  ownerOrganization: true,
+  municipalityCode: true,
+  category: true,
+  sourceUrl: true,
+  sourceType: true,
+  license: true,
+  attributionText: true,
+  lastVerifiedAt: true,
+  updateFrequency: true,
+  effectiveFrom: true,
+  effectiveTo: true,
+});
+export type SourceLedgerEntry = z.infer<typeof sourceLedgerEntrySchema>;
+
+export const sourcesResponseSchema = z.array(sourceLedgerEntrySchema);
+export type SourcesResponse = z.infer<typeof sourcesResponseSchema>;
+
+/**
  * なぜ: 計画§8.2「GET /api/waste-schedules?municipality=&area= → WasteSchedule[]+areas[]。
  * area未指定なら地区一覧」。cautionはC-9「祝日・年末年始等の例外日は展開せず注意書きで
  * 公式カレンダーへ誘導」を必ず応答に含めるため必須。schedulesはarea指定時のみ返す。T-006で追加。

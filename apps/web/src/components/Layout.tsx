@@ -15,7 +15,7 @@ const navItems = [
   { to: '/checklist', label: 'チェックリスト', end: false },
   { to: '/facilities', label: '窓口一覧', end: false },
   { to: '/waste', label: 'ごみ収集', end: false },
-  { to: '/coverage', label: '対応状況・データ出典', end: false },
+  { to: '/coverage', label: '対応状況・来歴', end: false },
 ];
 
 function LogoMark() {

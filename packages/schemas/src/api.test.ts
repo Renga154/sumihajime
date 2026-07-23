@@ -5,6 +5,8 @@ import {
   chatRequestSchema,
   chatResponseSchema,
   errorResponseSchema,
+  sourceLedgerEntrySchema,
+  sourcesResponseSchema,
   wasteSortingSearchResponseSchema,
   wasteSortingSummaryResponseSchema,
 } from './api.js';
@@ -111,6 +113,46 @@ describe('errorResponseSchema', () => {
   it('rejects an error object missing code', () => {
     const result = errorResponseSchema.safeParse({ error: { message: 'x' } });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('sourceLedgerEntrySchema / sourcesResponseSchema (GET /api/sources 公開ビュー)', () => {
+  const entry = {
+    sourceId: 'src-13112-waste_schedule-001',
+    sourceTitle: '世田谷区 ごみ収集曜日',
+    ownerOrganization: '世田谷区',
+    municipalityCode: '13112',
+    category: 'waste_schedule',
+    sourceUrl: 'https://www.city.setagaya.lg.jp/example.csv',
+    sourceType: 'csv',
+    license: 'CC BY 4.0',
+    attributionText: '出典: 世田谷区オープンデータ',
+    lastVerifiedAt: '2026-07-21T00:00:00Z',
+    updateFrequency: '年度更新',
+    effectiveFrom: '2026-04-01',
+    effectiveTo: '2027-03-31',
+  };
+
+  it('parses a valid ledger entry (municipality-scoped, effectiveTo付き)', () => {
+    expect(sourceLedgerEntrySchema.safeParse(entry).success).toBe(true);
+  });
+
+  it('rejects internal review metadata (公開ビューに reviewStatus 等を含めない)', () => {
+    const withInternal = { ...entry, reviewStatus: 'approved', reviewer: 'someone' };
+    // pick + strictObject 由来のため、余剰キーは拒否される。
+    expect(sourceLedgerEntrySchema.safeParse(withInternal).success).toBe(false);
+  });
+
+  it('allows a national/都レベルソース(municipalityCode省略)', () => {
+    const { municipalityCode: _omit, effectiveFrom: _f, effectiveTo: _t, ...national } = entry;
+    void _omit;
+    void _f;
+    void _t;
+    expect(sourceLedgerEntrySchema.safeParse(national).success).toBe(true);
+  });
+
+  it('sourcesResponseSchema parses an array of entries', () => {
+    expect(sourcesResponseSchema.safeParse([entry]).success).toBe(true);
   });
 });
 

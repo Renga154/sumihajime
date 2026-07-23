@@ -5,6 +5,7 @@ import {
   facilitiesResponseSchema,
   municipalitiesResponseSchema,
   procedureDetailResponseSchema,
+  sourcesResponseSchema,
   wasteSchedulesResponseSchema,
   wasteSortingSearchResponseSchema,
   wasteSortingSummaryResponseSchema,
@@ -15,6 +16,7 @@ import {
   type MunicipalitiesResponse,
   type ProcedureDetailResponse,
   type Profile,
+  type SourcesResponse,
   type WasteSchedulesResponse,
   type WasteSortingSearchResponse,
   type WasteSortingSummaryResponse,
@@ -107,6 +109,14 @@ export async function getProcedure(
   return procedureDetailResponseSchema.parse(
     await request(`/procedures/${encodeURIComponent(procedureId)}?${q.toString()}`),
   );
+}
+
+/**
+ * GET /api/sources : データソース台帳の公開ビュー(Wave3・来歴ダッシュボード)。
+ * 承認済みの全ソースを返す(自治体スコープなし。UI側で自治体別にグルーピングする)。
+ */
+export async function getSources(): Promise<SourcesResponse> {
+  return sourcesResponseSchema.parse(await request('/sources'));
 }
 
 export async function getFacilities(

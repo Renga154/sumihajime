@@ -275,6 +275,23 @@ function rowToSource(row: Row): Source {
   });
 }
 
+/**
+ * なぜ: GET /api/sources(Wave3)のデータソース台帳の公開ビュー。承認済み(review_status=
+ * 'approved')の行のみを返す。seed は承認済みソースしか挿入しないが(publish/load.ts)、
+ * 公開エンドポイントとして SQL 側でも review_status を明示フィルタし二重に担保する
+ * (原則2・原則9: 未承認/未整備を公開しない)。municipality_code, source_id 昇順で安定化。
+ * 返す形状は rowToSource(全列)のままとし、境界(index.ts)で公開ビュー列に射影する。
+ */
+export async function getApprovedSources(db: D1Database): Promise<Source[]> {
+  const res = await db
+    .prepare(
+      "SELECT * FROM sources WHERE review_status = 'approved' " +
+        'ORDER BY municipality_code, source_id',
+    )
+    .all<Row>();
+  return res.results.map(rowToSource);
+}
+
 export async function getSourcesByIds(db: D1Database, ids: string[]): Promise<Map<string, Source>> {
   const map = new Map<string, Source>();
   const unique = [...new Set(ids)];

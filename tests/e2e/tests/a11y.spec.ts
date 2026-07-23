@@ -79,3 +79,21 @@ test('a11y: ごみ収集(地区選択・収集曜日込み)に重大違反なし
   await expect(page.getByRole('heading', { name: '収集曜日' })).toBeVisible();
   await assertNoSerious(page);
 });
+
+test('a11y: 窓口一覧(施設地図込み)に重大違反なし', async ({ page }) => {
+  await page.goto('/');
+  await seedProfile(page, '13112');
+  await page.goto('/facilities');
+  await expect(page.getByRole('heading', { name: '窓口一覧' })).toBeVisible();
+  // 地図コンテナ(aria-label付きregion)が描画されてから検査する。
+  await expect(page.getByRole('region', { name: /地図/ })).toBeVisible();
+  await assertNoSerious(page);
+});
+
+test('a11y: 対応状況・データの来歴ダッシュボードに重大違反なし', async ({ page }) => {
+  await page.goto('/coverage');
+  await expect(page.getByRole('heading', { name: '対応状況・データの来歴' })).toBeVisible();
+  // 台帳テーブルの描画完了(非同期ロード)を待ってから検査する。
+  await expect(page.getByRole('heading', { name: 'データソース台帳' })).toBeVisible();
+  await assertNoSerious(page);
+});

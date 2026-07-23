@@ -7,6 +7,7 @@ import {
   municipalitiesResponseSchema,
   municipalityCodeSchema,
   procedureDetailResponseSchema,
+  sourcesResponseSchema,
   wasteSchedulesResponseSchema,
   wasteSortingSearchResponseSchema,
   wasteSortingSummaryResponseSchema,
@@ -20,6 +21,7 @@ import {
   getFacilities,
   getMunicipalitiesWithCoverage,
   getMunicipality,
+  getApprovedSources,
   getProcedureVersion,
   getProcedureVersions,
   getRuleSet,
@@ -254,6 +256,42 @@ app.get('/api/facilities', async (c) => {
     requestId,
     event: 'facilities.list',
     municipalityCode: code,
+    latencyMs: Date.now() - start,
+    count: body.length,
+  });
+  return c.json(body);
+});
+
+/**
+ * GET /api/sources : データソース台帳の公開ビュー(Wave3・来歴ダッシュボード)。
+ * 承認済み(review_status=approved)の全ソースを、公開に必要な列だけへ射影して返す
+ * (内部レビュー用メタは出さない)。自治体スコープではなく台帳全体を返し、UI側で自治体別に
+ * グルーピングする。ログはallowlist(件数のみ。PIIなし)。
+ */
+app.get('/api/sources', async (c) => {
+  const start = Date.now();
+  const requestId = c.get('requestId');
+  const sources = await getApprovedSources(c.env.DB);
+  const body = sourcesResponseSchema.parse(
+    sources.map((s) => ({
+      sourceId: s.sourceId,
+      sourceTitle: s.sourceTitle,
+      ownerOrganization: s.ownerOrganization,
+      ...(s.municipalityCode ? { municipalityCode: s.municipalityCode } : {}),
+      category: s.category,
+      sourceUrl: s.sourceUrl,
+      sourceType: s.sourceType,
+      license: s.license,
+      attributionText: s.attributionText,
+      ...(s.lastVerifiedAt ? { lastVerifiedAt: s.lastVerifiedAt } : {}),
+      updateFrequency: s.updateFrequency,
+      ...(s.effectiveFrom ? { effectiveFrom: s.effectiveFrom } : {}),
+      ...(s.effectiveTo ? { effectiveTo: s.effectiveTo } : {}),
+    })),
+  );
+  logEvent({
+    requestId,
+    event: 'sources.list',
     latencyMs: Date.now() - start,
     count: body.length,
   });

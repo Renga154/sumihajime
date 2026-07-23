@@ -224,6 +224,42 @@ describe('GET /api/facilities', () => {
   });
 });
 
+describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)', () => {
+  it('承認済みソースのみを、公開ビュー列だけで返す(内部レビュー用メタは含めない)', async () => {
+    const res = await request('/api/sources');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>[];
+    // 台帳には承認済み42件がシードされる(publish/load は approved のみ挿入)。
+    expect(body.length).toBe(42);
+
+    for (const s of body) {
+      // 公開に必要な列は揃う。
+      expect(typeof s.sourceId).toBe('string');
+      expect(typeof s.sourceTitle).toBe('string');
+      expect(typeof s.ownerOrganization).toBe('string');
+      expect(typeof s.sourceUrl).toBe('string');
+      expect(String(s.sourceUrl)).toMatch(/^https?:\/\//);
+      expect(typeof s.license).toBe('string');
+      expect(typeof s.attributionText).toBe('string');
+      expect(typeof s.updateFrequency).toBe('string');
+      // 内部レビュー用メタは公開ビューに出さない(原則: 台帳の内部状態を露出しない)。
+      expect(s.reviewStatus).toBeUndefined();
+      expect(s.reviewer).toBeUndefined();
+      expect(s.contentHash).toBeUndefined();
+      expect(s.fetchMethod).toBeUndefined();
+      expect(s.notes).toBeUndefined();
+    }
+
+    // 年度データ(effectiveTo付き=ごみ収集曜日等)が含まれ、鮮度カウントダウンの材料になる。
+    const withEffectiveTo = body.filter((s) => typeof s.effectiveTo === 'string');
+    expect(withEffectiveTo.length).toBeGreaterThan(0);
+    expect(withEffectiveTo.some((s) => s.effectiveTo === '2027-03-31')).toBe(true);
+
+    // CC BY ライセンスのソースが台帳に含まれる(帰属表示の対象)。
+    expect(body.some((s) => String(s.license).includes('CC BY'))).toBe(true);
+  });
+});
+
 describe('GET /api/waste-schedules', () => {
   it('area 未指定 → 118地区一覧 + caution', async () => {
     const res = await request('/api/waste-schedules?municipality=13112');
