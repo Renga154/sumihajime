@@ -38,17 +38,60 @@ pnpm install
 
 ## 主要コマンド
 
-| コマンド                                           | 内容                                      |
-| -------------------------------------------------- | ----------------------------------------- |
-| `pnpm format`                                      | Prettier で整形                           |
-| `pnpm format:check`                                | 整形チェック（CI）                        |
-| `pnpm lint`                                        | ESLint                                    |
-| `pnpm typecheck`                                   | 全パッケージの型チェック（再帰）          |
-| `pnpm test`                                        | 全パッケージのテスト（再帰、Vitest）      |
-| `pnpm --filter web dev`                            | Web SPA のローカル開発サーバ              |
-| `pnpm --filter web build`                          | Web SPA を `apps/web/dist` へビルド       |
-| `pnpm --filter api dev`                            | API Worker のローカル起動（wrangler dev） |
-| `pnpm --filter api exec wrangler deploy --dry-run` | デプロイ構成の検証（dry-run）             |
+| コマンド                                           | 内容                                                    |
+| -------------------------------------------------- | ------------------------------------------------------- |
+| `pnpm format`                                      | Prettier で整形                                         |
+| `pnpm format:check`                                | 整形チェック（CI）                                      |
+| `pnpm lint`                                        | ESLint                                                  |
+| `pnpm typecheck`                                   | 全パッケージの型チェック（再帰）                        |
+| `pnpm test`                                        | 全パッケージのテスト（再帰、Vitest。E2E は除外）        |
+| `pnpm test:e2e`                                    | E2E（Playwright。`pnpm --filter @tmn/e2e test` と同義） |
+| `pnpm --filter web dev`                            | Web SPA のローカル開発サーバ                            |
+| `pnpm --filter web build`                          | Web SPA を `apps/web/dist` へビルド                     |
+| `pnpm --filter api dev`                            | API Worker のローカル起動（wrangler dev）               |
+| `pnpm --filter api exec wrangler deploy --dry-run` | デプロイ構成の検証（dry-run）                           |
+
+## E2E テスト（Playwright + axe-core + 性能計測。T-017）
+
+ブラウザ依存のため **CI には組み込まず、ローカル/手動で実行**します（`ci.yml` では走りません）。
+`tests/e2e`（ワークスペースパッケージ `@tmn/e2e`）に基盤があります。
+
+**初回のみ** Chromium を取得します（webkit/firefox は不要）：
+
+```bash
+pnpm --filter @tmn/e2e exec playwright install chromium
+```
+
+実行：
+
+```bash
+pnpm --filter @tmn/e2e test      # = pnpm test:e2e
+```
+
+- テスト対象サーバーは **ポート 8788** の `wrangler dev`（`--local`）。8787 は使いません。
+- `playwright.config.ts` の `webServer` が **「ローカル D1 シード（3 自治体）→ `web` build →
+  `wrangler dev --port 8788`」** を自動実行し、テスト後に自動終了します
+  （既に 8788 が起動中なら再利用します）。手動で前提を整える場合は次を実行してください：
+
+  ```bash
+  pnpm --filter @tmn/publish exec tsx src/publish.ts   # ローカル D1 に 3 自治体をシード
+  pnpm --filter web build                              # SPA を apps/web/dist へ
+  ```
+
+- ビューポートは **モバイル(375×812)を主線**、デスクトップ(1280×800)は主要導線 1 本のみ。
+- チャット（`/api/chat`）は **Playwright の route interception で決定論的にモック**し、
+  実 OpenAI/Vectorize は叩きません。
+- カバー範囲: 主要導線（免責 5 項目→世田谷選択→入力→暫定生成→期限順→詳細→根拠カード）、
+  条件変更での増減、完了状態のリロード保持、未対応自治体（杉並）、RAG 正常/保留/無効時の劣化、
+  自治体切替（江東の学校・保育、新宿のごみ地区）、キーボード操作スモーク、
+  **axe-core による主要 5 画面の重大(critical/serious)違反 0 件**、
+  `POST /api/checklists` の p95（20 回、`< 2 秒`）と DOMContentLoaded の参考計測。
+
+HTML レポート（生成物は Git 管理外）：
+
+```bash
+pnpm --filter @tmn/e2e exec playwright show-report
+```
 
 ## リポジトリ構成
 

@@ -11,6 +11,8 @@ export default tseslint.config(
       '**/coverage/**',
       '**/.wrangler/**',
       '**/node_modules/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
     ],
   },
   js.configs.recommended,

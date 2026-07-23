@@ -4,6 +4,9 @@ build
 coverage
 .wrangler
 pnpm-lock.yaml
+# Playwright(E2E)生成物。整形対象外。
+tests/e2e/playwright-report
+tests/e2e/test-results
 # 原文スナップショット(不変・SHA-256を台帳に記録)。整形するとcontent_hashが無効化するため除外。
 data/sources
 # D1マイグレーション(prettierにSQLパーサがないため除外)。

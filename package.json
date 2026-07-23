@@ -14,7 +14,8 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "typecheck": "pnpm -r --if-present run typecheck",
-    "test": "pnpm -r --if-present run test"
+    "test": "pnpm -r --if-present --filter=!@tmn/e2e run test",
+    "test:e2e": "pnpm --filter @tmn/e2e test"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
