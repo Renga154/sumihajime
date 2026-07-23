@@ -23,15 +23,36 @@ const confidenceLabel: Record<ChatResponse['confidence'], string> = {
 function CitationCard({ citation }: { citation: ChatCitation }) {
   const verified = formatDateFromDateTime(citation.lastVerifiedAt);
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
-      <p className="font-semibold text-slate-900">{citation.title}</p>
-      <dl className="mt-1 grid grid-cols-[6rem_1fr] gap-x-2 gap-y-0.5 text-slate-700">
+    <div className="rounded-xl border border-slate-200 border-l-4 border-l-brand-600 bg-gradient-to-br from-brand-50/70 to-white p-3 text-sm">
+      <div className="flex items-start gap-2.5">
+        <span
+          aria-hidden="true"
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-600 text-white ring-4 ring-brand-100"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
+            <path
+              d="M6.5 12.5l3.2 3.2 7-7.4"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[0.68rem] font-bold uppercase tracking-wider text-brand-700">
+            公式根拠
+          </p>
+          <p className="font-semibold leading-snug text-slate-900">{citation.title}</p>
+        </div>
+      </div>
+      <dl className="mt-2 grid grid-cols-[5.5rem_1fr] gap-x-2 gap-y-0.5 text-slate-700">
         <dt className="text-slate-500">提供元</dt>
-        <dd>{citation.ownerOrganization}</dd>
+        <dd className="font-medium">{citation.ownerOrganization}</dd>
         {verified && (
           <>
             <dt className="text-slate-500">最終確認日</dt>
-            <dd>{verified}</dd>
+            <dd className="font-semibold text-slate-900">{verified}</dd>
           </>
         )}
       </dl>
@@ -114,7 +135,15 @@ export function ChatPanel({
 
   return (
     <section aria-labelledby="chat-heading" className="space-y-3">
-      <h2 id="chat-heading" className="text-lg font-bold text-slate-900">
+      <h2 id="chat-heading" className="flex items-center gap-2 text-lg font-bold text-slate-900">
+        <span
+          aria-hidden="true"
+          className="grid h-7 w-7 place-items-center rounded-lg bg-brand-50 text-brand-600 ring-1 ring-brand-100"
+        >
+          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+            <path d="M10 1.5l1.9 4.2 4.6.5-3.4 3.1.9 4.5L10 11.9 6 13.8l.9-4.5L3.5 6.2l4.6-.5L10 1.5z" />
+          </svg>
+        </span>
         AIに質問する（ベータ）
       </h2>
 
@@ -153,7 +182,7 @@ export function ChatPanel({
           <button
             type="submit"
             disabled={loading || question.trim().length === 0}
-            className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             質問する
           </button>
@@ -178,7 +207,7 @@ export function ChatPanel({
               className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${
                 result.abstained
                   ? 'bg-amber-100 text-amber-900 ring-amber-300'
-                  : 'bg-blue-50 text-blue-900 ring-blue-200'
+                  : 'bg-brand-50 text-brand-800 ring-brand-200'
               }`}
             >
               {result.abstained ? '要確認' : confidenceLabel[result.confidence]}

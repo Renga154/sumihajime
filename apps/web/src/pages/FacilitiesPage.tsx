@@ -21,7 +21,7 @@ export function FacilitiesPage() {
     return (
       <Card>
         <p className="text-slate-700">先に自治体を選んでください。</p>
-        <Link to="/" className="mt-2 inline-block font-semibold text-blue-700 underline">
+        <Link to="/" className="mt-2 inline-block font-semibold text-brand-700 underline">
           自治体選択へ
         </Link>
       </Card>
@@ -51,14 +51,20 @@ export function FacilitiesPage() {
 
       {groups.map(([category, list]) => (
         <section key={category} aria-labelledby={`fac-${category}`}>
-          <h2 id={`fac-${category}`} className="text-lg font-bold text-slate-900">
+          <h2
+            id={`fac-${category}`}
+            className="flex items-center gap-2 text-lg font-bold text-slate-900"
+          >
+            <span className="h-5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
             {category}
-            <span className="ml-2 text-sm font-normal text-slate-500">（{list.length}件）</span>
+            <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-100">
+              {list.length}件
+            </span>
           </h2>
-          <ul className="mt-2 space-y-2">
+          <ul className="mt-2.5 space-y-2">
             {list.map((f) => (
               <li key={f.facilityId}>
-                <Card>
+                <Card interactive>
                   <p className="font-semibold text-slate-900">{f.name}</p>
                   <p className="text-sm text-slate-700">{f.address}</p>
                   {f.hours && <p className="text-sm text-slate-600">開庁時間：{f.hours}</p>}

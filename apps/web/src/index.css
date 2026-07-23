@@ -4,7 +4,37 @@
  * なぜ: §15.3 アクセシビリティ。キーボード操作時のフォーカスを常に可視化し、
  * 文字拡大に耐えるためrem基準・行間を確保する。色だけに依存しない状態表示は
  * 各バッジ側でテキストを併記して担保する(components/Badge.tsx)。
+ *
+ * ブランドトークン: 行政情報の信頼感を担う深いブルー(brand)と、転入者に寄り添う
+ * 温かみのアクセント(accent)を @theme で一元定義し、全画面のアドホックな色指定を
+ * これらへ統一する。brand-600 は白文字でコントラスト比 約7.9:1(WCAG AA達成)。
+ * accent は装飾(ロゴ・見出し帯・証票)のみに用い、白背景上の本文には使わない。
  */
+
+@theme {
+  /* 信頼感のあるブルー(primary) */
+  --color-brand-50: #eef4fc;
+  --color-brand-100: #d8e6f8;
+  --color-brand-200: #b3cded;
+  --color-brand-300: #82a9dd;
+  --color-brand-400: #5183c8;
+  --color-brand-500: #2f66b0;
+  --color-brand-600: #1f5195;
+  --color-brand-700: #1a4380;
+  --color-brand-800: #163663;
+  --color-brand-900: #112947;
+
+  /* 温かみのあるアクセント(強調・装飾のみ) */
+  --color-accent-50: #fff5ec;
+  --color-accent-100: #ffe8d4;
+  --color-accent-200: #fecfa8;
+  --color-accent-300: #fbae71;
+  --color-accent-400: #f5883a;
+  --color-accent-500: #ea6c16;
+  --color-accent-600: #cf560b;
+  --color-accent-700: #a8430a;
+  --color-accent-800: #85350c;
+}
 
 :root {
   color-scheme: light;
@@ -26,15 +56,32 @@ body {
     'Noto Sans JP',
     Meiryo,
     sans-serif;
-  line-height: 1.7;
+  /* 日本語の可読性: 本文は行間ゆったり・文字間わずかに開ける。 */
+  line-height: 1.75;
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 見出しは行間を詰め、視覚的な階層を明確にする。 */
+h1,
+h2,
+h3 {
+  line-height: 1.35;
+  letter-spacing: 0.005em;
 }
 
 /* キーボードフォーカスの可視化(マウス操作時は出さない)。 */
 :focus-visible {
-  outline: 3px solid var(--color-blue-600);
+  outline: 3px solid var(--color-brand-600);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* フォーム部品(チェックボックス・ラジオ)はブランドカラーで統一する。 */
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--color-brand-600);
 }
 
 /* スクリーンリーダー専用テキスト。 */
@@ -48,4 +95,43 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/*
+ * ローディングのスケルトン。控えめなシマーで「読み込み中」を伝える。
+ * prefers-reduced-motion を尊重し、動きを止める。
+ */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-slate-100);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, white 65%, transparent),
+    transparent
+  );
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
 }

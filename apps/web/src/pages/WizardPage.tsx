@@ -202,7 +202,7 @@ export function WizardPage() {
       <Card>
         <p className="text-slate-700">先に自治体を選んでください。</p>
         <p className="mt-2">
-          <Link to="/" className="font-semibold text-blue-700 underline">
+          <Link to="/" className="font-semibold text-brand-700 underline">
             自治体選択へ戻る
           </Link>
         </p>
@@ -224,15 +224,23 @@ export function WizardPage() {
                 type="button"
                 onClick={() => setStep(n)}
                 aria-current={active ? 'step' : undefined}
-                className={`rounded-full px-3 py-1 ${
+                className={`inline-flex items-center gap-1.5 rounded-full py-1.5 pl-1.5 pr-3 transition-colors ${
                   active
-                    ? 'bg-blue-700 font-semibold text-white'
+                    ? 'bg-brand-600 font-semibold text-white shadow-sm'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                {n}. {label}
-                {n === 1 && <span className="ml-1 text-xs">（必須）</span>}
-                {n > 1 && <span className="ml-1 text-xs">（任意）</span>}
+                <span
+                  aria-hidden="true"
+                  className={`grid h-5 w-5 place-items-center rounded-full text-xs font-bold ${
+                    active ? 'bg-white/25 text-white' : 'bg-white text-slate-600'
+                  }`}
+                >
+                  {n}
+                </span>
+                {/* なぜ: ラベルと（必須/任意）を1つのテキストノードにまとめ、要素境界での
+                    アクセシブル名への空白挿入を防ぐ(E2Eは「世帯（任意）」を空白なしで参照)。 */}
+                {`${label}${n === 1 ? '（必須）' : '（任意）'}`}
               </button>
             </li>
           );
@@ -263,7 +271,7 @@ export function WizardPage() {
               type="date"
               value={moveDate}
               onChange={(e) => setMoveDate(e.target.value)}
-              className="mt-1 rounded-md border border-slate-300 px-3 py-2"
+              className="mt-2 rounded-lg border border-slate-300 px-3 py-2 transition-colors focus:border-brand-500"
               required
             />
           </div>
@@ -278,7 +286,10 @@ export function WizardPage() {
             </p>
             <div className="mt-2 space-y-1">
               {ORIGIN_TYPES.map((o) => (
-                <label key={o} className="flex items-center gap-2">
+                <label
+                  key={o}
+                  className="-mx-2 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50"
+                >
                   <input
                     type="radio"
                     name="originType"
@@ -296,7 +307,7 @@ export function WizardPage() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="rounded-md border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
             >
               次へ（世帯の入力）
             </button>
@@ -313,7 +324,10 @@ export function WizardPage() {
             </p>
             <div className="mt-2 space-y-1">
               {(['single', 'multiple'] as HouseholdKind[]).map((k) => (
-                <label key={k} className="flex items-center gap-2">
+                <label
+                  key={k}
+                  className="-mx-2 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50"
+                >
                   <input
                     type="radio"
                     name="householdKind"
@@ -335,7 +349,10 @@ export function WizardPage() {
             </p>
             <div className="mt-2 grid grid-cols-2 gap-1 sm:grid-cols-3">
               {AGE_BANDS.map((band) => (
-                <label key={band} className="flex items-center gap-2">
+                <label
+                  key={band}
+                  className="-mx-1 flex cursor-pointer items-center gap-2 rounded-lg px-1 py-1.5 hover:bg-slate-50"
+                >
                   <input
                     type="checkbox"
                     checked={ageBands.includes(band)}
@@ -366,14 +383,14 @@ export function WizardPage() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="rounded-md border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
             >
               戻る
             </button>
             <button
               type="button"
               onClick={() => setStep(3)}
-              className="rounded-md border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
             >
               次へ（条件チェック）
             </button>
@@ -414,7 +431,10 @@ export function WizardPage() {
                       </p>
                       <div className="mt-1 space-y-1">
                         {(['yes', 'no', 'unknown'] as Tri[]).map((v) => (
-                          <label key={v} className="flex items-center gap-2">
+                          <label
+                            key={v}
+                            className="-mx-2 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white"
+                          >
                             <input
                               type="radio"
                               name="dogMicrochip"
@@ -438,7 +458,7 @@ export function WizardPage() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="rounded-md border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
             >
               戻る
             </button>
@@ -447,13 +467,20 @@ export function WizardPage() {
       )}
 
       {/* Step1完了時点でいつでも生成できる(FR-003)。Step2/3はスキップ可。 */}
-      <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
+      <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-4px_16px_-8px_rgba(15,41,73,0.25)] backdrop-blur">
         <button
           type="button"
           onClick={generate}
           disabled={!step1Valid}
-          className="w-full rounded-md bg-blue-700 px-4 py-3 text-base font-bold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-brand-700 active:bg-brand-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none"
         >
+          <svg aria-hidden="true" viewBox="0 0 20 20" className="h-5 w-5" fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0l-3.5-3.5a1 1 0 011.4-1.4l2.8 2.79 6.8-6.79a1 1 0 011.4 0z"
+              clipRule="evenodd"
+            />
+          </svg>
           この内容でチェックリストを作成
         </button>
         {!step1Valid && (

@@ -7,7 +7,7 @@ import { loadDone, loadProfile, saveDone, toggleDone, isDone, type DoneMap } fro
 import { groupIntoSections, sectionDescription, sectionLabel } from '../lib/sections';
 import { formatDate } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
-import { Card, ErrorMessage, Loading } from '../components/ui';
+import { Card, EmptyState, ErrorMessage, Loading } from '../components/ui';
 import { NeedsConfirmationBadge, PriorityBadge } from '../components/Badge';
 import { ChatPanel } from '../components/ChatPanel';
 
@@ -50,7 +50,7 @@ export function ChecklistPage() {
     return (
       <Card>
         <p className="text-slate-700">先に自治体を選んでください。</p>
-        <Link to="/" className="mt-2 inline-block font-semibold text-blue-700 underline">
+        <Link to="/" className="mt-2 inline-block font-semibold text-brand-700 underline">
           自治体選択へ
         </Link>
       </Card>
@@ -60,7 +60,7 @@ export function ChecklistPage() {
     return (
       <Card>
         <p className="text-slate-700">まだ条件が入力されていません。</p>
-        <Link to="/wizard" className="mt-2 inline-block font-semibold text-blue-700 underline">
+        <Link to="/wizard" className="mt-2 inline-block font-semibold text-brand-700 underline">
           条件を入力する
         </Link>
       </Card>
@@ -69,19 +69,32 @@ export function ChecklistPage() {
 
   return (
     <div className="space-y-5">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-bold text-slate-900">あなたのチェックリスト</h1>
+      <header className="space-y-3">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">あなたのチェックリスト</h1>
         {state.data && (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-700">
-            <span>
-              <span className="text-slate-500">自治体：</span>
-              <span className="font-semibold">{state.data.muniName}</span>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 font-semibold text-brand-800 ring-1 ring-inset ring-brand-100">
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M10 2a5 5 0 00-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 00-5-5zm0 6.5A1.5 1.5 0 1110 5.5a1.5 1.5 0 010 3z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className="sr-only">自治体：</span>
+              {state.data.muniName}
             </span>
-            <span>
-              <span className="text-slate-500">引越し日：</span>
-              <span className="font-semibold">{formatDate(profile.moveDate)}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                <path d="M9 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2V2a1 1 0 112 0v1h2V2zM5 7v7h10V7H5z" />
+              </svg>
+              <span className="sr-only">引越し日：</span>
+              {formatDate(profile.moveDate)}
             </span>
-            <Link to="/wizard" className="font-semibold text-blue-700 underline">
+            <Link
+              to="/wizard"
+              className="inline-flex items-center gap-1 font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
+            >
               条件を修正する
             </Link>
           </div>
@@ -94,39 +107,50 @@ export function ChecklistPage() {
       {state.data && (
         <>
           <div
-            className="rounded-lg border border-slate-200 bg-white p-4"
+            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
             role="status"
             aria-live="polite"
           >
-            <p className="text-sm text-slate-700">
-              進捗：<span className="font-bold">{doneCount}</span> / {tasks.length} 件 完了
-            </p>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+            <div className="flex items-end justify-between gap-3">
+              <p className="text-sm text-slate-700">
+                進捗：<span className="text-lg font-bold text-slate-900">{doneCount}</span> /{' '}
+                {tasks.length} 件 完了
+              </p>
+              <span className="text-2xl font-bold tabular-nums text-brand-700">
+                {tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0}
+                <span className="text-sm font-semibold text-slate-400">%</span>
+              </span>
+            </div>
+            <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full bg-green-500"
+                className="h-full rounded-full bg-gradient-to-r from-brand-500 to-green-500 transition-[width] duration-500 ease-out"
                 style={{ width: `${tasks.length ? (doneCount / tasks.length) * 100 : 0}%` }}
               />
             </div>
           </div>
 
           {sections.length === 0 && (
-            <Card>
-              <p className="text-slate-700">
-                現在の条件に該当する手続きはありませんでした。条件を追加すると項目が増えることがあります。
-              </p>
-            </Card>
+            <EmptyState title="該当する手続きはありませんでした">
+              条件を追加すると項目が増えることがあります。「条件を修正する」からお試しください。
+            </EmptyState>
           )}
 
           {sections.map((section) => (
             <section key={section.key} aria-labelledby={`sec-${section.key}`}>
-              <h2 id={`sec-${section.key}`} className="text-lg font-bold text-slate-900">
+              <h2
+                id={`sec-${section.key}`}
+                className="flex items-center gap-2 text-lg font-bold text-slate-900"
+              >
+                <span className="h-5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
                 {sectionLabel[section.key]}
-                <span className="ml-2 text-sm font-normal text-slate-500">
-                  （{section.tasks.length}件）
+                <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-100">
+                  {section.tasks.length}件
                 </span>
               </h2>
-              <p className="text-xs text-slate-500">{sectionDescription[section.key]}</p>
-              <ul className="mt-2 space-y-2">
+              <p className="mt-0.5 pl-3.5 text-xs text-slate-500">
+                {sectionDescription[section.key]}
+              </p>
+              <ul className="mt-2.5 space-y-2.5">
                 {section.tasks.map((task) => (
                   <li key={task.id}>
                     <TaskCard
@@ -158,51 +182,111 @@ function TaskCard({
 }) {
   const needsConfirmation = task.applicable === 'needs_confirmation';
   const checkboxId = `done-${task.id}`;
+  const borderByPriority: Record<typeof task.priority, string> = {
+    urgent: 'border-l-red-400',
+    high: 'border-l-orange-400',
+    normal: 'border-l-brand-400',
+    optional: 'border-l-slate-300',
+  };
   return (
-    <Card className={done ? 'opacity-70' : ''}>
+    <Card
+      interactive
+      className={`border-l-4 ${
+        done ? 'border-l-green-400 bg-green-50/40' : borderByPriority[task.priority]
+      }`}
+    >
       <div className="flex items-start gap-3">
         <input
           id={checkboxId}
           type="checkbox"
           checked={done}
           onChange={(e) => onToggle(e.target.checked)}
-          className="mt-1 h-5 w-5 shrink-0"
+          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer"
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <PriorityBadge priority={task.priority} />
             {needsConfirmation && <NeedsConfirmationBadge />}
+            {done && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800 ring-1 ring-inset ring-green-200">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  className="h-3.5 w-3.5"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0l-3.5-3.5a1 1 0 011.4-1.4l2.8 2.79 6.8-6.79a1 1 0 011.4 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                完了
+              </span>
+            )}
           </div>
           <label
             htmlFor={checkboxId}
-            className={`mt-1 block font-bold ${done ? 'text-slate-500 line-through' : 'text-slate-900'}`}
+            className={`mt-1.5 block cursor-pointer font-bold leading-snug ${
+              done ? 'text-slate-400 line-through' : 'text-slate-900'
+            }`}
           >
             {task.title}
           </label>
 
-          <p className="mt-1 text-sm">
+          <div className="mt-1.5">
             {task.dueDate ? (
-              <span>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-semibold ring-1 ring-inset ${
+                  done
+                    ? 'bg-slate-50 text-slate-400 ring-slate-200'
+                    : 'bg-slate-50 text-slate-800 ring-slate-200'
+                }`}
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  className="h-4 w-4 text-slate-500"
+                  fill="currentColor"
+                >
+                  <path d="M9 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2V2a1 1 0 112 0v1h2V2zM5 7v7h10V7H5z" />
+                </svg>
                 <span className="text-slate-500">期限：</span>
-                <span className="font-semibold text-slate-800">{formatDate(task.dueDate)}</span>
+                {formatDate(task.dueDate)}
               </span>
             ) : (
-              <span className="font-semibold text-amber-800">期限は要確認</span>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1 text-sm font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
+                <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 7a1 1 0 112 0 1 1 0 01-2 0zm2 3a1 1 0 10-2 0v4a1 1 0 102 0v-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                期限は要確認
+              </span>
             )}
-          </p>
+          </div>
           {!task.dueDate && task.dueDescription && (
-            <p className="text-xs text-slate-500">{task.dueDescription}</p>
+            <p className="mt-1 text-xs text-slate-500">{task.dueDescription}</p>
           )}
 
-          <p className="mt-1 text-sm text-slate-700">{task.applicabilityReason}</p>
+          <p className="mt-2 text-sm text-slate-700">{task.applicabilityReason}</p>
 
-          <p className="mt-2">
+          <p className="mt-2.5">
             <Link
               to={`/procedures/${encodeURIComponent(task.procedureId)}`}
               state={{ task }}
-              className="text-sm font-semibold text-blue-700 underline"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
             >
               詳細・必要書類・公式根拠を見る
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 11-1.4-1.4L11.58 10 7.3 5.7a1 1 0 010-1.4z"
+                  clipRule="evenodd"
+                />
+              </svg>
             </Link>
           </p>
         </div>

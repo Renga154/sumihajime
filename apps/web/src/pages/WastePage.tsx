@@ -33,7 +33,7 @@ export function WastePage() {
     return (
       <Card>
         <p className="text-slate-700">先に自治体を選んでください。</p>
-        <Link to="/" className="mt-2 inline-block font-semibold text-blue-700 underline">
+        <Link to="/" className="mt-2 inline-block font-semibold text-brand-700 underline">
           自治体選択へ
         </Link>
       </Card>
@@ -57,10 +57,24 @@ export function WastePage() {
           {/* C-9: cautionは常に表示。 */}
           <div
             role="note"
-            className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+            className="flex gap-2.5 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-sm text-amber-950"
           >
-            <p className="font-semibold">収集日についての注意</p>
-            <p className="mt-1">{base.data.waste.caution}</p>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 20"
+              className="mt-0.5 h-5 w-5 shrink-0 text-amber-600"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 7a1 1 0 112 0 1 1 0 01-2 0zm2 3a1 1 0 10-2 0v4a1 1 0 102 0v-4z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <div>
+              <p className="font-semibold">収集日についての注意</p>
+              <p className="mt-1">{base.data.waste.caution}</p>
+            </div>
           </div>
 
           {base.data.muni?.officialUrl && (
@@ -100,7 +114,11 @@ export function WastePage() {
 
           {detail.data && detail.data.schedules && (
             <section aria-labelledby="schedule-heading">
-              <h2 id="schedule-heading" className="text-lg font-bold text-slate-900">
+              <h2
+                id="schedule-heading"
+                className="flex items-center gap-2 text-lg font-bold text-slate-900"
+              >
+                <span className="h-5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
                 収集曜日
               </h2>
               <ScheduleTable schedules={detail.data.schedules} />

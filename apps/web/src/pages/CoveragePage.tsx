@@ -81,7 +81,11 @@ export function CoveragePage() {
       {state.data && (
         <>
           <section aria-labelledby="cov-heading">
-            <h2 id="cov-heading" className="text-lg font-bold text-slate-900">
+            <h2
+              id="cov-heading"
+              className="flex items-center gap-2 text-lg font-bold text-slate-900"
+            >
+              <span className="h-5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
               自治体の対応状況
             </h2>
             <ul className="mt-2 space-y-3">
@@ -94,7 +98,11 @@ export function CoveragePage() {
           </section>
 
           <section aria-labelledby="src-heading">
-            <h2 id="src-heading" className="text-lg font-bold text-slate-900">
+            <h2
+              id="src-heading"
+              className="flex items-center gap-2 text-lg font-bold text-slate-900"
+            >
+              <span className="h-5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
               データの出典
             </h2>
             <p className="text-sm text-slate-600">

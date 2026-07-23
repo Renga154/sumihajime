@@ -7,9 +7,21 @@ export function Disclaimer() {
   return (
     <section
       aria-labelledby="disclaimer-heading"
-      className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+      className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
     >
-      <h2 id="disclaimer-heading" className="text-base font-bold">
+      <h2 id="disclaimer-heading" className="flex items-center gap-1.5 text-base font-bold">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          className="h-5 w-5 shrink-0 text-amber-600"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 7a1 1 0 112 0 1 1 0 01-2 0zm2 3a1 1 0 10-2 0v4a1 1 0 102 0v-4z"
+            clipRule="evenodd"
+          />
+        </svg>
         ご利用の前に
       </h2>
       <ul className="mt-2 list-disc space-y-1 pl-5">

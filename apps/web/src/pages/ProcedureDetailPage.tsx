@@ -34,7 +34,7 @@ export function ProcedureDetailPage() {
     return (
       <Card>
         <p className="text-slate-700">先に自治体を選んでください。</p>
-        <Link to="/" className="mt-2 inline-block font-semibold text-blue-700 underline">
+        <Link to="/" className="mt-2 inline-block font-semibold text-brand-700 underline">
           自治体選択へ
         </Link>
       </Card>
@@ -44,7 +44,7 @@ export function ProcedureDetailPage() {
   return (
     <div className="space-y-4">
       <p>
-        <Link to="/checklist" className="text-sm font-semibold text-blue-700 underline">
+        <Link to="/checklist" className="text-sm font-semibold text-brand-700 underline">
           ← チェックリストに戻る
         </Link>
       </p>
@@ -54,28 +54,50 @@ export function ProcedureDetailPage() {
 
       {state.data && (
         <article className="space-y-5">
-          <header className="space-y-2">
+          <header className="space-y-2 rounded-2xl border border-slate-200 bg-gradient-to-br from-brand-50/60 to-white p-5">
             <div className="flex flex-wrap items-center gap-2">
               <PriorityBadge priority={state.data.procedure.priority} />
               <DataStatusBadge status={state.data.procedure.dataStatus} />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">{state.data.procedure.title}</h1>
+            <h1 className="text-2xl font-bold leading-snug tracking-tight text-slate-900">
+              {state.data.procedure.title}
+            </h1>
             <p className="text-slate-700">{state.data.procedure.shortDescription}</p>
           </header>
 
           <Card className="space-y-2">
-            <p className="text-sm">
+            <div>
               {(stateDueDate ?? state.data.procedure.dueDate) ? (
-                <span>
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2.5 py-1 text-sm font-semibold text-slate-800 ring-1 ring-inset ring-slate-200">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 20 20"
+                    className="h-4 w-4 text-slate-500"
+                    fill="currentColor"
+                  >
+                    <path d="M9 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2V2a1 1 0 112 0v1h2V2zM5 7v7h10V7H5z" />
+                  </svg>
                   <span className="text-slate-500">期限：</span>
-                  <span className="font-semibold">
-                    {formatDate(stateDueDate ?? state.data.procedure.dueDate!)}
-                  </span>
+                  {formatDate(stateDueDate ?? state.data.procedure.dueDate!)}
                 </span>
               ) : (
-                <span className="font-semibold text-amber-800">期限は要確認</span>
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 20 20"
+                    className="h-4 w-4"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 7a1 1 0 112 0 1 1 0 01-2 0zm2 3a1 1 0 10-2 0v4a1 1 0 102 0v-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  期限は要確認
+                </span>
               )}
-            </p>
+            </div>
             {state.data.procedure.dueDescription && (
               <p className="text-sm text-slate-600">{state.data.procedure.dueDescription}</p>
             )}
@@ -97,7 +119,7 @@ export function ProcedureDetailPage() {
                           ? 'bg-amber-100 text-amber-900 ring-amber-300'
                           : doc.status === 'required'
                             ? 'bg-slate-200 text-slate-800 ring-slate-300'
-                            : 'bg-blue-50 text-blue-900 ring-blue-200'
+                            : 'bg-brand-50 text-brand-800 ring-brand-200'
                       }`}
                     >
                       {documentStatusLabel[doc.status]}
@@ -143,7 +165,7 @@ export function ProcedureDetailPage() {
                 ))}
               </ul>
               <p className="mt-2 text-sm">
-                <Link to="/facilities" className="font-semibold text-blue-700 underline">
+                <Link to="/facilities" className="font-semibold text-brand-700 underline">
                   窓口一覧（住所・地図リンク）を見る
                 </Link>
               </p>
@@ -185,8 +207,11 @@ export function ProcedureDetailPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-      <div className="mt-2">{children}</div>
+      <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+        <span className="h-5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
+        {title}
+      </h2>
+      <div className="mt-2 pl-3.5">{children}</div>
     </section>
   );
 }
