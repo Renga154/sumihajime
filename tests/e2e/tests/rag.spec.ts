@@ -40,7 +40,8 @@ test('RAG(a): 正常応答モックで回答本文と引用カード(公式URL�
     'href',
     /city\.setagaya\.lg\.jp/,
   );
-  await expect(page.getByText('最終確認日')).toBeVisible();
+  // exact指定: 引用カードのラベルに限定する(印刷専用の「（最終確認日: …）」注記と区別)。
+  await expect(page.getByText('最終確認日', { exact: true })).toBeVisible();
 });
 
 test('RAG(b): 保留応答モックで「確認できません」+公式導線を表示', async ({ page }) => {

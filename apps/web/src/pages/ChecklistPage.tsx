@@ -5,7 +5,8 @@ import { getMunicipalities, postChecklist } from '../api/client';
 import { useAppState } from '../state/AppState';
 import { loadDone, loadProfile, saveDone, toggleDone, isDone, type DoneMap } from '../lib/storage';
 import { groupIntoSections, sectionDescription, sectionLabel } from '../lib/sections';
-import { formatDate } from '../lib/format';
+import { formatDate, formatDateFromDateTime } from '../lib/format';
+import { buildChecklistIcs, datedTasks } from '../lib/ics';
 import { useAsync } from '../lib/useAsync';
 import { Card, EmptyState, ErrorMessage, Loading } from '../components/ui';
 import { NeedsConfirmationBadge, PriorityBadge } from '../components/Badge';
@@ -45,6 +46,25 @@ export function ChecklistPage() {
     [tasks, profile],
   );
   const doneCount = tasks.filter((t) => isDone(doneMap, t.procedureId)).length;
+  const icsTaskCount = datedTasks(tasks).length;
+
+  /**
+   * 期限つきタスクを .ics(終日イベント)にしてクライアントで生成・ダウンロードする。
+   * サーバーへは一切送らない(§13 プライバシー: 収集する個人情報を増やさない)。
+   */
+  function downloadIcs() {
+    if (!municipalityCode) return;
+    const ics = buildChecklistIcs(tasks, municipalityCode);
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tokyo-move-navi-${municipalityCode}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
 
   if (!municipalityCode) {
     return (
@@ -129,6 +149,39 @@ export function ChecklistPage() {
             </div>
           </div>
 
+          {/* 書き出し操作(印刷・カレンダー登録)。印刷時は非表示。 */}
+          <div className="print-hide flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+            >
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M5 3a1 1 0 00-1 1v3h12V4a1 1 0 00-1-1H5zM3 8a2 2 0 00-2 2v3a2 2 0 002 2h1v2a1 1 0 001 1h10a1 1 0 001-1v-2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3zm3 6h8v3H6v-3z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              印刷する
+            </button>
+            <button
+              type="button"
+              onClick={downloadIcs}
+              disabled={icsTaskCount === 0}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+            >
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                <path d="M9 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2V2a1 1 0 112 0v1h2V2zM5 7v7h10V7H5z" />
+              </svg>
+              カレンダーに登録（.ics）
+            </button>
+          </div>
+          <p className="print-hide -mt-1 text-xs text-slate-500">
+            カレンダーには期限のあるタスク（{icsTaskCount}
+            件）のみを終日予定として書き出します。期限が未確定のタスクは含まれません。ファイルはこの端末内で作成され、サーバーには送信されません。
+          </p>
+
           {sections.length === 0 && (
             <EmptyState title="該当する手続きはありませんでした">
               条件を追加すると項目が増えることがあります。「条件を修正する」からお試しください。
@@ -164,7 +217,9 @@ export function ChecklistPage() {
             </section>
           ))}
 
-          <ChatPanel municipalityCode={municipalityCode} municipalityName={state.data.muniName} />
+          <div className="print-hide">
+            <ChatPanel municipalityCode={municipalityCode} municipalityName={state.data.muniName} />
+          </div>
         </>
       )}
     </div>
@@ -191,7 +246,7 @@ function TaskCard({
   return (
     <Card
       interactive
-      className={`border-l-4 ${
+      className={`print-avoid-break border-l-4 ${
         done ? 'border-l-green-400 bg-green-50/40' : borderByPriority[task.priority]
       }`}
     >
@@ -273,7 +328,21 @@ function TaskCard({
 
           <p className="mt-2 text-sm text-slate-700">{task.applicabilityReason}</p>
 
-          <p className="mt-2.5">
+          {/* 印刷専用: 紙でも公式根拠を辿れるよう、公式URL文字列と最終確認日を明示する。 */}
+          {task.sources.length > 0 && (
+            <div className="print-only mt-2 text-sm text-slate-700">
+              {task.sources.map((s) => (
+                <p key={s.sourceId} className="mt-0.5">
+                  公式: {s.url}
+                  <span className="ml-2">
+                    （最終確認日: {formatDateFromDateTime(s.lastVerifiedAt)}）
+                  </span>
+                </p>
+              ))}
+            </div>
+          )}
+
+          <p className="mt-2.5 print-hide">
             <Link
               to={`/procedures/${encodeURIComponent(task.procedureId)}`}
               state={{ task }}

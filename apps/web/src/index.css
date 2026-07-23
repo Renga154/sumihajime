@@ -135,3 +135,48 @@ input[type='radio'] {
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * 印刷ビュー(チェックリストを紙で使う)。ナビ・チャット・操作ボタンなどの画面専用UIを
+ * 隠し、各タスクは公式URL文字列と最終確認日を明示して、紙でも根拠が辿れるようにする。
+ * 免責は共通フッター(Layout)がそのまま印字される。.print-only は画面では非表示。
+ */
+.print-only {
+  display: none;
+}
+
+@media print {
+  /* 画面専用の装飾・操作系は印刷しない。 */
+  header nav,
+  .print-hide,
+  [data-print='hide'] {
+    display: none !important;
+  }
+
+  /* 紙でだけ見せる根拠情報(URL文字列・最終確認日など)。 */
+  .print-only {
+    display: block !important;
+  }
+
+  /* 余白と改ページ制御。カードは分割せず、色地は落として黒印字を優先する。 */
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: none !important;
+  }
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  @page {
+    margin: 16mm 14mm;
+  }
+}

@@ -25,6 +25,18 @@ export function LandingPage() {
   const supported = (data ?? []).filter((m) => m.supported);
   const unsupported = (data ?? []).filter((m) => !m.supported);
 
+  // なぜ: 未対応59自治体を「23区/市部/町村部」に分けて折りたたむ(主役=対応中3を埋もれさせない)。
+  // 分類は自治体コードの上位桁で決まる(131xx=区, 132xx=市, 133xx/134xx=町村)。
+  const unsupportedGroups: { key: string; label: string; items: MunicipalityWithCoverage[] }[] = [
+    { key: 'wards', label: '23区', items: unsupported.filter((m) => m.code.startsWith('131')) },
+    { key: 'cities', label: '市部', items: unsupported.filter((m) => m.code.startsWith('132')) },
+    {
+      key: 'towns',
+      label: '町村部',
+      items: unsupported.filter((m) => m.code.startsWith('133') || m.code.startsWith('134')),
+    },
+  ].filter((g) => g.items.length > 0);
+
   return (
     <div className="space-y-6">
       <section className="relative overflow-hidden rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-accent-50/40 px-5 py-7 sm:px-7 sm:py-9">
@@ -81,6 +93,9 @@ export function LandingPage() {
               <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                 <span className="h-4 w-1 rounded-full bg-brand-500" aria-hidden="true" />
                 対応している自治体
+                <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-100">
+                  {supported.length}
+                </span>
               </h3>
               <ul className="mt-2 space-y-2">
                 {supported.map((m) => (
@@ -133,28 +148,62 @@ export function LandingPage() {
               <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                 <span className="h-4 w-1 rounded-full bg-slate-300" aria-hidden="true" />
                 未対応の自治体
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
+                  {unsupported.length}
+                </span>
               </h3>
               <p className="mt-0.5 pl-3 text-xs text-slate-500">
-                現在チェックリストは作成できません。手続きは各自治体の公式サイトでご確認ください。
+                現在チェックリストは作成できません。グループを開くと各自治体の公式サイトへの導線を表示します。
               </p>
-              <ul className="mt-2 space-y-2">
-                {unsupported.map((m) => (
-                  <li key={m.code}>
-                    <Card className="flex items-center justify-between gap-3 bg-slate-50/60">
-                      <div>
-                        <p className="font-semibold text-slate-900">
-                          {m.name} <Badge tone="gray">未対応{m.note ? `（${m.note}）` : ''}</Badge>
-                        </p>
-                        {m.officialUrl && (
-                          <p className="mt-1 text-sm">
-                            <ExternalLink href={m.officialUrl}>公式サイトを見る</ExternalLink>
-                          </p>
-                        )}
-                      </div>
-                    </Card>
-                  </li>
+
+              <div className="mt-2 space-y-2">
+                {unsupportedGroups.map((g) => (
+                  <details
+                    key={g.key}
+                    className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 font-semibold text-slate-800 marker:content-none hover:bg-slate-100 focus-visible:bg-slate-100">
+                      <span className="flex items-center gap-2">
+                        {g.label}
+                        <span className="inline-flex items-center rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
+                          {g.items.length}件
+                        </span>
+                      </span>
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 20 20"
+                        className="h-4 w-4 shrink-0 text-slate-400 transition-transform"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5.3 7.3a1 1 0 011.4 0L10 10.58l3.3-3.3a1 1 0 111.4 1.42l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 010-1.42z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </summary>
+                    <ul className="space-y-2 border-t border-slate-200 p-3">
+                      {g.items.map((m) => (
+                        <li key={m.code}>
+                          <Card className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-slate-900">
+                                {m.name}{' '}
+                                <Badge tone="gray">未対応{m.note ? `（${m.note}）` : ''}</Badge>
+                              </p>
+                              {m.officialUrl && (
+                                <p className="mt-1 text-sm">
+                                  <ExternalLink href={m.officialUrl}>公式サイトを見る</ExternalLink>
+                                </p>
+                              )}
+                            </div>
+                          </Card>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
         )}

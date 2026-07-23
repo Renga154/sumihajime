@@ -6,6 +6,8 @@ import {
   municipalitiesResponseSchema,
   procedureDetailResponseSchema,
   wasteSchedulesResponseSchema,
+  wasteSortingSearchResponseSchema,
+  wasteSortingSummaryResponseSchema,
   type ChatRequest,
   type ChatResponse,
   type ChecklistResponse,
@@ -14,6 +16,8 @@ import {
   type ProcedureDetailResponse,
   type Profile,
   type WasteSchedulesResponse,
+  type WasteSortingSearchResponse,
+  type WasteSortingSummaryResponse,
 } from '@tmn/schemas';
 
 /**
@@ -121,6 +125,27 @@ export async function getWaste(
   const q = new URLSearchParams({ municipality: municipalityCode });
   if (areaId) q.set('area', areaId);
   return wasteSchedulesResponseSchema.parse(await request(`/waste-schedules?${q.toString()}`));
+}
+
+/**
+ * GET /api/waste-sorting?municipality=&q= : ごみ分別辞書(Wave1-B)。
+ * q未指定 → カテゴリ別件数サマリー、q指定 → 品目検索(最大30件+総件数)。境界検証は
+ * 応答形状に応じて対応するスキーマで行い、想定外形状をUIへ流さない。データ未整備の自治体は
+ * ApiError(404 waste_sorting_data_unavailable)を投げ、UIは公式分別ページへ誘導する。
+ */
+export async function getWasteSortingSummary(
+  municipalityCode: string,
+): Promise<WasteSortingSummaryResponse> {
+  const q = new URLSearchParams({ municipality: municipalityCode });
+  return wasteSortingSummaryResponseSchema.parse(await request(`/waste-sorting?${q.toString()}`));
+}
+
+export async function searchWasteSorting(
+  municipalityCode: string,
+  query: string,
+): Promise<WasteSortingSearchResponse> {
+  const q = new URLSearchParams({ municipality: municipalityCode, q: query });
+  return wasteSortingSearchResponseSchema.parse(await request(`/waste-sorting?${q.toString()}`));
 }
 
 /**

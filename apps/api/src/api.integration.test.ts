@@ -81,7 +81,7 @@ interface Task {
 }
 
 describe('GET /api/municipalities', () => {
-  it('returns 6 municipalities; 世田谷(13112)・江東(13108)・新宿(13104)がsupported(2026-07-22承認)', async () => {
+  it('returns 62 municipalities; 世田谷(13112)・江東(13108)・新宿(13104)がsupported(2026-07-22承認)', async () => {
     const res = await request('/api/municipalities');
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -91,14 +91,15 @@ describe('GET /api/municipalities', () => {
       officialUrl?: string;
       coverage: unknown[];
     }[];
-    expect(body).toHaveLength(6);
+    // 東京都62市区町村の誠実リスト化(Wave2)。
+    expect(body).toHaveLength(62);
     const supported = body
       .filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
     expect(supported).toEqual(['13104', '13108', '13112']);
-    // 各自治体に公式導線URL(FR-021)。
-    for (const m of body) expect(m.officialUrl).toMatch(/^https:\/\//);
+    // 各自治体に公式導線URL(FR-021)。出典ページの表記どおり http/https いずれもあり得る。
+    for (const m of body) expect(m.officialUrl).toMatch(/^https?:\/\//);
     // 世田谷にはカバレッジ行がある(FR-024)。
     const setagaya = body.find((m) => m.code === '13112');
     expect(setagaya?.coverage.length).toBeGreaterThan(0);

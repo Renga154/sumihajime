@@ -6,6 +6,7 @@ import { useAppState } from '../state/AppState';
 import { useAsync } from '../lib/useAsync';
 import { weekOfMonthLabel, weekdayLabel } from '../lib/format';
 import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
+import { WasteSortingSearch } from '../components/WasteSortingSearch';
 
 /**
  * ごみページ(§7.4 / FR-014・FR-015 / C-9)。地区(町丁目範囲)を選択式で選ぶと曜日を表示する。
@@ -127,6 +128,13 @@ export function WastePage() {
               </p>
             </section>
           )}
+
+          {/* FR-014 補強: 品目名から分別区分を調べる検索(収集曜日セクションと並置)。 */}
+          <WasteSortingSearch
+            municipalityCode={municipalityCode}
+            municipalityName={base.data.muni?.name ?? municipalityCode}
+            officialUrl={base.data.muni?.officialUrl}
+          />
         </>
       )}
     </div>

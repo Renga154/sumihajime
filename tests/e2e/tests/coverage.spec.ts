@@ -7,6 +7,9 @@ import { test, expect } from '@playwright/test';
 test('未対応自治体: 杉並区は選択不可で公式リンクのみ表示', async ({ page }) => {
   await page.goto('/');
 
+  // 未対応の区は「23区」グループに折りたたまれているため、まず展開する(キーボード操作可)。
+  await page.locator('summary').filter({ hasText: '23区' }).click();
+
   const suginami = page.getByRole('listitem').filter({ hasText: '杉並区' });
   await expect(suginami).toBeVisible();
   await expect(suginami.getByText('未対応')).toBeVisible();
