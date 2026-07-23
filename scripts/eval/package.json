@@ -1,0 +1,26 @@
+{
+  "name": "@tmn/rag-eval",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "RAG evaluation harness: runs the 30-question dataset against the production /api/chat endpoint (serial, 7s spacing for the 10 req/min rate limit), machine-scores retrieval/citation/abstention/municipality-isolation, and emits JSON + Markdown reports (T-014).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "eval": "tsx src/run.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tmn/rag-index": "workspace:*",
+    "@tmn/schemas": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2"
+  }
+}
