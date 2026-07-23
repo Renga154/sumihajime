@@ -7,6 +7,8 @@ import type {
   Source,
   WasteArea,
   WasteSchedule,
+  WasteSortingCategorySummary,
+  WasteSortingItem,
 } from '@tmn/schemas';
 import {
   coverageSchema,
@@ -17,6 +19,8 @@ import {
   sourceSchema,
   wasteAreaSchema,
   wasteScheduleSchema,
+  wasteSortingCategorySummarySchema,
+  wasteSortingItemSchema,
 } from '@tmn/schemas';
 
 /**
@@ -390,4 +394,93 @@ export async function getWasteSchedules(
       effectiveTo: optString(row.effective_to),
     }),
   );
+}
+
+/** ---- waste_sorting_items(Wave1-B) ---- */
+
+function rowToWasteSortingItem(row: Row): WasteSortingItem {
+  return wasteSortingItemSchema.parse({
+    itemId: asString(row.item_id),
+    municipalityCode: asString(row.municipality_code),
+    name: asString(row.name),
+    reading: optString(row.reading),
+    category: asString(row.category),
+    notes: optString(row.notes),
+    feeNote: optString(row.fee_note),
+    sourceId: asString(row.source_id),
+  });
+}
+
+/**
+ * なぜ: /api/waste-sorting の 404(未整備)判定用。municipality_code に1件でも
+ * 行があれば「この自治体はごみ分別データを持つ」とみなす(waste_datasets のような
+ * 専用メタテーブルは設けず、行の有無自体を可用性の真実源とする)。
+ */
+export async function hasWasteSortingData(db: D1Database, code: string): Promise<boolean> {
+  const row = await db
+    .prepare('SELECT 1 FROM waste_sorting_items WHERE municipality_code = ? LIMIT 1')
+    .bind(code)
+    .first<Row>();
+  return row !== null;
+}
+
+/** q未指定時: カテゴリ別件数サマリー(分別区分ごとの件数を降順ではなくcategory名昇順で返す)。 */
+export async function getWasteSortingCategorySummary(
+  db: D1Database,
+  code: string,
+): Promise<WasteSortingCategorySummary[]> {
+  const res = await db
+    .prepare(
+      'SELECT category, COUNT(*) AS count FROM waste_sorting_items WHERE municipality_code = ? ' +
+        'GROUP BY category ORDER BY category',
+    )
+    .bind(code)
+    .all<Row>();
+  return res.results.map((row) =>
+    wasteSortingCategorySummarySchema.parse({
+      category: asString(row.category),
+      count: Number(row.count),
+    }),
+  );
+}
+
+/**
+ * なぜ: 全角/半角・大小文字の表記ゆれを吸収した「素朴な」正規化(D1/SQLiteにICU正規化が
+ * ないため、名称/よみをアプリ側で正規化して部分一致する)。全角英数字→半角化+小文字化の
+ * みを行う(全角カナ→半角カナ等の変換までは扱わない。「素朴に正規化」の範囲)。
+ */
+export function normalizeForWasteSortingSearch(s: string): string {
+  return s
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/\u3000/g, ' ')
+    .toLowerCase();
+}
+
+export interface WasteSortingSearchResult {
+  items: WasteSortingItem[];
+  total: number;
+}
+
+/**
+ * name/reading への部分一致検索(大小文字・全半角を素朴に正規化)。最大 limit 件を返しつつ、
+ * 絞り込み後の総件数(total)も返す。1自治体あたり最大千件強(実データ)のため、
+ * D1側では自治体スコープのみ絞り込み、一致判定はアプリ側で行う(原則4はSQLで強制)。
+ */
+export async function searchWasteSortingItems(
+  db: D1Database,
+  code: string,
+  query: string,
+  limit = 30,
+): Promise<WasteSortingSearchResult> {
+  const res = await db
+    .prepare('SELECT * FROM waste_sorting_items WHERE municipality_code = ? ORDER BY item_id')
+    .bind(code)
+    .all<Row>();
+  const needle = normalizeForWasteSortingSearch(query);
+  const matched = res.results.map(rowToWasteSortingItem).filter((item) => {
+    const name = normalizeForWasteSortingSearch(item.name);
+    const reading = item.reading ? normalizeForWasteSortingSearch(item.reading) : '';
+    return name.includes(needle) || (reading.length > 0 && reading.includes(needle));
+  });
+  return { items: matched.slice(0, limit), total: matched.length };
 }

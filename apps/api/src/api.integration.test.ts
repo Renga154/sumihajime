@@ -255,6 +255,61 @@ describe('GET /api/waste-schedules', () => {
   });
 });
 
+describe('GET /api/waste-sorting', () => {
+  it('q未指定 → カテゴリ別件数サマリー(世田谷787品目・17カテゴリ)', async () => {
+    const res = await request('/api/waste-sorting?municipality=13112');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      municipalityCode: string;
+      categories: { category: string; count: number }[];
+      total: number;
+    };
+    expect(body.municipalityCode).toBe('13112');
+    expect(body.total).toBe(787);
+    expect(body.categories.length).toBeGreaterThan(0);
+    const sumOfCounts = body.categories.reduce((n, c) => n + c.count, 0);
+    expect(sumOfCounts).toBe(787);
+  });
+
+  it('q指定 → name部分一致で品目がヒットする(品目名/カテゴリの入れ替わりを補正済み)', async () => {
+    const res = await request('/api/waste-sorting?municipality=13112&q=アイロン');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      query: string;
+      items: { name: string; category: string }[];
+      total: number;
+    };
+    expect(body.total).toBeGreaterThan(0);
+    expect(body.items.length).toBeGreaterThan(0);
+    expect(body.items.length).toBeLessThanOrEqual(30);
+    expect(body.items.every((i) => i.name.includes('アイロン'))).toBe(true);
+    // 品目/カテゴリの入れ替わり補正: nameは品目名(アイロン系)、categoryは分別区分(不燃ごみ等)。
+    expect(body.items.every((i) => i.category !== i.name)).toBe(true);
+  });
+
+  it('0件ヒットのクエリは items:[] + total:0 を返す(存在しない自治体データ扱いにしない)', async () => {
+    const res = await request(
+      '/api/waste-sorting?municipality=13112&q=絶対に存在しない品目名XYZ123',
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { items: unknown[]; total: number };
+    expect(body.items).toEqual([]);
+    expect(body.total).toBe(0);
+  });
+
+  it('municipality 未指定は 400', async () => {
+    const res = await request('/api/waste-sorting');
+    expect(res.status).toBe(400);
+  });
+
+  it('データ未整備の自治体(杉並=13115)は 404 waste_sorting_data_unavailable', async () => {
+    const res = await request('/api/waste-sorting?municipality=13115');
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe('waste_sorting_data_unavailable');
+  });
+});
+
 describe('構造化ログ: プロフィール内容(PII)を出さない(§13)', () => {
   afterEach(() => {
     vi.restoreAllMocks();

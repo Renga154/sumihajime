@@ -4,7 +4,12 @@ import { generatedTaskSchema } from './task.js';
 import { municipalityCodeSchema, municipalitySchema, coverageSchema } from './municipality.js';
 import { procedureVersionSchema } from './procedure.js';
 import { sourceSchema } from './source.js';
-import { facilitySchema, wasteAreaSchema, wasteScheduleSchema } from './facility.js';
+import {
+  facilitySchema,
+  wasteAreaSchema,
+  wasteScheduleSchema,
+  wasteSortingItemSchema,
+} from './facility.js';
 
 /**
  * なぜ: REQUIREMENTS §14 API契約(初期案) + 計画§8.2。境界層(HTTPリクエスト/
@@ -63,6 +68,33 @@ export const wasteSchedulesResponseSchema = z.strictObject({
   effectiveTo: z.iso.date().optional(),
 });
 export type WasteSchedulesResponse = z.infer<typeof wasteSchedulesResponseSchema>;
+
+/**
+ * なぜ: Wave1-B「GET /api/waste-sorting?municipality=&q=」。
+ * q指定時は品目検索結果(items、最大30件)+total(絞り込み後の総件数。UIで
+ * 「他にN件あります」等を表示できるように)。q未指定はカテゴリ別件数サマリー
+ * (categories)を返す(§8.2の「一覧 or 詳細」形状に倣う。詳細=検索結果、一覧=サマリー)。
+ */
+export const wasteSortingSearchResponseSchema = z.strictObject({
+  municipalityCode: municipalityCodeSchema,
+  query: z.string().min(1),
+  items: z.array(wasteSortingItemSchema).max(30),
+  total: z.int().nonnegative(),
+});
+export type WasteSortingSearchResponse = z.infer<typeof wasteSortingSearchResponseSchema>;
+
+export const wasteSortingCategorySummarySchema = z.strictObject({
+  category: z.string().min(1),
+  count: z.int().nonnegative(),
+});
+export type WasteSortingCategorySummary = z.infer<typeof wasteSortingCategorySummarySchema>;
+
+export const wasteSortingSummaryResponseSchema = z.strictObject({
+  municipalityCode: municipalityCodeSchema,
+  categories: z.array(wasteSortingCategorySummarySchema),
+  total: z.int().nonnegative(),
+});
+export type WasteSortingSummaryResponse = z.infer<typeof wasteSortingSummaryResponseSchema>;
 
 /**
  * なぜ: 計画§8.2の応答形状。tasksは生成された全GeneratedTask、ruleVersionは

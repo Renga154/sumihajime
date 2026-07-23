@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type {
   Coverage,
@@ -9,6 +9,7 @@ import type {
   Source,
   WasteArea,
   WasteSchedule,
+  WasteSortingItem,
 } from '@tmn/schemas';
 import {
   coverageSchema,
@@ -18,6 +19,7 @@ import {
   sourceSchema,
   wasteAreaSchema,
   wasteScheduleSchema,
+  wasteSortingItemSchema,
 } from '@tmn/schemas';
 import { parseCsvRecords } from './csv.js';
 import { MUNICIPALITIES } from './municipalities.js';
@@ -46,6 +48,8 @@ export interface PublishData {
   wasteAreas: WasteArea[];
   wasteSchedules: WasteSchedule[];
   wasteDatasets: WasteDataset[];
+  /** ごみ分別辞書(Wave1-B)。当該自治体のCSVが存在しない自治体は単に空(不足はエラーにしない)。 */
+  wasteSortingItems: WasteSortingItem[];
   /** 公開物が参照する sourceId(ゲート入力)。 */
   references: SourceRef[];
 }
@@ -227,6 +231,26 @@ export function loadWasteFor(
   };
 }
 
+interface WasteSortingJson {
+  municipalityCode: string;
+  sourceId: string;
+  items: unknown[];
+}
+
+/**
+ * ごみ分別辞書JSON(data/normalized/<code>/waste-sorting.json) → WasteSortingItem[]。
+ * なぜ: Wave1-B時点では世田谷/江東/新宿の3区のみ整備済み。他自治体はファイル自体が
+ * 存在しないため、存在しない場合は空配列を返す(欠落をエラーにしない。CLAUDE.md原則9
+ * 「未対応自治体・カテゴリを対応済みに見せない」は coverage.csv/DBの有無で表現する)。
+ */
+export function loadWasteSortingFor(repoRoot: string, code: string): WasteSortingItem[] {
+  const rel = `data/normalized/${code}/waste-sorting.json`;
+  const path = resolve(repoRoot, rel);
+  if (!existsSync(path)) return [];
+  const raw = JSON.parse(readFileSync(path, 'utf-8')) as WasteSortingJson;
+  return raw.items.map((i) => wasteSortingItemSchema.parse(i));
+}
+
 /**
  * すべての公開データを読み込み・スキーマ検証し、ゲート入力(references)まで組み立てる。
  * SQL生成やゲート判定はここでは行わない(呼び出し側が assertPublishGate → buildSeedStatements)。
@@ -265,6 +289,7 @@ export function loadPublishData(
   const wasteAreas: WasteArea[] = [];
   const wasteSchedules: WasteSchedule[] = [];
   const wasteDatasets: WasteDataset[] = [];
+  const wasteSortingItems: WasteSortingItem[] = [];
   const references: SourceRef[] = [];
 
   for (const code of municipalityCodes) {
@@ -272,6 +297,7 @@ export function loadPublishData(
     const ruleSet = loadRuleSetFor(repoRoot, code);
     const facs = loadFacilitiesFor(repoRoot, code);
     const waste = loadWasteFor(repoRoot, code);
+    const sortingItems = loadWasteSortingFor(repoRoot, code);
 
     procedures.push(...procs);
     ruleSets.push(ruleSet);
@@ -279,6 +305,7 @@ export function loadPublishData(
     wasteAreas.push(...waste.areas);
     wasteSchedules.push(...waste.schedules);
     wasteDatasets.push(waste.dataset);
+    wasteSortingItems.push(...sortingItems);
 
     for (const p of procs) {
       references.push({ owner: `procedure_version ${p.id}@${p.version}`, sourceIds: p.sourceIds });
@@ -293,6 +320,12 @@ export function loadPublishData(
     const facilitySourceIds = [...new Set(facs.map((f) => f.sourceId))];
     references.push({ owner: `facilities (${code})`, sourceIds: facilitySourceIds });
     references.push({ owner: `waste dataset (${code})`, sourceIds: [waste.dataset.sourceId] });
+    // なぜ: ごみ分別辞書はファイル未整備の自治体もあるため、その場合は参照0件
+    // (=ゲート対象なし)で自然にスキップされる。
+    const sortingSourceIds = [...new Set(sortingItems.map((i) => i.sourceId))];
+    if (sortingSourceIds.length > 0) {
+      references.push({ owner: `waste sorting (${code})`, sourceIds: sortingSourceIds });
+    }
   }
 
   return {
@@ -306,6 +339,7 @@ export function loadPublishData(
     wasteAreas,
     wasteSchedules,
     wasteDatasets,
+    wasteSortingItems,
     references,
   };
 }

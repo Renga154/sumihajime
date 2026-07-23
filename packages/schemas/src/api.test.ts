@@ -5,6 +5,8 @@ import {
   chatRequestSchema,
   chatResponseSchema,
   errorResponseSchema,
+  wasteSortingSearchResponseSchema,
+  wasteSortingSummaryResponseSchema,
 } from './api.js';
 
 const profile141Fixture = {
@@ -109,5 +111,55 @@ describe('errorResponseSchema', () => {
   it('rejects an error object missing code', () => {
     const result = errorResponseSchema.safeParse({ error: { message: 'x' } });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('wasteSortingSearchResponseSchema / wasteSortingSummaryResponseSchema', () => {
+  it('parses a search response with items + total', () => {
+    const result = wasteSortingSearchResponseSchema.safeParse({
+      municipalityCode: '13112',
+      query: 'アイロン',
+      items: [
+        {
+          itemId: '131121S00002',
+          municipalityCode: '13112',
+          name: 'アイロン',
+          category: '不燃ごみ',
+          feeNote: '無料',
+          sourceId: 'src-13112-waste_sorting-001',
+        },
+      ],
+      total: 1,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects more than 30 items (search cap)', () => {
+    const item = {
+      itemId: 'x',
+      municipalityCode: '13112',
+      name: 'x',
+      category: '不燃ごみ',
+      sourceId: 'src-13112-waste_sorting-001',
+    };
+    const result = wasteSortingSearchResponseSchema.safeParse({
+      municipalityCode: '13112',
+      query: 'x',
+      items: Array.from({ length: 31 }, () => item),
+      total: 31,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('parses a category summary response', () => {
+    const result = wasteSortingSummaryResponseSchema.safeParse({
+      municipalityCode: '13112',
+      categories: [
+        { category: '不燃ごみ', count: 100 },
+        { category: '可燃ごみ', count: 200 },
+      ],
+      total: 300,
+    });
+    expect(result.success).toBe(true);
   });
 });

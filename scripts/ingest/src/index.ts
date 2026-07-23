@@ -39,3 +39,5 @@ export type {
   BuildWasteOptions,
   BuiltWaste,
 } from './waste-table.js';
+export { parseWasteSortingCsv } from './waste-sorting.js';
+export type { WasteSortingCsvOptions } from './waste-sorting.js';
