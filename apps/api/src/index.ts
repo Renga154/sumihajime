@@ -8,6 +8,8 @@ import {
   municipalityCodeSchema,
   procedureDetailResponseSchema,
   wasteSchedulesResponseSchema,
+  wasteSortingSearchResponseSchema,
+  wasteSortingSummaryResponseSchema,
 } from '@tmn/schemas';
 import { evaluate } from '@tmn/rules';
 import { logEvent } from './log.js';
@@ -25,6 +27,9 @@ import {
   getWasteAreas,
   getWasteDataset,
   getWasteSchedules,
+  getWasteSortingCategorySummary,
+  hasWasteSortingData,
+  searchWasteSortingItems,
 } from './db.js';
 
 /**
@@ -323,6 +328,71 @@ app.get('/api/waste-schedules', async (c) => {
     municipalityCode: code,
     latencyMs: Date.now() - start,
     count: schedules.length,
+  });
+  return c.json(body);
+});
+
+/**
+ * GET /api/waste-sorting?municipality=&q= : ごみ分別辞書(Wave1-B)。
+ * q未指定 → カテゴリ別件数サマリー。q指定 → name/reading部分一致検索(最大30件+総件数)。
+ * この自治体にデータが1件もない場合は 404(waste_sorting_data_unavailable。原則9)。
+ */
+app.get('/api/waste-sorting', async (c) => {
+  const start = Date.now();
+  const requestId = c.get('requestId');
+  const code = requireMunicipalityQuery(c);
+  if (!code) {
+    return fail(
+      c,
+      400,
+      'invalid_municipality',
+      'municipality クエリ(5桁の自治体コード)を指定してください。',
+    );
+  }
+
+  const hasData = await hasWasteSortingData(c.env.DB, code);
+  if (!hasData) {
+    return fail(
+      c,
+      404,
+      'waste_sorting_data_unavailable',
+      'この自治体のごみ分別データはまだ整備されていません。公式サイトでご確認ください。',
+      { municipalityCode: code },
+    );
+  }
+
+  const q = c.req.query('q');
+  if (!q || q.trim().length === 0) {
+    const categories = await getWasteSortingCategorySummary(c.env.DB, code);
+    const total = categories.reduce((n, cat) => n + cat.count, 0);
+    const body = wasteSortingSummaryResponseSchema.parse({
+      municipalityCode: code,
+      categories,
+      total,
+    });
+    logEvent({
+      requestId,
+      event: 'waste_sorting.summary',
+      municipalityCode: code,
+      latencyMs: Date.now() - start,
+      count: total,
+    });
+    return c.json(body);
+  }
+
+  const { items, total } = await searchWasteSortingItems(c.env.DB, code, q, 30);
+  const body = wasteSortingSearchResponseSchema.parse({
+    municipalityCode: code,
+    query: q,
+    items,
+    total,
+  });
+  logEvent({
+    requestId,
+    event: 'waste_sorting.search',
+    municipalityCode: code,
+    latencyMs: Date.now() - start,
+    count: total,
   });
   return c.json(body);
 });

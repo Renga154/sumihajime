@@ -46,6 +46,7 @@ function main(): void {
     facilities: data.facilities.length,
     wasteAreas: data.wasteAreas.length,
     wasteSchedules: data.wasteSchedules.length,
+    wasteSortingItems: data.wasteSortingItems.length,
     statements: statements.length,
   };
   console.log('[publish] gate passed (all published sourceIds are approved).');

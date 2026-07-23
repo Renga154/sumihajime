@@ -63,3 +63,24 @@ export const wasteScheduleSchema = z.strictObject({
   effectiveTo: z.iso.date().optional(),
 });
 export type WasteSchedule = z.infer<typeof wasteScheduleSchema>;
+
+/**
+ * なぜ: Wave1-B(ごみ分別辞書)。世田谷/江東/新宿の「ごみ分別方法」CSV
+ * (自治体標準オープンデータセット準拠: 品目/分別区分/注意点/料金種別/料金/料金備考/備考)を
+ * 正規化した品目単位のレコード。CLAUDE.md原則3(推測禁止)によりCSVの記載内容のみを保持し、
+ * 読み仮名(reading)・注意/料金の付帯情報(notes/feeNote)は出典CSVに値がある場合のみ設定する
+ * (3区とも「料金」「料金備考」「注意点」列は全行空欄のため、feeNoteは「料金種別」
+ * (無料/有料)、notesは実データを持つ「備考」列を採用する。scripts/ingest/src/waste-sorting.ts
+ * 参照)。itemId は出典CSVのID列をそのまま採用し、(municipalityCode, itemId) で一意。
+ */
+export const wasteSortingItemSchema = z.strictObject({
+  itemId: z.string().min(1),
+  municipalityCode: municipalityCodeSchema,
+  name: z.string().min(1),
+  reading: z.string().optional(),
+  category: z.string().min(1),
+  notes: z.string().optional(),
+  feeNote: z.string().optional(),
+  sourceId: z.string().min(1),
+});
+export type WasteSortingItem = z.infer<typeof wasteSortingItemSchema>;

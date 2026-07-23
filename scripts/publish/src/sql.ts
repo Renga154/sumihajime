@@ -25,6 +25,7 @@ function json(v: unknown): string {
 
 /** 公開対象テーブル(DELETE順=INSERT順)。冪等な再publishのため先に全消去。 */
 const TABLES = [
+  'waste_sorting_items',
   'waste_datasets',
   'waste_schedules',
   'waste_areas',
@@ -136,6 +137,15 @@ export function buildSeedStatements(data: PublishData): string[] {
         `effective_from, effective_to) VALUES (` +
         `${str(d.municipalityCode)}, ${str(d.sourceId)}, ${str(d.caution)}, ${nstr(d.granularityNote)}, ` +
         `${nstr(d.effectiveFrom)}, ${nstr(d.effectiveTo)})`,
+    );
+  }
+
+  for (const i of data.wasteSortingItems) {
+    out.push(
+      `INSERT INTO waste_sorting_items (municipality_code, item_id, name, reading, category, notes, ` +
+        `fee_note, source_id) VALUES (` +
+        `${str(i.municipalityCode)}, ${str(i.itemId)}, ${str(i.name)}, ${nstr(i.reading)}, ` +
+        `${str(i.category)}, ${nstr(i.notes)}, ${nstr(i.feeNote)}, ${str(i.sourceId)})`,
     );
   }
 
