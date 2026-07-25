@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { chunkLines, buildSourceChunks } from './chunk.js';
+import { chunkLines, buildSourceChunks, isHeadingLine } from './chunk.js';
 import type { RagChunkMetadata } from './types.js';
 
 /** 指定長の疑似行を作る(文字数境界の検証用)。 */
@@ -44,6 +44,60 @@ describe('chunkLines', () => {
     const chunks = chunkLines([line(2000)], { minChars: 500, maxChars: 800, overlapChars: 0 });
     expect(chunks.length).toBeGreaterThanOrEqual(3);
     for (const c of chunks) expect(c.length).toBeLessThanOrEqual(800);
+  });
+
+  it('見出し行の手前でチャンクを区切り、節を焦点化する(答えが無関係な節に埋もれない)', () => {
+    // 前節(180字)→ 見出し「5 資格発生日」+ 答え → 見出し「6 医療証の使い方」。
+    const lines = [
+      line(180, '前'), // 前節本文(headingMin=150 を超える)
+      '5 資格発生日',
+      '転入日から6か月以内に申請すると転入日に遡って資格が発生します。',
+      '6 医療証の使い方',
+      line(120, '後'),
+    ];
+    const chunks = chunkLines(lines, {
+      minChars: 500,
+      maxChars: 800,
+      overlapChars: 120,
+      headingMinChars: 150,
+    });
+    // 「5 資格発生日」の答えは、前節と別チャンクに分離される。
+    const answerChunk = chunks.find((c) => c.includes('6か月以内'));
+    expect(answerChunk).toBeDefined();
+    expect(answerChunk!.startsWith('5 資格発生日')).toBe(true);
+    expect(answerChunk).not.toContain('前前前');
+  });
+
+  it('headingMinChars 未満では見出しでも区切らない(過剰断片化を避ける)', () => {
+    const lines = ['1 概要', 'ごく短い前置き。', '2 詳細', line(60, '本')];
+    const chunks = chunkLines(lines, {
+      minChars: 500,
+      maxChars: 800,
+      overlapChars: 0,
+      headingMinChars: 150,
+    });
+    expect(chunks).toHaveLength(1);
+  });
+});
+
+describe('isHeadingLine', () => {
+  it('番号・括弧・記号見出しを検出する', () => {
+    expect(isHeadingLine('5 資格発生日')).toBe(true);
+    expect(isHeadingLine('5．住所が変更になった場合')).toBe(true);
+    expect(isHeadingLine('（2）申請方法')).toBe(true);
+    expect(isHeadingLine('【申請できる条件】')).toBe(true);
+    expect(isHeadingLine('＜申請時に提出できる場合＞')).toBe(true);
+    expect(isHeadingLine('第3章 手続き')).toBe(true);
+    expect(isHeadingLine('■ 注意事項')).toBe(true);
+  });
+
+  it('本文行(数字始まりでも見出しでない語)は誤検出しない', () => {
+    expect(isHeadingLine('6か月を経過後は申請月の初日から資格が発生します。')).toBe(false);
+    expect(isHeadingLine('1週間程度で医療証をご自宅にお送りします。')).toBe(false);
+    expect(isHeadingLine('再発行には1,000円かかりますのでご注意ください。')).toBe(false);
+    expect(isHeadingLine('転入届は14日以内に提出してください。')).toBe(false);
+    // 長い行は見出しとみなさない。
+    expect(isHeadingLine('1 ' + line(60))).toBe(false);
   });
 });
 

@@ -1,0 +1,1896 @@
+{
+  "dataset": {
+    "datasetVersion": "1.2.0",
+    "generatedFor": "T-014",
+    "description": "RAG評価データセット50問。7区対応(世田谷13112/江東13108/新宿13104/杉並13115/千代田13101/品川13109/大田13111)。全期待値はコーパス(承認済みHTMLスナップショット)に実在する事実のみを根拠にする。正答系36(世田谷7/江東7/新宿6/杉並4/千代田4/品川4/大田4)・保留系9・越境系5。answerMustInclude は公式文言由来のキーフレーズのみ。v1.2: Step5で品川・大田を追加。品川は転入届14日/マイナンバー90日/子ども医療6カ月/国保14日、大田は転入届14日/児童手当15日特例/子ども医療6か月/保育前月7日の正答系を追加。保留系は品川の収集曜日(収集日CSVの鮮度未確認で waste.json 不在=誠実縮退)と大田の品目別分別(都カタログに分別辞書CSVが無く未整備)を各1問追加。v1.1: コーパス拡張後の手続き意図グラウンディング回帰への回帰ガードとして世田谷転入届ケース(P01/P02)を維持し、杉並・千代田の正答系と保留系を追加。X01の未対応自治体は杉並→八王子(13201)。",
+    "corpus": {
+      "municipalities": ["13112", "13108", "13104", "13115", "13101", "13109", "13111"],
+      "indexedSourceType": "html",
+      "note": "waste_sorting等のCSVソースは未索引(コーパス外)。retrievalは自治体コードでVectorize/D1の二重スコープ。生成前に決定論的な手続き意図リランク(rerankByProcedureIntent)で質問が主題とする手続きのチャンクを優先する。"
+    },
+    "scoring": {
+      "contaminationRule": "非保留応答の各citation.sourceIdは 'src-{municipalityCode}-' で始まらなければ自治体混入(重大)。",
+      "needsHumanReviewRule": "非保留応答の本文に日数・期限表現(\\d+日以内 等)が現れ、その表現が当該ケースのanswerMustIncludeに無い場合、人手レビュー対象としてフラグ(自動failにはしない)。",
+      "autoFailRule": "非保留(abstained=false)なのにcitations=0は根拠なし断定として自動fail。"
+    },
+    "cases": [
+      {
+        "id": "P01-seta-resident-deadline",
+        "kind": "positive",
+        "municipalityCode": "13112",
+        "question": "世田谷区に引っ越したら、転入届はいつまでに出せばいいですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13112-resident_registration-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "resident_registrationスナップショット『引越しをしてきた日（世田谷区に住み始めた日）から14日以内』に一致。"
+      },
+      {
+        "id": "P02-seta-resident-documents",
+        "kind": "positive",
+        "municipalityCode": "13112",
+        "question": "世田谷区への転入届のときに持っていく書類を教えてください。",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13112-resident_registration-001"],
+          "answerMustInclude": ["転出証明書"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "resident_registrationスナップショット『持ち物…転出証明書(前住所の役所が発行)』に一致。"
+      },
+      {
+        "id": "P03-seta-nhi-deadline",
+        "kind": "positive",
+        "municipalityCode": "13112",
+        "question": "世田谷区で国民健康保険に加入する届出は、いつまでにすればよいですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13112-national_health_insurance-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "national_health_insuranceスナップショット『加入すべき事由が発生した日から14日以内』に一致。"
+      },
+      {
+        "id": "P04-seta-child-allowance-15day",
+        "kind": "positive",
+        "municipalityCode": "13112",
+        "question": "世田谷区の児童手当で、15日特例とは何ですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13112-child_benefits-001"],
+          "answerMustInclude": ["15日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "child_benefitsスナップショット『翌日から15日以内に申請すれば、申請月から支給（又は増額）されます（15日特例）』に一致。"
+      },
+      {
+        "id": "P05-seta-dog-tag-exchange",
+        "kind": "positive",
+        "municipalityCode": "13112",
+        "question": "世田谷区に転入したとき、前の住所で交付された犬の鑑札はどうなりますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13112-dog_registration-001"],
+          "answerMustInclude": ["交換"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "dog_registrationスナップショット『世田谷区の犬鑑札と無償で交換いたします』に一致。"
+      },
+      {
+        "id": "P06-seta-child-medical-age",
+        "kind": "positive",
+        "municipalityCode": "13112",
+        "question": "世田谷区の子ども医療費助成は、何歳まで対象ですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13112-child_medical-001"],
+          "answerMustInclude": ["18歳"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "child_medicalスナップショット『0歳から18歳に達した日以後最初の年度末（3月31日）までの児童を対象』に一致。"
+      },
+      {
+        "id": "P07-seta-nhi-identity-doc",
+        "kind": "positive",
+        "municipalityCode": "13112",
+        "question": "世田谷区で国民健康保険の届出をするとき、本人確認書類は必要ですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13112-national_health_insurance-001"],
+          "answerMustInclude": ["本人確認"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "national_health_insuranceスナップショット『届出する方の本人確認書類』に一致。"
+      },
+      {
+        "id": "P08-koto-resident-deadline",
+        "kind": "positive",
+        "municipalityCode": "13108",
+        "question": "江東区に引っ越したら、転入届はいつまでに提出しますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13108-resident_registration-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "resident_registrationスナップショット『新しい住所に住み始めてから14日以内』に一致。"
+      },
+      {
+        "id": "P09-koto-nhi-deadline",
+        "kind": "positive",
+        "municipalityCode": "13108",
+        "question": "江東区で国民健康保険に加入する届出期間を教えてください。",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13108-national_health_insurance-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "national_health_insuranceスナップショット『届出期間…転入日から14日以内』に一致。"
+      },
+      {
+        "id": "P10-koto-child-allowance-15day",
+        "kind": "positive",
+        "municipalityCode": "13108",
+        "question": "江東区の児童手当の15日特例について教えてください。",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13108-child_benefits-001"],
+          "answerMustInclude": ["15日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "child_benefitsスナップショット『翌日から数えて15日以内に申請した場合…（15日特例）』に一致。"
+      },
+      {
+        "id": "P11-koto-mynumber-90day",
+        "kind": "positive",
+        "municipalityCode": "13108",
+        "question": "江東区でマイナンバーカードの継続利用は、転入届を行った日から何日以内に手続きしますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13108-my_number-001"],
+          "answerMustInclude": ["90日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "my_numberスナップショット『転入届を行った日から、90日以内に継続利用手続きを行うこと』に一致(90日は江東のみ)。"
+      },
+      {
+        "id": "P12-koto-dog-fee",
+        "kind": "positive",
+        "municipalityCode": "13108",
+        "question": "江東区で犬の登録をするときの手数料はいくらですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13108-dog_registration-001"],
+          "answerMustInclude": ["3,000円"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "dog_registrationスナップショット『登録手数料は1頭につき3,000円』に一致。"
+      },
+      {
+        "id": "P13-koto-school-documents",
+        "kind": "positive",
+        "municipalityCode": "13108",
+        "question": "江東区へ小・中学校の転入学をするとき、前の学校から受け取る書類は何ですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13108-school_transfer-001", "src-13108-school_transfer-002"],
+          "answerMustInclude": ["在学証明書"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "school_transferスナップショット『転校に必要な書類（在学証明書・教科書給与証明書）を受け取り』に一致(学校転入は江東・新宿のみ)。"
+      },
+      {
+        "id": "P14-koto-child-medical-income",
+        "kind": "positive",
+        "municipalityCode": "13108",
+        "question": "江東区の子ども医療費助成に、保護者の所得制限はありますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13108-child_medical-001"],
+          "answerMustInclude": ["所得制限"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "child_medicalスナップショット『本制度に保護者の所得制限はありません』に一致。"
+      },
+      {
+        "id": "P15-shinjuku-resident-deadline",
+        "kind": "positive",
+        "municipalityCode": "13104",
+        "question": "新宿区に引っ越したら、転入届はいつまでに出しますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13104-resident_registration-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "resident_registrationスナップショット『引越ししてきた日から14日以内』に一致。"
+      },
+      {
+        "id": "P16-shinjuku-resident-documents",
+        "kind": "positive",
+        "municipalityCode": "13104",
+        "question": "新宿区への転入届に必要なものを教えてください。",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13104-resident_registration-001"],
+          "answerMustInclude": ["転出証明書"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "resident_registrationスナップショット『届出に必要なもの…前住所地の市区町村の役所が発行した転出証明書』に一致。"
+      },
+      {
+        "id": "P17-shinjuku-child-allowance-15day",
+        "kind": "positive",
+        "municipalityCode": "13104",
+        "question": "新宿区の児童手当で、転入した日の翌日から15日以内に請求するとどうなりますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13104-child_benefits-001"],
+          "answerMustInclude": ["15日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "child_benefitsスナップショット『その日の翌日から15日以内に請求すれば事由発生のあった日の翌月分から支給できる』に一致。"
+      },
+      {
+        "id": "P18-shinjuku-dog-30day",
+        "kind": "positive",
+        "municipalityCode": "13104",
+        "question": "新宿区で飼い犬に関する事項に変更があったら、何日以内に届け出ますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13104-dog_registration-001"],
+          "answerMustInclude": ["30日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "dog_registrationスナップショット『飼い犬に関する事項に変更があった場合には、30日以内に届出をしなければなりません』に一致(新宿は30日)。"
+      },
+      {
+        "id": "P19-shinjuku-dog-tag-exchange",
+        "kind": "positive",
+        "municipalityCode": "13104",
+        "question": "新宿区に転入したとき、前住所の犬の鑑札は交換してもらえますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13104-dog_registration-001"],
+          "answerMustInclude": ["交換"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "dog_registrationスナップショット『前住所地の鑑札をお持ちの場合、無料で新宿区の鑑札と交換します』に一致。"
+      },
+      {
+        "id": "P20-shinjuku-school-documents",
+        "kind": "positive",
+        "municipalityCode": "13104",
+        "question": "新宿区へ小・中学校の転校をするとき、前の学校で受け取る証明書は何ですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13104-school_transfer-001"],
+          "answerMustInclude": ["在学証明書"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "school_transferスナップショット『前籍学校で転退学届を提出し、「在学証明書」及び「教科用図書給与証明書」を受け取ってください』に一致。"
+      },
+      {
+        "id": "A01-koto-childcare-vacancy",
+        "kind": "abstain",
+        "municipalityCode": "13108",
+        "question": "江東区で、今0歳児クラスに空きはありますか？",
+        "expect": {
+          "abstain": true,
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "childcareスナップショットは申込手続きの案内で、リアルタイムの空き人数は未収録(コーパス外)。保留すべき。"
+      },
+      {
+        "id": "A02-shinjuku-resident-tax-amount",
+        "kind": "abstain",
+        "municipalityCode": "13104",
+        "question": "新宿区の住民税は、年間いくらになりますか？",
+        "expect": {
+          "abstain": true,
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "住民税額を扱うソースはコーパスに存在しない。金額を断定せず保留すべき。"
+      },
+      {
+        "id": "A03-seta-moving-company",
+        "kind": "abstain",
+        "municipalityCode": "13112",
+        "question": "世田谷区でおすすめの引越し業者を教えてください。",
+        "expect": {
+          "abstain": true,
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "民間業者の推薦は行政手続きコーパスの範囲外。保留すべき。"
+      },
+      {
+        "id": "A04-shinjuku-bulky-waste-date",
+        "kind": "abstain",
+        "municipalityCode": "13104",
+        "question": "新宿区で粗大ごみを申し込んだら、収集は何日に来ますか？",
+        "expect": {
+          "abstain": true,
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "waste_scheduleスナップショットは資源・ごみの定期収集日で、粗大ごみの予約収集日は未収録(コーパス外)。保留すべき。"
+      },
+      {
+        "id": "A05-seta-waste-sorting-item",
+        "kind": "abstain",
+        "municipalityCode": "13112",
+        "question": "世田谷区で、プラスチック製の容器は何ごみとして出せばいいですか？",
+        "expect": {
+          "abstain": true,
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "世田谷の分別品目はCSV(waste_sorting)で未索引。waste_guide(HTML)は収集日案内で品目分別を含まない。保留すべき。"
+      },
+      {
+        "id": "X01-hachioji-unsupported",
+        "kind": "cross",
+        "municipalityCode": "13201",
+        "question": "八王子市の転入届について教えてください。",
+        "expect": {
+          "abstain": true,
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": [
+            "src-13112-",
+            "src-13108-",
+            "src-13104-",
+            "src-13115-",
+            "src-13101-"
+          ]
+        },
+        "rationale": "13201(八王子市)は未対応(supported=false)。対象外として保留し公式サイトへ誘導する応答が正。他自治体ソースを引用してはならない。5区化(Step4)で杉並・千代田が対応化したため、未対応自治体のスコープ外検証をこの区へ移した。"
+      },
+      {
+        "id": "X02-seta-asks-koto-allowance",
+        "kind": "cross",
+        "municipalityCode": "13112",
+        "question": "江東区の児童手当について教えてください。",
+        "expect": {
+          "abstain": "either",
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": ["src-13108-", "src-13104-"]
+        },
+        "rationale": "世田谷チャットで江東区を問う越境。保留するか、回答するなら引用は全て src-13112-。江東/新宿ソースの引用(自治体混入)は禁止。"
+      },
+      {
+        "id": "X03-koto-asks-shinjuku-dog",
+        "kind": "cross",
+        "municipalityCode": "13108",
+        "question": "新宿区の飼い犬の登録は何日以内にすればよいですか？",
+        "expect": {
+          "abstain": "either",
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": ["src-13104-", "src-13112-"]
+        },
+        "rationale": "江東チャットで新宿区を問う越境。引用は全て src-13108-。新宿/世田谷ソースの引用は禁止。"
+      },
+      {
+        "id": "X04-shinjuku-asks-seta-resident",
+        "kind": "cross",
+        "municipalityCode": "13104",
+        "question": "世田谷区の転入届の期限を教えてください。",
+        "expect": {
+          "abstain": "either",
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": ["src-13112-", "src-13108-"]
+        },
+        "rationale": "新宿チャットで世田谷区を問う越境。引用は全て src-13104-。世田谷/江東ソースの引用は禁止。"
+      },
+      {
+        "id": "X05-seta-asks-shinjuku-school",
+        "kind": "cross",
+        "municipalityCode": "13112",
+        "question": "新宿区の小学校の転入学手続きを教えてください。",
+        "expect": {
+          "abstain": "either",
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": ["src-13104-", "src-13108-"]
+        },
+        "rationale": "世田谷チャットで新宿区の学校転入を問う越境。世田谷は学校転入ソースを持たないため保留が自然。引用が出るなら全て src-13112- でなければならない。"
+      },
+      {
+        "id": "P21-sugi-resident-deadline",
+        "kind": "positive",
+        "municipalityCode": "13115",
+        "question": "杉並区に引っ越したら、転入届はいつまでに出せばいいですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13115-resident_registration-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "resident_registrationスナップショット『他の区市町村から杉並区に引越しをしたときは、14日以内に杉並区の窓口で転入の手続きが必要』に一致。回帰ガード: 杉並でも転入届の一般質問で resident_registration が主根拠になること。"
+      },
+      {
+        "id": "P22-sugi-mynumber-90day",
+        "kind": "positive",
+        "municipalityCode": "13115",
+        "question": "杉並区で、転入後にマイナンバーカードの継続利用は転入届出日から何日以内に手続きしますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13115-my_number-001"],
+          "answerMustInclude": ["90日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "my_numberスナップショット『転入届け出日から90日以内に手続きを行わなかった場合、マイナンバーカードは失効』に一致(90日は杉並・江東・千代田。世田谷・新宿の14日とは相違=自治体差分を混入させない)。"
+      },
+      {
+        "id": "P23-sugi-nhi-deadline",
+        "kind": "positive",
+        "municipalityCode": "13115",
+        "question": "杉並区で国民健康保険に加入する届出は、いつまでにすればよいですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13115-national_health_insurance-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "national_health_insuranceスナップショット『届出の期間 加入事由の発生日以降14日以内』に一致。"
+      },
+      {
+        "id": "P24-sugi-dog-30day",
+        "kind": "positive",
+        "municipalityCode": "13115",
+        "question": "杉並区で、マイクロチップを装着していない犬を飼い始めたら、何日以内に登録が必要ですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13115-dog_registration-001"],
+          "answerMustInclude": ["30日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "dog_registrationスナップショット『犬を飼い始めた日から30日以内に、犬の所在地の区市町村で(登録)』に一致(マイクロチップ未装着の犬)。"
+      },
+      {
+        "id": "P25-chiyoda-resident-deadline",
+        "kind": "positive",
+        "municipalityCode": "13101",
+        "question": "千代田区に引っ越したら、転入届はいつまでに出せばいいですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13101-resident_registration-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "resident_registrationスナップショット『新しい住所に引っ越してから14日以内』に一致。回帰ガード: 千代田でも転入届の一般質問で resident_registration が主根拠になること。"
+      },
+      {
+        "id": "P26-chiyoda-mynumber-90day",
+        "kind": "positive",
+        "municipalityCode": "13101",
+        "question": "千代田区で、転入手続きをした日から何日を過ぎるとマイナンバーカードの住所変更手続きができなくなりますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13101-my_number-001"],
+          "answerMustInclude": ["90日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "my_numberスナップショット『転入手続きをした日から90日を過ぎると、住所の変更手続き(...)』に一致(90日は千代田・杉並・江東。世田谷・新宿の14日とは相違)。"
+      },
+      {
+        "id": "P27-chiyoda-nhi-deadline",
+        "kind": "positive",
+        "municipalityCode": "13101",
+        "question": "千代田区で国民健康保険に加入するときは、何日以内に届け出ますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13101-national_health_insurance-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "national_health_insuranceスナップショット『(加入・脱退の際は)必ず14日以内に届け出をしてください』に一致。"
+      },
+      {
+        "id": "P28-chiyoda-child-medical-3month",
+        "kind": "positive",
+        "municipalityCode": "13101",
+        "question": "千代田区の子ども医療費助成は、転入日の翌日から何か月以内に申請すると転入日にさかのぼって認定されますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13101-child_medical-001"],
+          "answerMustInclude": ["3か月"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "child_medicalスナップショット『出生、転入日の翌日から3か月以内に(...)申請』に一致(3か月は千代田・世田谷・新宿。杉並の15日とは相違=自治体差分を混入させない)。"
+      },
+      {
+        "id": "A06-sugi-childcare-vacancy",
+        "kind": "abstain",
+        "municipalityCode": "13115",
+        "question": "杉並区で、今0歳児クラスに空きはありますか？",
+        "expect": {
+          "abstain": true,
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "childcareスナップショットは区外からの申込手続きの入口案内で、リアルタイムの空き人数は未収録(コーパス外)。意図リランクでchildcareが上位化しても、空き数は抜粋に無いため保留すべき。"
+      },
+      {
+        "id": "A07-chiyoda-resident-tax-amount",
+        "kind": "abstain",
+        "municipalityCode": "13101",
+        "question": "千代田区の住民税は、年間いくらになりますか？",
+        "expect": {
+          "abstain": true,
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "住民税額を扱うソースはコーパスに存在しない。金額を断定せず保留すべき。"
+      },
+      {
+        "id": "P29-shinagawa-resident-deadline",
+        "kind": "positive",
+        "municipalityCode": "13109",
+        "question": "品川区に引っ越したら、転入届はいつまでに出せばいいですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13109-resident_registration-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "resident_registrationスナップショット『住み始めてから14日以内』に一致。回帰ガード: 品川でも転入届の一般質問で resident_registration が主根拠になること。"
+      },
+      {
+        "id": "P30-shinagawa-mynumber-90day",
+        "kind": "positive",
+        "municipalityCode": "13109",
+        "question": "品川区で、転入届を出した後にマイナンバーカードの継続利用は届出日から何日以内に申し出ますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13109-my_number-001"],
+          "answerMustInclude": ["90日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "my_numberスナップショット『転入届済みの場合は届出日から90日以内の申し出であること』に一致(90日は品川・杉並・江東・千代田・大田。世田谷・新宿の14日とは相違=自治体差分を混入させない)。"
+      },
+      {
+        "id": "P31-shinagawa-child-medical-6month",
+        "kind": "positive",
+        "municipalityCode": "13109",
+        "question": "品川区の子どもすこやか医療費助成は、異動日から何か月以内に申請すると異動日にさかのぼって資格が発生しますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13109-child_medical-001"],
+          "answerMustInclude": ["6カ月"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "child_medicalスナップショット『異動日から6カ月以内に申請』に一致(6カ月は品川・大田。世田谷/新宿/千代田の3か月・杉並の15日とは相違=自治体差分を混入させない)。"
+      },
+      {
+        "id": "P32-shinagawa-nhi-deadline",
+        "kind": "positive",
+        "municipalityCode": "13109",
+        "question": "品川区で国民健康保険に加入する届出は、いつまでにすればよいですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13109-national_health_insurance-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "national_health_insuranceスナップショット『14日以内に届出をしてください』に一致。"
+      },
+      {
+        "id": "P33-ota-resident-deadline",
+        "kind": "positive",
+        "municipalityCode": "13111",
+        "question": "大田区に引っ越したら、転入届はいつまでに出せばいいですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13111-resident_registration-001"],
+          "answerMustInclude": ["14日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "resident_registrationスナップショット『大田区に住み始めた日から14日以内』に一致。回帰ガード: 大田でも転入届の一般質問で resident_registration が主根拠になること。"
+      },
+      {
+        "id": "P34-ota-child-allowance-15day",
+        "kind": "positive",
+        "municipalityCode": "13111",
+        "question": "大田区で児童手当の申請は、転入(前住所地の転出予定日)の翌日から何日以内にすると転入月の翌月分から受け取れますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13111-child_benefits-001"],
+          "answerMustInclude": ["15日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "child_benefitsスナップショット『異動日(...)の翌日から15日以内に申請した場合は』の15日特例に一致。"
+      },
+      {
+        "id": "P35-ota-child-medical-6month",
+        "kind": "positive",
+        "municipalityCode": "13111",
+        "question": "大田区の子ども医療費助成は、転入日から何か月以内に申請すると転入日にさかのぼって資格が発生しますか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13111-child_medical-001"],
+          "answerMustInclude": ["6か月"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "child_medicalスナップショット『6か月以内に申請された場合は出生日または転入日に遡って資格が発生します』に一致(6か月は大田・品川。世田谷/新宿/千代田の3か月・杉並の15日とは相違=自治体差分を混入させない)。"
+      },
+      {
+        "id": "P36-ota-childcare-prev-month-7th",
+        "kind": "positive",
+        "municipalityCode": "13111",
+        "question": "大田区外に住んでいて区内の保育園に入園を希望する場合、申込の締切はいつですか？",
+        "expect": {
+          "abstain": false,
+          "expectedSourceIds": ["src-13111-childcare-001"],
+          "answerMustInclude": ["前月7日"],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "childcareスナップショット『申込月の前月7日まで(7日が閉庁日の場合は翌開庁日)』に一致(前月7日は大田。江東の前月末日・世田谷の前月10日とは相違=自治体差分を混入させない)。"
+      },
+      {
+        "id": "A08-shinagawa-waste-collection-day",
+        "kind": "abstain",
+        "municipalityCode": "13109",
+        "question": "品川区で燃やすごみは何曜日に収集されますか？",
+        "expect": {
+          "abstain": true,
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "品川は収集曜日の機械判読可能データ(収集日CSV)が2017年更新のままで現行年度と確認できず waste.json を作らない誠実縮退。waste_guide(HTML)は地区別収集曜日一覧・収集カレンダーへの導線ページで、住所別の具体的な収集曜日は抜粋に含まれない(コーパス外)。保留すべき。"
+      },
+      {
+        "id": "A09-ota-waste-sorting-item",
+        "kind": "abstain",
+        "municipalityCode": "13111",
+        "question": "大田区で、ペットボトルは何ごみとして出せばいいですか？",
+        "expect": {
+          "abstain": true,
+          "expectedSourceIds": [],
+          "answerMustInclude": [],
+          "forbiddenSourcePrefixes": []
+        },
+        "rationale": "大田の品目別ごみ分別辞書(waste_sorting CSV)は都カタログに存在せず未整備(コーパス外)。waste_guide(HTML)は収集日の導線で品目別分別を含まない。保留すべき。"
+      }
+    ]
+  },
+  "meta": {
+    "endpoint": "https://tokyo-move-navi.maintainer.workers.dev/api/chat",
+    "ranAt": "2026-07-25T17:39:45.825Z",
+    "spacingMs": 7000,
+    "timeoutMs": 30000,
+    "approvedHtmlSources": {
+      "13101": 10,
+      "13104": 12,
+      "13108": 13,
+      "13109": 10,
+      "13111": 12,
+      "13112": 12,
+      "13115": 12
+    },
+    "approvedHtmlSourceTotal": 81,
+    "indexedVectorCount": 640,
+    "ruleVersion": "13112:2026-07-25.1 / 13108:2026-07-22.1 / 13104:2026-07-22.1 / 13115:2026-07-25.1 / 13101:2026-07-25.1",
+    "promptVersion": "SYSTEM_PROMPT (packages/rag/src/prompt.ts, fixed)"
+  },
+  "results": [
+    {
+      "id": "P01-seta-resident-deadline",
+      "kind": "positive",
+      "municipalityCode": "13112",
+      "question": "世田谷区に引っ越したら、転入届はいつまでに出せばいいですか？",
+      "httpStatus": 200,
+      "latencyMs": 3402,
+      "abstained": false,
+      "answer": "①世田谷区に引っ越した場合、転入届は引越しをしてきた日から14日以内に提出する必要があります。  \n②ただし、マイナンバーカードをお持ちの方は、転出（予定）日から30日以内、かつ転入日から14日以内に転入届を提出しないと、カードが失効する可能性がありますのでご注意ください。",
+      "citationSourceIds": ["src-13112-resident_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": ["30日以内"],
+      "status": "needs_human_review",
+      "failReasons": []
+    },
+    {
+      "id": "P02-seta-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13112",
+      "question": "世田谷区への転入届のときに持っていく書類を教えてください。",
+      "httpStatus": 200,
+      "latencyMs": 2593,
+      "abstained": false,
+      "answer": "①転入届の際に持参する書類は以下の通りです：\n- 転出証明書（前住所の役所が発行）\n- 届出する方の本人確認書類（マイナンバーカード、運転免許証、パスポートなど）\n- 外国人の方は、引越しをした方全員分の在留カードまたは特別永住者証明書\n\n②注意事項として、転出証明書はマイナンバーカードをお持ちの方が特例の転出届をされた場合は不要です。また、本人確認書類は有効期限内のもので、コピーは不可です。",
+      "citationSourceIds": ["src-13112-resident_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P03-seta-nhi-deadline",
+      "kind": "positive",
+      "municipalityCode": "13112",
+      "question": "世田谷区で国民健康保険に加入する届出は、いつまでにすればよいですか？",
+      "httpStatus": 200,
+      "latencyMs": 2609,
+      "abstained": false,
+      "answer": "国民健康保険に加入する届出は、加入すべき事由が発生した日から14日以内に行う必要があります。もし14日を過ぎてしまった場合でも、書類がそろい次第速やかに届出をしてください。\n\nただし、加入事由発生前は手続きができませんのでご注意ください。",
+      "citationSourceIds": ["src-13112-national_health_insurance-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P04-seta-child-allowance-15day",
+      "kind": "positive",
+      "municipalityCode": "13112",
+      "question": "世田谷区の児童手当で、15日特例とは何ですか？",
+      "httpStatus": 200,
+      "latencyMs": 2513,
+      "abstained": false,
+      "answer": "①15日特例とは、児童手当の申請日が出生日や前住所地での転出予定日の翌日から15日以内に申請した場合、申請月から支給（または増額）される特例のことです。申請日が出生日や転出予定日の翌月になった場合でも、15日以内に申請すれば、申請月から支給されます。\n\n②申請日を数える際には、閉庁日（土日、祝日、年末年始等）を含めますが、15日目が閉庁日の場合は翌開庁日が15日目となります。",
+      "citationSourceIds": ["src-13112-child_benefits-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P05-seta-dog-tag-exchange",
+      "kind": "positive",
+      "municipalityCode": "13112",
+      "question": "世田谷区に転入したとき、前の住所で交付された犬の鑑札はどうなりますか？",
+      "httpStatus": 200,
+      "latencyMs": 2447,
+      "abstained": false,
+      "answer": "①世田谷区に転入した場合、前住所地の区市町村で交付された犬鑑札を持参のうえ、飼い犬の登録事項変更届を提出する必要があります。世田谷区の犬鑑札と無償で交換されます。 \n\n②紛失等のため、犬鑑札を持参できない場合は再交付手数料がかかります。また、転入届とは別に飼い犬の登録変更の手続きが必要です。",
+      "citationSourceIds": ["src-13112-dog_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P06-seta-child-medical-age",
+      "kind": "positive",
+      "municipalityCode": "13112",
+      "question": "世田谷区の子ども医療費助成は、何歳まで対象ですか？",
+      "httpStatus": 200,
+      "latencyMs": 2043,
+      "abstained": false,
+      "answer": "世田谷区の子ども医療費助成は、0歳から18歳に達した日以後最初の年度末（3月31日）までの児童が対象です。\n\n注意事項として、4月1日生まれの方は前の3月31日までが対象となります。",
+      "citationSourceIds": ["src-13112-child_medical-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": ["31日", "1日", "31日まで"],
+      "status": "needs_human_review",
+      "failReasons": []
+    },
+    {
+      "id": "P07-seta-nhi-identity-doc",
+      "kind": "positive",
+      "municipalityCode": "13112",
+      "question": "世田谷区で国民健康保険の届出をするとき、本人確認書類は必要ですか？",
+      "httpStatus": 200,
+      "latencyMs": 2012,
+      "abstained": false,
+      "answer": "①はい、国民健康保険の届出をする際には本人確認書類が必要です。  \n②具体的には、官公署発行の顔写真つき証明書（運転免許証、パスポート、マイナンバーカードなど）が求められます。これらがない場合は、他の書類を組み合わせて提出する必要があります。",
+      "citationSourceIds": ["src-13112-national_health_insurance-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P08-koto-resident-deadline",
+      "kind": "positive",
+      "municipalityCode": "13108",
+      "question": "江東区に引っ越したら、転入届はいつまでに提出しますか？",
+      "httpStatus": 200,
+      "latencyMs": 1943,
+      "abstained": false,
+      "answer": "①江東区に引っ越した場合、転入届は新しい住所に住み始めてから14日以内に提出する必要があります。  \n②なお、引っ越し前に届出をすることはできません。また、14日目が区役所の閉庁日にあたる場合は、翌開庁日が届出期間の末日となります。",
+      "citationSourceIds": ["src-13108-resident_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P09-koto-nhi-deadline",
+      "kind": "positive",
+      "municipalityCode": "13108",
+      "question": "江東区で国民健康保険に加入する届出期間を教えてください。",
+      "httpStatus": 200,
+      "latencyMs": 1894,
+      "abstained": false,
+      "answer": "江東区で国民健康保険に加入する届出期間は、転入日から14日以内です。\n\nただし、詳細については江東区の公式ページでの確認をお勧めします。",
+      "citationSourceIds": ["src-13108-national_health_insurance-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P10-koto-child-allowance-15day",
+      "kind": "positive",
+      "municipalityCode": "13108",
+      "question": "江東区の児童手当の15日特例について教えてください。",
+      "httpStatus": 200,
+      "latencyMs": 2701,
+      "abstained": false,
+      "answer": "①江東区の児童手当の15日特例は、出生または転入した日（転出予定日）の翌日から数えて15日以内に申請した場合、要件の発生した月に申請があったものとみなされるというものです。例えば、4月30日に出生または転入した場合、5月15日までに申請すれば4月中の申請とみなされ、5月分から支給されます。\n\n②申請が遅れると、遅れた分の手当を受けることができなくなるため、早めの申請が推奨されます。",
+      "citationSourceIds": ["src-13108-child_benefits-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": ["30日"],
+      "status": "needs_human_review",
+      "failReasons": []
+    },
+    {
+      "id": "P11-koto-mynumber-90day",
+      "kind": "positive",
+      "municipalityCode": "13108",
+      "question": "江東区でマイナンバーカードの継続利用は、転入届を行った日から何日以内に手続きしますか？",
+      "httpStatus": 200,
+      "latencyMs": 1924,
+      "abstained": false,
+      "answer": "江東区でマイナンバーカードの継続利用は、転入届を行った日から90日以内に手続きする必要があります。\n\nただし、転入届は江東区に住み始めた日から14日以内かつ転出証明書の転出予定日から30日以内に行う必要がありますので、ご注意ください。",
+      "citationSourceIds": ["src-13108-my_number-001", "src-13108-resident_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": ["14日以内", "30日以内"],
+      "status": "needs_human_review",
+      "failReasons": []
+    },
+    {
+      "id": "P12-koto-dog-fee",
+      "kind": "positive",
+      "municipalityCode": "13108",
+      "question": "江東区で犬の登録をするときの手数料はいくらですか？",
+      "httpStatus": 200,
+      "latencyMs": 1575,
+      "abstained": false,
+      "answer": "①江東区で犬の登録をするときの手数料は1頭につき3,000円です。  \n②手続きは江東区保健所生活衛生課で行います。",
+      "citationSourceIds": ["src-13108-dog_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P13-koto-school-documents",
+      "kind": "positive",
+      "municipalityCode": "13108",
+      "question": "江東区へ小・中学校の転入学をするとき、前の学校から受け取る書類は何ですか？",
+      "httpStatus": 200,
+      "latencyMs": 1821,
+      "abstained": false,
+      "answer": "①江東区へ小・中学校の転入学をする際、前の学校から受け取る書類は「在学証明書」と「教科書給与証明書」です。  \n②これらの書類は、転校に必要なものであり、転入学通知書と合わせて転入学（転校）する学校へ提出する必要があります。",
+      "citationSourceIds": ["src-13108-school_transfer-001", "src-13108-school_transfer-002"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P14-koto-child-medical-income",
+      "kind": "positive",
+      "municipalityCode": "13108",
+      "question": "江東区の子ども医療費助成に、保護者の所得制限はありますか？",
+      "httpStatus": 200,
+      "latencyMs": 1609,
+      "abstained": false,
+      "answer": "①江東区の子ども医療費助成には、保護者の所得制限はありません。  \n②ただし、助成を受けるためには医療証の交付申請が必要です。",
+      "citationSourceIds": ["src-13108-child_medical-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P15-shinjuku-resident-deadline",
+      "kind": "positive",
+      "municipalityCode": "13104",
+      "question": "新宿区に引っ越したら、転入届はいつまでに出しますか？",
+      "httpStatus": 200,
+      "latencyMs": 1477,
+      "abstained": false,
+      "answer": "①新宿区に引っ越した場合、転入届は引越ししてきた日から14日以内に提出する必要があります。  \n②引越す前には届出できません。",
+      "citationSourceIds": ["src-13104-resident_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P16-shinjuku-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13104",
+      "question": "新宿区への転入届に必要なものを教えてください。",
+      "httpStatus": 200,
+      "latencyMs": 4050,
+      "abstained": false,
+      "answer": "①新宿区への転入届に必要なものは以下の通りです：\n- 前住所地の市区町村の役所が発行した転出証明書\n- 届出人の本人確認ができる書類（有効期限内の運転免許証・旅券（パスポート）等）\n- 健康保険の資格確認書（国民健康保険に加入している世帯に入る場合）\n- マイナンバーカード（個人番号カード）（お持ちの方は同一世帯の全員分）\n- 転入者全員の記載された戸籍謄本（抄本）の写し\n- 転入者全員の記載された戸籍の附票の写し\n\n②注意事項として、本人確認ができる書類は外国人住民の場合、在留カードまたは特別永住者証明書が必要です。また、戸籍謄本や附票は新しいもの（3か月以内）を用意する必要があります。",
+      "citationSourceIds": ["src-13104-resident_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": ["3か月以内"],
+      "status": "needs_human_review",
+      "failReasons": []
+    },
+    {
+      "id": "P17-shinjuku-child-allowance-15day",
+      "kind": "positive",
+      "municipalityCode": "13104",
+      "question": "新宿区の児童手当で、転入した日の翌日から15日以内に請求するとどうなりますか？",
+      "httpStatus": 200,
+      "latencyMs": 2393,
+      "abstained": false,
+      "answer": "転入した日の翌日から15日以内に請求すると、事由発生のあった日の翌月分から支給できることがあります。\n\nただし、請求期限が土日祝日などの閉庁日にあたる場合には、翌開庁日が請求期限となりますので、連休などの場合には請求期限にご注意ください。",
+      "citationSourceIds": ["src-13104-child_benefits-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P18-shinjuku-dog-30day",
+      "kind": "positive",
+      "municipalityCode": "13104",
+      "question": "新宿区で飼い犬に関する事項に変更があったら、何日以内に届け出ますか？",
+      "httpStatus": 200,
+      "latencyMs": 1625,
+      "abstained": false,
+      "answer": "新宿区で飼い犬に関する事項に変更があった場合、30日以内に届出をしなければなりません。",
+      "citationSourceIds": ["src-13104-dog_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P19-shinjuku-dog-tag-exchange",
+      "kind": "positive",
+      "municipalityCode": "13104",
+      "question": "新宿区に転入したとき、前住所の犬の鑑札は交換してもらえますか？",
+      "httpStatus": 200,
+      "latencyMs": 2068,
+      "abstained": false,
+      "answer": "①はい、前住所地の犬の鑑札は新宿区の鑑札と無料で交換してもらえます。  \n②ただし、前住所地の鑑札を紛失した場合は再交付手数料がかかります。",
+      "citationSourceIds": ["src-13104-dog_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P20-shinjuku-school-documents",
+      "kind": "positive",
+      "municipalityCode": "13104",
+      "question": "新宿区へ小・中学校の転校をするとき、前の学校で受け取る証明書は何ですか？",
+      "httpStatus": 200,
+      "latencyMs": 2973,
+      "abstained": false,
+      "answer": "①前の学校で受け取る証明書は「在学証明書」と「教科用図書給与証明書」です。  \n②これらの証明書は、転校手続きに必要な書類として、新宿区の指定校に提出する必要があります。",
+      "citationSourceIds": ["src-13104-school_transfer-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "A01-koto-childcare-vacancy",
+      "kind": "abstain",
+      "municipalityCode": "13108",
+      "question": "江東区で、今0歳児クラスに空きはありますか？",
+      "httpStatus": 200,
+      "latencyMs": 1393,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "A02-shinjuku-resident-tax-amount",
+      "kind": "abstain",
+      "municipalityCode": "13104",
+      "question": "新宿区の住民税は、年間いくらになりますか？",
+      "httpStatus": 200,
+      "latencyMs": 2910,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "A03-seta-moving-company",
+      "kind": "abstain",
+      "municipalityCode": "13112",
+      "question": "世田谷区でおすすめの引越し業者を教えてください。",
+      "httpStatus": 200,
+      "latencyMs": 2132,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "A04-shinjuku-bulky-waste-date",
+      "kind": "abstain",
+      "municipalityCode": "13104",
+      "question": "新宿区で粗大ごみを申し込んだら、収集は何日に来ますか？",
+      "httpStatus": 200,
+      "latencyMs": 1379,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "A05-seta-waste-sorting-item",
+      "kind": "abstain",
+      "municipalityCode": "13112",
+      "question": "世田谷区で、プラスチック製の容器は何ごみとして出せばいいですか？",
+      "httpStatus": 200,
+      "latencyMs": 1513,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "X01-hachioji-unsupported",
+      "kind": "cross",
+      "municipalityCode": "13201",
+      "question": "八王子市の転入届について教えてください。",
+      "httpStatus": 200,
+      "latencyMs": 53,
+      "abstained": true,
+      "answer": "八王子市は現在このチャットの対応対象外です。お手続きは八王子市の公式サイト(https://www.city.hachioji.tokyo.jp/)でご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "X02-seta-asks-koto-allowance",
+      "kind": "cross",
+      "municipalityCode": "13112",
+      "question": "江東区の児童手当について教えてください。",
+      "httpStatus": 200,
+      "latencyMs": 1530,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "X03-koto-asks-shinjuku-dog",
+      "kind": "cross",
+      "municipalityCode": "13108",
+      "question": "新宿区の飼い犬の登録は何日以内にすればよいですか？",
+      "httpStatus": 200,
+      "latencyMs": 1475,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "X04-shinjuku-asks-seta-resident",
+      "kind": "cross",
+      "municipalityCode": "13104",
+      "question": "世田谷区の転入届の期限を教えてください。",
+      "httpStatus": 200,
+      "latencyMs": 1356,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "X05-seta-asks-shinjuku-school",
+      "kind": "cross",
+      "municipalityCode": "13112",
+      "question": "新宿区の小学校の転入学手続きを教えてください。",
+      "httpStatus": 200,
+      "latencyMs": 1637,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P21-sugi-resident-deadline",
+      "kind": "positive",
+      "municipalityCode": "13115",
+      "question": "杉並区に引っ越したら、転入届はいつまでに出せばいいですか？",
+      "httpStatus": 200,
+      "latencyMs": 1824,
+      "abstained": false,
+      "answer": "転入届は、杉並区の新しい住所に住み始めてから14日以内に提出する必要があります。住み始める前に受付はできませんので、ご注意ください。",
+      "citationSourceIds": ["src-13115-resident_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P22-sugi-mynumber-90day",
+      "kind": "positive",
+      "municipalityCode": "13115",
+      "question": "杉並区で、転入後にマイナンバーカードの継続利用は転入届出日から何日以内に手続きしますか？",
+      "httpStatus": 200,
+      "latencyMs": 2396,
+      "abstained": false,
+      "answer": "転入後にマイナンバーカードの継続利用は、転入届出日から90日以内に手続きする必要があります。\n\n注意事項として、転入届を行った日が「転出予定日から30日、または新しい住所に住み始めてから14日を経過した日」を過ぎていた場合、マイナンバーカードは失効し、引き続き利用することはできません。",
+      "citationSourceIds": ["src-13115-my_number-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": ["30日", "14日"],
+      "status": "needs_human_review",
+      "failReasons": []
+    },
+    {
+      "id": "P23-sugi-nhi-deadline",
+      "kind": "positive",
+      "municipalityCode": "13115",
+      "question": "杉並区で国民健康保険に加入する届出は、いつまでにすればよいですか？",
+      "httpStatus": 200,
+      "latencyMs": 1871,
+      "abstained": false,
+      "answer": "①国民健康保険に加入する届出は、加入事由の発生日以降14日以内に行う必要があります。  \n②原則として、加入事由発生前の届出は受付できません。",
+      "citationSourceIds": ["src-13115-national_health_insurance-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P24-sugi-dog-30day",
+      "kind": "positive",
+      "municipalityCode": "13115",
+      "question": "杉並区で、マイクロチップを装着していない犬を飼い始めたら、何日以内に登録が必要ですか？",
+      "httpStatus": 200,
+      "latencyMs": 1567,
+      "abstained": false,
+      "answer": "①犬を飼い始めた日から30日以内に、犬の所在地の区市町村で登録の申請をする必要があります。  \n②生後90日以内の犬の場合は、90日を経過した日から30日以内に申請することが求められます。",
+      "citationSourceIds": ["src-13115-dog_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": ["90日以内", "90日"],
+      "status": "needs_human_review",
+      "failReasons": []
+    },
+    {
+      "id": "P25-chiyoda-resident-deadline",
+      "kind": "positive",
+      "municipalityCode": "13101",
+      "question": "千代田区に引っ越したら、転入届はいつまでに出せばいいですか？",
+      "httpStatus": 200,
+      "latencyMs": 1667,
+      "abstained": false,
+      "answer": "転入届は、新しい住所に引っ越してから14日以内に提出する必要があります。\n\nただし、引っ越し前に届出することはできませんのでご注意ください。",
+      "citationSourceIds": ["src-13101-resident_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P26-chiyoda-mynumber-90day",
+      "kind": "positive",
+      "municipalityCode": "13101",
+      "question": "千代田区で、転入手続きをした日から何日を過ぎるとマイナンバーカードの住所変更手続きができなくなりますか？",
+      "httpStatus": 200,
+      "latencyMs": 1600,
+      "abstained": false,
+      "answer": "転入手続きをした日から90日を過ぎると、マイナンバーカードの住所変更手続きができなくなります。\n\n注意事項として、住所の変更手続きができなくなると、カードが失効します。",
+      "citationSourceIds": ["src-13101-my_number-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P27-chiyoda-nhi-deadline",
+      "kind": "positive",
+      "municipalityCode": "13101",
+      "question": "千代田区で国民健康保険に加入するときは、何日以内に届け出ますか？",
+      "httpStatus": 200,
+      "latencyMs": 1698,
+      "abstained": false,
+      "answer": "①国民健康保険に加入する際は、必ず14日以内に届け出をしてください。  \n②届け出が遅れると、保険料をさかのぼって支払わなければならなくなり、その間、医療費が全額自己負担となります。",
+      "citationSourceIds": ["src-13101-national_health_insurance-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P28-chiyoda-child-medical-3month",
+      "kind": "positive",
+      "municipalityCode": "13101",
+      "question": "千代田区の子ども医療費助成は、転入日の翌日から何か月以内に申請すると転入日にさかのぼって認定されますか？",
+      "httpStatus": 200,
+      "latencyMs": 1884,
+      "abstained": false,
+      "answer": "①転入日の翌日から3か月以内に申請すると、転入日にさかのぼって認定されます。  \n②申請は、子育て推進課手当・医療係または各出張所で行う必要があります。",
+      "citationSourceIds": ["src-13101-child_medical-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "A06-sugi-childcare-vacancy",
+      "kind": "abstain",
+      "municipalityCode": "13115",
+      "question": "杉並区で、今0歳児クラスに空きはありますか？",
+      "httpStatus": 200,
+      "latencyMs": 1466,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "A07-chiyoda-resident-tax-amount",
+      "kind": "abstain",
+      "municipalityCode": "13101",
+      "question": "千代田区の住民税は、年間いくらになりますか？",
+      "httpStatus": 200,
+      "latencyMs": 1442,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P29-shinagawa-resident-deadline",
+      "kind": "positive",
+      "municipalityCode": "13109",
+      "question": "品川区に引っ越したら、転入届はいつまでに出せばいいですか？",
+      "httpStatus": 200,
+      "latencyMs": 2191,
+      "abstained": false,
+      "answer": "①品川区に住み始めてから14日以内に転入届を出す必要があります。  \n②住み始めていない場合は手続きができません。また、届出期間を大幅に過ぎると、50,000円以下の過料が科される可能性があります。",
+      "citationSourceIds": ["src-13109-resident_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P30-shinagawa-mynumber-90day",
+      "kind": "positive",
+      "municipalityCode": "13109",
+      "question": "品川区で、転入届を出した後にマイナンバーカードの継続利用は届出日から何日以内に申し出ますか？",
+      "httpStatus": 200,
+      "latencyMs": 2048,
+      "abstained": false,
+      "answer": "①転入届を出した後にマイナンバーカードの継続利用の申し出は、届出日から90日以内に行う必要があります。  \n②ただし、転入届を出してからの期間を越えてしまうと、マイナンバーカードとしての利用ができなくなりますので注意が必要です。",
+      "citationSourceIds": ["src-13109-my_number-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P31-shinagawa-child-medical-6month",
+      "kind": "positive",
+      "municipalityCode": "13109",
+      "question": "品川区の子どもすこやか医療費助成は、異動日から何か月以内に申請すると異動日にさかのぼって資格が発生しますか？",
+      "httpStatus": 200,
+      "latencyMs": 2210,
+      "abstained": false,
+      "answer": "①異動日から6カ月以内に申請すると、異動日から資格が発生します。  \n②ただし、6カ月を過ぎて申請した場合は、申請した日からの資格となります。",
+      "citationSourceIds": ["src-13109-child_medical-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P32-shinagawa-nhi-deadline",
+      "kind": "positive",
+      "municipalityCode": "13109",
+      "question": "品川区で国民健康保険に加入する届出は、いつまでにすればよいですか？",
+      "httpStatus": 200,
+      "latencyMs": 1803,
+      "abstained": false,
+      "answer": "①国民健康保険に加入する届出は、転入してきた日から14日以内に行う必要があります。  \n②詳細については、品川区の公式ページでの確認をお勧めします。",
+      "citationSourceIds": ["src-13109-national_health_insurance-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P33-ota-resident-deadline",
+      "kind": "positive",
+      "municipalityCode": "13111",
+      "question": "大田区に引っ越したら、転入届はいつまでに出せばいいですか？",
+      "httpStatus": 200,
+      "latencyMs": 1653,
+      "abstained": false,
+      "answer": "①大田区に住み始めた日から14日以内に転入届を出す必要があります。  \n②住み始める前の届出はできません。",
+      "citationSourceIds": ["src-13111-resident_registration-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P34-ota-child-allowance-15day",
+      "kind": "positive",
+      "municipalityCode": "13111",
+      "question": "大田区で児童手当の申請は、転入(前住所地の転出予定日)の翌日から何日以内にすると転入月の翌月分から受け取れますか？",
+      "httpStatus": 200,
+      "latencyMs": 2265,
+      "abstained": false,
+      "answer": "大田区で児童手当の申請は、転入日（受給者の前住所の転出予定日）の翌日から15日以内に行う必要があります。この場合、申請月から支給されます。\n\nただし、15日を過ぎて申請した場合、支給を受けられない月が発生することがありますので、注意が必要です。",
+      "citationSourceIds": ["src-13111-child_benefits-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P35-ota-child-medical-6month",
+      "kind": "positive",
+      "municipalityCode": "13111",
+      "question": "大田区の子ども医療費助成は、転入日から何か月以内に申請すると転入日にさかのぼって資格が発生しますか？",
+      "httpStatus": 200,
+      "latencyMs": 1700,
+      "abstained": false,
+      "answer": "①転入日から6か月以内に申請すると、転入日に遡って資格が発生します。  \n②ただし、提出された健康保険情報の保険加入日が転入日より遅い場合は、保険加入日から資格が発生することがあります。",
+      "citationSourceIds": ["src-13111-child_medical-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "P36-ota-childcare-prev-month-7th",
+      "kind": "positive",
+      "municipalityCode": "13111",
+      "question": "大田区外に住んでいて区内の保育園に入園を希望する場合、申込の締切はいつですか？",
+      "httpStatus": 200,
+      "latencyMs": 2220,
+      "abstained": false,
+      "answer": "①大田区外に住んでいて区内の保育園に入園を希望する場合、申込の締切は申込月の前月7日までです（7日が閉庁日のときは翌開庁日まで）。 \n\n②2、3月の入園・転園・あっせんについては、4月利用調整準備のため受け付けていません。申請書類に不備がある場合は、住民票を置いている自治体を経由して連絡がありますので、余裕を持って提出してください。",
+      "citationSourceIds": ["src-13111-childcare-001"],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": true,
+        "answerIncludes": true,
+        "citationCompleteness": true,
+        "noUnsupportedClaim": true,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": ["7日まで", "7日"],
+      "status": "needs_human_review",
+      "failReasons": []
+    },
+    {
+      "id": "A08-shinagawa-waste-collection-day",
+      "kind": "abstain",
+      "municipalityCode": "13109",
+      "question": "品川区で燃やすごみは何曜日に収集されますか？",
+      "httpStatus": 200,
+      "latencyMs": 1443,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    },
+    {
+      "id": "A09-ota-waste-sorting-item",
+      "kind": "abstain",
+      "municipalityCode": "13111",
+      "question": "大田区で、ペットボトルは何ごみとして出せばいいですか？",
+      "httpStatus": 200,
+      "latencyMs": 1329,
+      "abstained": true,
+      "answer": "ご質問の内容については、確認できませんでした（公式の根拠が見つかりませんでした）。お手数ですが、各自治体の公式ページで最新情報をご確認ください。",
+      "citationSourceIds": [],
+      "checks": {
+        "reachedApi": true,
+        "abstainMatch": true,
+        "retrievalHit": null,
+        "answerIncludes": null,
+        "citationCompleteness": null,
+        "noUnsupportedClaim": null,
+        "isolationOk": true
+      },
+      "contaminationCount": 0,
+      "reviewFlags": [],
+      "status": "pass",
+      "failReasons": []
+    }
+  ]
+}
