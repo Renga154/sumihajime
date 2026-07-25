@@ -232,9 +232,11 @@ export function loadWasteFor(
   schedules: WasteSchedule[];
   dataset: WasteDataset | null;
 } {
-  // なぜ: 収集曜日データを持たない自治体がある(例: 杉並区13115は収集曜日が第三者SaaSの
-  // JSウィジェット依存で機械取得不可のため waste.json を作らない=誠実縮退)。ファイルが
-  // 無い場合はエラーにせず空(dataset=null)を返し、WastePage 側の空状態フォールバックへ委ねる。
+  // なぜ: 収集曜日データを持たない対応自治体がある。杉並区(13115)は第三者SaaSのJSウィジェット
+  // 依存で機械取得不可、千代田区(13101)は公式PDFのみで機械判読可能データが無い。いずれも推測で
+  // 曜日を作らず waste.json を作らない=誠実縮退。ごみ分別辞書(waste-sorting)が未整備自治体で空配列を
+  // 返すのと同様に、waste.json 不在は欠落として扱いエラーにせず dataset=null を返す。呼び出し側は
+  // waste の公開物・ゲート参照を生成せず、WastePage 側の空状態フォールバックへ委ねる。
   const rel = `data/normalized/${code}/waste.json`;
   if (!existsSync(resolve(repoRoot, rel))) {
     return { areas: [], schedules: [], dataset: null };

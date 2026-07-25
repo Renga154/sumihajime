@@ -88,13 +88,15 @@ describe('publish gate — real repository data (13112)', () => {
 
   it('injecting a non-approved reference into the real dataset trips the gate', () => {
     const data = loadPublishData(repoRoot);
+    // なぜ: 実データ(approved参照のみ)に「台帳に存在しない=決してapprovedにならない」合成ソースを
+    // 1件注入するとゲートが必ず発火することを固定する。実台帳の承認状態が Step ごとに前進しても
+    // (どの自治体が approved かに関係なく)壊れない恒久形にするため、実在の source_id は使わない。
+    expect(data.approvedSourceIds.has('src-synthetic-never-in-registry-000')).toBe(false);
     const input: PublishGateInput = {
       approvedSourceIds: data.approvedSourceIds,
       references: [
         ...data.references,
-        // なぜ: 江東(13108)・新宿(13104)・杉並(13115)は2026-07-25までに承認済みのため、
-        // 未承認ソースのfixtureとして千代田(13101、未整備・candidateのまま)の登録行を使う。
-        { owner: 'procedure_injected', sourceIds: ['src-13101-facilities-001'] }, // candidate
+        { owner: 'procedure_injected', sourceIds: ['src-synthetic-never-in-registry-000'] },
       ],
     };
     expect(() => assertPublishGate(input)).toThrow(PublishGateError);
@@ -195,13 +197,16 @@ describe('publish gate — Setagaya school-transfer & childcare after human revi
     const data = loadPublishData(repoRoot);
     // なぜ: 承認によりゲートが無条件で緑になったわけではないことの証明。もし verified 手続き/ルールが
     // 非approvedソースを参照する状態になれば、ゲートは必ず発火する(不変条件は維持)。
+    // なぜ: 実台帳に存在しない合成ソースを使う。どの自治体が承認済みかに依存しない恒久形
+    // (実在の source_id を使うと、その自治体が後の Step で承認された瞬間に本テストが壊れる連鎖が続く)。
+    expect(data.approvedSourceIds.has('src-synthetic-never-in-registry-000')).toBe(false);
     const input: PublishGateInput = {
       approvedSourceIds: data.approvedSourceIds,
       references: [
         ...data.references,
         {
           owner: 'procedure_version (hypothetical verified referencing non-approved)',
-          sourceIds: ['src-13101-facilities-001'], // 千代田(13101)は未整備で candidate のまま(非approved)
+          sourceIds: ['src-synthetic-never-in-registry-000'],
         },
       ],
     };
@@ -260,5 +265,53 @@ describe('publish gate — Suginami (13115) after human review approval (Step4-A
     const { data } = buildSeed(repoRoot, SUPPORTED);
     const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
     expect(codes).toEqual(['13104', '13108', '13112', '13115']);
+  });
+});
+
+describe('publish gate — Chiyoda (13101) after human review approval (Step4-B)', () => {
+  // なぜ: 2026-07-25 に人手レビュー承認済み(台帳の全13101ソースがapproved。収集曜日は公式PDF
+  // のみで機械判読可能データが無いため waste.json を作らない「誠実縮退」= waste_schedule は
+  // 非公開のまま)。世田谷/江東/新宿/千代田の4自治体がそろって公開ゲートを通過することを固定する。
+  const SUPPORTED = ['13112', '13108', '13104', '13101'];
+
+  it('承認後: 千代田を含めた4自治体の公開(supported全件)がゲートを通過する', () => {
+    expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    const violations = findGateViolations({
+      approvedSourceIds: data.approvedSourceIds,
+      references: data.references,
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('承認後のseedは4自治体分のルールセットを含む', () => {
+    const { data } = buildSeed(repoRoot, SUPPORTED);
+    const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
+    expect(codes).toEqual(['13101', '13104', '13108', '13112']);
+  });
+
+  it('誠実縮退: 千代田は waste.json 不在のため収集曜日の公開物(wasteDataset)を持たない', () => {
+    // なぜ: waste_schedule を「未対応」として正しく非公開に留めることの回帰ガード
+    // (公式PDFのみ=機械判読データ無しにつき推測で曜日を作らない)。
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    expect(data.wasteDatasets.some((d) => d.municipalityCode === '13101')).toBe(false);
+  });
+});
+
+describe('publish gate — five-ward publish (Step4 integration)', () => {
+  // なぜ: Step4統合後の対応5区(千代田/新宿/江東/世田谷/杉並)がそろって公開ゲートを通過し、
+  // 5区分のルールセットが seed されることを固定する(横断の回帰ガード)。
+  const SUPPORTED = ['13101', '13104', '13108', '13112', '13115'];
+
+  it('5区の buildSeed はゲートを通過し、5区分のルールセットを含む', () => {
+    expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
+    const { data } = buildSeed(repoRoot, SUPPORTED);
+    const violations = findGateViolations({
+      approvedSourceIds: data.approvedSourceIds,
+      references: data.references,
+    });
+    expect(violations).toEqual([]);
+    const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
+    expect(codes).toEqual(['13101', '13104', '13108', '13112', '13115']);
   });
 });

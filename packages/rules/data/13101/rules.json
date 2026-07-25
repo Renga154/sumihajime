@@ -1,0 +1,128 @@
+{
+  "municipalityCode": "13101",
+  "ruleVersion": "2026-07-25.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "新しい住所に引っ越してから14日以内(千代田区に住み始めた日から14日以内)。",
+      "sourceIds": ["src-13101-resident_registration-001"],
+      "applicabilityReasonTemplate": "他の市区町村や国外から千代田区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転入手続きをした日から90日を過ぎるとマイナンバーカードの継続利用ができず失効します(住所等変更の届出自体は変更があった日から14日以内)。90日の起算は転入手続き日のため引越し日からは日付を確定できません。転入届と同時の早めの手続きを推奨します。",
+      "sourceIds": ["src-13101-my_number-001", "src-13101-resident_registration-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用(住所変更)と署名用電子証明書の発行手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "国保に加入する事由(千代田区への転入)が発生してから14日以内。",
+      "sourceIds": ["src-13101-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険等に加入していない方は、千代田区の国民健康保険への加入手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "千代田区の国民年金ページには、転入に伴う住所変更の届出の要否や日数の期限の記載がありません。加入・種別変更の届出は国民年金係(区役所2階)または出張所へ。住所変更の要否・連携状況は年金事務所へご確認ください。",
+      "sourceIds": ["src-13101-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金(第1号)に加入している方の届出に関する案内です。転入に伴う住所変更の届出の要否は年金事務所へご確認ください。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生や転入の際は15日以内に申請してください(15日特例)。詳細な必要書類は千代田区公式ページ「新規申請に必要なもの」でご確認のうえ、早めに申請してください。",
+      "sourceIds": ["src-13101-child_benefits-001"],
+      "applicabilityReasonTemplate": "0歳〜高校生相当世代までの児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生・転入日の翌日から3か月以内に申請すると出生日・転入日から助成対象になります。3か月を経過してからの申請は助成開始が申請日の属する月の1日からとなることがあります。",
+      "sourceIds": ["src-13101-child_medical-001"],
+      "applicabilityReasonTemplate": "18歳に達した日以降最初の3月31日までの児童がいる世帯が対象です(区に住民登録があり国内の健康保険に加入していること)。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "前籍校で「在学証明書」「教科用図書給与証明書」等を受け取り、千代田区で転入手続きをしたのち学務課学務係へお問い合わせのうえ転入学手続きを行ってください。日数固定の期限は公式ページに記載がありません。",
+      "sourceIds": ["src-13101-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯、または就学・保育のニーズがある世帯が対象の、区立小・中学校への転入学手続きです。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "千代田区に転入予定でも直接申し込めます(オンライン申請または子ども支援課窓口)。申込期限は入園希望月・年度により異なります。入園内定後は利用希望月の前月末日までに転入手続き(住民票異動)が必要です。",
+      "sourceIds": ["src-13101-childcare-001"],
+      "applicabilityReasonTemplate": "未就学のお子さまがいる、または就学・保育のニーズがある世帯で、千代田区の保育園等の利用を希望する方向けの入口案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "鑑札が交付されている犬は、転入届とは別に区の窓口(保健所・総合窓口課・各出張所)で住所変更(登録事項変更届)の手続きが必要です(明確な日数の期限は千代田区の該当ページに記載なし)。",
+      "sourceIds": ["src-13101-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップ(みなし鑑札)を装着していないため、区窓口での飼い犬の登録事項変更の届出が必要です。",
+      "needsConfirmationReason": "犬のマイクロチップ装着有無が未確認のため、届出先(区窓口 または 環境省データベース)が確定できません。装着状況をご確認ください(装着・環境省登録済みなら区への届出は不要です)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの住所別の収集日を千代田区公式「資源とごみの収集カレンダー」(PDF)またはアプリ「分けちよ！」でご確認ください)。",
+      "sourceIds": ["src-13101-waste_guide-001"],
+      "applicabilityReasonTemplate": "千代田区の収集曜日は公式PDFのみのため、住所別の収集日は公式カレンダー/アプリでご確認ください(本サービスは収集曜日データを保持していません=誠実縮退)。分別方法はごみ分別辞書で検索できます。"
+    }
+  ]
+}

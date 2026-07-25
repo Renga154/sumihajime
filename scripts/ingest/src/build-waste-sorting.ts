@@ -11,8 +11,12 @@ import { parseWasteSortingCsv } from './waste-sorting.js';
  *
  * 使い方: pnpm --filter @tmn/ingest build-waste-sorting
  *
- * 対象は「waste_sorting のスナップショットを持つ3区」のみ(未対応自治体・候補中の
- * 千代田(13101)等は対象外。CLAUDE.md原則9: 未対応を対応済みに見せない)。
+ * 対象は「waste_sorting のスナップショットを持つ自治体」のみ。Step4-Bで千代田(13101)を追加。
+ * 千代田は収集曜日がPDFのみ(waste.jsonは作らない=誠実縮退)だが、ごみ分別辞書CSVは
+ * 自治体標準オープンデータ(CC BY 4.0)として実在するため正規化対象に含める。ただし出典CSVは
+ * まだ pending(人手レビュー未了)であり、公開ゲート(ADR-007 / gate.ts)が未承認ソース参照を
+ * 弾くため、正規化しても承認までは公開(D1シード)されない(CLAUDE.md原則9: 未対応を対応済みに
+ * 見せない、は registry の review_status と publish ゲートで担保)。
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -46,12 +50,19 @@ const TARGETS: Target[] = [
     sourceId: 'src-13104-waste_sorting-001',
   },
   {
-    // Step4-A 杉並区。人手レビュー未承認(pending)のスナップショットだが、正規化JSONは
-    // 他区と同様に静的コミットする(公開ゲート=ADR-007/loadでソース非approvedのため未公開)。
+    // Step4-A 杉並区。杉並CSVは「注意点」列に実データを持つため notes に統合する
+    // (mergeCautionIntoNotes)。収集曜日は第三者SaaS依存で機械取得不可のため waste.json は作らない。
     municipalityCode: '13115',
     snapshotFile: 'data/sources/13115/snapshots/src-13115-waste_sorting-001.csv',
     sourceId: 'src-13115-waste_sorting-001',
     mergeCautionIntoNotes: true,
+  },
+  {
+    // なぜ: Step4-B。千代田区(13101)ごみ分別辞書(東京都オープンデータ・自治体標準準拠。
+    // 品目=「ゴミの品目」/分別区分=「分別区分」で江東・新宿と同じ並び=itemCategorySwapped不要)。
+    municipalityCode: '13101',
+    snapshotFile: 'data/sources/13101/snapshots/src-13101-waste_sorting-001.csv',
+    sourceId: 'src-13101-waste_sorting-001',
   },
 ];
 

@@ -1,0 +1,3579 @@
+{
+  "municipalityCode": "13101",
+  "sourceId": "src-13101-waste_sorting-001",
+  "items": [
+    {
+      "itemId": "131016S00001",
+      "municipalityCode": "13101",
+      "name": "アルミホイル",
+      "category": "燃やさないごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00002",
+      "municipalityCode": "13101",
+      "name": "衣類乾燥機",
+      "category": "清掃事務所で収集できないもの",
+      "notes": "家電リサイクル法対象品",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00003",
+      "municipalityCode": "13101",
+      "name": "エアコン",
+      "category": "清掃事務所で収集できないもの",
+      "notes": "家電リサイクル法対象品",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00004",
+      "municipalityCode": "13101",
+      "name": "枝・落ち葉（草木）",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00005",
+      "municipalityCode": "13101",
+      "name": "傘",
+      "category": "燃やさないごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00006",
+      "municipalityCode": "13101",
+      "name": "カセットボンベ",
+      "category": "蛍光管等",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00007",
+      "municipalityCode": "13101",
+      "name": "かばん",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00008",
+      "municipalityCode": "13101",
+      "name": "紙おむつ",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00009",
+      "municipalityCode": "13101",
+      "name": "紙箱（洗剤の箱・線香の箱等臭いのついたもの）",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00010",
+      "municipalityCode": "13101",
+      "name": "紙パック（飲料用500ml以上）",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00011",
+      "municipalityCode": "13101",
+      "name": "紙（テイッシュペーパー・ハンバーガーの包み紙等汚れのついたもの）",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00012",
+      "municipalityCode": "13101",
+      "name": "乾燥剤",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00013",
+      "municipalityCode": "13101",
+      "name": "缶（食品用）",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00014",
+      "municipalityCode": "13101",
+      "name": "カーテン",
+      "category": "燃やすごみ（注釈） ストックヤード",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00015",
+      "municipalityCode": "13101",
+      "name": "ガラス製品",
+      "category": "燃やさないごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00016",
+      "municipalityCode": "13101",
+      "name": "蛍光管",
+      "category": "蛍光管等",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00017",
+      "municipalityCode": "13101",
+      "name": "血圧計（水銀式）",
+      "category": "蛍光管等",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00018",
+      "municipalityCode": "13101",
+      "name": "ゴム手袋",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00019",
+      "municipalityCode": "13101",
+      "name": "ゴムホース",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00020",
+      "municipalityCode": "13101",
+      "name": "雑誌",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00021",
+      "municipalityCode": "13101",
+      "name": "写真",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00022",
+      "municipalityCode": "13101",
+      "name": "シュレッダー紙",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00023",
+      "municipalityCode": "13101",
+      "name": "消火器",
+      "category": "清掃事務所で収集できないもの",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00024",
+      "municipalityCode": "13101",
+      "name": "食用油",
+      "category": "燃やすごみ（注釈） ストックヤード",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00025",
+      "municipalityCode": "13101",
+      "name": "新聞",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00026",
+      "municipalityCode": "13101",
+      "name": "シーツ",
+      "category": "燃やすごみ（注釈） ストックヤード",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00027",
+      "municipalityCode": "13101",
+      "name": "CD・DVD（本体・ケース）",
+      "category": "プラスチック",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00028",
+      "municipalityCode": "13101",
+      "name": "石油類（ガソリン・灯油・軽油等）",
+      "category": "清掃事務所で収集できないもの",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00029",
+      "municipalityCode": "13101",
+      "name": "洗濯機",
+      "category": "清掃事務所で収集できないもの",
+      "notes": "家電リサイクル法対象品",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00030",
+      "municipalityCode": "13101",
+      "name": "体温計（水銀式）",
+      "category": "蛍光管等",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00031",
+      "municipalityCode": "13101",
+      "name": "段ボール",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00032",
+      "municipalityCode": "13101",
+      "name": "注射針",
+      "category": "清掃事務所で収集できないもの",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00033",
+      "municipalityCode": "13101",
+      "name": "使い捨てカイロ",
+      "category": "燃やさないごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00034",
+      "municipalityCode": "13101",
+      "name": "土（砂を含む）",
+      "category": "清掃事務所で収集できないもの",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00035",
+      "municipalityCode": "13101",
+      "name": "テレビ（ブラウン管・液晶・プラズマ・有機EL）",
+      "category": "清掃事務所で収集できないもの",
+      "notes": "家電リサイクル法対象品",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00036",
+      "municipalityCode": "13101",
+      "name": "電卓",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00037",
+      "municipalityCode": "13101",
+      "name": "電池（乾電池・リチウム一次電池）",
+      "category": "蛍光管等",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00038",
+      "municipalityCode": "13101",
+      "name": "電池（コイン型リチウム電池）",
+      "category": "蛍光管等",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00039",
+      "municipalityCode": "13101",
+      "name": "電池（小型充電式電池）",
+      "category": "蛍光管等",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00040",
+      "municipalityCode": "13101",
+      "name": "電池（ボタン電池）",
+      "category": "蛍光管等",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00041",
+      "municipalityCode": "13101",
+      "name": "陶磁器",
+      "category": "燃やさないごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00042",
+      "municipalityCode": "13101",
+      "name": "塗料",
+      "category": "清掃事務所で収集できないもの",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00043",
+      "municipalityCode": "13101",
+      "name": "トレー（商品の入っていたもの）",
+      "category": "プラスチック",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00044",
+      "municipalityCode": "13101",
+      "name": "動物の死体（25Kg未満）",
+      "category": "清掃事務所で収集できないもの",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00045",
+      "municipalityCode": "13101",
+      "name": "なべ",
+      "category": "燃やさないごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00046",
+      "municipalityCode": "13101",
+      "name": "生ごみ",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00047",
+      "municipalityCode": "13101",
+      "name": "箱（洗剤など臭いのついたもの）",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00048",
+      "municipalityCode": "13101",
+      "name": "発泡スチロール",
+      "category": "プラスチック",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00049",
+      "municipalityCode": "13101",
+      "name": "刃物",
+      "category": "燃やさないごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00050",
+      "municipalityCode": "13101",
+      "name": "針金ハンガー",
+      "category": "燃やさないごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00051",
+      "municipalityCode": "13101",
+      "name": "パソコン",
+      "category": "清掃事務所で収集できないもの",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00052",
+      "municipalityCode": "13101",
+      "name": "パンフレット",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00053",
+      "municipalityCode": "13101",
+      "name": "ビデオテープ（カセットテープ含む）",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00054",
+      "municipalityCode": "13101",
+      "name": "びん（化粧品や薬品）",
+      "category": "燃やさないごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00055",
+      "municipalityCode": "13101",
+      "name": "びん（食品用）",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00056",
+      "municipalityCode": "13101",
+      "name": "封筒（窓付き）",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00057",
+      "municipalityCode": "13101",
+      "name": "布団",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00058",
+      "municipalityCode": "13101",
+      "name": "プラ製商品袋（菓子袋等）",
+      "category": "プラスチック",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00059",
+      "municipalityCode": "13101",
+      "name": "弁当容器（使い捨て用）",
+      "category": "プラスチック",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00060",
+      "municipalityCode": "13101",
+      "name": "ペットボトル",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00061",
+      "municipalityCode": "13101",
+      "name": "保冷剤",
+      "category": "燃やすごみ",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00062",
+      "municipalityCode": "13101",
+      "name": "ボトル（プラ製で商品の入っていたもの）",
+      "category": "プラスチック",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00063",
+      "municipalityCode": "13101",
+      "name": "毛布",
+      "category": "粗大ごみ（注釈） ストックヤード",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00064",
+      "municipalityCode": "13101",
+      "name": "ライター",
+      "category": "蛍光管等",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00065",
+      "municipalityCode": "13101",
+      "name": "冷蔵庫・冷凍庫",
+      "category": "清掃事務所で収集できないもの",
+      "notes": "家電リサイクル法対象品",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00066",
+      "municipalityCode": "13101",
+      "name": "レジ袋",
+      "category": "プラスチック",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00067",
+      "municipalityCode": "13101",
+      "name": "レジャーシート",
+      "category": "プラスチック",
+      "feeNote": "無料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00068",
+      "municipalityCode": "13101",
+      "name": "衣装箱",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00071",
+      "municipalityCode": "13101",
+      "name": "照明器具",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00072",
+      "municipalityCode": "13101",
+      "name": "自転車（16インチ以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00076",
+      "municipalityCode": "13101",
+      "name": "ベッドマット（シングル）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00077",
+      "municipalityCode": "13101",
+      "name": "ソファー（2人以上用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00080",
+      "municipalityCode": "13101",
+      "name": "アイロン台",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00081",
+      "municipalityCode": "13101",
+      "name": "アコーディオンカーテン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00082",
+      "municipalityCode": "13101",
+      "name": "アタッシュケース",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00083",
+      "municipalityCode": "13101",
+      "name": "編み機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00084",
+      "municipalityCode": "13101",
+      "name": "アンテナ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00085",
+      "municipalityCode": "13101",
+      "name": "イーゼル・キャンバス",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00086",
+      "municipalityCode": "13101",
+      "name": "池（家庭庭園用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00087",
+      "municipalityCode": "13101",
+      "name": "衣桁",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00088",
+      "municipalityCode": "13101",
+      "name": "いす（ソファー以外）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00089",
+      "municipalityCode": "13101",
+      "name": "板類一束、（ガラス板、鉄板類除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00090",
+      "municipalityCode": "13101",
+      "name": "一輪車",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00091",
+      "municipalityCode": "13101",
+      "name": "井戸用ポンプ（家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00092",
+      "municipalityCode": "13101",
+      "name": "井戸用モーター（家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00093",
+      "municipalityCode": "13101",
+      "name": "ウインドサーフィンボード",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00094",
+      "municipalityCode": "13101",
+      "name": "ウインドサーフィンボード一式",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00095",
+      "municipalityCode": "13101",
+      "name": "ウインドファン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00096",
+      "municipalityCode": "13101",
+      "name": "植木・植木鉢（土を取り除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00097",
+      "municipalityCode": "13101",
+      "name": "ウエストマッサージ器等",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00098",
+      "municipalityCode": "13101",
+      "name": "ウォーターサーバー（1m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00099",
+      "municipalityCode": "13101",
+      "name": "ウォーターサーバー（1m以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00100",
+      "municipalityCode": "13101",
+      "name": "ウォーターベッド・エアーベッドマット",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00101",
+      "municipalityCode": "13101",
+      "name": "ウォシュレット（簡易便座）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00102",
+      "municipalityCode": "13101",
+      "name": "ウッドカーペット（6畳未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00103",
+      "municipalityCode": "13101",
+      "name": "ウッドカーペット（6畳以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00104",
+      "municipalityCode": "13101",
+      "name": "エアロバイク",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00105",
+      "municipalityCode": "13101",
+      "name": "映写機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00106",
+      "municipalityCode": "13101",
+      "name": "オイルヒーター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00107",
+      "municipalityCode": "13101",
+      "name": "OA機器（ワープロを除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00108",
+      "municipalityCode": "13101",
+      "name": "オットマン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00109",
+      "municipalityCode": "13101",
+      "name": "オーディオ機器（単体。カラオケ／スピーカー除く",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00110",
+      "municipalityCode": "13101",
+      "name": "オーブン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00111",
+      "municipalityCode": "13101",
+      "name": "オーブンレンジ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00112",
+      "municipalityCode": "13101",
+      "name": "置き物（花器・花瓶除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00113",
+      "municipalityCode": "13101",
+      "name": "桶",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00114",
+      "municipalityCode": "13101",
+      "name": "オルガン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00115",
+      "municipalityCode": "13101",
+      "name": "温風器（電気温風ヒーター）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00116",
+      "municipalityCode": "13101",
+      "name": "介護用ベッド",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00117",
+      "municipalityCode": "13101",
+      "name": "カーテンレール",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00118",
+      "municipalityCode": "13101",
+      "name": "鏡・姿見",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00119",
+      "municipalityCode": "13101",
+      "name": "花器・花瓶（かめ）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00120",
+      "municipalityCode": "13101",
+      "name": "額縁",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00121",
+      "municipalityCode": "13101",
+      "name": "かご",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00122",
+      "municipalityCode": "13101",
+      "name": "傘立て",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00123",
+      "municipalityCode": "13101",
+      "name": "加湿器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00124",
+      "municipalityCode": "13101",
+      "name": "ガスオーブン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00125",
+      "municipalityCode": "13101",
+      "name": "ガステーブル（ガスコンロ）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00126",
+      "municipalityCode": "13101",
+      "name": "カセットコンロ（卓上用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00127",
+      "municipalityCode": "13101",
+      "name": "楽器類（オルガン、シンセサイザー及びギターを除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00128",
+      "municipalityCode": "13101",
+      "name": "金網（フェンス）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00129",
+      "municipalityCode": "13101",
+      "name": "鞄",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00130",
+      "municipalityCode": "13101",
+      "name": "カラオケ演奏装置",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00131",
+      "municipalityCode": "13101",
+      "name": "ガラス板（一束）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00132",
+      "municipalityCode": "13101",
+      "name": "簡易・携帯便器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00133",
+      "municipalityCode": "13101",
+      "name": "換気扇",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00134",
+      "municipalityCode": "13101",
+      "name": "換気扇フード",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00135",
+      "municipalityCode": "13101",
+      "name": "看板",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00136",
+      "municipalityCode": "13101",
+      "name": "看板（電飾）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00137",
+      "municipalityCode": "13101",
+      "name": "キーボード（パソコン）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00138",
+      "municipalityCode": "13101",
+      "name": "ギター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00139",
+      "municipalityCode": "13101",
+      "name": "ギターケース",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00140",
+      "municipalityCode": "13101",
+      "name": "キックボード",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00141",
+      "municipalityCode": "13101",
+      "name": "脚立",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00142",
+      "municipalityCode": "13101",
+      "name": "キャリア",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00143",
+      "municipalityCode": "13101",
+      "name": "キャンプ用品（いす）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00144",
+      "municipalityCode": "13101",
+      "name": "キャンプ用品（テーブル）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00145",
+      "municipalityCode": "13101",
+      "name": "キャンプ用品（テント・ターブ）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00146",
+      "municipalityCode": "13101",
+      "name": "キャンプ用品（野外調理器）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00147",
+      "municipalityCode": "13101",
+      "name": "キャンプ用品（いす付きテーブル）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00148",
+      "municipalityCode": "13101",
+      "name": "キャットタワー（1m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00149",
+      "municipalityCode": "13101",
+      "name": "キャットタワー（1m以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00150",
+      "municipalityCode": "13101",
+      "name": "鏡台（姫鏡台／高さ40cm未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00151",
+      "municipalityCode": "13101",
+      "name": "鏡台（高さ40cm以上70cm未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00152",
+      "municipalityCode": "13101",
+      "name": "鏡台（高さ70cm以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00153",
+      "municipalityCode": "13101",
+      "name": "業務用ゲーム機（家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00154",
+      "municipalityCode": "13101",
+      "name": "キングサイズベッド",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00155",
+      "municipalityCode": "13101",
+      "name": "クイーンサイズベッド",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00156",
+      "municipalityCode": "13101",
+      "name": "空気入れ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00157",
+      "municipalityCode": "13101",
+      "name": "空気清浄機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00158",
+      "municipalityCode": "13101",
+      "name": "クーラーボックス",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00159",
+      "municipalityCode": "13101",
+      "name": "クッション",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00160",
+      "municipalityCode": "13101",
+      "name": "クリスマスツリー（1.5m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00161",
+      "municipalityCode": "13101",
+      "name": "クリスマスツリー（1.5m以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00162",
+      "municipalityCode": "13101",
+      "name": "車いす",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00163",
+      "municipalityCode": "13101",
+      "name": "車いす　電動",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00164",
+      "municipalityCode": "13101",
+      "name": "化粧箱",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00165",
+      "municipalityCode": "13101",
+      "name": "健康いす",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00166",
+      "municipalityCode": "13101",
+      "name": "健康器具（50cm未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00167",
+      "municipalityCode": "13101",
+      "name": "健康器具（50cm以上・1m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00168",
+      "municipalityCode": "13101",
+      "name": "健康器具（1m以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00169",
+      "municipalityCode": "13101",
+      "name": "高圧洗浄機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00170",
+      "municipalityCode": "13101",
+      "name": "工具箱（大工道具箱等・家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00171",
+      "municipalityCode": "13101",
+      "name": "工具類（大工道具等・家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00172",
+      "municipalityCode": "13101",
+      "name": "行李・柳行李",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00173",
+      "municipalityCode": "13101",
+      "name": "コーヒーメーカー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00174",
+      "municipalityCode": "13101",
+      "name": "小型調理器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00175",
+      "municipalityCode": "13101",
+      "name": "黒板・白板",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00176",
+      "municipalityCode": "13101",
+      "name": "ござ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00177",
+      "municipalityCode": "13101",
+      "name": "こたつ（家具調電気こたつ）（こたつ板を除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00178",
+      "municipalityCode": "13101",
+      "name": "こたつ（家具調電気こたつ以外）（こたつ板除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00179",
+      "municipalityCode": "13101",
+      "name": "こたつ板",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00180",
+      "municipalityCode": "13101",
+      "name": "子供用遊具（ブランコ及びすべり台を除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00181",
+      "municipalityCode": "13101",
+      "name": "碁盤・将棋盤",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00182",
+      "municipalityCode": "13101",
+      "name": "コピー機（家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00183",
+      "municipalityCode": "13101",
+      "name": "ごみ箱",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00184",
+      "municipalityCode": "13101",
+      "name": "ゴムボート",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00185",
+      "municipalityCode": "13101",
+      "name": "米びつ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00186",
+      "municipalityCode": "13101",
+      "name": "ゴルフ用具",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00187",
+      "municipalityCode": "13101",
+      "name": "ゴルフバッグ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00188",
+      "municipalityCode": "13101",
+      "name": "ゴルフクラブ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00189",
+      "municipalityCode": "13101",
+      "name": "ゴルフ練習場器具",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00190",
+      "municipalityCode": "13101",
+      "name": "ゴルフネット",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00191",
+      "municipalityCode": "13101",
+      "name": "サーフボード",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00192",
+      "municipalityCode": "13101",
+      "name": "サイクリングマシン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00193",
+      "municipalityCode": "13101",
+      "name": "座いす",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00194",
+      "municipalityCode": "13101",
+      "name": "座布団（5枚まで）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00195",
+      "municipalityCode": "13101",
+      "name": "サマーチェア",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00196",
+      "municipalityCode": "13101",
+      "name": "三脚",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00197",
+      "municipalityCode": "13101",
+      "name": "敷パッド",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00198",
+      "municipalityCode": "13101",
+      "name": "敷物・ホットカーペット（一畳以下）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00199",
+      "municipalityCode": "13101",
+      "name": "敷物・ホットカーペット（1畳を超えるもの）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00200",
+      "municipalityCode": "13101",
+      "name": "自転車（16インチ未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00201",
+      "municipalityCode": "13101",
+      "name": "自転車の車輪",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00202",
+      "municipalityCode": "13101",
+      "name": "芝刈り機（エンジン式を除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00203",
+      "municipalityCode": "13101",
+      "name": "写真引き伸ばし器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00204",
+      "municipalityCode": "13101",
+      "name": "ジューサー・ミキサー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00205",
+      "municipalityCode": "13101",
+      "name": "シュレッダー（家庭使用）（高さ60cm未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00206",
+      "municipalityCode": "13101",
+      "name": "シュレッダー（家庭使用）（高さ60cm以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00207",
+      "municipalityCode": "13101",
+      "name": "浄水機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00208",
+      "municipalityCode": "13101",
+      "name": "除湿機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00209",
+      "municipalityCode": "13101",
+      "name": "食器洗乾燥機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00210",
+      "municipalityCode": "13101",
+      "name": "食器乾燥機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00211",
+      "municipalityCode": "13101",
+      "name": "ショッピングカート",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00212",
+      "municipalityCode": "13101",
+      "name": "シングルベッド（ベッドマットを除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00213",
+      "municipalityCode": "13101",
+      "name": "シンセサイザー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00214",
+      "municipalityCode": "13101",
+      "name": "水槽（最大辺50cm以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00215",
+      "municipalityCode": "13101",
+      "name": "水槽（最大辺50cm未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00216",
+      "municipalityCode": "13101",
+      "name": "炊飯器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00217",
+      "municipalityCode": "13101",
+      "name": "スーツケース",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00218",
+      "municipalityCode": "13101",
+      "name": "スキー板（ストック含む）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00219",
+      "municipalityCode": "13101",
+      "name": "スキー用品（板／ストック除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00220",
+      "municipalityCode": "13101",
+      "name": "スキャナー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00221",
+      "municipalityCode": "13101",
+      "name": "スケート靴",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00222",
+      "municipalityCode": "13101",
+      "name": "スケートボード",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00223",
+      "municipalityCode": "13101",
+      "name": "スコップ・シャベル",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00224",
+      "municipalityCode": "13101",
+      "name": "すだれ・よしず",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00225",
+      "municipalityCode": "13101",
+      "name": "スタンド式灰皿",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00226",
+      "municipalityCode": "13101",
+      "name": "スチーム暖房機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00227",
+      "municipalityCode": "13101",
+      "name": "ステッパー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00228",
+      "municipalityCode": "13101",
+      "name": "ステレオセット（ミニコンポ以外／幅80cm以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00229",
+      "municipalityCode": "13101",
+      "name": "ミニコンポステレオセット（幅80cm未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00230",
+      "municipalityCode": "13101",
+      "name": "スチームクリーナー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00231",
+      "municipalityCode": "13101",
+      "name": "ストーブ（ファンヒーター）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00232",
+      "municipalityCode": "13101",
+      "name": "ストーブ（ファンヒーター以外）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00233",
+      "municipalityCode": "13101",
+      "name": "ストーブガード",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00234",
+      "municipalityCode": "13101",
+      "name": "スノーボード",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00235",
+      "municipalityCode": "13101",
+      "name": "スノーボードブーツ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00236",
+      "municipalityCode": "13101",
+      "name": "すのこ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00237",
+      "municipalityCode": "13101",
+      "name": "スピーカー（最大辺50cm未満）（一個）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00238",
+      "municipalityCode": "13101",
+      "name": "スピーカー（最大辺50cm以上）（一個）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00239",
+      "municipalityCode": "13101",
+      "name": "すべり台",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00240",
+      "municipalityCode": "13101",
+      "name": "ズボンプレッサー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00241",
+      "municipalityCode": "13101",
+      "name": "製図机",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00242",
+      "municipalityCode": "13101",
+      "name": "製図板",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00243",
+      "municipalityCode": "13101",
+      "name": "製図用ドラフター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00244",
+      "municipalityCode": "13101",
+      "name": "精米機（家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00245",
+      "municipalityCode": "13101",
+      "name": "セミダブルベッド",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00246",
+      "municipalityCode": "13101",
+      "name": "扇風機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00247",
+      "municipalityCode": "13101",
+      "name": "洗面化粧台",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00248",
+      "municipalityCode": "13101",
+      "name": "掃除機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00249",
+      "municipalityCode": "13101",
+      "name": "掃除用具",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00250",
+      "municipalityCode": "13101",
+      "name": "足温器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00251",
+      "municipalityCode": "13101",
+      "name": "ソファー（一人用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00252",
+      "municipalityCode": "13101",
+      "name": "ソファーベッド",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00253",
+      "municipalityCode": "13101",
+      "name": "そり",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00254",
+      "municipalityCode": "13101",
+      "name": "台（最大辺1m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00255",
+      "municipalityCode": "13101",
+      "name": "台（最大辺1m以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00256",
+      "municipalityCode": "13101",
+      "name": "台車",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00257",
+      "municipalityCode": "13101",
+      "name": "体操用マット",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00258",
+      "municipalityCode": "13101",
+      "name": "タイプライター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00259",
+      "municipalityCode": "13101",
+      "name": "タイヤチェーン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00260",
+      "municipalityCode": "13101",
+      "name": "タイルカーペット（1束5枚まで）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00261",
+      "municipalityCode": "13101",
+      "name": "高枝鋏み",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00262",
+      "municipalityCode": "13101",
+      "name": "卓上型IHクッキングヒーター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00263",
+      "municipalityCode": "13101",
+      "name": "たたみ（1畳）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00264",
+      "municipalityCode": "13101",
+      "name": "たたみ（軽量・ウレタンのみ）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00265",
+      "municipalityCode": "13101",
+      "name": "たたみ（半畳）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00266",
+      "municipalityCode": "13101",
+      "name": "かご（脱衣かご）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00267",
+      "municipalityCode": "13101",
+      "name": "卓球台",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00268",
+      "municipalityCode": "13101",
+      "name": "脱水機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00269",
+      "municipalityCode": "13101",
+      "name": "建具（アルミサッシ、ガラス戸を除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00270",
+      "municipalityCode": "13101",
+      "name": "建具（アルミサッシ、ガラス戸）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00271",
+      "municipalityCode": "13101",
+      "name": "ダブルベッド（ベッドマットを除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00272",
+      "municipalityCode": "13101",
+      "name": "たらい",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00273",
+      "municipalityCode": "13101",
+      "name": "樽",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00274",
+      "municipalityCode": "13101",
+      "name": "ダンベル",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00275",
+      "municipalityCode": "13101",
+      "name": "地球儀",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00276",
+      "municipalityCode": "13101",
+      "name": "チャイルドシート",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00277",
+      "municipalityCode": "13101",
+      "name": "茶箱",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00278",
+      "municipalityCode": "13101",
+      "name": "チューナー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00279",
+      "municipalityCode": "13101",
+      "name": "ついたて",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00280",
+      "municipalityCode": "13101",
+      "name": "学習机",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00281",
+      "municipalityCode": "13101",
+      "name": "両そで机",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00282",
+      "municipalityCode": "13101",
+      "name": "机（両そで机以外）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00283",
+      "municipalityCode": "13101",
+      "name": "突っ張り棚",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00284",
+      "municipalityCode": "13101",
+      "name": "突っ張り棒",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00285",
+      "municipalityCode": "13101",
+      "name": "壷",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00286",
+      "municipalityCode": "13101",
+      "name": "釣竿",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00287",
+      "municipalityCode": "13101",
+      "name": "DVDレコーダー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00288",
+      "municipalityCode": "13101",
+      "name": "テーブル・座卓（最大辺1m未満。ガラス製天板除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00289",
+      "municipalityCode": "13101",
+      "name": "テーブル・座卓（最大辺1m以上1．5m未満。ガラス製天板除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00290",
+      "municipalityCode": "13101",
+      "name": "テーブル・座卓（最大辺1．5m以上。ガラス製天板除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00291",
+      "municipalityCode": "13101",
+      "name": "テーブル・座卓（ガラス製天板で最大辺1m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00292",
+      "municipalityCode": "13101",
+      "name": "テーブル・座卓（ガラス製天板で最大辺1m以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00293",
+      "municipalityCode": "13101",
+      "name": "テーブルの脚",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00294",
+      "municipalityCode": "13101",
+      "name": "テーブルの天板（最大辺1m未満。ガラス製除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00295",
+      "municipalityCode": "13101",
+      "name": "テーブルの天板（最大辺1m以上1．5m未満。ガラス製除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00296",
+      "municipalityCode": "13101",
+      "name": "テーブルの天板（最大辺1．5m以上。ガラス製除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00297",
+      "municipalityCode": "13101",
+      "name": "テーブルの天板（ガラス製で最大辺1m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00298",
+      "municipalityCode": "13101",
+      "name": "テーブルの天板（ガラス製で最大辺1m以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00299",
+      "municipalityCode": "13101",
+      "name": "手押し車（運搬用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00300",
+      "municipalityCode": "13101",
+      "name": "手提金庫",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00301",
+      "municipalityCode": "13101",
+      "name": "鉄製の棒",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00302",
+      "municipalityCode": "13101",
+      "name": "鉄板類",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00303",
+      "municipalityCode": "13101",
+      "name": "テニスラケット",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00304",
+      "municipalityCode": "13101",
+      "name": "テレビ台（幅1m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00305",
+      "municipalityCode": "13101",
+      "name": "テレビ台（幅1m以上で天板がガラス製以外）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00306",
+      "municipalityCode": "13101",
+      "name": "テレビ台（幅1m以上で天板がガラス製）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00307",
+      "municipalityCode": "13101",
+      "name": "テレビ台（スタンド型）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00308",
+      "municipalityCode": "13101",
+      "name": "テレビ台（壁掛け型）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00309",
+      "municipalityCode": "13101",
+      "name": "電子オルガン（エレクトーンなど）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00310",
+      "municipalityCode": "13101",
+      "name": "電子ピアノ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00311",
+      "municipalityCode": "13101",
+      "name": "電子レンジ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00312",
+      "municipalityCode": "13101",
+      "name": "天体望遠鏡",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00313",
+      "municipalityCode": "13101",
+      "name": "電話機・FAX（家庭用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00314",
+      "municipalityCode": "13101",
+      "name": "電話台",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00315",
+      "municipalityCode": "13101",
+      "name": "謄写版",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00316",
+      "municipalityCode": "13101",
+      "name": "トースター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00317",
+      "municipalityCode": "13101",
+      "name": "時計",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00318",
+      "municipalityCode": "13101",
+      "name": "トタン板",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00319",
+      "municipalityCode": "13101",
+      "name": "扉",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00320",
+      "municipalityCode": "13101",
+      "name": "ドライヤー（家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00321",
+      "municipalityCode": "13101",
+      "name": "ドラムセット一式",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00322",
+      "municipalityCode": "13101",
+      "name": "トランク",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00323",
+      "municipalityCode": "13101",
+      "name": "かご（鳥かご）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00324",
+      "municipalityCode": "13101",
+      "name": "長いす",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00325",
+      "municipalityCode": "13101",
+      "name": "流し台のシンク",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00326",
+      "municipalityCode": "13101",
+      "name": "鍋",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00327",
+      "municipalityCode": "13101",
+      "name": "24時間風呂",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00328",
+      "municipalityCode": "13101",
+      "name": "二段ベッド",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00329",
+      "municipalityCode": "13101",
+      "name": "乳児用具（ベビーベッドを除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00330",
+      "municipalityCode": "13101",
+      "name": "人形",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00331",
+      "municipalityCode": "13101",
+      "name": "人形ケース",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00332",
+      "municipalityCode": "13101",
+      "name": "ぬいぐるみ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00333",
+      "municipalityCode": "13101",
+      "name": "寝袋・シュラフ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00334",
+      "municipalityCode": "13101",
+      "name": "乗物玩具",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00335",
+      "municipalityCode": "13101",
+      "name": "バーベルの棒",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00336",
+      "municipalityCode": "13101",
+      "name": "バーベルの重り（10kg単位）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00337",
+      "municipalityCode": "13101",
+      "name": "パイプハンガー（幅1m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00338",
+      "municipalityCode": "13101",
+      "name": "パイプハンガー（幅1m以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00339",
+      "municipalityCode": "13101",
+      "name": "パイプベッド",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00340",
+      "municipalityCode": "13101",
+      "name": "パイプ類",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00341",
+      "municipalityCode": "13101",
+      "name": "パイプワゴン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00342",
+      "municipalityCode": "13101",
+      "name": "蝿帳",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00343",
+      "municipalityCode": "13101",
+      "name": "バケツ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00344",
+      "municipalityCode": "13101",
+      "name": "バット(ケース付可)",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00345",
+      "municipalityCode": "13101",
+      "name": "箱物家具（高さ・幅・奥行のうち最も長い辺と次に長い辺の合計が135cm以下）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00346",
+      "municipalityCode": "13101",
+      "name": "箱物家具（高さ・幅・奥行のうち最も長い辺と次に長い辺の合計が180cm以下）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00347",
+      "municipalityCode": "13101",
+      "name": "箱物家具（高さ・幅・奥行のうち最も長い辺と次に長い辺の合計が270cm以下）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00348",
+      "municipalityCode": "13101",
+      "name": "箱物家具（高さ・幅・奥行のうち最も長い辺と次に長い辺の合計が360cm未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00349",
+      "municipalityCode": "13101",
+      "name": "箱物家具（高さ・幅・奥行のうち最も長い辺と次に長い辺の合計が360cm以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00350",
+      "municipalityCode": "13101",
+      "name": "はしご",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00351",
+      "municipalityCode": "13101",
+      "name": "パソコンケース",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00352",
+      "municipalityCode": "13101",
+      "name": "パソコンラック",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00353",
+      "municipalityCode": "13101",
+      "name": "パチンコ台（手動式）（家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00354",
+      "municipalityCode": "13101",
+      "name": "パチンコ台（電動式）（家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00355",
+      "municipalityCode": "13101",
+      "name": "パネル",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00356",
+      "municipalityCode": "13101",
+      "name": "パネルヒーター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00357",
+      "municipalityCode": "13101",
+      "name": "バブルスター（超音波風呂）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00358",
+      "municipalityCode": "13101",
+      "name": "パラソル",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00359",
+      "municipalityCode": "13101",
+      "name": "パレット（引越し等用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00360",
+      "municipalityCode": "13101",
+      "name": "ハロゲン温風ヒーター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00361",
+      "municipalityCode": "13101",
+      "name": "ハンガーラック（高さ1m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00362",
+      "municipalityCode": "13101",
+      "name": "ハンガーラック（回転式又は高さ1m以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00363",
+      "municipalityCode": "13101",
+      "name": "ハンモック（布のみ）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00364",
+      "municipalityCode": "13101",
+      "name": "ハンモック（自立式）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00365",
+      "municipalityCode": "13101",
+      "name": "ビーズクッション（1m未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00366",
+      "municipalityCode": "13101",
+      "name": "ビーズクッション（1m以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00367",
+      "municipalityCode": "13101",
+      "name": "ビール・酒ケース",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00368",
+      "municipalityCode": "13101",
+      "name": "美顔器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00369",
+      "municipalityCode": "13101",
+      "name": "引き出し類（3段まで）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00370",
+      "municipalityCode": "13101",
+      "name": "ビデオカメラ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00371",
+      "municipalityCode": "13101",
+      "name": "ビデオデッキ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00372",
+      "municipalityCode": "13101",
+      "name": "雛壇",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00373",
+      "municipalityCode": "13101",
+      "name": "火鉢・七輪",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00374",
+      "municipalityCode": "13101",
+      "name": "ビルトインIH ヒーター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00375",
+      "municipalityCode": "13101",
+      "name": "ビルトインコンロ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00376",
+      "municipalityCode": "13101",
+      "name": "布団",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00377",
+      "municipalityCode": "13101",
+      "name": "布団乾燥機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00378",
+      "municipalityCode": "13101",
+      "name": "踏み台",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00379",
+      "municipalityCode": "13101",
+      "name": "譜面立て",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00380",
+      "municipalityCode": "13101",
+      "name": "ブラインド",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00381",
+      "municipalityCode": "13101",
+      "name": "ぶらさがり健康器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00382",
+      "municipalityCode": "13101",
+      "name": "フライパン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00383",
+      "municipalityCode": "13101",
+      "name": "プラスチックケース等",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00384",
+      "municipalityCode": "13101",
+      "name": "ブランコ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00385",
+      "municipalityCode": "13101",
+      "name": "プランター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00386",
+      "municipalityCode": "13101",
+      "name": "プリンター高さ（20cm未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00387",
+      "municipalityCode": "13101",
+      "name": "プリンター（高さ20cm以上30cm未満）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00388",
+      "municipalityCode": "13101",
+      "name": "プリンター高さ（30cm以上）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00389",
+      "municipalityCode": "13101",
+      "name": "風呂がま",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00390",
+      "municipalityCode": "13101",
+      "name": "プロジェクションテレビ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00391",
+      "municipalityCode": "13101",
+      "name": "風呂ふた",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00392",
+      "municipalityCode": "13101",
+      "name": "噴霧器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00393",
+      "municipalityCode": "13101",
+      "name": "ベッドヘッド（品物の一部分）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00394",
+      "municipalityCode": "13101",
+      "name": "ベッドマット(セミダブル・ダブル)",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00395",
+      "municipalityCode": "13101",
+      "name": "ベッドマット（クイーン・キング）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00396",
+      "municipalityCode": "13101",
+      "name": "ペット用品（ペット小屋を除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00397",
+      "municipalityCode": "13101",
+      "name": "ベビーカー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00398",
+      "municipalityCode": "13101",
+      "name": "ベビーチェア",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00399",
+      "municipalityCode": "13101",
+      "name": "ベビーバス",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00400",
+      "municipalityCode": "13101",
+      "name": "ベビーベッド",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00401",
+      "municipalityCode": "13101",
+      "name": "ベビーベッドマット",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00402",
+      "municipalityCode": "13101",
+      "name": "ヘリウムボンベ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00403",
+      "municipalityCode": "13101",
+      "name": "ヘルスメーター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00404",
+      "municipalityCode": "13101",
+      "name": "ヘルメット",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00405",
+      "municipalityCode": "13101",
+      "name": "ベンチプレス台",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00406",
+      "municipalityCode": "13101",
+      "name": "ホースリール（ホース含む）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00407",
+      "municipalityCode": "13101",
+      "name": "ホームサウナ（家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00408",
+      "municipalityCode": "13101",
+      "name": "ホームベーカリー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00409",
+      "municipalityCode": "13101",
+      "name": "ボウリングボール",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00410",
+      "municipalityCode": "13101",
+      "name": "ポット",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00411",
+      "municipalityCode": "13101",
+      "name": "歩行器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00412",
+      "municipalityCode": "13101",
+      "name": "ホットプレート",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00413",
+      "municipalityCode": "13101",
+      "name": "ボディーボード",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00414",
+      "municipalityCode": "13101",
+      "name": "ポリ容器（ポリタンク）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00415",
+      "municipalityCode": "13101",
+      "name": "ホワイトボード",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00416",
+      "municipalityCode": "13101",
+      "name": "本立て",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00417",
+      "municipalityCode": "13101",
+      "name": "枕",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00418",
+      "municipalityCode": "13101",
+      "name": "マッサージ器（座椅子タイプのチェアを含む）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00419",
+      "municipalityCode": "13101",
+      "name": "マッサージチェア（簡易式いすタイプ）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00420",
+      "municipalityCode": "13101",
+      "name": "マッサージチェア（ソファータイプ）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00421",
+      "municipalityCode": "13101",
+      "name": "マットレス（厚さ10cm以下）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00422",
+      "municipalityCode": "13101",
+      "name": "松葉杖（1セット）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00423",
+      "municipalityCode": "13101",
+      "name": "マネキン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00424",
+      "municipalityCode": "13101",
+      "name": "ミシン（卓上式）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00425",
+      "municipalityCode": "13101",
+      "name": "ミシン（卓上式以外）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00426",
+      "municipalityCode": "13101",
+      "name": "無線機（小型・家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00427",
+      "municipalityCode": "13101",
+      "name": "毛布・電気毛布",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00428",
+      "municipalityCode": "13101",
+      "name": "餅つき器（家庭使用）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00429",
+      "municipalityCode": "13101",
+      "name": "物干し竿　(物干しパイプ)",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00430",
+      "municipalityCode": "13101",
+      "name": "物干し台（一個）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00431",
+      "municipalityCode": "13101",
+      "name": "物干しパイプ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00432",
+      "municipalityCode": "13101",
+      "name": "郵便受け",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00433",
+      "municipalityCode": "13101",
+      "name": "湯沸器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00434",
+      "municipalityCode": "13101",
+      "name": "浴槽",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00435",
+      "municipalityCode": "13101",
+      "name": "ライティングデスク",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00436",
+      "municipalityCode": "13101",
+      "name": "ラジオ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00437",
+      "municipalityCode": "13101",
+      "name": "ラジカセ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00438",
+      "municipalityCode": "13101",
+      "name": "ラック（オーディオ用等を除く）",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00439",
+      "municipalityCode": "13101",
+      "name": "ランニングマシン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00440",
+      "municipalityCode": "13101",
+      "name": "ランドセル",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00441",
+      "municipalityCode": "13101",
+      "name": "リヤカー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00442",
+      "municipalityCode": "13101",
+      "name": "旅行鞄",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00443",
+      "municipalityCode": "13101",
+      "name": "冷水器",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00444",
+      "municipalityCode": "13101",
+      "name": "冷風機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00445",
+      "municipalityCode": "13101",
+      "name": "レーザーディスクプレーヤー",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00446",
+      "municipalityCode": "13101",
+      "name": "レンジフード",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00447",
+      "municipalityCode": "13101",
+      "name": "ローイングマシン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00448",
+      "municipalityCode": "13101",
+      "name": "ロースター",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00449",
+      "municipalityCode": "13101",
+      "name": "ロールカーテン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00450",
+      "municipalityCode": "13101",
+      "name": "ロデオマシン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00451",
+      "municipalityCode": "13101",
+      "name": "ロボット掃除機",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00452",
+      "municipalityCode": "13101",
+      "name": "ワープロ",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    },
+    {
+      "itemId": "131016S00453",
+      "municipalityCode": "13101",
+      "name": "ワゴン",
+      "category": "粗大ごみ",
+      "feeNote": "有料",
+      "sourceId": "src-13101-waste_sorting-001"
+    }
+  ]
+}

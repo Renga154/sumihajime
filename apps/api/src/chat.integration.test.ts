@@ -191,17 +191,17 @@ describe('POST /api/chat — 保留系', () => {
   });
 
   it('未対応自治体(supported=false)は対象外を明示+公式誘導で保留', async () => {
-    // なぜ: 杉並(13115)は2026-07-25人手レビュー承認によりsupported=trueへ変わったため、
-    // 未対応自治体のfixtureとして未整備のまま(candidate)の千代田(13101)を使う。
+    // なぜ: 杉並(13115)・千代田(13101)は2026-07-25人手レビュー承認によりsupported=trueへ
+    // 変わったため、未対応自治体のfixtureとして未整備の八王子市(13201、市部)を使う。
     const vz = mockVectorize([]);
     const res = await chat(baseEnv({ VECTORIZE: vz }), {
-      municipalityCode: '13101', // 千代田(未対応)
+      municipalityCode: '13201', // 八王子(未対応)
       question: 'ごみの出し方は?',
     });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { answer: string; abstained: boolean };
     expect(body.abstained).toBe(true);
-    expect(body.answer).toContain('千代田区');
+    expect(body.answer).toContain('八王子市');
     expect(body.answer).toContain('公式サイト');
   });
 });
