@@ -14,11 +14,11 @@ import { MunicipalityScopeMismatchError } from './errors.js';
 
 /**
  * なぜ: Step5-A 品川区(13109)縦切りデータの来歴・型・決定論・自治体差分をCIで機械検証する。
- * 品川は pending 自治体で、収集曜日を「鮮度未確認のため作らない」誠実縮退を含むため、
- * 既存区と異なる次の点を固定する:
- * (a) 全手続きが dataStatus=partial(人手レビュー未了)で、公開ゲート(ADR-007)から除外される前提
+ * 品川は2026-07-26に人手レビュー承認(ユーザー決裁「2区とも承認」)済みで、収集曜日を
+ * 「鮮度未確認のため作らない」誠実縮退を含むため、既存区と異なる次の点を固定する:
+ * (a) 全手続きが dataStatus=verified(2026-07-26承認)で、公開ゲート(ADR-007)の対象
  * (b) waste.json(収集曜日)を作らない(=ファイルが存在しない)ことの回帰ガード。収集日CSVが
- *     2017年更新のままで現行年度(令和8年度)と確認できないため古いデータを公開しない(誠実縮退)
+ *     2017年更新のままで現行年度(令和8年度)と確認できないため古いデータを公開しない(承認後も恒久的な誠実縮退)
  * (c) waste-sorting.json(分別辞書)は整備済み(415品目)で、品川固有の「注意点」列が notes に統合されている
  * (d) 施設は窓口系7件(本庁舎3階戸籍住民課1+住民異動を扱う地域センター6)。GIF非準拠CSVのため座標なし
  * (e) 自治体差分: マイナンバー継続利用=90日(世田谷/新宿の14日と相違)/子ども医療=6カ月遡及
@@ -104,27 +104,29 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
   return o;
 }
 
-describe('Shinagawa (13109) — schema validation & pending status (CI gate)', () => {
+describe('Shinagawa (13109) — schema validation & approved status (CI gate)', () => {
   it('rules.json parses as a RuleSet, scoped to 13109, 10 rules, ruleVersion 2026-07-26.1', () => {
     expect(shinagawaRuleSet.municipalityCode).toBe(SHINAGAWA);
     expect(shinagawaRuleSet.ruleVersion).toBe('2026-07-26.1');
     expect(shinagawaRuleSet.rules.length).toBe(10);
+    // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
+    expect(shinagawaRuleSet.publishedRuleVersion).toBeUndefined();
   });
 
-  it('procedures.json — 10 ProcedureVersions parse; 全件 partial(人手レビュー未了)+ pending caution', () => {
+  it('procedures.json — 10 ProcedureVersions parse; 全件 verified(2026-07-26人手レビュー承認)', () => {
     const procedures = parseProcedures();
     expect(procedures.length).toBe(10);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(SHINAGAWA);
-      // Step5-A時点では未承認のため partial(ADR-007で公開ゲートから除外=staging)。
-      expect(pv.dataStatus).toBe('partial');
+      // 2026-07-26 人手レビュー承認(ユーザー決裁「2区とも承認」)によりverified(ADR-007の公開単位)。
+      expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
       expect(pv.lastVerifiedAt).toBe('2026-07-26T00:00:00Z');
       // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持。
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();
-      // 未承認であることを利用者へ誠実に開示する caution を全手続きに含む。
-      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(true);
+      // 承認によりpending系のcaution文言は除去されている。
+      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(false);
     }
   });
 

@@ -81,7 +81,7 @@ interface Task {
 }
 
 describe('GET /api/municipalities', () => {
-  it('returns 62 municipalities; 千代田(13101)・新宿(13104)・江東(13108)・世田谷(13112)・杉並(13115)がsupported(杉並・千代田は2026-07-25承認)', async () => {
+  it('returns 62 municipalities; 千代田(13101)・新宿(13104)・江東(13108)・品川(13109)・世田谷(13112)・杉並(13115)がsupported(品川は2026-07-26承認)', async () => {
     const res = await request('/api/municipalities');
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -97,7 +97,7 @@ describe('GET /api/municipalities', () => {
       .filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
-    expect(supported).toEqual(['13101', '13104', '13108', '13112', '13115']);
+    expect(supported).toEqual(['13101', '13104', '13108', '13109', '13112', '13115']);
     // 各自治体に公式導線URL(FR-021)。出典ページの表記どおり http/https いずれもあり得る。
     for (const m of body) expect(m.officialUrl).toMatch(/^https?:\/\//);
     // 世田谷にはカバレッジ行がある(FR-024)。
@@ -165,7 +165,7 @@ describe('POST /api/checklists — 犬・マイクロチップ不明', () => {
 
 describe('POST /api/checklists — 未対応自治体', () => {
   it('八王子(13201)は supported=false エラー + 公式URL(FR-021)', async () => {
-    // なぜ: 杉並(13115)・千代田(13101)は2026-07-25人手レビュー承認によりsupported=trueへ
+    // なぜ: 杉並(13115)・千代田(13101)・品川(13109)は人手レビュー承認によりsupported=trueへ
     // 変わったため、未対応自治体のfixtureとして未整備の八王子市(13201、市部)を使う。
     const res = await postChecklist(profile({ municipalityCode: '13201' }));
     expect(res.status).toBe(409);
@@ -233,10 +233,11 @@ describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)
     const res = await request('/api/sources');
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>[];
-    // 台帳には承認済み72件がシードされる(publish/load は approved のみ挿入)。
+    // 台帳には承認済み84件がシードされる(publish/load は approved のみ挿入)。
     // 2026-07-25 Step3承認で世田谷の学校転入・保育の4ソースが追加approved化(42→46)、
-    // 同日Step4-A承認で杉並(13115)の14ソース(46→60)、Step4-B承認で千代田(13101)の12ソース(60→72)。
-    expect(body.length).toBe(72);
+    // 同日Step4-A承認で杉並(13115)の14ソース(46→60)、Step4-B承認で千代田(13101)の12ソース(60→72)、
+    // 2026-07-26 Step5-A承認で品川(13109)の12ソース(72→84)。
+    expect(body.length).toBe(84);
 
     for (const s of body) {
       // 公開に必要な列は揃う。

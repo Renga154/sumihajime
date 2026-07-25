@@ -68,9 +68,10 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Step5-Aで品川区データ(手続き10件/窓口施設7件=本庁舎3階戸籍住民課+住民異動を扱う
-    // 6地域センター/ごみ分別辞書415品目)を整備しsupportedへ。収集曜日は収集日CSVが2017年更新の
-    // ままで現行年度(令和8年度)と確認できないため誠実縮退(waste.jsonなし)。全ソースは pending だが
-    // publish の承認ゲート(load.ts)で公開ビュー上の supported は承認済みソース有無に従う(承認まで false)。
+    // 6地域センター/ごみ分別辞書415品目)を整備。収集曜日は収集日CSVが2017年更新の
+    // ままで現行年度(令和8年度)と確認できないため恒久的に誠実縮退(waste.jsonなし)。2026-07-26の
+    // 人手レビュー承認(ユーザー決裁「2区とも承認」)により全ソースがapproved化・全手続きがverified化
+    // されたため、公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13109',
     name: '品川区',
     supported: true,
