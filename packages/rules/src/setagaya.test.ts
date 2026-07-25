@@ -96,27 +96,44 @@ function outcomeFor(p: Profile, procedureId: string) {
 }
 
 describe('Setagaya (13112) — schema validation (来歴・型検証; CI gate)', () => {
-  it('rules.json parses as a RuleSet and is scoped to 13112', () => {
+  // Step3(2026-07-25): 学校転入・保育の2手続きを dataStatus=partial(人手レビュー未了)で追加。
+  // 既存8件(verified, 2026-07-21承認)は不変。ruleVersion は全体で1つ→ 2026-07-25.1 へ更新。
+  const STAGED_IDS = ['procedure_childcare_application', 'procedure_school_transfer'];
+
+  it('rules.json parses as a RuleSet, scoped to 13112, 10 rules, ruleVersion 2026-07-25.1', () => {
     expect(setagayaRuleSet.municipalityCode).toBe(MUNICIPALITY);
-    expect(setagayaRuleSet.ruleVersion).toBe('2026-07-21.1');
-    expect(setagayaRuleSet.rules.length).toBe(8);
+    expect(setagayaRuleSet.ruleVersion).toBe('2026-07-25.1');
+    expect(setagayaRuleSet.rules.length).toBe(10);
   });
 
-  it('procedures.json — all 8 ProcedureVersions parse; every one is verified + has sourceIds + lastVerifiedAt', () => {
+  it('procedures.json — 10 ProcedureVersions parse; 8 verified(2026-07-21承認・不変)+ 2 partial(Step3 pending)', () => {
     const procedures = parseProcedures();
-    expect(procedures.length).toBe(8);
+    expect(procedures.length).toBe(10);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(MUNICIPALITY);
-      expect(pv.dataStatus).toBe('verified'); // 2026-07-21 人手レビュー承認済み
       expect(pv.sourceIds.length).toBeGreaterThan(0);
-      expect(pv.lastVerifiedAt).toBe('2026-07-21T11:44:00Z');
       // 期限は dueDate(算定式) ではなく dueDescription(公式文言) を静的に保持する
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();
     }
+    const verified = procedures.filter((p) => p.dataStatus === 'verified');
+    const staged = procedures.filter((p) => p.dataStatus === 'partial');
+    // 既存8件は verified のまま、2026-07-21 人手レビュー承認の版・確認日を保持(不変の回帰ガード)。
+    expect(verified.length).toBe(8);
+    for (const pv of verified) {
+      expect(pv.version).toBe('2026-07-21.1');
+      expect(pv.lastVerifiedAt).toBe('2026-07-21T11:44:00Z');
+    }
+    // Step3 追加の2件は partial(pending)で、確認日は 2026-07-25。ADR-007により承認まで非公開。
+    expect(staged.map((p) => p.id).sort()).toEqual(STAGED_IDS);
+    for (const pv of staged) {
+      expect(pv.version).toBe('2026-07-25.1');
+      expect(pv.lastVerifiedAt).toBe('2026-07-25T00:00:00Z');
+      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(true);
+    }
   });
 
-  it('procedures and rules cover exactly the same 8 procedureIds', () => {
+  it('procedures と rules は同一の10 procedureId を過不足なく覆う', () => {
     const procedures = parseProcedures();
     const procIds = procedures.map((p) => p.id).sort();
     const ruleIds = setagayaRuleSet.rules.map((r) => r.procedureId).sort();
@@ -168,14 +185,19 @@ describe('Setagaya (13112) — persona evaluations (該当タスクの増減を�
     const jusho = outcomeFor(single, 'procedure_resident_registration');
     expect(jusho.priority).toBe('urgent');
     expect(jusho.dueDate).toBe('2026-08-15');
-    // 子育て・犬タスクは非該当
-    expect(outcomeFor(single, 'procedure_child_allowance').applicable).toBe('not_applicable');
-    expect(outcomeFor(single, 'procedure_dog_registration_transfer').applicable).toBe(
-      'not_applicable',
-    );
+    // 子育て・学校転入・保育・犬タスクは非該当(単身・学齢児なし・保育ニーズなし)
+    for (const id of [
+      'procedure_child_allowance',
+      'procedure_child_medical',
+      'procedure_school_transfer',
+      'procedure_childcare_application',
+      'procedure_dog_registration_transfer',
+    ]) {
+      expect(outcomeFor(single, id).applicable).toBe('not_applicable');
+    }
   });
 
-  it('子育て世帯: 単身と比べ 児童手当・子ども医療 が増える(決定論的増加)', () => {
+  it('子育て世帯(未就学0-2+小学生): 単身と比べ 児童手当・子ども医療・学校転入・保育 が増える(Step3で学校転入・保育を追加)', () => {
     const single = profile({ flags: { hasMyNumberCard: true } });
     const family = profile({
       memberCount: 4,
@@ -183,7 +205,17 @@ describe('Setagaya (13112) — persona evaluations (該当タスクの増減を�
       flags: { hasMyNumberCard: true, needsNationalPension: false },
     });
     const added = applicableIds(family).filter((id) => !applicableIds(single).includes(id));
-    expect(added.sort()).toEqual(['procedure_child_allowance', 'procedure_child_medical'].sort());
+    expect(added.sort()).toEqual(
+      [
+        'procedure_child_allowance',
+        'procedure_child_medical',
+        'procedure_school_transfer',
+        'procedure_childcare_application',
+      ].sort(),
+    );
+    // 学校転入は elementary、保育は age0_2 で該当(江東・新宿と同一の条件式)。
+    expect(outcomeFor(family, 'procedure_school_transfer').applicable).toBe('applicable');
+    expect(outcomeFor(family, 'procedure_childcare_application').applicable).toBe('applicable');
     // 児童手当の15日特例は前住所地の転出予定日起算のため moveDate からは算定不可 →
     // 日付を出さず公式文言のみ表示(遅い期限を示して特例月を逃させないための安全側判断、レビュー承認済み)
     const allowance = outcomeFor(family, 'procedure_child_allowance');
@@ -194,6 +226,19 @@ describe('Setagaya (13112) — persona evaluations (該当タスクの増減を�
     const med = outcomeFor(family, 'procedure_child_medical');
     expect(med.dueDate).toBeUndefined();
     expect(med.dueDescription).toContain('3か月以内');
+  });
+
+  it('就学・保育ニーズフラグ単独(年齢帯=adultのみ)でも 学校転入・保育 が該当(∨条件; 江東・新宿と同一)', () => {
+    const flagOnly = profile({ flags: { hasSchoolOrChildcareNeeds: true } });
+    expect(outcomeFor(flagOnly, 'procedure_school_transfer').applicable).toBe('applicable');
+    expect(outcomeFor(flagOnly, 'procedure_childcare_application').applicable).toBe('applicable');
+    // 学校転入・保育とも期限は公式に日数記載なし → dueDate は出さず公式文言のみ。
+    const school = outcomeFor(flagOnly, 'procedure_school_transfer');
+    expect(school.dueDate).toBeUndefined();
+    expect(school.dueDescription).toContain('学校指定通知書');
+    const childcare = outcomeFor(flagOnly, 'procedure_childcare_application');
+    expect(childcare.dueDate).toBeUndefined();
+    expect(childcare.dueDescription).toContain('前月10日');
   });
 
   it('犬あり・マイクロチップ不明: 犬の届出は needs_confirmation(C-10, 推測しない)', () => {

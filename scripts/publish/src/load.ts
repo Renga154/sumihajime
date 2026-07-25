@@ -50,8 +50,18 @@ export interface PublishData {
   wasteDatasets: WasteDataset[];
   /** ごみ分別辞書(Wave1-B)。当該自治体のCSVが存在しない自治体は単に空(不足はエラーにしない)。 */
   wasteSortingItems: WasteSortingItem[];
-  /** 公開物が参照する sourceId(ゲート入力)。 */
+  /** 公開物が参照する sourceId(ゲート入力)。ADR-007: 公開対象(verified)のみを載せる。 */
   references: SourceRef[];
+  /**
+   * ADR-007: 公開単位=verified手続きのみ。dataStatus!=='verified'(partial/stale)のため
+   * seed(公開)から除外し staging に留めた手続き。publish CLI が除外件数を報告するために保持。
+   */
+  excludedProcedures: ProcedureVersion[];
+  /**
+   * ADR-007: 対応する手続きが未公開(非verified)のため seed から間引いたルール参照。
+   * rules.json ファイルは不変で、間引きはメモリ上のみ。
+   */
+  excludedRuleRefs: { municipalityCode: string; procedureId: string }[];
 }
 
 function readText(repoRoot: string, rel: string): string {
@@ -291,13 +301,41 @@ export function loadPublishData(
   const wasteDatasets: WasteDataset[] = [];
   const wasteSortingItems: WasteSortingItem[] = [];
   const references: SourceRef[] = [];
+  const excludedProcedures: ProcedureVersion[] = [];
+  const excludedRuleRefs: { municipalityCode: string; procedureId: string }[] = [];
 
   for (const code of municipalityCodes) {
-    const procs = loadProceduresFor(repoRoot, code);
-    const ruleSet = loadRuleSetFor(repoRoot, code);
+    const allProcs = loadProceduresFor(repoRoot, code);
+    const fullRuleSet = loadRuleSetFor(repoRoot, code);
     const facs = loadFacilitiesFor(repoRoot, code);
     const waste = loadWasteFor(repoRoot, code);
     const sortingItems = loadWasteSortingFor(repoRoot, code);
+
+    // ADR-007: 公開単位 = dataStatus==='verified' の手続きのみ。partial/stale(人手レビュー
+    // 未了の staging データ)は seed(公開)から除外し、対応するルールも RuleSet から間引く。
+    // rules.json / procedures.json のファイル自体は不変(除外はメモリ上のみ)。これにより
+    // 公開済み自治体へ pending 手続きを追加しても既定シードは緑を保ち、かつ未承認データは
+    // D1 に載らない(原則2/9)。ゲートは「公開対象(verified)が非approvedソースを参照したら
+    // 全停止」の不変条件を維持する(下の references は公開対象のみで構成)。
+    const procs = allProcs.filter((p) => p.dataStatus === 'verified');
+    const stagedProcs = allProcs.filter((p) => p.dataStatus !== 'verified');
+    const publishedIds = new Set(procs.map((p) => p.id));
+    const publishedRules = fullRuleSet.rules.filter((r) => publishedIds.has(r.procedureId));
+    // ADR-007: 公開される rule_set の版は「公開済み成果物の版」を表す publishedRuleVersion を
+    // 優先する(staging を含むファイルでは ruleVersion が前進していても、公開内容=verified部分
+    // 集合は不変のため版を進めない=誠実な版付け)。未指定なら ruleVersion をそのまま用いる。
+    const ruleSet: RuleSet = {
+      ...fullRuleSet,
+      ruleVersion: fullRuleSet.publishedRuleVersion ?? fullRuleSet.ruleVersion,
+      rules: publishedRules,
+    };
+
+    excludedProcedures.push(...stagedProcs);
+    for (const rule of fullRuleSet.rules) {
+      if (!publishedIds.has(rule.procedureId)) {
+        excludedRuleRefs.push({ municipalityCode: code, procedureId: rule.procedureId });
+      }
+    }
 
     procedures.push(...procs);
     ruleSets.push(ruleSet);
@@ -341,5 +379,7 @@ export function loadPublishData(
     wasteDatasets,
     wasteSortingItems,
     references,
+    excludedProcedures,
+    excludedRuleRefs,
   };
 }

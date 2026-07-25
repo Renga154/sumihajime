@@ -295,7 +295,10 @@ describe('Koto (13108) — persona evaluations (子育てペルソナで該当�
 });
 
 describe('Koto (13108) — 自治体差分の実証(デモの根拠)', () => {
-  it('同一プロフィール(子育て・小学生あり)でも 13108 は学校転入・保育が該当し、13112 は該当手続き自体が存在しない', () => {
+  it('同一プロフィール(子育て・小学生あり)で 13108 も 13112 も学校転入・保育が該当する(Step3で世田谷にも整備→差分解消)', () => {
+    // なぜ: Step3(2026-07-25)以前は「江東のみ学校転入・保育あり/世田谷は未整備」という差分だった。
+    // Step3で世田谷にも同一条件式の2手続きを追加したため、同一の子育てプロフィールでは両区とも該当し、
+    // 該当集合も一致する。この「変化点」を回帰ガードとして固定する(残る自治体差分は下のtestで維持)。
     const koto = profile({
       municipalityCode: KOTO,
       town: '青海',
@@ -313,18 +316,30 @@ describe('Koto (13108) — 自治体差分の実証(デモの根拠)', () => {
     const kotoIds = applicableIds(koto, kotoRuleSet);
     const setagayaIds = applicableIds(setagaya, setagayaRuleSet);
 
-    // 江東のみが持つ子育て中核カテゴリ(世田谷では未整備 → procedureId自体が存在しない)。
-    expect(kotoIds).toContain('procedure_school_transfer');
-    expect(kotoIds).toContain('procedure_childcare_application');
-    expect(setagayaIds).not.toContain('procedure_school_transfer');
-    expect(setagayaIds).not.toContain('procedure_childcare_application');
+    for (const ids of [kotoIds, setagayaIds]) {
+      expect(ids).toContain('procedure_school_transfer');
+      expect(ids).toContain('procedure_childcare_application');
+    }
+    // 学校転入・保育の有無ではもはや区別できない(該当集合が一致)。
+    expect(setagayaIds).toEqual(kotoIds);
+  });
 
-    // 結果集合が実際に異なる(デモで見せられる差)。
-    expect(kotoIds).not.toEqual(setagayaIds);
-    const onlyInKoto = kotoIds.filter((id) => !setagayaIds.includes(id));
-    expect(onlyInKoto.sort()).toEqual(
-      ['procedure_childcare_application', 'procedure_school_transfer'].sort(),
+  it('残る自治体差分: マイナンバー継続利用の期限は江東=90日文言(dueDate無し)/世田谷=14日算定(維持)', () => {
+    // なぜ: 学校・保育の差分は解消したが、自治体差分デモの核(マイナンバー期限14日/90日)は維持する。
+    const withCard = { flags: { hasMyNumberCard: true } };
+    const koto = outcomeFor(
+      profile({ municipalityCode: KOTO, town: '青海', ...withCard }),
+      kotoRuleSet,
+      'procedure_mynumber_continued_use',
     );
+    const setagaya = outcomeFor(
+      profile({ municipalityCode: '13112', town: '世田谷4丁目', ...withCard }),
+      setagayaRuleSet,
+      'procedure_mynumber_continued_use',
+    );
+    expect(koto.dueDate).toBeUndefined();
+    expect(koto.dueDescription).toContain('90日');
+    expect(setagaya.dueDate).toBe('2026-08-15');
   });
 });
 

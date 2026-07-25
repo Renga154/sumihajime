@@ -71,6 +71,30 @@ exports[`Setagaya (13112) — provenance integrity & scope safety > 決定論: �
       "warnings": [],
     },
     {
+      "applicabilityReason": "小・中学生(義務教育の学齢)のお子さまがいる世帯、または就学・保育のニーズがある世帯が対象の、区立小・中学校への転入学手続きです。",
+      "applicable": "applicable",
+      "dueDescription": "くみん窓口・出張所での転入届出(住み始めた日から14日以内)の際に「学校指定通知書」が交付されます。前籍校で在学証明書・教科用図書給与証明書を受け取り、転入届にあわせて転校先の学校へ提出してください。日数固定の期限は公式ページに記載がありません。",
+      "priority": "high",
+      "procedureId": "procedure_school_transfer",
+      "sourceIds": [
+        "src-13112-school_transfer-001",
+        "src-13112-school_transfer-002",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "未就学のお子さまがいる、または就学・保育のニーズがある世帯で、世田谷区の保育園等の利用を希望する方向けの入口案内です。",
+      "applicable": "applicable",
+      "dueDescription": "各月の申込締切日は入園希望月の前月10日です(郵送・電子申請・土日祝は締切日が異なります)。区外からの転入予定の場合は入園月の前月末までに世田谷区へ転入手続きが必要です(月・年度により異なるため日数固定の期限は設定していません)。",
+      "priority": "normal",
+      "procedureId": "procedure_childcare_application",
+      "sourceIds": [
+        "src-13112-childcare-001",
+        "src-13112-childcare-002",
+      ],
+      "warnings": [],
+    },
+    {
       "applicabilityReason": "犬を飼っており、マイクロチップを装着していないため、区窓口での飼い犬の登録事項変更の届出が必要です。",
       "applicable": "not_applicable",
       "dueDescription": "転入届とは別に、速やかに区窓口で登録事項変更の手続きが必要です(明確な日数の期限は公式ページに記載なし)。",
@@ -93,6 +117,6 @@ exports[`Setagaya (13112) — provenance integrity & scope safety > 決定論: �
       "warnings": [],
     },
   ],
-  "ruleVersion": "2026-07-21.1",
+  "ruleVersion": "2026-07-25.1",
 }
 `;

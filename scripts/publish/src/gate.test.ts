@@ -154,3 +154,54 @@ describe('publish gate — Shinjuku (13104) after human review approval (T-016)'
     expect(codes).toEqual(['13104', '13108', '13112']);
   });
 });
+
+describe('publish gate — ADR-007 verified-only publish unit (Step3 世田谷 pending追加)', () => {
+  // なぜ: Step3 で公開済みの世田谷(13112, 既定シード対象)に学校転入・保育の2手続きを
+  // dataStatus=partial(pending)で追加した。ADR-007により公開単位=verified手続きのみとし、
+  // partial手続きとその参照ソース(pending)は seed(公開)とゲート検査の対象から除外(staging)する。
+  // ゲートの不変条件(公開対象=verifiedが非approvedソースを参照したら全停止)は維持する。
+  const STAGED_IDS = ['procedure_childcare_application', 'procedure_school_transfer'];
+  const PENDING_SOURCES = [
+    'src-13112-school_transfer-001',
+    'src-13112-school_transfer-002',
+    'src-13112-childcare-001',
+    'src-13112-childcare-002',
+  ];
+
+  it('(a) partial手続き+pendingソースは公開から除外され、pending参照はゲート対象外→既定buildSeedは通過する', () => {
+    const data = loadPublishData(repoRoot); // 既定=13112のみ
+    // 公開対象は verified 8手続きのみ(pending 2手続きは seed に載らない)。
+    expect(data.procedures.length).toBe(8);
+    expect(data.procedures.every((p) => p.dataStatus === 'verified')).toBe(true);
+    // 除外された手続き・ルールが報告される(publish CLI が件数をログ出力する根拠)。
+    expect(data.excludedProcedures.map((p) => p.id).sort()).toEqual(STAGED_IDS);
+    expect([...new Set(data.excludedRuleRefs.map((r) => r.procedureId))].sort()).toEqual(
+      STAGED_IDS,
+    );
+    // pending ソースは registry には実在するが approved ではなく、公開参照(references)にも含まれない。
+    const referenced = new Set(data.references.flatMap((r) => r.sourceIds));
+    for (const sid of PENDING_SOURCES) {
+      expect(data.approvedSourceIds.has(sid)).toBe(false);
+      expect(referenced.has(sid)).toBe(false);
+    }
+    // よってゲートは通過し、既定シード(統合テストが使う)は緑を保つ。
+    expect(() => buildSeed(repoRoot)).not.toThrow();
+  });
+
+  it('(b) 回帰ガード: 公開対象(verified)が pendingソースを参照したら従来どおり PublishGateError で全停止する', () => {
+    const data = loadPublishData(repoRoot);
+    // なぜ: 「pendingは除外される」だけを緩めた設計ではないことの証明。もし verified 手続き/ルールが
+    // pending ソースを参照する状態になれば、ゲートは必ず発火する(不変条件は強化のまま維持)。
+    const input: PublishGateInput = {
+      approvedSourceIds: data.approvedSourceIds,
+      references: [
+        ...data.references,
+        {
+          owner: 'procedure_version (hypothetical verified referencing pending)',
+          sourceIds: ['src-13112-school_transfer-001'],
+        },
+      ],
+    };
+    expect(() => assertPublishGate(input)).toThrow(PublishGateError);
+  });
+});
