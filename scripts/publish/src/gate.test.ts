@@ -201,10 +201,68 @@ describe('publish gate — Setagaya school-transfer & childcare after human revi
         ...data.references,
         {
           owner: 'procedure_version (hypothetical verified referencing non-approved)',
-          sourceIds: ['src-13115-facilities-001'], // 杉並(13115)は未整備のためcandidateのまま
+          sourceIds: ['src-13115-facilities-001'], // 杉並(13115)はStep4-Aで pending のまま(非approved)
         },
       ],
     };
     expect(() => assertPublishGate(input)).toThrow(PublishGateError);
+  });
+});
+
+describe('publish gate — Suginami (13115) pending inclusion (ADR-007 new behavior, Step4-A)', () => {
+  // なぜ: Step4-Aで杉並を supported=true にしたため、publish CLI(supported全件)は 13115 を
+  // 公開対象に含める。杉並の全ソースは pending(非approved)・全手続きは partial のため、ADR-007の
+  // 精緻化(手続きは dataStatus、施設・ごみはソースapproved で公開可否を判断)により、杉並の全項目が
+  // 「除外(staging)」扱いになりゲートは通過する(旧T-015/T-016の『pending自治体はゲートで全停止』
+  // からの挙動変化)。承認(全ソースapproved化+partial解除)と同時にマージすれば公開へ切り替わる。
+  const SUPPORTED = ['13112', '13108', '13104', '13115'];
+
+  it('supported全件(杉並含む)の buildSeed はゲートを通過する(杉並は全除外)', () => {
+    expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    const violations = findGateViolations({
+      approvedSourceIds: data.approvedSourceIds,
+      references: data.references,
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('杉並の手続き・ルール・非手続きソースは公開されず、全て除外(staging)として報告される', () => {
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    // 公開物(seed)に 13115 は一切含まれない。
+    expect(data.procedures.some((p) => p.municipalityCode === '13115')).toBe(false);
+    expect(data.ruleSets.some((rs) => rs.municipalityCode === '13115')).toBe(false);
+    expect(data.facilities.some((f) => f.municipalityCode === '13115')).toBe(false);
+    expect(data.wasteSortingItems.some((i) => i.municipalityCode === '13115')).toBe(false);
+    // 除外(staging)側に 13115 の手続き10件・非手続きソース(施設001/002・分別辞書)が報告される。
+    expect(data.excludedProcedures.filter((p) => p.municipalityCode === '13115')).toHaveLength(10);
+    const excludedNonProc = data.excludedNonProcedureSources
+      .filter((s) => s.municipalityCode === '13115')
+      .map((s) => s.sourceId)
+      .sort();
+    expect(excludedNonProc).toEqual(
+      [
+        'src-13115-facilities-001',
+        'src-13115-facilities-002',
+        'src-13115-waste_sorting-001',
+      ].sort(),
+    );
+    // 公開ビューの municipalities では 13115 は supported=false のまま(承認まで対応済みに見せない)。
+    const suginami = data.municipalities.find((m) => m.code === '13115');
+    expect(suginami?.supported).toBe(false);
+  });
+
+  it('欠落する waste.json(収集曜日を作らない)でも load は失敗しない', () => {
+    // なぜ: 杉並は waste.json を作らない(誠実縮退)。loadPublishData がファイル欠落で例外に
+    // ならず、13115 の収集曜日は seed に0件で通ることを固定する。
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    expect(data.wasteAreas.some((a) => a.municipalityCode === '13115')).toBe(false);
+    expect(data.wasteDatasets.some((d) => d.municipalityCode === '13115')).toBe(false);
+  });
+
+  it('既存3区(世田谷/江東/新宿)の公開は不変: seedに3区のルールセットが載る', () => {
+    const { data } = buildSeed(repoRoot, SUPPORTED);
+    const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
+    expect(codes).toEqual(['13104', '13108', '13112']);
   });
 });

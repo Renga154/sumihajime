@@ -1,0 +1,323 @@
+{
+  "municipalityCode": "13115",
+  "version": "2026-07-25.1",
+  "note": "Step4-A 杉並区(13115) 縦切りデータ。全手続きは杉並区公式ページ記載の範囲のみを要約・データ化(推測なし。他区の値は混入させない)。全ソースは人手レビュー未承認(pending)のため dataStatus=partial とし、ADR-007により公開ゲート(seed)から除外(staging)される。承認時に partial→verified へ昇格し公開対象になる。自治体差分の要点: マイナンバーカード継続利用=転入届日から90日以内(世田谷・新宿の14日とは相違、江東と同じ)/子ども医療費の遡及=転入日の翌日から15日以内(世田谷・新宿の3か月とは相違)/学校の交付書類名=『転入学通知書』(世田谷『学校指定通知書』とは相違)。収集曜日(waste_schedule)は第三者SaaSのJSウィジェット依存で機械取得不可のため作成せず、procedure_waste_check で公式の収集曜日検索ツール・全域PDFへ誘導する(捏造・無理な構造化をしない)。dueDate は実行時にルールエンジンが moveDate から算定するため、静的な ProcedureVersion には dueDescription(公式文言)のみを保持する。",
+  "procedures": [
+    {
+      "id": "procedure_resident_registration",
+      "version": "2026-07-25.1",
+      "municipalityCode": "13115",
+      "canonicalType": "resident_registration",
+      "title": "転入届(区外・国外から杉並区への引越し)",
+      "shortDescription": "他の区市町村や国外から杉並区に引越してきたときの住民登録の届出。杉並区の窓口でのみ受付(実際に住み始めてからでないと手続きできません)。",
+      "applicabilityReason": "他の区市町村や外国から杉並区に転入したすべての方に必要な届出です。",
+      "priority": "urgent",
+      "dueDescription": "杉並区の新しい住所に住み始めてから14日以内。住み始める前は受付できません。区役所の休日(土曜・日曜・祝日・年末年始)が14日目に当たる場合は、その日以後の最初の開庁日が届出期限です。",
+      "requiredDocuments": [
+        {
+          "label": "転出証明書(前住所地の区市町村で交付。マイナンバーカードで特例の転出届をした場合は不要。郵送申請可)",
+          "status": "conditional"
+        },
+        {
+          "label": "窓口に来る方の本人確認書類(官公署発行の顔写真付き証明書1点、または健康保険資格確認書・年金手帳等2点以上)",
+          "status": "required"
+        },
+        {
+          "label": "引越しをする方全員分のマイナンバーカード(お持ちの方。転入届後に継続利用の手続きが必要。4桁の暗証番号が必要)",
+          "status": "conditional"
+        },
+        {
+          "label": "(国外からの転入・外国人の方)転入される方全員分の在留カード等",
+          "status": "conditional"
+        }
+      ],
+      "channels": ["counter"],
+      "locations": ["杉並区役所東棟1階 区民課区民係窓口", "区民事務所(6か所)"],
+      "contact": "区民課区民係(杉並区役所東棟1階)",
+      "sourceIds": ["src-13115-resident_registration-001", "src-13115-relocation_hub-001"],
+      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "この手続きは人手レビュー未了(pending)です。内容は確定情報ではないため、必ず杉並区公式ページで最新情報をご確認ください。",
+        "杉並区役所東棟1階の区民課窓口は混雑するため、区は区民事務所の利用を案内しています。",
+        "郵送での転入届はできません(窓口のみ)。"
+      ]
+    },
+    {
+      "id": "procedure_mynumber_continued_use",
+      "version": "2026-07-25.1",
+      "municipalityCode": "13115",
+      "canonicalType": "my_number",
+      "title": "マイナンバーカードの継続利用(他区市町村からの転入)",
+      "shortDescription": "他区市町村から杉並区へ転入した後、マイナンバーカードを引き続き利用するための継続利用(券面記載事項変更)の手続き。",
+      "applicabilityReason": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。",
+      "priority": "high",
+      "dueDescription": "転入届を行った日から90日以内に継続利用の手続きが必要です。なお転入届自体は、新しい住所に住み始めてから14日以内かつ転出予定日から30日以内に行う必要があります。期限を過ぎるとマイナンバーカードは失効します。",
+      "requiredDocuments": [
+        {
+          "label": "変更があった方のマイナンバーカード(4桁の暗証番号が必要)",
+          "status": "required"
+        },
+        {
+          "label": "窓口に来る方の本人確認書類",
+          "status": "required"
+        },
+        {
+          "label": "(15歳以上の方)署名用電子証明書の発行手続き(住所変更で失効するため。原則本人来庁。同一世帯員の代理は封緘した委任状で可)",
+          "status": "conditional"
+        }
+      ],
+      "channels": ["counter"],
+      "locations": ["杉並区役所東棟1階 区民課区民係窓口", "区民事務所(6か所)"],
+      "contact": "区民課区民係(杉並区役所東棟1階)",
+      "sourceIds": ["src-13115-my_number-001", "src-13115-resident_registration-001"],
+      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "この手続きは人手レビュー未了(pending)です。内容は確定情報ではないため、必ず杉並区公式ページで最新情報をご確認ください。",
+        "継続利用の期限『転入届日から90日以内』は杉並区・江東区の値です(世田谷区・新宿区は14日以内で、自治体により異なります)。",
+        "任意代理人による手続きは照会書方式となり、届け出日当日には完了しません。"
+      ]
+    },
+    {
+      "id": "procedure_national_health_insurance",
+      "version": "2026-07-25.1",
+      "municipalityCode": "13115",
+      "canonicalType": "national_health_insurance",
+      "title": "国民健康保険加入の手続き(杉並区へ転入したとき)",
+      "shortDescription": "職場の健康保険等に加入していない方が、杉並区に転入したときに国民健康保険へ加入する手続き。",
+      "applicabilityReason": "職場の健康保険等に加入していない方は、杉並区の国民健康保険への加入手続きが必要です。",
+      "priority": "high",
+      "dueDescription": "加入事由の発生日(杉並区に転入した日)以降14日以内。転入手続きの際に窓口でお申し出ください。区の電子申請(杉並区国民健康保険加入手続の電子申請)からも申請できます。",
+      "requiredDocuments": [
+        {
+          "label": "本人確認書類(マイナンバーカード・運転免許証・パスポート・在留カードなど。資格確認書等の即日交付に必要)",
+          "status": "required"
+        },
+        {
+          "label": "(別世帯の代理人による届出)委任状",
+          "status": "conditional"
+        }
+      ],
+      "channels": ["counter", "online"],
+      "locations": ["杉並区役所 国民健康保険の窓口", "区民事務所"],
+      "contact": "国保年金課",
+      "sourceIds": ["src-13115-national_health_insurance-001"],
+      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "この手続きは人手レビュー未了(pending)です。内容は確定情報ではないため、必ず杉並区公式ページで最新情報をご確認ください。",
+        "お勤め先の健康保険・後期高齢者医療制度・生活保護に該当する方は国民健康保険の対象外です。",
+        "マイナンバーによる情報連携は即時に行えない場合があるため、届出に必要なものは必ずお持ちください。"
+      ]
+    },
+    {
+      "id": "procedure_national_pension_address",
+      "version": "2026-07-25.1",
+      "municipalityCode": "13115",
+      "canonicalType": "national_pension",
+      "title": "国民年金(第1号)加入者の住所変更(杉並区へ転入したとき)",
+      "shortDescription": "国民年金第1号被保険者の方が杉並区に転入したときの住所変更に関する案内。",
+      "applicabilityReason": "国民年金(第1号)に加入している方の住所変更に関する案内です。",
+      "priority": "normal",
+      "dueDescription": "国民年金第1号被保険者の方は、区役所(区民係)または区民事務所で転入の届出をしてください。国民年金の納付は基礎年金番号で管理されているため、前住所が記載された納付書はそのまま使用できます。本ページに日数の期限の記載はありません。",
+      "requiredDocuments": [
+        {
+          "label": "転入の届出に必要な書類(住民票の転入届にあわせて手続き)",
+          "status": "unknown"
+        }
+      ],
+      "channels": ["counter"],
+      "locations": ["杉並区役所(区民係)", "区民事務所"],
+      "contact": "国保年金課",
+      "sourceIds": ["src-13115-national_pension-001"],
+      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "この手続きは人手レビュー未了(pending)です。内容は確定情報ではないため、必ず杉並区公式ページで最新情報をご確認ください。",
+        "本案内は杉並区公式ページ記載の範囲のみに基づきます。マイナンバーと基礎年金番号の連携状況等の詳細は年金事務所へご確認ください。"
+      ]
+    },
+    {
+      "id": "procedure_child_allowance",
+      "version": "2026-07-25.1",
+      "municipalityCode": "13115",
+      "canonicalType": "child_benefits",
+      "title": "児童手当(杉並区へ転入したとき)",
+      "shortDescription": "高校生年代までの児童を養育している世帯が対象の児童手当。転入した場合は新たに申請(認定請求)が必要。",
+      "applicabilityReason": "0歳〜高校生年代(18歳到達後最初の3月31日)までの児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。",
+      "priority": "high",
+      "dueDescription": "出生・転入等の事由発生の翌日から15日以内に申請(認定請求)してください。申請しないと受給できません。起算日は前住所地での転出予定日等のため引越し日からは算定できません。早めの申請を推奨します。",
+      "requiredDocuments": [
+        {
+          "label": "児童手当 認定請求書(受付窓口にあります。またはダウンロード)",
+          "status": "required"
+        },
+        {
+          "label": "(国内の別住所に住む児童を請求する場合)監護・生計同一申立書",
+          "status": "conditional"
+        }
+      ],
+      "channels": ["counter", "mail", "online"],
+      "locations": ["杉並区役所 子ども家庭部管理課子ども医療・手当係"],
+      "contact": "子ども家庭部管理課 子ども医療・手当係",
+      "sourceIds": ["src-13115-child_benefits-001"],
+      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "この手続きは人手レビュー未了(pending)です。内容は確定情報ではないため、必ず杉並区公式ページで最新情報をご確認ください。",
+        "電子申請(LoGoフォーム)にはマイナンバーカードが必要です。郵送申請は申請書が届いた日を申請日とします。",
+        "公務員の方は原則所属庁への請求です(独立行政法人・企業出向者を除く)。"
+      ]
+    },
+    {
+      "id": "procedure_child_medical",
+      "version": "2026-07-25.1",
+      "municipalityCode": "13115",
+      "canonicalType": "child_medical",
+      "title": "子ども医療費助成(マル乳・マル子・マル青医療証)",
+      "shortDescription": "出生から18歳到達後最初の3月31日までのお子さんの医療費の自己負担分を助成する制度。転入時は医療証交付申請が必要。",
+      "applicabilityReason": "0歳〜18歳到達後最初の3月31日までの児童がいる世帯が対象です(健康保険に加入していること)。",
+      "priority": "high",
+      "dueDescription": "原則、申請月の1日(転入日が1日以外の場合はその日)から認定します。転入日の翌日から数えて15日以内に申請すれば、転入日に遡って資格を認定します。15日を経過した場合は子ども医療・手当係へご相談ください。",
+      "requiredDocuments": [
+        {
+          "label": "医療証交付申請書",
+          "status": "required"
+        },
+        {
+          "label": "お子さんの医療保険の資格内容がわかるものの写し",
+          "status": "required"
+        }
+      ],
+      "channels": ["counter", "mail", "online"],
+      "locations": ["杉並区役所 子ども家庭部管理課子ども医療・手当係"],
+      "contact": "子ども家庭部管理課 子ども医療・手当係",
+      "sourceIds": ["src-13115-child_medical-001"],
+      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "この手続きは人手レビュー未了(pending)です。内容は確定情報ではないため、必ず杉並区公式ページで最新情報をご確認ください。",
+        "遡及の期限『転入日の翌日から15日以内』は杉並区の値です(世田谷区・新宿区は3か月以内で、自治体により異なります)。",
+        "保険診療外の費用(容器代・文書料・差額ベッド代・健康診断・予防接種等)や入院時食事療養標準負担額等は対象外です。"
+      ]
+    },
+    {
+      "id": "procedure_school_transfer",
+      "version": "2026-07-25.1",
+      "municipalityCode": "13115",
+      "canonicalType": "school_transfer",
+      "title": "区立小・中学校への転校手続き(杉並区へ転入したとき)",
+      "shortDescription": "転入により新しい住所地の指定校へ転校する手続き。前籍校での証明書受領と、転入届の際の『転入学通知書』交付が必要。",
+      "applicabilityReason": "小・中学生(義務教育の学齢)のお子さまがいる世帯、または就学・保育のニーズがある世帯が対象の、区立小・中学校への転入学手続きです。",
+      "priority": "high",
+      "dueDescription": "新しい住所地に住み始めてから14日以内に住民登録の転入届をし、その際に『転入学通知書』を受け取ってください。前籍校で発行された『在学証明書』『教科用図書給与証明書』を受け取り、転入学通知書とあわせて転入先の学校へ提出します。日数固定の期限は本ページに記載がありません。",
+      "requiredDocuments": [
+        {
+          "label": "転入学通知書(転入・転居届の手続きの際に交付。名称は教育委員会により異なる)",
+          "status": "required"
+        },
+        {
+          "label": "前籍校が発行した在学証明書・教科用図書給与証明書",
+          "status": "required"
+        }
+      ],
+      "channels": ["counter"],
+      "locations": [
+        "杉並区役所または区民事務所(転入届)",
+        "教育委員会事務局 学務課学事係(指定校・区域外就学等の相談)"
+      ],
+      "contact": "教育委員会事務局 学務課学事係",
+      "sourceIds": ["src-13115-school_transfer-001"],
+      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "この手続きは人手レビュー未了(pending)です。内容は確定情報ではないため、必ず杉並区公式ページで最新情報をご確認ください。",
+        "杉並区の交付書類名は『転入学通知書』です(世田谷区の『学校指定通知書』とは名称が異なります)。",
+        "指定校は住所地に基づき教育委員会が定めます。まず前籍校と転校先の学校の双方へ電話連絡してください。"
+      ]
+    },
+    {
+      "id": "procedure_childcare_application",
+      "version": "2026-07-25.1",
+      "municipalityCode": "13115",
+      "canonicalType": "childcare",
+      "title": "保育施設の入園申込(杉並区外から申込む場合)",
+      "shortDescription": "杉並区外に住んでいる方が杉並区の保育施設を申込む場合の入口案内。転入予定等の要件があります。",
+      "applicabilityReason": "未就学のお子さまがいる、または就学・保育のニーズがある世帯で、杉並区の保育施設の利用を希望する方向けの入口案内です。",
+      "priority": "normal",
+      "dueDescription": "杉並区に転入予定がある(または在勤・在学、里帰り出産の)場合のみ、区外在住中でも杉並区の保育施設を申込めます。『転入に関する確認書』等が必要です。申込締切日・必要書類は『令和8年度 保育施設利用のご案内』でご確認ください。日数固定の期限は設定していません(月・年度により異なります)。",
+      "requiredDocuments": [
+        {
+          "label": "転入に関する確認書(区様式)",
+          "status": "conditional"
+        },
+        {
+          "label": "保育施設利用の申込書類(『保育施設利用のご案内』参照)",
+          "status": "required"
+        }
+      ],
+      "channels": ["counter", "mail", "online"],
+      "locations": ["子ども家庭部 保育課認定・入園係"],
+      "contact": "子ども家庭部 保育課認定・入園係",
+      "sourceIds": ["src-13115-childcare-001"],
+      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "この手続きは人手レビュー未了(pending)です。内容は確定情報ではないため、必ず杉並区公式ページで最新情報をご確認ください。",
+        "申込締切日・必要書類の詳細は『保育施設利用のご案内』(PDF)に記載されており、本アプリでは入口案内にとどめています。"
+      ]
+    },
+    {
+      "id": "procedure_dog_registration_transfer",
+      "version": "2026-07-25.1",
+      "municipalityCode": "13115",
+      "canonicalType": "dog_registration",
+      "title": "飼い犬の登録事項変更(杉並区へ転入したとき)",
+      "shortDescription": "犬を飼っている方が転入したときの、犬の所在地変更(登録変更)の手続き。マイクロチップ未装着の場合は区窓口での手続きが必要。",
+      "applicabilityReason": "犬を飼っており、マイクロチップを装着していないため、区窓口での飼い犬の登録変更の手続きが必要です。",
+      "priority": "normal",
+      "dueDescription": "転入(所在地変更)の場合は、新しい住所地で登録変更の手続きをしてください(前住所地での手続きは不要)。マイクロチップ未装着の犬は区の窓口(保健所等)での手続きが必要です。本ページに転入に伴う変更届の日数期限の記載はありません。",
+      "requiredDocuments": [
+        {
+          "label": "前の住所地で交付された犬鑑札等(詳細は新しい住所地の窓口へご確認ください)",
+          "status": "unknown"
+        }
+      ],
+      "channels": ["counter"],
+      "locations": ["杉並保健所"],
+      "contact": "杉並保健所 生活衛生課",
+      "sourceIds": ["src-13115-dog_registration-001"],
+      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "この手続きは人手レビュー未了(pending)です。内容は確定情報ではないため、必ず杉並区公式ページで最新情報をご確認ください。",
+        "マイクロチップを装着し環境大臣の指定登録機関へ情報登録済みの犬は、区窓口ではなく『犬と猫のマイクロチップ情報登録サイト』で手続きします(区への届出は不要)。"
+      ]
+    },
+    {
+      "id": "procedure_waste_check",
+      "version": "2026-07-25.1",
+      "municipalityCode": "13115",
+      "canonicalType": "waste_schedule",
+      "title": "ごみ・資源の収集曜日を確認する",
+      "shortDescription": "お住まいの地域の資源・ごみの収集曜日を、区の収集曜日検索ツール・地域別カレンダー・全域版PDFで確認する導線。",
+      "applicabilityReason": "お住まいの地域の資源・ごみ収集曜日を確認してください(祝日・年末年始は変更の可能性あり)。",
+      "priority": "normal",
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集曜日を確認してください)。杉並区の収集曜日は町名・地域ごとに決められており、区の『ごみと資源 収集曜日検索』や地域別カレンダー・全域版PDF(『ごみと資源の分け方・出し方』)でご確認ください。可燃ごみ・不燃ごみ・資源とも朝8時までに集積所へ出してください。",
+      "requiredDocuments": [],
+      "channels": ["online"],
+      "locations": ["杉並清掃事務所"],
+      "onlineUrl": "https://www.city.suginami.tokyo.jp/s104/715.html",
+      "contact": "杉並清掃事務所",
+      "sourceIds": ["src-13115-waste_guide-001"],
+      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "dataStatus": "partial",
+      "cautions": [
+        "この手続きは人手レビュー未了(pending)です。内容は確定情報ではないため、必ず杉並区公式ページで最新情報をご確認ください。",
+        "杉並区の収集曜日は第三者サービスの検索ウィジェットで提供されており、本アプリでは町丁目別の収集曜日データを保持していません(捏造・無理な構造化をしないための誠実な縮退)。区公式の『ごみと資源 収集曜日検索』および地域別カレンダー・全域版PDFでご確認ください。",
+        "祝日・年末年始は収集日が変更になる場合があります。"
+      ]
+    }
+  ]
+}

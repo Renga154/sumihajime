@@ -95,9 +95,15 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.tokyo-nakano.lg.jp/',
   },
   {
+    // なぜ: Step4-Aで杉並区データ(手続き10件/窓口施設7件/ごみ分別辞書127品目。収集曜日は
+    // 第三者SaaS依存で機械取得不可のため誠実縮退)を整備しsupportedへ。ただし全ソースは pending
+    // のため、公開ゲート(loadPublishDataのapproved判定)により公開ビュー(seed→D1→API)の
+    // supported は false のまま(=承認まで「対応済み」に見せない。原則9)。承認(全ソースapproved化
+    // +procedures/facilitiesのpending解除)と同時にマージすることで supported が有効化される。
     code: '13115',
     name: '杉並区',
-    supported: false,
+    supported: true,
+    note: '対応済み',
     officialUrl: 'https://www.city.suginami.tokyo.jp/',
   },
   {

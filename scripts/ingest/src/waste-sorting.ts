@@ -39,6 +39,15 @@ export interface WasteSortingCsvOptions {
    * (世田谷のCSVが2列の中身を入れ替えて出力しているため。上部コメント参照)。既定false。
    */
   itemCategorySwapped?: boolean;
+  /**
+   * true の場合、「注意点」列(あれば)を「備考」列とあわせて notes に統合する(既定false)。
+   * なぜ: 世田谷/江東/新宿の3区は「注意点」列が全行空欄だったため未使用だったが、杉並区の
+   * CSVは「注意点」列に実データ(例:『最大辺がおおむね30cmを超えるもの(220cm以内)は粗大ごみです』)
+   * を持つ。schema(notes単一フィールド)を変えず、かつ公式が記載した注意情報を落とさないため、
+   * 注意点と備考の両方を(いずれも値がある場合のみ)『／』で連結して notes に格納する。3区は
+   * 「注意点」が空欄のため、このオプションを有効にしても出力は不変(後方互換)。
+   */
+  mergeCautionIntoNotes?: boolean;
 }
 
 function findCol(header: string[], matcher: (h: string) => boolean, label: string): number {
@@ -63,6 +72,11 @@ export function parseWasteSortingCsv(
   const categoryCol = findCol(header, (h) => normalizeHeader(h) === '分別区分', '分別区分');
   const feeTypeCol = findCol(header, (h) => normalizeHeader(h) === '料金種別', '料金種別');
   const remarksCol = findCol(header, (h) => normalizeHeader(h) === '備考', '備考');
+  // なぜ: 「注意点」列は3区では空欄だが杉並区では実データを持つ。mergeCautionIntoNotes 有効時のみ
+  // 参照する(列が存在しなければ -1 のまま=統合対象なし)。
+  const cautionCol = opts.mergeCautionIntoNotes
+    ? header.findIndex((h) => normalizeHeader(h) === '注意点')
+    : -1;
 
   return dataRows.map((row, i) => {
     if (row.length !== header.length) {
@@ -78,13 +92,16 @@ export function parseWasteSortingCsv(
     const category = opts.itemCategorySwapped ? rawName : rawCategory;
     const feeType = (row[feeTypeCol] ?? '').trim();
     const remarks = (row[remarksCol] ?? '').trim();
+    const caution = cautionCol >= 0 ? (row[cautionCol] ?? '').trim() : '';
+    // 注意点・備考の両方(値があるものだけ)を『／』で連結。3区は注意点が空欄のため remarks のみ=不変。
+    const notes = [caution, remarks].filter((s) => s.length > 0).join('／');
 
     return wasteSortingItemSchema.parse({
       itemId,
       municipalityCode: opts.municipalityCode,
       name,
       category,
-      ...(remarks.length > 0 ? { notes: remarks } : {}),
+      ...(notes.length > 0 ? { notes } : {}),
       ...(feeType.length > 0 ? { feeNote: feeType } : {}),
       sourceId: opts.sourceId,
     });

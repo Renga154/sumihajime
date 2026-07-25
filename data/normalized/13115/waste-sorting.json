@@ -1,0 +1,1038 @@
+{
+  "municipalityCode": "13115",
+  "sourceId": "src-13115-waste_sorting-001",
+  "items": [
+    {
+      "itemId": "131156S00001",
+      "municipalityCode": "13115",
+      "name": "油（液状のまま）",
+      "category": "拠点回収",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00002",
+      "municipalityCode": "13115",
+      "name": "油（固めたもの）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00003",
+      "municipalityCode": "13115",
+      "name": "アルバム",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00004",
+      "municipalityCode": "13115",
+      "name": "石",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00005",
+      "municipalityCode": "13115",
+      "name": "一斗缶（菓子類）",
+      "category": "かん",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00006",
+      "municipalityCode": "13115",
+      "name": "一斗缶（食用油・オイル・塗料）（中身を使い切る）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00007",
+      "municipalityCode": "13115",
+      "name": "衣類",
+      "category": "可燃",
+      "notes": "拠点回収",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00008",
+      "municipalityCode": "13115",
+      "name": "インクカートリッジ（使用済み）",
+      "category": "可燃",
+      "notes": "拠点回収",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00009",
+      "municipalityCode": "13115",
+      "name": "植木鉢（プラスチック製）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00010",
+      "municipalityCode": "13115",
+      "name": "植木鉢（素焼き・陶器製）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00011",
+      "municipalityCode": "13115",
+      "name": "園芸用支柱",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00012",
+      "municipalityCode": "13115",
+      "name": "おむつ（汚物はトイレに流す）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00013",
+      "municipalityCode": "13115",
+      "name": "温度計（水銀使用）",
+      "category": "拠点回収",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00014",
+      "municipalityCode": "13115",
+      "name": "カーテン（裁断する）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00015",
+      "municipalityCode": "13115",
+      "name": "カード類",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00016",
+      "municipalityCode": "13115",
+      "name": "カーボン紙",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00017",
+      "municipalityCode": "13115",
+      "name": "貝殻",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00018",
+      "municipalityCode": "13115",
+      "name": "懐中電灯",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00019",
+      "municipalityCode": "13115",
+      "name": "カイロ",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00020",
+      "municipalityCode": "13115",
+      "name": "傘",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00021",
+      "municipalityCode": "13115",
+      "name": "カセットボンベ",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00022",
+      "municipalityCode": "13115",
+      "name": "紙コップ・皿",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00023",
+      "municipalityCode": "13115",
+      "name": "紙パック飲料用（裏が白いもの）",
+      "category": "古紙",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00024",
+      "municipalityCode": "13115",
+      "name": "紙パック飲料用（裏がアルミのもの）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00025",
+      "municipalityCode": "13115",
+      "name": "ガムテープ（紙・布・ビニール製）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00026",
+      "municipalityCode": "13115",
+      "name": "ガラス製品（耐熱性を含む）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00027",
+      "municipalityCode": "13115",
+      "name": "革製品（かばん・靴・服など）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00028",
+      "municipalityCode": "13115",
+      "name": "緩衝材（気泡緩衝材など）",
+      "category": "プラ",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00029",
+      "municipalityCode": "13115",
+      "name": "乾燥剤（脱酸素剤を含む）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00030",
+      "municipalityCode": "13115",
+      "name": "木の枝・幹（直径10cm・長さ50cmまで）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00031",
+      "municipalityCode": "13115",
+      "name": "薬の錠剤シート（中身を出す）",
+      "category": "プラ",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00032",
+      "municipalityCode": "13115",
+      "name": "靴",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00033",
+      "municipalityCode": "13115",
+      "name": "蛍光灯・管",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00034",
+      "municipalityCode": "13115",
+      "name": "化粧品のびん",
+      "category": "びん",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00035",
+      "municipalityCode": "13115",
+      "name": "ゴルフクラブ・バッグ",
+      "category": "粗大",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00036",
+      "municipalityCode": "13115",
+      "name": "コンクリート片",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00037",
+      "municipalityCode": "13115",
+      "name": "卓上コンロ",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00038",
+      "municipalityCode": "13115",
+      "name": "シーツ（裁断する）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00039",
+      "municipalityCode": "13115",
+      "name": "CD・CDケース",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00040",
+      "municipalityCode": "13115",
+      "name": "湿布薬",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00041",
+      "municipalityCode": "13115",
+      "name": "写真",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00042",
+      "municipalityCode": "13115",
+      "name": "砂利",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00043",
+      "municipalityCode": "13115",
+      "name": "シュレッダーくず",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00044",
+      "municipalityCode": "13115",
+      "name": "消火器",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00045",
+      "municipalityCode": "13115",
+      "name": "食品用保存袋・容器",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00046",
+      "municipalityCode": "13115",
+      "name": "除湿剤容器（水を捨てる）（シートタイプは可燃）",
+      "category": "プラ",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00047",
+      "municipalityCode": "13115",
+      "name": "食器類（ガラス製・陶磁器）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00048",
+      "municipalityCode": "13115",
+      "name": "食器類（プラスチック製）",
+      "category": "プラ",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00049",
+      "municipalityCode": "13115",
+      "name": "スーツケース",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00050",
+      "municipalityCode": "13115",
+      "name": "砂",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00051",
+      "municipalityCode": "13115",
+      "name": "スプレー缶",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00052",
+      "municipalityCode": "13115",
+      "name": "スポンジ",
+      "category": "プラ",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00053",
+      "municipalityCode": "13115",
+      "name": "炭（活性炭）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00054",
+      "municipalityCode": "13115",
+      "name": "体温計（水銀使用）",
+      "category": "拠点回収",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00055",
+      "municipalityCode": "13115",
+      "name": "体温計（電子）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00056",
+      "municipalityCode": "13115",
+      "name": "体重計",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00057",
+      "municipalityCode": "13115",
+      "name": "タイヤ（自動車・オートバイ）",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00058",
+      "municipalityCode": "13115",
+      "name": "タイヤ・チューブ（自転車）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00059",
+      "municipalityCode": "13115",
+      "name": "タイヤチェーン（金属製）（収納ケースを含む場合は粗大）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00060",
+      "municipalityCode": "13115",
+      "name": "タイヤチェーン（金属製以外）（収納ケースを含む場合は粗大）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00061",
+      "municipalityCode": "13115",
+      "name": "脱臭剤容器（中身を捨てる）（中身と分離できないものは可燃）",
+      "category": "プラ",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00062",
+      "municipalityCode": "13115",
+      "name": "土",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00063",
+      "municipalityCode": "13115",
+      "name": "テニスラケット",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00064",
+      "municipalityCode": "13115",
+      "name": "電気カーペット",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00065",
+      "municipalityCode": "13115",
+      "name": "電気コード",
+      "category": "不燃",
+      "notes": "拠点回収",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00066",
+      "municipalityCode": "13115",
+      "name": "電気毛布",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00067",
+      "municipalityCode": "13115",
+      "name": "電球（購入時のケースか紙に包む）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00068",
+      "municipalityCode": "13115",
+      "name": "電池（乾電池・リチウム一次電池）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00069",
+      "municipalityCode": "13115",
+      "name": "電池（充電式（二次）電池）",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00070",
+      "municipalityCode": "13115",
+      "name": "電池（ボタン電池）",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00071",
+      "municipalityCode": "13115",
+      "name": "灯油",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00072",
+      "municipalityCode": "13115",
+      "name": "トースター",
+      "category": "不燃",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00073",
+      "municipalityCode": "13115",
+      "name": "塗料",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00074",
+      "municipalityCode": "13115",
+      "name": "塗料のスプレー缶",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00075",
+      "municipalityCode": "13115",
+      "name": "ぬいぐるみ",
+      "category": "可燃",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00076",
+      "municipalityCode": "13115",
+      "name": "粘土（紙製・油製）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00077",
+      "municipalityCode": "13115",
+      "name": "バインダー（プラスチック製）",
+      "category": "プラ",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00078",
+      "municipalityCode": "13115",
+      "name": "バケツ（金属製）",
+      "category": "不燃",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00079",
+      "municipalityCode": "13115",
+      "name": "バケツ（プラスチック製）",
+      "category": "プラ",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00080",
+      "municipalityCode": "13115",
+      "name": "バッテリー",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00081",
+      "municipalityCode": "13115",
+      "name": "バット（野球用）",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00082",
+      "municipalityCode": "13115",
+      "name": "発泡スチロール",
+      "category": "プラ",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00083",
+      "municipalityCode": "13115",
+      "name": "花火（水に浸す）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00084",
+      "municipalityCode": "13115",
+      "name": "刃物類（厚手の紙等に包む）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00085",
+      "municipalityCode": "13115",
+      "name": "ハンガー（金属製・針金）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00086",
+      "municipalityCode": "13115",
+      "name": "ハンガー（プラスチック製・木製）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00087",
+      "municipalityCode": "13115",
+      "name": "ビデオテープ",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00088",
+      "municipalityCode": "13115",
+      "name": "ビデオデッキ",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00089",
+      "municipalityCode": "13115",
+      "name": "布団",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00090",
+      "municipalityCode": "13115",
+      "name": "布団カバー（裁断する）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00091",
+      "municipalityCode": "13115",
+      "name": "ブロック",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00092",
+      "municipalityCode": "13115",
+      "name": "風呂のふた",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00093",
+      "municipalityCode": "13115",
+      "name": "ペットのトイレシート",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00094",
+      "municipalityCode": "13115",
+      "name": "ヘルメット",
+      "category": "可燃",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00095",
+      "municipalityCode": "13115",
+      "name": "ペンキ",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00096",
+      "municipalityCode": "13115",
+      "name": "便座",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00097",
+      "municipalityCode": "13115",
+      "name": "ホース（裁断する）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00098",
+      "municipalityCode": "13115",
+      "name": "ホースリール",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00099",
+      "municipalityCode": "13115",
+      "name": "ボール（各種スポーツ用）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00100",
+      "municipalityCode": "13115",
+      "name": "ポット（魔法瓶）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00101",
+      "municipalityCode": "13115",
+      "name": "ポリタンク（最大辺30cm以上）",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00102",
+      "municipalityCode": "13115",
+      "name": "保冷剤",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00103",
+      "municipalityCode": "13115",
+      "name": "マグネットシート",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00104",
+      "municipalityCode": "13115",
+      "name": "マッチ（水に浸す）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00105",
+      "municipalityCode": "13115",
+      "name": "窓付き封筒（窓は外す）",
+      "category": "古紙",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00106",
+      "municipalityCode": "13115",
+      "name": "ミシン",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00107",
+      "municipalityCode": "13115",
+      "name": "密閉保存容器（プラスチック製）",
+      "category": "プラ",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00108",
+      "municipalityCode": "13115",
+      "name": "毛布",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00109",
+      "municipalityCode": "13115",
+      "name": "物干し竿・物干し台",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00110",
+      "municipalityCode": "13115",
+      "name": "薬品（農薬・劇薬）",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00111",
+      "municipalityCode": "13115",
+      "name": "ライター",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00112",
+      "municipalityCode": "13115",
+      "name": "ラップの芯",
+      "category": "古紙",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00113",
+      "municipalityCode": "13115",
+      "name": "レコード盤",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00114",
+      "municipalityCode": "13115",
+      "name": "レシート（感熱紙）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00115",
+      "municipalityCode": "13115",
+      "name": "レンガ",
+      "category": "収集不可",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00116",
+      "municipalityCode": "13115",
+      "name": "ロープ・梱包紐（裁断する）（麻・ポリエステル製）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00117",
+      "municipalityCode": "13115",
+      "name": "在宅医療用バッグ類（輸液・蓄尿・CAPD・栄養剤など）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00118",
+      "municipalityCode": "13115",
+      "name": "在宅医療用チューブ・カテーテル類",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00119",
+      "municipalityCode": "13115",
+      "name": "在宅医療用布、ゴム製品、吸入器など（マスク・包帯・ガーゼ・脱脂綿類・使い捨て手袋・吸入器など",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00120",
+      "municipalityCode": "13115",
+      "name": "在宅医療用注射筒（針を取り除いたプラスチック製のもの）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00121",
+      "municipalityCode": "13115",
+      "name": "在宅医療用ストーマ袋・紙おむつ",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00122",
+      "municipalityCode": "13115",
+      "name": "在宅医療用注射筒（針を取り除いたガラス製のもの）",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00123",
+      "municipalityCode": "13115",
+      "name": "在宅医療用血糖値測定器",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00124",
+      "municipalityCode": "13115",
+      "name": "びん・かん",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00125",
+      "municipalityCode": "13115",
+      "name": "古紙",
+      "category": "資源",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00126",
+      "municipalityCode": "13115",
+      "name": "アルミホイル",
+      "category": "不燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00127",
+      "municipalityCode": "13115",
+      "name": "自転車カバー（裁断する）",
+      "category": "可燃",
+      "feeNote": "無料",
+      "sourceId": "src-13115-waste_sorting-001"
+    },
+    {
+      "itemId": "131156S00128",
+      "municipalityCode": "13115",
+      "name": "杖",
+      "category": "粗大",
+      "notes": "最大辺がおおむね30cmを超えるもの（220cm以内）は粗大ごみです",
+      "feeNote": "有料",
+      "sourceId": "src-13115-waste_sorting-001"
+    }
+  ]
+}
