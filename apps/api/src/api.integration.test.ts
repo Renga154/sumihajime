@@ -81,7 +81,7 @@ interface Task {
 }
 
 describe('GET /api/municipalities', () => {
-  it('returns 62 municipalities; 世田谷(13112)・江東(13108)・新宿(13104)がsupported(2026-07-22承認)', async () => {
+  it('returns 62 municipalities; 世田谷(13112)・江東(13108)・新宿(13104)・杉並(13115)がsupported(杉並は2026-07-25承認)', async () => {
     const res = await request('/api/municipalities');
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -97,7 +97,7 @@ describe('GET /api/municipalities', () => {
       .filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
-    expect(supported).toEqual(['13104', '13108', '13112']);
+    expect(supported).toEqual(['13104', '13108', '13112', '13115']);
     // 各自治体に公式導線URL(FR-021)。出典ページの表記どおり http/https いずれもあり得る。
     for (const m of body) expect(m.officialUrl).toMatch(/^https?:\/\//);
     // 世田谷にはカバレッジ行がある(FR-024)。
@@ -164,15 +164,17 @@ describe('POST /api/checklists — 犬・マイクロチップ不明', () => {
 });
 
 describe('POST /api/checklists — 未対応自治体', () => {
-  it('杉並(13115)は supported=false エラー + 公式URL(FR-021)', async () => {
-    const res = await postChecklist(profile({ municipalityCode: '13115' }));
+  it('千代田(13101)は supported=false エラー + 公式URL(FR-021)', async () => {
+    // なぜ: 杉並(13115)は2026-07-25人手レビュー承認によりsupported=trueへ変わったため、
+    // 未対応自治体のfixtureとして未整備のまま(candidate)の千代田(13101)を使う。
+    const res = await postChecklist(profile({ municipalityCode: '13101' }));
     expect(res.status).toBe(409);
     const body = (await res.json()) as {
       error: { code: string; message: string; officialUrl?: string };
     };
     expect(body.error.code).toBe('municipality_not_supported');
-    expect(body.error.officialUrl).toBe('https://www.city.suginami.tokyo.jp/');
-    expect(body.error.message).toContain('杉並区');
+    expect(body.error.officialUrl).toBe('https://www.city.chiyoda.lg.jp/');
+    expect(body.error.message).toContain('千代田区');
   });
 
   it('存在しない自治体コードは 404', async () => {
@@ -231,9 +233,10 @@ describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)
     const res = await request('/api/sources');
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>[];
-    // 台帳には承認済み46件がシードされる(publish/load は approved のみ挿入)。
-    // 2026-07-25 Step3承認で世田谷の学校転入・保育の4ソースが追加approved化(42→46)。
-    expect(body.length).toBe(46);
+    // 台帳には承認済み60件がシードされる(publish/load は approved のみ挿入)。
+    // 2026-07-25 Step3承認で世田谷の学校転入・保育の4ソースが追加approved化(42→46)、
+    // 同日Step4-A承認で杉並(13115)の14ソースが追加approved化(46→60)。
+    expect(body.length).toBe(60);
 
     for (const s of body) {
       // 公開に必要な列は揃う。

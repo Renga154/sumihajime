@@ -96,10 +96,9 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Step4-Aで杉並区データ(手続き10件/窓口施設7件/ごみ分別辞書127品目。収集曜日は
-    // 第三者SaaS依存で機械取得不可のため誠実縮退)を整備しsupportedへ。ただし全ソースは pending
-    // のため、公開ゲート(loadPublishDataのapproved判定)により公開ビュー(seed→D1→API)の
-    // supported は false のまま(=承認まで「対応済み」に見せない。原則9)。承認(全ソースapproved化
-    // +procedures/facilitiesのpending解除)と同時にマージすることで supported が有効化される。
+    // 第三者SaaS依存で機械取得不可のため恒久的に誠実縮退)を整備。2026-07-25の人手レビュー承認
+    // (ユーザー決裁「2区とも承認」)により全ソースがapproved化・全手続きがverified化されたため、
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13115',
     name: '杉並区',
     supported: true,

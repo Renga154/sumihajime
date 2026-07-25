@@ -14,9 +14,10 @@ import { MunicipalityScopeMismatchError } from './errors.js';
 
 /**
  * なぜ: Step4-A 杉並区(13115)縦切りデータの来歴・型・決定論・自治体差分をCIで機械検証する。
- * 杉並は「収集曜日を作らない誠実縮退」を含む pending 自治体のため、既存3区と異なる次の点を固定する:
- * (a) 全手続きが dataStatus=partial(人手レビュー未了)で、公開ゲート(ADR-007)から除外される前提
- * (b) waste.json(収集曜日)を作らない(=ファイルが存在しない)ことの回帰ガード(捏造しない誓約)
+ * 杉並は2026-07-25に人手レビュー承認(ユーザー決裁「2区とも承認」)済みで、「収集曜日を作らない
+ * 誠実縮退」を含むため、既存3区と異なる次の点を固定する:
+ * (a) 全手続きが dataStatus=verified(2026-07-25承認)で、公開ゲート(ADR-007)の対象
+ * (b) waste.json(収集曜日)を作らない(=ファイルが存在しない)ことの回帰ガード(承認後も恒久的)
  * (c) waste-sorting.json(分別辞書)は整備済みで、杉並固有の「注意点」列が notes に統合されている
  * (d) 施設は窓口系7件(本庁舎1+区民事務所6)。事前調査の『区民事務所7件』を6件へ訂正した回帰ガード
  * (e) 自治体差分: マイナンバー継続利用=90日(世田谷/新宿の14日と相違)/子ども医療=15日遡及
@@ -102,27 +103,29 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
   return o;
 }
 
-describe('Suginami (13115) — schema validation & pending status (CI gate)', () => {
+describe('Suginami (13115) — schema validation & approved status (CI gate)', () => {
   it('rules.json parses as a RuleSet, scoped to 13115, 10 rules, ruleVersion 2026-07-25.1', () => {
     expect(suginamiRuleSet.municipalityCode).toBe(SUGINAMI);
     expect(suginamiRuleSet.ruleVersion).toBe('2026-07-25.1');
     expect(suginamiRuleSet.rules.length).toBe(10);
+    // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
+    expect(suginamiRuleSet.publishedRuleVersion).toBeUndefined();
   });
 
-  it('procedures.json — 10 ProcedureVersions parse; 全件 partial(人手レビュー未了)+ pending caution', () => {
+  it('procedures.json — 10 ProcedureVersions parse; 全件 verified(2026-07-25人手レビュー承認)', () => {
     const procedures = parseProcedures();
     expect(procedures.length).toBe(10);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(SUGINAMI);
-      // Step4-A時点では未承認のため partial(ADR-007で公開ゲートから除外=staging)。
-      expect(pv.dataStatus).toBe('partial');
+      // 2026-07-25 人手レビュー承認(ユーザー決裁「2区とも承認」)によりverified(ADR-007の公開単位)。
+      expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
       expect(pv.lastVerifiedAt).toBe('2026-07-25T00:00:00Z');
       // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持。
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();
-      // 未承認であることを利用者へ誠実に開示する caution を全手続きに含む。
-      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(true);
+      // 承認によりpending系のcaution文言は除去されている。
+      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(false);
     }
   });
 
