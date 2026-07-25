@@ -206,7 +206,7 @@ function StatTile({
     gray: 'border-slate-200 bg-slate-50',
   };
   return (
-    <div className={`rounded-xl border p-3 ${toneClass[tone]}`}>
+    <div className={`rounded-lg border p-3 ${toneClass[tone]}`}>
       <p className="text-xs font-medium text-slate-600">{label}</p>
       <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
         {value}
@@ -220,7 +220,7 @@ function YearDataCountdownCard({ countdown }: { countdown: YearDataCountdown }) 
   const { title, category, effectiveTo, daysRemaining, expired } = countdown;
   const soon = !expired && daysRemaining <= 90;
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3">
+    <div className="rounded-lg border border-slate-200 bg-white p-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold text-slate-500">{categoryText(category)}</span>
         {expired ? (
@@ -268,11 +268,12 @@ function MunicipalityCoverage({ municipality }: { municipality: MunicipalityWith
         <div className="mt-2 overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-300 text-left">
-                <th scope="col" className="py-1 pr-4 font-semibold">
+              {/* DADSのテーブル作法: ヘッダは淡い帯で本文と区別し、下に濃い罫線を敷く。 */}
+              <tr className="border-b border-slate-300 bg-slate-50 text-left">
+                <th scope="col" className="px-2 py-1.5 font-semibold">
                   カテゴリ
                 </th>
-                <th scope="col" className="py-1 font-semibold">
+                <th scope="col" className="px-2 py-1.5 font-semibold">
                   状況
                 </th>
               </tr>
@@ -280,10 +281,10 @@ function MunicipalityCoverage({ municipality }: { municipality: MunicipalityWith
             <tbody>
               {municipality.coverage.map((c) => (
                 <tr key={c.category} className="border-b border-slate-100">
-                  <th scope="row" className="py-1 pr-4 text-left font-normal text-slate-800">
+                  <th scope="row" className="px-2 py-1.5 text-left font-normal text-slate-800">
                     {categoryText(c.category)}
                   </th>
-                  <td className="py-1">
+                  <td className="px-2 py-1.5">
                     <Badge tone={statusTone[c.status]}>{coverageStatusLabel[c.status]}</Badge>
                   </td>
                 </tr>
@@ -311,20 +312,21 @@ function SourceLedgerGroup({ group }: { group: MunicipalityGroup }) {
         <table className="w-full border-collapse text-sm">
           <caption className="sr-only">{group.name}のデータソース台帳</caption>
           <thead>
-            <tr className="border-b border-slate-300 text-left align-bottom">
-              <th scope="col" className="py-1.5 pr-3 font-semibold">
+            {/* DADSのテーブル作法: ヘッダ帯(淡いグレー)+濃い罫線で列見出しを明確にする。 */}
+            <tr className="border-b border-slate-300 bg-slate-50 text-left align-bottom">
+              <th scope="col" className="px-2 py-2 font-semibold">
                 タイトル
               </th>
-              <th scope="col" className="py-1.5 pr-3 font-semibold">
+              <th scope="col" className="px-2 py-2 font-semibold">
                 種別
               </th>
-              <th scope="col" className="py-1.5 pr-3 font-semibold">
+              <th scope="col" className="px-2 py-2 font-semibold">
                 ライセンス
               </th>
-              <th scope="col" className="py-1.5 pr-3 font-semibold">
+              <th scope="col" className="px-2 py-2 font-semibold">
                 最終確認日
               </th>
-              <th scope="col" className="py-1.5 font-semibold">
+              <th scope="col" className="px-2 py-2 font-semibold">
                 更新頻度
               </th>
             </tr>
@@ -332,24 +334,24 @@ function SourceLedgerGroup({ group }: { group: MunicipalityGroup }) {
           <tbody>
             {group.sources.map((s) => (
               <tr key={s.sourceId} className="border-b border-slate-100 align-top">
-                <th scope="row" className="py-2 pr-3 text-left font-normal">
+                <th scope="row" className="px-2 py-2 text-left font-normal">
                   <ExternalLink href={s.sourceUrl}>{s.sourceTitle}</ExternalLink>
                   {isCcBy(s.license) && (
                     <span className="mt-1 block text-xs text-slate-500">{s.attributionText}</span>
                   )}
                 </th>
-                <td className="py-2 pr-3 text-slate-700">{sourceTypeLabel[s.sourceType]}</td>
-                <td className="py-2 pr-3">
+                <td className="px-2 py-2 text-slate-700">{sourceTypeLabel[s.sourceType]}</td>
+                <td className="px-2 py-2">
                   {isCcBy(s.license) ? (
                     <Badge tone="brand">{s.license}</Badge>
                   ) : (
                     <span className="text-slate-600">{s.license}</span>
                   )}
                 </td>
-                <td className="py-2 pr-3 tabular-nums text-slate-700">
+                <td className="px-2 py-2 tabular-nums text-slate-700">
                   {formatDateFromDateTime(s.lastVerifiedAt) || '—'}
                 </td>
-                <td className="py-2 text-slate-700">{s.updateFrequency}</td>
+                <td className="px-2 py-2 text-slate-700">{s.updateFrequency}</td>
               </tr>
             ))}
           </tbody>

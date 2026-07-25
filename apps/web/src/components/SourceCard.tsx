@@ -34,7 +34,7 @@ function OfficialSeal() {
 export function SourceCard({ source }: { source: Source }) {
   const verified = formatDateFromDateTime(source.lastVerifiedAt);
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 border-l-4 border-l-brand-600 bg-gradient-to-br from-brand-50/70 to-white shadow-sm">
+    <div className="overflow-hidden rounded-lg border border-slate-200 border-l-4 border-l-brand-600 bg-gradient-to-br from-brand-50/70 to-white">
       <div className="p-3.5">
         <div className="flex items-start gap-3">
           <OfficialSeal />

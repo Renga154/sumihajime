@@ -1,28 +1,90 @@
 @import 'tailwindcss';
 
 /*
+ * フォント: デジタル庁デザインシステム(DADS)に倣い本文書体を Noto Sans JP に統一する。
+ * CDN/外部フォント読込みは禁止のため npm パッケージ @fontsource/noto-sans-jp から
+ * woff2 サブセットのみを Vite に取り込ませる(woff レガシーは同梱せずバンドルを軽量化)。
+ * weight は 400(本文)/500(強調)/700(見出し)。ASCII・数字は 13KB の latin サブセットへ、
+ * それ以外(かな・漢字・全角記号)は約1MBの japanese サブセットへ unicode-range で振り分け、
+ * font-display: swap でフォント読込中もフォールバックで即描画する。
+ */
+@font-face {
+  font-family: 'Noto Sans JP';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-japanese-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Sans JP';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-japanese-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Sans JP';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-japanese-700-normal.woff2') format('woff2');
+}
+/* ASCII/数字は軽量な latin サブセットで先読み(source order 後勝ちで latin を優先)。 */
+@font-face {
+  font-family: 'Noto Sans JP';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-latin-400-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Noto Sans JP';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-latin-500-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Noto Sans JP';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-latin-700-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/*
  * なぜ: §15.3 アクセシビリティ。キーボード操作時のフォーカスを常に可視化し、
  * 文字拡大に耐えるためrem基準・行間を確保する。色だけに依存しない状態表示は
  * 各バッジ側でテキストを併記して担保する(components/Badge.tsx)。
  *
- * ブランドトークン: 行政情報の信頼感を担う深いブルー(brand)と、転入者に寄り添う
- * 温かみのアクセント(accent)を @theme で一元定義し、全画面のアドホックな色指定を
- * これらへ統一する。brand-600 は白文字でコントラスト比 約7.9:1(WCAG AA達成)。
- * accent は装飾(ロゴ・見出し帯・証票)のみに用い、白背景上の本文には使わない。
+ * ブランドトークン(DADS準拠): 行政情報の信頼感を担うプライマリブルーは、デジタル庁
+ * デザインシステムの Key(=Blue)スケール(MIT / Copyright デジタル庁, digital-go-jp/design-tokens)
+ * の考え方に合わせ、鮮やかで濃い官公庁ブルーへ寄せる。brand-600(#0017c1)は白文字で
+ * コントラスト比 約10:1、brand-700(#00118f)本文リンクで約12:1 と WCAG AA/AAA を満たす。
+ * accent は装飾(ロゴ・見出し帯)のみに用い、白背景上の本文には使わない。
  */
 
 @theme {
-  /* 信頼感のあるブルー(primary) */
-  --color-brand-50: #eef4fc;
-  --color-brand-100: #d8e6f8;
-  --color-brand-200: #b3cded;
-  --color-brand-300: #82a9dd;
-  --color-brand-400: #5183c8;
-  --color-brand-500: #2f66b0;
-  --color-brand-600: #1f5195;
-  --color-brand-700: #1a4380;
-  --color-brand-800: #163663;
-  --color-brand-900: #112947;
+  /* プライマリ(DADS Blue スケール準拠)。brand-600 が主要ボタン/証票、brand-700 がリンク。 */
+  --color-brand-50: #e8f1fe;
+  --color-brand-100: #d9e6ff;
+  --color-brand-200: #c5d7fb;
+  --color-brand-300: #9db7f9;
+  --color-brand-400: #7096f8;
+  --color-brand-500: #3460fb;
+  --color-brand-600: #0017c1;
+  --color-brand-700: #00118f;
+  --color-brand-800: #000071;
+  --color-brand-900: #000060;
 
   /* 温かみのあるアクセント(強調・装飾のみ) */
   --color-accent-50: #fff5ec;
@@ -34,6 +96,9 @@
   --color-accent-600: #cf560b;
   --color-accent-700: #a8430a;
   --color-accent-800: #85350c;
+
+  /* フォーカスインジケータ(DADS流の高視認・黄色)。Yellow-300 相当。 */
+  --color-focus: #ffd43d;
 }
 
 :root {
@@ -49,14 +114,15 @@ body {
   margin: 0;
   background-color: var(--color-slate-50);
   color: var(--color-slate-900);
+  /* DADS準拠: 本文は Noto Sans JP を最優先し、未読込時はシステムスタックへフォールバック。 */
   font-family:
+    'Noto Sans JP',
     system-ui,
     -apple-system,
     'Hiragino Kaku Gothic ProN',
-    'Noto Sans JP',
     Meiryo,
     sans-serif;
-  /* 日本語の可読性: 本文は行間ゆったり・文字間わずかに開ける。 */
+  /* 日本語の可読性: 本文は行間ゆったり(DADS Std-170%相当)・文字間わずかに開ける。 */
   line-height: 1.75;
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
@@ -71,11 +137,17 @@ h3 {
   letter-spacing: 0.005em;
 }
 
-/* キーボードフォーカスの可視化(マウス操作時は出さない)。 */
+/*
+ * キーボードフォーカスの可視化(マウス操作時は出さない)。
+ * DADS流の高視認フォーカス: 外側に暗色アウトライン(背景色に依らずコントラスト比3:1以上を
+ * 確保=WCAG 2.4.13)、内側に高視認の黄色リング(box-shadow)を重ね、明暗どちらの背景でも
+ * フォーカス位置が一目で分かるようにする。
+ */
 :focus-visible {
-  outline: 3px solid var(--color-brand-600);
+  outline: 3px solid #1a1a1a;
   outline-offset: 2px;
-  border-radius: 4px;
+  box-shadow: 0 0 0 2px var(--color-focus);
+  border-radius: 2px;
 }
 
 /* フォーム部品(チェックボックス・ラジオ)はブランドカラーで統一する。 */

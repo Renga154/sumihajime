@@ -54,7 +54,7 @@ export function ProcedureDetailPage() {
 
       {state.data && (
         <article className="space-y-5">
-          <header className="space-y-2 rounded-2xl border border-slate-200 bg-gradient-to-br from-brand-50/60 to-white p-5">
+          <header className="space-y-2 rounded-xl border border-slate-200 bg-gradient-to-br from-brand-50/60 to-white p-5">
             <div className="flex flex-wrap items-center gap-2">
               <PriorityBadge priority={state.data.procedure.priority} />
               <DataStatusBadge status={state.data.procedure.dataStatus} />

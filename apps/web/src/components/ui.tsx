@@ -39,7 +39,7 @@ export function Skeleton({ className = '' }: { className?: string }) {
 /** カード型スケルトン(リスト読み込み時のプレースホルダ)。 */
 export function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="flex items-center gap-3">
         <Skeleton className="h-5 w-16 rounded-full" />
         <Skeleton className="h-4 w-24" />
@@ -59,7 +59,7 @@ export function ErrorMessage({ error }: { error: unknown }) {
   return (
     <div
       role="alert"
-      className="flex gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-900"
+      className="flex gap-3 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900"
     >
       <svg
         aria-hidden="true"
@@ -96,7 +96,7 @@ export function ErrorMessage({ error }: { error: unknown }) {
 /** 空状態: 何もないことと「次の行動」を伝える。 */
 export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center">
+    <div className="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-8 text-center">
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"
@@ -126,9 +126,10 @@ export function Card({
   className?: string;
   interactive?: boolean;
 }) {
-  const base =
-    'rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow duration-150';
-  const hover = interactive ? 'hover:shadow-md hover:border-slate-300' : '';
+  // DADS流のフラットさ: 既定は影を落とさず1pxの罫線で面を区切る。操作可能カードのみ
+  // ホバーで控えめな影(DADS Elevation-1相当)と罫線の濃さで反応を示す。
+  const base = 'rounded-lg border border-slate-200 bg-white p-4 transition-shadow duration-150';
+  const hover = interactive ? 'hover:border-slate-300 hover:shadow-sm' : '';
   return <div className={`${base} ${hover} ${className}`}>{children}</div>;
 }
 

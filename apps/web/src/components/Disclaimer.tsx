@@ -7,13 +7,13 @@ export function Disclaimer() {
   return (
     <section
       aria-labelledby="disclaimer-heading"
-      className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+      className="rounded-lg border border-amber-300 border-l-4 border-l-amber-500 bg-amber-50 p-4 text-sm text-amber-950"
     >
       <h2 id="disclaimer-heading" className="flex items-center gap-1.5 text-base font-bold">
         <svg
           aria-hidden="true"
           viewBox="0 0 20 20"
-          className="h-5 w-5 shrink-0 text-amber-600"
+          className="h-5 w-5 shrink-0 text-amber-700"
           fill="currentColor"
         >
           <path

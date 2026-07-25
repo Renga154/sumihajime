@@ -217,7 +217,7 @@ function NoResults({
   officialUrl?: string;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center">
+    <div className="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-6 text-center">
       <p className="font-semibold text-slate-800">
         「{query}」に一致する品目は見つかりませんでした
       </p>
@@ -244,7 +244,7 @@ function UnavailableNote({
   officialUrl?: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-6 text-center">
+    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-center">
       <p className="font-semibold text-slate-800">
         この自治体のごみ分別データはまだ整備されていません
       </p>

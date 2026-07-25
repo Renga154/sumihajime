@@ -23,7 +23,7 @@ const confidenceLabel: Record<ChatResponse['confidence'], string> = {
 function CitationCard({ citation }: { citation: ChatCitation }) {
   const verified = formatDateFromDateTime(citation.lastVerifiedAt);
   return (
-    <div className="rounded-xl border border-slate-200 border-l-4 border-l-brand-600 bg-gradient-to-br from-brand-50/70 to-white p-3 text-sm">
+    <div className="rounded-lg border border-slate-200 border-l-4 border-l-brand-600 bg-gradient-to-br from-brand-50/70 to-white p-3 text-sm">
       <div className="flex items-start gap-2.5">
         <span
           aria-hidden="true"
@@ -182,7 +182,7 @@ export function ChatPanel({
           <button
             type="submit"
             disabled={loading || question.trim().length === 0}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             質問する
           </button>

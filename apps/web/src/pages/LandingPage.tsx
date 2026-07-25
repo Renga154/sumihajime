@@ -39,7 +39,7 @@ export function LandingPage() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-accent-50/40 px-5 py-7 sm:px-7 sm:py-9">
+      <section className="relative overflow-hidden rounded-xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-accent-50/40 px-5 py-7 sm:px-7 sm:py-9">
         <span
           aria-hidden="true"
           className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-brand-100/50 blur-2xl"
@@ -122,7 +122,7 @@ export function LandingPage() {
                       <button
                         type="button"
                         onClick={() => start(m)}
-                        className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 active:bg-brand-800"
+                        className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 active:bg-brand-800"
                       >
                         この自治体で始める
                         <svg
@@ -160,7 +160,7 @@ export function LandingPage() {
                 {unsupportedGroups.map((g) => (
                   <details
                     key={g.key}
-                    className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60"
+                    className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50/60"
                   >
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 font-semibold text-slate-800 marker:content-none hover:bg-slate-100 focus-visible:bg-slate-100">
                       <span className="flex items-center gap-2">
