@@ -72,7 +72,15 @@ export function renderReport(data: EvalReportData): string {
 
   lines.push(`## 1. corpus / index / prompt バージョン`);
   lines.push('');
-  lines.push(`- 索引対象自治体: ${dataset.corpus.municipalities.join(' / ')}(世田谷・江東・新宿)`);
+  const MUNI_NAMES: Record<string, string> = {
+    '13112': '世田谷',
+    '13108': '江東',
+    '13104': '新宿',
+    '13115': '杉並',
+    '13101': '千代田',
+  };
+  const muniLabel = dataset.corpus.municipalities.map((c) => MUNI_NAMES[c] ?? c).join('・');
+  lines.push(`- 索引対象自治体: ${dataset.corpus.municipalities.join(' / ')}(${muniLabel})`);
   lines.push(`- 索引ソース種別: ${dataset.corpus.indexedSourceType}(CSVソースは未索引=コーパス外)`);
   const srcRows = Object.entries(meta.approvedHtmlSources)
     .map(([code, n]) => `${code}=${n}`)
@@ -198,7 +206,7 @@ export function renderReport(data: EvalReportData): string {
   lines.push(`8. レイテンシ/コスト → p95 ${s.latency.p95}ms(閾値8000ms)`);
   lines.push('');
   lines.push(
-    `> 注記: 本評価は本番エンドポイントの実測1回分。rag-evalスキルの原則に従い、失敗は個別例へのチューニングではなく根本原因(§5)単位で対処し、修正後は全30問を再実行すること。`,
+    `> 注記: 本評価は本番エンドポイントの実測1回分。rag-evalスキルの原則に従い、失敗は個別例へのチューニングではなく根本原因(§5)単位で対処し、修正後は全${dataset.cases.length}問を再実行すること。`,
   );
   lines.push('');
 

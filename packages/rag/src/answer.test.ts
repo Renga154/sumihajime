@@ -5,6 +5,7 @@ import {
   confidenceFromScore,
   shouldAbstain,
   selectMatches,
+  isHoldAnswer,
 } from './answer.js';
 import type { VectorizeMatch } from './types.js';
 
@@ -51,6 +52,29 @@ describe('validateCitations', () => {
 
   it('全て捏造なら空(=呼び出し側で保留へ差し替え)', () => {
     expect(validateCitations(['src-FAKE'], allowed)).toEqual([]);
+  });
+});
+
+describe('isHoldAnswer', () => {
+  it('先頭が保留語(確認できません/確認できませんでした)の本文は保留とみなす', () => {
+    expect(isHoldAnswer('確認できません。杉並区の公式ページでの確認をお勧めします。')).toBe(true);
+    expect(isHoldAnswer('①確認できません。各自治体の公式ページでの確認をお勧めします。')).toBe(
+      true,
+    );
+    expect(isHoldAnswer('確認できませんでした（公式の根拠が見つかりませんでした）。')).toBe(true);
+  });
+
+  it('事実を先頭に述べる実回答は保留とみなさない(末尾に注意で保留語があっても)', () => {
+    expect(isHoldAnswer('転入届は14日以内です。それ以外の詳細は確認できません。')).toBe(false);
+    expect(isHoldAnswer('①引越しをしてきた日から14日以内に転入届を出す必要があります。')).toBe(
+      false,
+    );
+  });
+
+  it('先頭の列挙・装飾記号(-, ・, ①, 全角空白)を剥がして判定する', () => {
+    expect(isHoldAnswer('- 確認できません。')).toBe(true);
+    expect(isHoldAnswer('・確認できません。')).toBe(true);
+    expect(isHoldAnswer('①　確認できません。')).toBe(true);
   });
 });
 

@@ -7,7 +7,9 @@ import {
   chatComplete,
   confidenceFromScore,
   embedText,
+  isHoldAnswer,
   parseAnswer,
+  rerankByProcedureIntent,
   selectMatches,
   shouldAbstain,
   validateCitations,
@@ -34,7 +36,14 @@ import { getMunicipality, getRagChunks, getSourcesByIds, type Bindings } from '.
 type Variables = { requestId: string };
 type Env = { Bindings: Bindings; Variables: Variables };
 
+// なぜ: 生成プロンプトへ渡す抜粋数(LLMのコンテキスト予算)。
 const TOP_K = 6;
+// なぜ: ベクトル検索で取得する候補プール数。TOP_Kより広く取り、決定論的な手続き意図リランク
+// (rerankByProcedureIntent)で「質問が主題とする手続き」のチャンクを TOP_K 内へ引き上げるための余地。
+// コーパス拡張(世田谷=90チャンク; 学校16/保育12が転入届に頻繁言及)で、resident_registration の
+// 正チャンクが埋め込み類似度の上位6から押し出される回帰への対策。returnMetadata:'none' のため
+// Vectorize は topK を広めに取れる。1自治体の総チャンク数(最大90)に対し十分な余裕を持たせる。
+const FETCH_K = 50;
 const TIMEOUT_MS = 15_000;
 const DEFAULT_MIN_SCORE = 0.3;
 
@@ -184,7 +193,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
     }
 
     const result = await env.VECTORIZE.query(queryVector, {
-      topK: TOP_K,
+      topK: FETCH_K,
       filter: { municipalityCode: code },
       returnMetadata: 'none',
     });
@@ -226,8 +235,14 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       return c.json(abstainBody('unknown'));
     }
 
-    const allowedSourceIds = new Set(orderedChunks.map((r) => r.sourceId));
-    const promptChunks: PromptChunk[] = orderedChunks.map((r) => ({
+    // なぜ: 決定論的な手続き意図リランク。質問が主題とする手続き(category)のチャンクを候補プールの
+    // 先頭へ安定昇格させ、上位 TOP_K のみを生成へ渡す。これで埋め込み類似度で沈んだ正手続きチャンク
+    // (例: 転入届の質問に対する resident_registration)が、学校/保育チャンクに押し出されず載る。
+    // 意図が判定できない質問は no-op(検索スコア順のまま)。LLM判定は用いない(決定論原則)。
+    const promptSource = rerankByProcedureIntent(question, orderedChunks).slice(0, TOP_K);
+
+    const allowedSourceIds = new Set(promptSource.map((r) => r.sourceId));
+    const promptChunks: PromptChunk[] = promptSource.map((r) => ({
       sourceId: r.sourceId,
       title: r.title,
       text: r.text,
@@ -243,6 +258,19 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
 
     // 10) 出力検証: SOURCES行を解析し、検索ヒット済みsourceIdに解決できる引用のみ採用。
     const { body, citedSourceIds } = parseAnswer(raw);
+    // なぜ: 本文の主文(先頭)が「確認できません」等の保留語で、なお SOURCES に抜粋を列挙している
+    // 矛盾ケース(保留を主文としつつ引用付き)は、引用付きの実回答として提示しない。標準の保留応答へ差し替える
+    // (§11.5/§11.6)。手続き・自治体に依存しない一般規則。
+    if (isHoldAnswer(body)) {
+      logEvent({
+        requestId,
+        event: 'chat.abstained',
+        municipalityCode: code,
+        latencyMs: Date.now() - start,
+        abstained: true,
+      });
+      return c.json(abstainBody('unknown'));
+    }
     const validSourceIds = validateCitations(citedSourceIds, allowedSourceIds);
     if (validSourceIds.length === 0 || body.length === 0) {
       // 引用なし/本文なし → 捏造の疑い。保留へ差し替え(§11.6)。

@@ -9,4 +9,5 @@ export * from './chunk.js';
 export * from './openai.js';
 export * from './prompt.js';
 export * from './answer.js';
+export * from './intent.js';
 export * from './ratelimit.js';

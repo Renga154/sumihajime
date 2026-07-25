@@ -42,15 +42,15 @@ export function parseDataset(raw: unknown): EvalDataset {
   return parsed as EvalDataset;
 }
 
-/** 正答系20/保留系5/越境系5・自治体配分(世田谷7/江東7/新宿6)を軽く健全性チェック。 */
+/** 正答系28/保留系7/越境系5・自治体整合を軽く健全性チェック(5区対応 v1.1)。 */
 export function assertDatasetShape(dataset: EvalDataset): void {
   const cases: EvalCase[] = dataset.cases;
-  if (cases.length !== 30) throw new Error(`expected 30 cases, got ${cases.length}`);
+  if (cases.length !== 40) throw new Error(`expected 40 cases, got ${cases.length}`);
   const ids = new Set(cases.map((c) => c.id));
   if (ids.size !== cases.length) throw new Error('duplicate case ids');
   const byKind = (k: string) => cases.filter((c) => c.kind === k).length;
-  if (byKind('positive') !== 20) throw new Error(`expected 20 positive, got ${byKind('positive')}`);
-  if (byKind('abstain') !== 5) throw new Error(`expected 5 abstain, got ${byKind('abstain')}`);
+  if (byKind('positive') !== 28) throw new Error(`expected 28 positive, got ${byKind('positive')}`);
+  if (byKind('abstain') !== 7) throw new Error(`expected 7 abstain, got ${byKind('abstain')}`);
   if (byKind('cross') !== 5) throw new Error(`expected 5 cross, got ${byKind('cross')}`);
   for (const c of cases) {
     if (c.kind === 'positive' && c.expect.expectedSourceIds.length === 0) {

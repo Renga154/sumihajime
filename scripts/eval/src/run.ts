@@ -22,7 +22,9 @@ const DEFAULT_ENDPOINT = 'https://tokyo-move-navi.maintainer.workers.dev/api/cha
 const DEFAULT_SPACING_MS = 7_000; // 10req/分=1req/6秒。余裕を見て7秒。
 const REQUEST_TIMEOUT_MS = 30_000;
 const RATE_LIMIT_BACKOFF_MS = 65_000;
-const REPORT_DATE = process.env.EVAL_REPORT_DATE ?? '2026-07-23';
+// なぜ: レポート成果物名は実行日付(rag-eval-YYYY-MM-DD.md)にする。過去日で固定すると
+// 再実行が歴史記録(例: 初回7/23レポート)を上書きしてしまう。EVAL_REPORT_DATE で明示上書き可。
+const REPORT_DATE = process.env.EVAL_REPORT_DATE ?? new Date().toISOString().slice(0, 10);
 
 interface Args {
   endpoint: string;
@@ -125,7 +127,7 @@ async function callChat(endpoint: string, c: EvalCase, allowRetry = true): Promi
 
 function readRuleVersions(): string | null {
   const versions: string[] = [];
-  for (const code of ['13112', '13108', '13104']) {
+  for (const code of ['13112', '13108', '13104', '13115', '13101']) {
     const p = resolve(repoRoot, `packages/rules/data/${code}/rules.json`);
     if (!existsSync(p)) continue;
     try {
