@@ -8,8 +8,8 @@ import { evaluate } from './evaluate.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
 
 /**
- * なぜ: Step5-B 大田区(13111)縦切りデータ(pending)の来歴・型・決定論・自治体差分をCIで機械検証する。
- * (a) rules/procedures/facilities が @tmn/schemas でparse成功。手続きは全件 partial(人手レビュー未了)。
+ * なぜ: Step5-B 大田区(13111)縦切りデータ(2026-07-26承認済み)の来歴・型・決定論・自治体差分をCIで機械検証する。
+ * (a) rules/procedures/facilities が @tmn/schemas でparse成功。手続きは全件 verified(2026-07-26人手レビュー承認済み)。
  * (b) ペルソナ別評価で該当タスクの増減を明示アサート(子育て世帯で児童手当・子ども医療・学校転入・保育が増える)。
  * (c) 自治体差分: 子ども医療の申請期限は「6か月」(江東/世田谷/新宿/杉並と相違)、マイナンバー継続は「90日」文言。
  * (d) 越境(13111プロフィール×13112ルール)がエラー。
@@ -98,13 +98,14 @@ describe('Ota (13111) — schema validation (来歴・型検証; CI gate)', () =
     expect(otaRuleSet.rules.length).toBe(10);
   });
 
-  it('procedures.json — 10 ProcedureVersions parse; 全件 partial(人手レビュー未了)+ sourceIds + lastVerifiedAt', () => {
+  it('procedures.json — 10 ProcedureVersions parse; 全件 verified(2026-07-26 人手レビュー承認済み)+ sourceIds + lastVerifiedAt', () => {
     const procedures = parseProcedures();
     expect(procedures.length).toBe(10);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(OTA);
-      // 2026-07-26 時点で pending。承認まで partial(ADR-007 で公開対象=verified のみ)。
-      expect(pv.dataStatus).toBe('partial');
+      // 2026-07-26 人手レビュー承認(ユーザー決裁「2区とも承認」)により verified へ昇格。
+      // ADR-007 で公開対象=verified のみ。
+      expect(pv.dataStatus).toBe('verified');
       expect(pv.version).toBe('2026-07-26.1');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
       expect(pv.lastVerifiedAt).toBe('2026-07-26T00:00:00Z');

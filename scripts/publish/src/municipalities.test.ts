@@ -23,12 +23,12 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
     expect(villages).toHaveLength(8);
   });
 
-  it('supported は6区(千代田/新宿/江東/大田/世田谷/杉並)。Step5-Bで大田を整備(pending)', () => {
+  it('supported は6区(千代田/新宿/江東/大田/世田谷/杉並)。Step5-Bで大田を整備し2026-07-26人手レビュー承認済み', () => {
     // なぜ: 静的 supported は「MVP整備対象」という product 意図を表す。Step4-Aで杉並(13115)、
     // Step4-Bで千代田(13101)、Step5-Bで大田(13111)のデータを整備し supported=true にした。
-    // 千代田・新宿・江東・世田谷・杉並は人手レビュー承認済み。大田(13111)は 2026-07-26 時点で
-    // pending のため、公開ビュー(loadPublishData)では承認済みソースが無く supported=false に
-    // 落ちる(gate.test.ts / load.ts の approved 判定で担保)。ここで検証するのは静的な整備意図。
+    // 6区すべて人手レビュー承認済み。大田(13111)は 2026-07-26 の承認(ユーザー決裁「2区とも承認」)
+    // により全ソースが approved・全手続きが verified となったため、公開ビュー(loadPublishData)でも
+    // supported=true になる(gate.test.ts / load.ts の approved 判定で担保)。ここで検証するのは静的な整備意図。
     const supported = MUNICIPALITIES.filter((m) => m.supported)
       .map((m) => m.code)
       .sort();

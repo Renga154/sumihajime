@@ -1,13 +1,13 @@
 {
   "municipalityCode": "13111",
   "sourceId": "src-13111-facilities-001",
-  "reviewStatus": "pending_human_review",
+  "reviewStatus": "approved",
   "extractionNote": "出典=大田区「区庁舎等一覧」CSV(東京都オープンデータ, opendata.metro `131113_cyousya.csv`, Shift-JIS, 通番/名称/郵便番号/住所/電話番号/緯度/経度, 26行)。全26件を緯度経度付きで採用し、名称で category を付与した(本庁舎1・地域庁舎4・特別出張所18・その他庁舎3=産業プラザ庁舎/教育委員会/本庁舎分室(公園課))。転入届の受付窓口は転入届ページ(src-13111-resident_registration-001)の公式文言「各特別出張所 又は 本庁舎1階戸籍住民窓口」に一致する。江東・新宿の統合「公共施設一覧」CSV(GIF標準)に相当する単一ファイルは大田区の都カタログには存在せず、本CSVは全国地方公共団体コード・POIコード・バリアフリー属性を持たない(docs/research/opendata-gaps.md 参照)。電話番号は Facility スキーマに対応列が無いため保持していない(各手続きの連絡先は procedures.json / 公式ページを参照)。",
   "dataQualityNotes": [
     "全26施設に緯度・経度が付いており地図表示(ADR-005)可能。住所・緯度経度は出典CSVの値をそのまま採用(捏造補完なし)。",
     "受付時間(hours)は出典CSVに列が無いため未設定。窓口ごとの受付時間は各手続きページ(procedures.json)を参照。",
     "category「その他庁舎」の3件(産業プラザ庁舎・教育委員会・本庁舎分室(公園課))は転入届の主窓口ではないが、出典「区庁舎等一覧」に含まれる区の施設のため保持(教育委員会=学務課学事係は学校転入の窓口)。",
-    "人手レビュー未了(pending)。公開前に窓口区分・現行性の最終確認が必要。"
+    "2026-07-26 人手レビュー承認済み(maintainer、ユーザー決裁「2区とも承認」)。reviewStatus を approved へ更新。"
   ],
   "facilities": [
     {
