@@ -1,7 +1,7 @@
 {
   "municipalityCode": "13112",
   "version": "2026-07-25.1",
-  "note": "T-005 世田谷区 縦切りデータ。全手続きは公式ページ記載の範囲のみを要約・データ化(推測なし)。既存8件は 2026-07-21 人手レビュー承認済み(dataStatus=verified、version 2026-07-21.1、lastVerifiedAt 2026-07-21T11:44:00Z)で不変。Step3(2026-07-25)で学校転入(procedure_school_transfer)・保育(procedure_childcare_application)の2件を dataStatus=partial(人手レビュー未了=pending)で追加した。ADR-007により公開単位は verified 手続きのみのため、この2件は承認まで公開(D1シード)対象から除外される(staging)。dueDateは実行時にルールエンジンがmoveDateから算定するため、静的なProcedureVersionにはdueDescription(公式文言)のみを保持する。",
+  "note": "T-005 世田谷区 縦切りデータ。全手続きは公式ページ記載の範囲のみを要約・データ化(推測なし)。既存8件は 2026-07-21 人手レビュー承認済み(dataStatus=verified、version 2026-07-21.1、lastVerifiedAt 2026-07-21T11:44:00Z)で不変。Step3(2026-07-25)で学校転入(procedure_school_transfer)・保育(procedure_childcare_application)の2件を追加し、2026-07-25 人手レビュー承認済み(ユーザー決裁、dataStatus=verified、version 2026-07-25.1、lastVerifiedAt 2026-07-25T00:00:00Z)。ADR-007により公開単位は verified かつソースapproved の手続きのため、この2件も公開(D1シード)対象に含まれる。dueDateは実行時にルールエンジンがmoveDateから算定するため、静的なProcedureVersionにはdueDescription(公式文言)のみを保持する。",
   "procedures": [
     {
       "id": "procedure_resident_registration",
@@ -235,9 +235,8 @@
       "contact": "教育委員会事務局 学務課 就学係(区役所第2庁舎5階53番窓口) 電話 03-5432-2683",
       "sourceIds": ["src-13112-school_transfer-001", "src-13112-school_transfer-002"],
       "lastVerifiedAt": "2026-07-25T00:00:00Z",
-      "dataStatus": "partial",
+      "dataStatus": "verified",
       "cautions": [
-        "【人手レビュー未了(pending)】本手続きは Step3(2026-07-25)で追加した公開前(staging)データです。承認済み公式ソース(src-13112-school_transfer-001/002)に基づきますが、人手レビュー承認までは公開(D1シード)対象から除外されます(ADR-007)。",
         "「学校指定通知書」は世田谷区で用いられる名称です(江東区の「転入学通知書」等、他区の名称・手続きは混入させていません)。",
         "学年途中の転入は src-13112-school_transfer-001(学年途中)、新学年(4月)からの入学は src-13112-school_transfer-002 を根拠としています。国・都・私立からの転学、外国籍のお子さんの手続きは学務課就学係で別途手続きが必要です。"
       ]
@@ -271,9 +270,8 @@
       "contact": "子ども・若者部 保育認定・調整課 入園 電話 03-5432-1200",
       "sourceIds": ["src-13112-childcare-001", "src-13112-childcare-002"],
       "lastVerifiedAt": "2026-07-25T00:00:00Z",
-      "dataStatus": "partial",
+      "dataStatus": "verified",
       "cautions": [
-        "【人手レビュー未了(pending)】本手続きは Step3(2026-07-25)で追加した公開前(staging)データです。承認済み公式ソース(src-13112-childcare-001/002)に基づきますが、人手レビュー承認までは公開(D1シード)対象から除外されます(ADR-007)。",
         "公式文言『転入予定者も含め、区外在住中は、区立保育園を希望することはできません』。区民となった後に申込が可能です。",
         "申込締切は入園希望月の前月10日です(世田谷区)。江東区(前月末日)・新宿区(入園希望月ごと)とは締切の定めが異なります(他区の値は混入させていません)。"
       ]

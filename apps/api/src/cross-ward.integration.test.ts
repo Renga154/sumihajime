@@ -30,7 +30,13 @@ function request(path: string, init?: RequestInit): Promise<Response> {
 }
 
 interface ProcedureDetail {
-  procedure: { id: string; municipalityCode: string; title: string };
+  procedure: {
+    id: string;
+    municipalityCode: string;
+    title: string;
+    dueDescription: string;
+    requiredDocuments: { label: string; status: string }[];
+  };
   sources: { sourceId: string; sourceUrl: string }[];
 }
 
@@ -85,12 +91,28 @@ describe('越境混線なし: 共有 procedure_id が自治体ごとに正しく
     }
   });
 
-  it('江東固有の手続き(procedure_school_transfer)は江東でのみ引け、世田谷では 404', async () => {
+  it('procedure_school_transfer は両区で200を返すが、内容(必要書類の名称)は自区のもので混線しない(2026-07-25 世田谷Step3承認後の回帰ガード)', async () => {
+    // なぜ: 2026-07-25 人手レビュー承認により世田谷(13112)でも procedure_school_transfer が
+    // 公開されるようになったため、旧来の「江東限定・世田谷は404」という前提は成立しなくなった。
+    // 404の有無より本質的な混線検知として、両区が200を返す前提で「必要書類の名称が自区のもの
+    // であること」をアサートする(世田谷=「学校指定通知書」、江東=「転入学通知書」。互いの
+    // 名称が混入していないことを機械検証)。
+    const setagaya = await getProcedureDetail('procedure_school_transfer', '13112');
     const koto = await getProcedureDetail('procedure_school_transfer', '13108');
+    expect(setagaya.procedure.municipalityCode).toBe('13112');
     expect(koto.procedure.municipalityCode).toBe('13108');
 
-    const setagaya = await request('/api/procedures/procedure_school_transfer?municipality=13112');
-    expect(setagaya.status).toBe(404);
+    const setagayaDocLabels = setagaya.procedure.requiredDocuments.map((d) => d.label).join(' ');
+    const kotoDocLabels = koto.procedure.requiredDocuments.map((d) => d.label).join(' ');
+
+    expect(setagayaDocLabels).toContain('学校指定通知書');
+    expect(setagayaDocLabels).not.toContain('転入学通知書');
+    expect(kotoDocLabels).toContain('転入学通知書');
+    expect(kotoDocLabels).not.toContain('学校指定通知書');
+
+    // 根拠ソースも自区のもの(接頭辞)であること = 一方が他方で上書きされていない。
+    expect(setagaya.sources.every((s) => s.sourceId.startsWith('src-13112-'))).toBe(true);
+    expect(koto.sources.every((s) => s.sourceId.startsWith('src-13108-'))).toBe(true);
   });
 });
 
@@ -154,8 +176,22 @@ describe('無回帰: 世田谷(13108同時シード下でも)従来どおり自�
     expect(setagaya.procedure.title).toContain('世田谷');
   });
 
-  it('江東固有の childcare_application は世田谷では 404(取り違えない)', async () => {
-    const res = await request('/api/procedures/procedure_childcare_application?municipality=13112');
-    expect(res.status).toBe(404);
+  it('procedure_childcare_application は両区で200を返すが、申込締切の文言(自区の公式期限)は混線しない(2026-07-25 世田谷Step3承認後の回帰ガード)', async () => {
+    // なぜ: 2026-07-25 人手レビュー承認により世田谷(13112)でも procedure_childcare_application が
+    // 公開されるようになったため、旧来の「江東限定・世田谷は404」という前提は成立しなくなった。
+    // 混線検知として、両区の申込締切の公式文言(世田谷=前月10日、江東=前月末日)が
+    // 互いに入れ替わっていないことをアサートする。
+    const setagaya = await getProcedureDetail('procedure_childcare_application', '13112');
+    const koto = await getProcedureDetail('procedure_childcare_application', '13108');
+    expect(setagaya.procedure.municipalityCode).toBe('13112');
+    expect(koto.procedure.municipalityCode).toBe('13108');
+
+    expect(setagaya.procedure.dueDescription).toContain('前月10日');
+    expect(setagaya.procedure.dueDescription).not.toContain('前月末日');
+    expect(koto.procedure.dueDescription).toContain('前月末日');
+    expect(koto.procedure.dueDescription).not.toContain('前月10日');
+
+    expect(setagaya.sources.every((s) => s.sourceId.startsWith('src-13112-'))).toBe(true);
+    expect(koto.sources.every((s) => s.sourceId.startsWith('src-13108-'))).toBe(true);
   });
 });

@@ -96,17 +96,19 @@ function outcomeFor(p: Profile, procedureId: string) {
 }
 
 describe('Setagaya (13112) — schema validation (来歴・型検証; CI gate)', () => {
-  // Step3(2026-07-25): 学校転入・保育の2手続きを dataStatus=partial(人手レビュー未了)で追加。
-  // 既存8件(verified, 2026-07-21承認)は不変。ruleVersion は全体で1つ→ 2026-07-25.1 へ更新。
-  const STAGED_IDS = ['procedure_childcare_application', 'procedure_school_transfer'];
+  // Step3(2026-07-25): 学校転入・保育の2手続きを追加、同日 人手レビュー承認(ユーザー決裁)。
+  // 既存8件(verified, 2026-07-21承認)は不変。ruleVersion は全体で1つ→ 2026-07-25.1 へ更新(公開版もこれに一致)。
+  const APPROVED_STEP3_IDS = ['procedure_childcare_application', 'procedure_school_transfer'];
 
   it('rules.json parses as a RuleSet, scoped to 13112, 10 rules, ruleVersion 2026-07-25.1', () => {
     expect(setagayaRuleSet.municipalityCode).toBe(MUNICIPALITY);
     expect(setagayaRuleSet.ruleVersion).toBe('2026-07-25.1');
     expect(setagayaRuleSet.rules.length).toBe(10);
+    // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
+    expect(setagayaRuleSet.publishedRuleVersion).toBeUndefined();
   });
 
-  it('procedures.json — 10 ProcedureVersions parse; 8 verified(2026-07-21承認・不変)+ 2 partial(Step3 pending)', () => {
+  it('procedures.json — 10 ProcedureVersions parse; 全件 verified(8件は2026-07-21承認・不変、2件はStep3 2026-07-25承認)', () => {
     const procedures = parseProcedures();
     expect(procedures.length).toBe(10);
     for (const pv of procedures) {
@@ -115,21 +117,21 @@ describe('Setagaya (13112) — schema validation (来歴・型検証; CI gate)',
       // 期限は dueDate(算定式) ではなく dueDescription(公式文言) を静的に保持する
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();
+      // 2026-07-25時点で13112の全手続きが人手レビュー承認済み(ADR-007の公開単位)
+      expect(pv.dataStatus).toBe('verified');
     }
-    const verified = procedures.filter((p) => p.dataStatus === 'verified');
-    const staged = procedures.filter((p) => p.dataStatus === 'partial');
+    const original = procedures.filter((p) => p.version === '2026-07-21.1');
+    const approvedStep3 = procedures.filter((p) => p.version === '2026-07-25.1');
     // 既存8件は verified のまま、2026-07-21 人手レビュー承認の版・確認日を保持(不変の回帰ガード)。
-    expect(verified.length).toBe(8);
-    for (const pv of verified) {
-      expect(pv.version).toBe('2026-07-21.1');
+    expect(original.length).toBe(8);
+    for (const pv of original) {
       expect(pv.lastVerifiedAt).toBe('2026-07-21T11:44:00Z');
     }
-    // Step3 追加の2件は partial(pending)で、確認日は 2026-07-25。ADR-007により承認まで非公開。
-    expect(staged.map((p) => p.id).sort()).toEqual(STAGED_IDS);
-    for (const pv of staged) {
-      expect(pv.version).toBe('2026-07-25.1');
+    // Step3 追加の2件は 2026-07-25 に人手レビュー承認され、pending系のcaution文言は除去されている。
+    expect(approvedStep3.map((p) => p.id).sort()).toEqual(APPROVED_STEP3_IDS);
+    for (const pv of approvedStep3) {
       expect(pv.lastVerifiedAt).toBe('2026-07-25T00:00:00Z');
-      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(true);
+      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(false);
     }
   });
 

@@ -123,7 +123,9 @@ describe('POST /api/checklists — 単身・都外', () => {
 
     // 期限順: 転入届が先頭(最も早い期限)。
     expect(body.tasks[0]?.procedureId).toBe('procedure_resident_registration');
-    expect(body.ruleVersion).toBe('2026-07-21.1');
+    // 2026-07-25 Step3承認(学校転入・保育)により publishedRuleVersion が外れ、
+    // ruleVersion(=ファイル全体の版)がそのまま公開版になった(ADR-007)。
+    expect(body.ruleVersion).toBe('2026-07-25.1');
   });
 });
 
@@ -229,8 +231,9 @@ describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)
     const res = await request('/api/sources');
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>[];
-    // 台帳には承認済み42件がシードされる(publish/load は approved のみ挿入)。
-    expect(body.length).toBe(42);
+    // 台帳には承認済み46件がシードされる(publish/load は approved のみ挿入)。
+    // 2026-07-25 Step3承認で世田谷の学校転入・保育の4ソースが追加approved化(42→46)。
+    expect(body.length).toBe(46);
 
     for (const s of body) {
       // 公開に必要な列は揃う。
