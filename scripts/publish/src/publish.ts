@@ -22,12 +22,18 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 const apiDir = resolve(repoRoot, 'apps/api');
 const wranglerBin = resolve(apiDir, 'node_modules/.bin/wrangler');
-const DB_NAME = 'tokyo-move-navi';
+// なぜbinding名: wrangler env(--env odh のミラー等)では database_name が環境ごとに異なるが、
+// binding名 "DB" は全環境で共通のため、環境非依存にD1を特定できる(ADR-008)。
+const DB_NAME = 'DB';
 
 function main(): void {
   const dryRun = process.argv.includes('--dry-run');
   const remote = process.argv.includes('--remote');
   const targetFlag = remote ? '--remote' : '--local';
+  // --env <name> があれば wrangler にそのまま透過する(ミラー環境への投入。既定は従来通り)。
+  const envIdx = process.argv.indexOf('--env');
+  const envName = envIdx >= 0 ? process.argv[envIdx + 1] : undefined;
+  const envArgs: string[] = envName ? ['--env', envName] : [];
 
   // なぜ: CLIは supported な全自治体を公開対象にする。承認ゲート(buildSeed内)が
   // 未承認ソース(江東=pending/candidate 等)を参照する自治体を拒否し、publishを止める。
@@ -85,16 +91,20 @@ function main(): void {
   }
 
   console.log(`[publish] applying migrations (${targetFlag})…`);
-  execFileSync(wranglerBin, ['d1', 'migrations', 'apply', DB_NAME, targetFlag], {
+  execFileSync(wranglerBin, ['d1', 'migrations', 'apply', DB_NAME, targetFlag, ...envArgs], {
     cwd: apiDir,
     stdio: 'inherit',
   });
 
   console.log(`[publish] seeding D1 (${targetFlag})…`);
-  execFileSync(wranglerBin, ['d1', 'execute', DB_NAME, targetFlag, '--file', seedFile], {
-    cwd: apiDir,
-    stdio: 'inherit',
-  });
+  execFileSync(
+    wranglerBin,
+    ['d1', 'execute', DB_NAME, targetFlag, '--file', seedFile, ...envArgs],
+    {
+      cwd: apiDir,
+      stdio: 'inherit',
+    },
+  );
 
   console.log('[publish] done.');
 }

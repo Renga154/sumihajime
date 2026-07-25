@@ -30,8 +30,12 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 const apiDir = resolve(repoRoot, 'apps/api');
 const wranglerBin = resolve(apiDir, 'node_modules/.bin/wrangler');
-const DB_NAME = 'tokyo-move-navi';
-const INDEX_NAME = 'tokyo-move-navi-rag';
+// なぜbinding名: wrangler env(--env odh のミラー等)では database_name が環境ごとに異なるが、
+// binding名 "DB" は全環境で共通のため、環境非依存にD1を特定できる(ADR-008)。
+const DB_NAME = 'DB';
+// --env/--index で上書き可能(ミラー環境向け)。既定は個人アカウントの本番索引。
+let INDEX_NAME = 'tokyo-move-navi-rag';
+let ENV_ARGS: string[] = [];
 // なぜ: Vectorize の upsert は非同期に処理される。処理完了前にクエリすると新チャンクがヒットせず
 // 保留・誤答になる(本番でこの取りこぼしが発生)。upsert 前後で info の processedUpToMutation の変化と
 // vectorCount を監視し、索引反映を保証してから終了する(詳細は upsertVectorsAndWait を参照)。
@@ -60,7 +64,7 @@ interface VectorizeInfo {
 }
 
 function vectorizeInfo(): VectorizeInfo {
-  const out = execFileSync(wranglerBin, ['vectorize', 'info', INDEX_NAME, '--json'], {
+  const out = execFileSync(wranglerBin, ['vectorize', 'info', INDEX_NAME, '--json', ...ENV_ARGS], {
     cwd: apiDir,
     encoding: 'utf-8',
   });
@@ -80,7 +84,7 @@ function upsertVectorsAndWait(ndjsonPath: string, expectedCount: number): void {
   const before = vectorizeInfo().processedUpToMutation;
   const upsertOut = execFileSync(
     wranglerBin,
-    ['vectorize', 'upsert', INDEX_NAME, '--file', ndjsonPath, '--json'],
+    ['vectorize', 'upsert', INDEX_NAME, '--file', ndjsonPath, '--json', ...ENV_ARGS],
     { cwd: apiDir, encoding: 'utf-8' },
   );
   const enqueued = parseLeadingJson<{ count?: number }>(upsertOut)?.count;
@@ -139,6 +143,17 @@ async function main(): Promise<void> {
   const dryRun = process.argv.includes('--dry-run');
   const remote = process.argv.includes('--remote');
   const dbTarget = remote ? '--remote' : '--local';
+  const envIdx = process.argv.indexOf('--env');
+  if (envIdx >= 0 && process.argv[envIdx + 1]) {
+    ENV_ARGS = ['--env', process.argv[envIdx + 1]!];
+  }
+  const indexIdx = process.argv.indexOf('--index');
+  if (indexIdx >= 0 && process.argv[indexIdx + 1]) {
+    INDEX_NAME = process.argv[indexIdx + 1]!;
+  }
+  if (ENV_ARGS.length > 0 || INDEX_NAME !== 'tokyo-move-navi-rag') {
+    console.log(`[rag-index] target: index=${INDEX_NAME} env=${ENV_ARGS[1] ?? '(default)'}`);
+  }
 
   const manifest = buildChunkManifest(repoRoot);
   console.log(
@@ -191,7 +206,7 @@ async function main(): Promise<void> {
   console.log(`[rag-index] wrote ${lines.length} vectors: ${ndjsonPath}`);
 
   console.log(`[rag-index] seeding D1 rag_chunks (${dbTarget})…`);
-  execFileSync(wranglerBin, ['d1', 'execute', DB_NAME, dbTarget, '--file', sqlPath], {
+  execFileSync(wranglerBin, ['d1', 'execute', DB_NAME, dbTarget, '--file', sqlPath, ...ENV_ARGS], {
     cwd: apiDir,
     stdio: 'inherit',
   });

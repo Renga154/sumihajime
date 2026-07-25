@@ -1,6 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tokyo-move-navi",
+  // 個人アカウント(正典)。提供環境(tokyo_odh_145)追加で複数アカウントになったため明示(ADR-008)。
+  "account_id": "<ACCOUNT_ID>",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-21",
   "assets": {
@@ -41,5 +43,41 @@
     "OPENAI_CHAT_MODEL": "gpt-4o-mini",
     "OPENAI_EMBED_MODEL": "text-embedding-3-small",
     "RAG_MIN_SCORE": "0.30",
+  },
+  // ハッカソン提供環境(tokyo_odh_145)へのミラー(ADR-008)。正典は個人アカウント側
+  // (提供環境のPaid権限は2026-09末失効、Final Stageは10/17のため)。bindings/varsは
+  // wranglerのenv非継承仕様により全て明示する。デプロイ: wrangler deploy --env odh
+  "env": {
+    "odh": {
+      "name": "sumihajime",
+      "account_id": "<ACCOUNT_ID>",
+      "assets": {
+        "directory": "../web/dist",
+        "not_found_handling": "single-page-application",
+        "run_worker_first": ["/api/*"],
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "sumihajime",
+          "database_id": "7f95495f-a18b-4079-9eb8-287bfe579bfe",
+          "migrations_dir": "migrations",
+        },
+      ],
+      "vectorize": [
+        {
+          "binding": "VECTORIZE",
+          "index_name": "sumihajime-rag",
+          "remote": true,
+        },
+      ],
+      "vars": {
+        "RAG_ENABLED": "true",
+        "OPENAI_BASE_URL": "https://api.openai.com/v1",
+        "OPENAI_CHAT_MODEL": "gpt-4o-mini",
+        "OPENAI_EMBED_MODEL": "text-embedding-3-small",
+        "RAG_MIN_SCORE": "0.30",
+      },
+    },
   },
 }
