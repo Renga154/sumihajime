@@ -43,6 +43,9 @@ const sourceTypeLabel: Record<SourceType, string> = {
   json: 'JSON',
   html: 'HTML',
   pdf: 'PDF',
+  // Step5-B: sourceTypeSchema に 'xlsx' を追加(大田区の収集曜日オープンデータ配信形式)したため、
+  // 網羅的な Record を満たす表示ラベルを追加(型の網羅性による必須の追従。表示専用)。
+  xlsx: 'XLSX',
 };
 
 const statusTone: Record<CoverageStatus, 'green' | 'amber' | 'gray'> = {

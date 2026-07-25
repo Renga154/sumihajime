@@ -7,8 +7,14 @@ import { municipalityCodeSchema } from './municipality.js';
  * 帰属を追跡する」を満たすための境界スキーマ。
  */
 
-/** なぜ: §12.3 sourceType(API/CSV/JSON/HTML/PDF)。 */
-export const sourceTypeSchema = z.enum(['api', 'csv', 'json', 'html', 'pdf']);
+/**
+ * なぜ: §12.3 sourceType(API/CSV/JSON/HTML/PDF)。
+ * 'xlsx' は Step5-B(大田区13111)で追加。収集曜日オープンデータが XLSX(結合セル)でのみ
+ * 配信される自治体があり、配信元・ライセンス(opendata.metro CC BY)を HTML 導線ページ
+ * (区サイト利用規約)と区別して正直に来歴追跡する(CLAUDE.md原則10)ために必要な追加。
+ * 既存値は不変・後方互換(additive)。
+ */
+export const sourceTypeSchema = z.enum(['api', 'csv', 'json', 'html', 'pdf', 'xlsx']);
 export type SourceType = z.infer<typeof sourceTypeSchema>;
 
 /**

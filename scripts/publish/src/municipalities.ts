@@ -78,7 +78,19 @@ export const MUNICIPALITIES: Municipality[] = [
     supported: false,
     officialUrl: 'https://www.city.meguro.tokyo.jp/',
   },
-  { code: '13111', name: '大田区', supported: false, officialUrl: 'http://www.city.ota.tokyo.jp/' },
+  {
+    // なぜ: Step5-Bで大田区データ(手続き10件/窓口施設26件/収集曜日XLSXパーサ)を整備しsupportedへ。
+    // 収集曜日はオープンデータ(XLSX)が令和7年度版で公式サイトの令和8年度版より1年度遅れのため
+    // 誤案内回避で非公開(誠実縮退)。分別辞書CSVは大田区都カタログに無く未整備。全ソースは
+    // pending だが publish の承認ゲート(load.ts)で公開ビュー上の supported は承認済みソース有無に
+    // 従う(承認まで false)。
+    code: '13111',
+    name: '大田区',
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
+    officialUrl: 'http://www.city.ota.tokyo.jp/',
+  },
   {
     // 対応済み。note は利用者向けの「表示専用」文言のみ(内部の進捗・工程用語は出さない=Step2)。
     code: '13112',
