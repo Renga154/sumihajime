@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
  * 「未対応」表示と公式サイトへの導線のみを出す(未対応を対応済みに見せない=CLAUDE.md原則9)。
  */
 test('未対応自治体: 八王子市は選択不可で公式リンクのみ表示', async ({ page }) => {
-  // なぜ: 杉並区・千代田区はStep4で対応(supported=true)になったため、未対応の対比例として
+  // なぜ: 杉並区・千代田区(Step4)・品川区・大田区(Step5)は対応(supported=true)になったため、未対応の対比例として
   // 未整備の八王子市(市部)を用いる(未対応を対応済みに見せない=CLAUDE.md原則9)。
   await page.goto('/');
 
@@ -23,8 +23,8 @@ test('未対応自治体: 八王子市は選択不可で公式リンクのみ表
   const link = hachioji.getByRole('link', { name: '公式サイトを見る' });
   await expect(link).toHaveAttribute('href', /city\.hachioji\.tokyo\.jp/);
 
-  // 対応自治体(Step4で追加した杉並・千代田を含む)には開始ボタンがある(対比)。
-  for (const name of ['世田谷区', '江東区', '新宿区', '杉並区', '千代田区']) {
+  // 対応自治体(Step4の杉並・千代田、Step5の品川・大田を含む)には開始ボタンがある(対比)。
+  for (const name of ['世田谷区', '江東区', '新宿区', '杉並区', '千代田区', '品川区', '大田区']) {
     const card = page.getByRole('listitem').filter({ hasText: name });
     await expect(card.getByRole('button', { name: 'この自治体で始める' })).toBeVisible();
   }

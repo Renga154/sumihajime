@@ -191,8 +191,8 @@ describe('POST /api/chat — 保留系', () => {
   });
 
   it('未対応自治体(supported=false)は対象外を明示+公式誘導で保留', async () => {
-    // なぜ: 杉並(13115)・千代田(13101)・品川(13109)は人手レビュー承認によりsupported=trueへ
-    // 変わったため、未対応自治体のfixtureとして未整備の八王子市(13201、市部)を使う。
+    // なぜ: 杉並(13115)・千代田(13101)・品川(13109)・大田(13111)は人手レビュー承認により
+    // supported=trueへ変わったため、未対応自治体のfixtureとして未整備の八王子市(13201、市部)を使う。
     const vz = mockVectorize([]);
     const res = await chat(baseEnv({ VECTORIZE: vz }), {
       municipalityCode: '13201', // 八王子(未対応)

@@ -1,9 +1,9 @@
 {
-  "datasetVersion": "1.1.0",
+  "datasetVersion": "1.2.0",
   "generatedFor": "T-014",
-  "description": "RAG評価データセット40問。5区対応(世田谷13112/江東13108/新宿13104/杉並13115/千代田13101)。全期待値はコーパス(承認済みHTMLスナップショット)に実在する事実のみを根拠にする。正答系28(世田谷7/江東7/新宿6/杉並4/千代田4)・保留系7・越境系5。answerMustInclude は公式文言由来のキーフレーズのみ。v1.1: コーパス拡張後の手続き意図グラウンディング回帰(転入届の一般質問で学校/保育チャンクが上位占有)への回帰ガードとして世田谷転入届ケース(P01/P02)を維持し、杉並・千代田の正答系と保留系を追加。X01の未対応自治体は杉並→八王子(13201)へ更新(杉並が対応化したため)。",
+  "description": "RAG評価データセット50問。7区対応(世田谷13112/江東13108/新宿13104/杉並13115/千代田13101/品川13109/大田13111)。全期待値はコーパス(承認済みHTMLスナップショット)に実在する事実のみを根拠にする。正答系36(世田谷7/江東7/新宿6/杉並4/千代田4/品川4/大田4)・保留系9・越境系5。answerMustInclude は公式文言由来のキーフレーズのみ。v1.2: Step5で品川・大田を追加。品川は転入届14日/マイナンバー90日/子ども医療6カ月/国保14日、大田は転入届14日/児童手当15日特例/子ども医療6か月/保育前月7日の正答系を追加。保留系は品川の収集曜日(収集日CSVの鮮度未確認で waste.json 不在=誠実縮退)と大田の品目別分別(都カタログに分別辞書CSVが無く未整備)を各1問追加。v1.1: コーパス拡張後の手続き意図グラウンディング回帰への回帰ガードとして世田谷転入届ケース(P01/P02)を維持し、杉並・千代田の正答系と保留系を追加。X01の未対応自治体は杉並→八王子(13201)。",
   "corpus": {
-    "municipalities": ["13112", "13108", "13104", "13115", "13101"],
+    "municipalities": ["13112", "13108", "13104", "13115", "13101", "13109", "13111"],
     "indexedSourceType": "html",
     "note": "waste_sorting等のCSVソースは未索引(コーパス外)。retrievalは自治体コードでVectorize/D1の二重スコープ。生成前に決定論的な手続き意図リランク(rerankByProcedureIntent)で質問が主題とする手続きのチャンクを優先する。"
   },
@@ -538,6 +538,136 @@
         "forbiddenSourcePrefixes": []
       },
       "rationale": "住民税額を扱うソースはコーパスに存在しない。金額を断定せず保留すべき。"
+    },
+    {
+      "id": "P29-shinagawa-resident-deadline",
+      "kind": "positive",
+      "municipalityCode": "13109",
+      "question": "品川区に引っ越したら、転入届はいつまでに出せばいいですか？",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13109-resident_registration-001"],
+        "answerMustInclude": ["14日"],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "resident_registrationスナップショット『住み始めてから14日以内』に一致。回帰ガード: 品川でも転入届の一般質問で resident_registration が主根拠になること。"
+    },
+    {
+      "id": "P30-shinagawa-mynumber-90day",
+      "kind": "positive",
+      "municipalityCode": "13109",
+      "question": "品川区で、転入届を出した後にマイナンバーカードの継続利用は届出日から何日以内に申し出ますか？",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13109-my_number-001"],
+        "answerMustInclude": ["90日"],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "my_numberスナップショット『転入届済みの場合は届出日から90日以内の申し出であること』に一致(90日は品川・杉並・江東・千代田・大田。世田谷・新宿の14日とは相違=自治体差分を混入させない)。"
+    },
+    {
+      "id": "P31-shinagawa-child-medical-6month",
+      "kind": "positive",
+      "municipalityCode": "13109",
+      "question": "品川区の子どもすこやか医療費助成は、異動日から何か月以内に申請すると異動日にさかのぼって資格が発生しますか？",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13109-child_medical-001"],
+        "answerMustInclude": ["6カ月"],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "child_medicalスナップショット『異動日から6カ月以内に申請』に一致(6カ月は品川・大田。世田谷/新宿/千代田の3か月・杉並の15日とは相違=自治体差分を混入させない)。"
+    },
+    {
+      "id": "P32-shinagawa-nhi-deadline",
+      "kind": "positive",
+      "municipalityCode": "13109",
+      "question": "品川区で国民健康保険に加入する届出は、いつまでにすればよいですか？",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13109-national_health_insurance-001"],
+        "answerMustInclude": ["14日"],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "national_health_insuranceスナップショット『14日以内に届出をしてください』に一致。"
+    },
+    {
+      "id": "P33-ota-resident-deadline",
+      "kind": "positive",
+      "municipalityCode": "13111",
+      "question": "大田区に引っ越したら、転入届はいつまでに出せばいいですか？",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13111-resident_registration-001"],
+        "answerMustInclude": ["14日"],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "resident_registrationスナップショット『大田区に住み始めた日から14日以内』に一致。回帰ガード: 大田でも転入届の一般質問で resident_registration が主根拠になること。"
+    },
+    {
+      "id": "P34-ota-child-allowance-15day",
+      "kind": "positive",
+      "municipalityCode": "13111",
+      "question": "大田区で児童手当の申請は、転入(前住所地の転出予定日)の翌日から何日以内にすると転入月の翌月分から受け取れますか？",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13111-child_benefits-001"],
+        "answerMustInclude": ["15日"],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "child_benefitsスナップショット『異動日(...)の翌日から15日以内に申請した場合は』の15日特例に一致。"
+    },
+    {
+      "id": "P35-ota-child-medical-6month",
+      "kind": "positive",
+      "municipalityCode": "13111",
+      "question": "大田区の子ども医療費助成は、転入日から何か月以内に申請すると転入日にさかのぼって資格が発生しますか？",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13111-child_medical-001"],
+        "answerMustInclude": ["6か月"],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "child_medicalスナップショット『6か月以内に申請された場合は出生日または転入日に遡って資格が発生します』に一致(6か月は大田・品川。世田谷/新宿/千代田の3か月・杉並の15日とは相違=自治体差分を混入させない)。"
+    },
+    {
+      "id": "P36-ota-childcare-prev-month-7th",
+      "kind": "positive",
+      "municipalityCode": "13111",
+      "question": "大田区外に住んでいて区内の保育園に入園を希望する場合、申込の締切はいつですか？",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13111-childcare-001"],
+        "answerMustInclude": ["前月7日"],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "childcareスナップショット『申込月の前月7日まで(7日が閉庁日の場合は翌開庁日)』に一致(前月7日は大田。江東の前月末日・世田谷の前月10日とは相違=自治体差分を混入させない)。"
+    },
+    {
+      "id": "A08-shinagawa-waste-collection-day",
+      "kind": "abstain",
+      "municipalityCode": "13109",
+      "question": "品川区で燃やすごみは何曜日に収集されますか？",
+      "expect": {
+        "abstain": true,
+        "expectedSourceIds": [],
+        "answerMustInclude": [],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "品川は収集曜日の機械判読可能データ(収集日CSV)が2017年更新のままで現行年度と確認できず waste.json を作らない誠実縮退。waste_guide(HTML)は地区別収集曜日一覧・収集カレンダーへの導線ページで、住所別の具体的な収集曜日は抜粋に含まれない(コーパス外)。保留すべき。"
+    },
+    {
+      "id": "A09-ota-waste-sorting-item",
+      "kind": "abstain",
+      "municipalityCode": "13111",
+      "question": "大田区で、ペットボトルは何ごみとして出せばいいですか？",
+      "expect": {
+        "abstain": true,
+        "expectedSourceIds": [],
+        "answerMustInclude": [],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "大田の品目別ごみ分別辞書(waste_sorting CSV)は都カタログに存在せず未整備(コーパス外)。waste_guide(HTML)は収集日の導線で品目別分別を含まない。保留すべき。"
     }
   ]
 }
