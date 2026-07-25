@@ -1,0 +1,84 @@
+{
+  "municipalityCode": "13115",
+  "sourceId": "src-13115-facilities-001",
+  "reviewStatus": "approved",
+  "extractionNote": "窓口系抽出: 出典GIF施設CSV(src-13115-facilities-001, UTF-8 BOM, 605行)から名称に『区民事務所』を含む行を採用(井草/高円寺/高井戸/永福和泉/荻窪/西荻=6件)。住所は出典CSVの『所在地_連結表記』、緯度経度は『緯度』『経度』列をそのまま採用(捏造補完なし)。区役所本庁舎(区民課区民係窓口)は出典CSVに窓口行が無いため、区公式サイトの区役所案内ページ(src-13115-facilities-002)から名称・住所・受付時間を補完した(fac-001)。緯度経度は同ページに数値記載がないため未設定(捏造回避)。",
+  "dataQualityNotes": [
+    "杉並区の転入・住民異動の主な窓口は『杉並区役所東棟1階 区民課区民係窓口』と6か所の『区民事務所』。事前調査(§5.3)および過去の監査メモ(docs/research/audit-verification.md)は『区民事務所7件』としていたが、本Step4-Aの再監査では出典CSV・区公式サイトの区民事務所一覧(kusei/.../jimusho/)のいずれでも区民事務所は6件(井草/荻窪/高井戸/高円寺/西荻/永福和泉)であり、阿佐谷地域は本庁舎(阿佐谷南1-15-1)が直接管轄する構成であることを確認した。事前調査の『7件』は本庁舎(区民課窓口)を1件に数えたための相違と考えられる(誠実な訂正。docs/research/opendata-gaps.md に記録)。",
+    "区役所本庁舎(fac-001)は出典CSV(公共施設一覧)に窓口としての行が無いため、区公式の区役所案内ページ(src-13115-facilities-002)から名称・住所・受付時間を補完した。緯度経度は同ページに数値記載がないため未設定(捏造回避)。",
+    "区民事務所の受付時間は出典CSVの利用可能時間列が空欄のため hours は設定していない(各手続きの受付窓口・時間は procedures.json / 公式ページ参照)。",
+    "出典CSVの基準日は令和6年4月時点(2024-04)であり鮮度に注意(住所・施設の改廃の可能性)。",
+    "2026-07-25 人手レビュー承認済み(maintainer、ユーザー決裁)。"
+  ],
+  "facilities": [
+    {
+      "facilityId": "13115-fac-001",
+      "municipalityCode": "13115",
+      "name": "杉並区役所(本庁舎・区民課区民係窓口)",
+      "category": "本庁舎",
+      "address": "東京都杉並区阿佐谷南1-15-1",
+      "hours": "午前8時30分から午後5時(第1・第3・第5土曜日は区民課区民係のみ午前9時から午後5時)",
+      "sourceId": "src-13115-facilities-002"
+    },
+    {
+      "facilityId": "13115-fac-002",
+      "municipalityCode": "13115",
+      "name": "井草区民事務所",
+      "category": "区民事務所",
+      "address": "東京都杉並区下井草4-30-2",
+      "sourceId": "src-13115-facilities-001",
+      "lat": 35.723267,
+      "lng": 139.618942
+    },
+    {
+      "facilityId": "13115-fac-003",
+      "municipalityCode": "13115",
+      "name": "荻窪区民事務所",
+      "category": "区民事務所",
+      "address": "東京都杉並区上荻1-2-1",
+      "sourceId": "src-13115-facilities-001",
+      "lat": 35.70488,
+      "lng": 139.622726
+    },
+    {
+      "facilityId": "13115-fac-004",
+      "municipalityCode": "13115",
+      "name": "高井戸区民事務所",
+      "category": "区民事務所",
+      "address": "東京都杉並区高井戸西2-1-26",
+      "sourceId": "src-13115-facilities-001",
+      "lat": 35.683319,
+      "lng": 139.615463
+    },
+    {
+      "facilityId": "13115-fac-005",
+      "municipalityCode": "13115",
+      "name": "高円寺区民事務所",
+      "category": "区民事務所",
+      "address": "東京都杉並区梅里1-22-32",
+      "sourceId": "src-13115-facilities-001",
+      "lat": 35.696636,
+      "lng": 139.654297
+    },
+    {
+      "facilityId": "13115-fac-006",
+      "municipalityCode": "13115",
+      "name": "西荻区民事務所",
+      "category": "区民事務所",
+      "address": "東京都杉並区西荻南3-5-23",
+      "sourceId": "src-13115-facilities-001",
+      "lat": 35.70145,
+      "lng": 139.601913
+    },
+    {
+      "facilityId": "13115-fac-007",
+      "municipalityCode": "13115",
+      "name": "永福和泉区民事務所",
+      "category": "区民事務所",
+      "address": "東京都杉並区和泉3-8-18",
+      "sourceId": "src-13115-facilities-001",
+      "lat": 35.675861,
+      "lng": 139.646072
+    }
+  ]
+}

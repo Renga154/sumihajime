@@ -62,6 +62,12 @@ export interface PublishData {
    * rules.json ファイルは不変で、間引きはメモリ上のみ。
    */
   excludedRuleRefs: { municipalityCode: string; procedureId: string }[];
+  /**
+   * ADR-007 第4項: ソースが未 approved のため seed(公開)から除外した非手続きデータ
+   * (施設・ごみデータセット・分別辞書)の (自治体, sourceId)。pending 自治体を supported に
+   * 含めても publish が「除外扱い」でゲートを通過することを CLI で明示報告するために保持。
+   */
+  excludedNonProcedureSources: { municipalityCode: string; sourceId: string }[];
 }
 
 function readText(repoRoot: string, rel: string): string {
@@ -224,9 +230,16 @@ export function loadWasteFor(
 ): {
   areas: WasteArea[];
   schedules: WasteSchedule[];
-  dataset: WasteDataset;
+  dataset: WasteDataset | null;
 } {
-  const raw = readJson(repoRoot, `data/normalized/${code}/waste.json`) as WasteJson;
+  // なぜ: 収集曜日データを持たない自治体がある(例: 杉並区13115は収集曜日が第三者SaaSの
+  // JSウィジェット依存で機械取得不可のため waste.json を作らない=誠実縮退)。ファイルが
+  // 無い場合はエラーにせず空(dataset=null)を返し、WastePage 側の空状態フォールバックへ委ねる。
+  const rel = `data/normalized/${code}/waste.json`;
+  if (!existsSync(resolve(repoRoot, rel))) {
+    return { areas: [], schedules: [], dataset: null };
+  }
+  const raw = readJson(repoRoot, rel) as WasteJson;
   return {
     areas: raw.wasteAreas.map((a) => wasteAreaSchema.parse(a)),
     schedules: raw.wasteSchedules.map((s) => wasteScheduleSchema.parse(s)),
@@ -303,6 +316,7 @@ export function loadPublishData(
   const references: SourceRef[] = [];
   const excludedProcedures: ProcedureVersion[] = [];
   const excludedRuleRefs: { municipalityCode: string; procedureId: string }[] = [];
+  const excludedNonProcedureSources: { municipalityCode: string; sourceId: string }[] = [];
 
   for (const code of municipalityCodes) {
     const allProcs = loadProceduresFor(repoRoot, code);
@@ -337,30 +351,58 @@ export function loadPublishData(
       }
     }
 
+    // ADR-007 第4項: 施設・ごみ等の非手続きデータは「ソースが approved である限り公開する」。
+    // その対偶として、ソースが未 approved(pending/candidate)なものは公開(seed/参照)しない=staging。
+    // これにより、全ソースが pending の新規自治体(例: 杉並区13115)を supported に含めても、
+    // publish は「杉並の全項目が除外(staging)扱い」でゲートを通過する(ADR-007の新挙動)。既存の
+    // 承認済み自治体(世田谷/江東/新宿)は全ソースが approved のため出力は不変(後方互換)。
+    const publishedFacs = facs.filter((f) => approvedSourceIds.has(f.sourceId));
+    const wasteApproved = waste.dataset !== null && approvedSourceIds.has(waste.dataset.sourceId);
+    const publishedSorting = sortingItems.filter((i) => approvedSourceIds.has(i.sourceId));
+    for (const sid of new Set(
+      [
+        ...facs.map((f) => f.sourceId),
+        ...(waste.dataset ? [waste.dataset.sourceId] : []),
+        ...sortingItems.map((i) => i.sourceId),
+      ].filter((sid) => !approvedSourceIds.has(sid)),
+    )) {
+      excludedNonProcedureSources.push({ municipalityCode: code, sourceId: sid });
+    }
+
     procedures.push(...procs);
-    ruleSets.push(ruleSet);
-    facilities.push(...facs);
-    wasteAreas.push(...waste.areas);
-    wasteSchedules.push(...waste.schedules);
-    wasteDatasets.push(waste.dataset);
-    wasteSortingItems.push(...sortingItems);
+    // なぜ: 公開ルールが0件(全手続き pending 等)の自治体は rule_set を seed しない
+    // (空の rule_set 行を作らず「承認まで自治体は空=D1に載らない」を素直に表現する)。
+    if (publishedRules.length > 0) {
+      ruleSets.push(ruleSet);
+    }
+    facilities.push(...publishedFacs);
+    if (wasteApproved && waste.dataset) {
+      wasteAreas.push(...waste.areas);
+      wasteSchedules.push(...waste.schedules);
+      wasteDatasets.push(waste.dataset);
+    }
+    wasteSortingItems.push(...publishedSorting);
 
     for (const p of procs) {
       references.push({ owner: `procedure_version ${p.id}@${p.version}`, sourceIds: p.sourceIds });
     }
-    for (const rule of ruleSet.rules) {
+    for (const rule of publishedRules) {
       references.push({
         owner: `rule ${ruleSet.municipalityCode}/${rule.procedureId}`,
         sourceIds: rule.sourceIds,
       });
     }
-    // 施設・ごみも公開物なので参照ソースをゲート対象に含める(distinctで冗長を避ける)。
-    const facilitySourceIds = [...new Set(facs.map((f) => f.sourceId))];
-    references.push({ owner: `facilities (${code})`, sourceIds: facilitySourceIds });
-    references.push({ owner: `waste dataset (${code})`, sourceIds: [waste.dataset.sourceId] });
-    // なぜ: ごみ分別辞書はファイル未整備の自治体もあるため、その場合は参照0件
+    // 施設・ごみも公開物なので参照ソースをゲート対象に含める(公開対象=approvedソースのみ。distinctで冗長回避)。
+    const facilitySourceIds = [...new Set(publishedFacs.map((f) => f.sourceId))];
+    if (facilitySourceIds.length > 0) {
+      references.push({ owner: `facilities (${code})`, sourceIds: facilitySourceIds });
+    }
+    if (wasteApproved && waste.dataset) {
+      references.push({ owner: `waste dataset (${code})`, sourceIds: [waste.dataset.sourceId] });
+    }
+    // なぜ: ごみ分別辞書は未整備・未承認の自治体もあるため、その場合は参照0件
     // (=ゲート対象なし)で自然にスキップされる。
-    const sortingSourceIds = [...new Set(sortingItems.map((i) => i.sourceId))];
+    const sortingSourceIds = [...new Set(publishedSorting.map((i) => i.sourceId))];
     if (sortingSourceIds.length > 0) {
       references.push({ owner: `waste sorting (${code})`, sourceIds: sortingSourceIds });
     }
@@ -381,5 +423,6 @@ export function loadPublishData(
     references,
     excludedProcedures,
     excludedRuleRefs,
+    excludedNonProcedureSources,
   };
 }

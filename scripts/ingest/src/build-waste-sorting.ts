@@ -24,6 +24,8 @@ interface Target {
   sourceId: string;
   /** 世田谷CSVは「品目」「分別区分」列の中身が入れ替わっている(waste-sorting.ts参照)。 */
   itemCategorySwapped?: boolean;
+  /** 杉並CSVは「注意点」列に実データを持つため notes に統合する(waste-sorting.ts参照)。 */
+  mergeCautionIntoNotes?: boolean;
 }
 
 const TARGETS: Target[] = [
@@ -43,6 +45,14 @@ const TARGETS: Target[] = [
     snapshotFile: 'data/sources/13104/snapshots/src-13104-waste_sorting-001.csv',
     sourceId: 'src-13104-waste_sorting-001',
   },
+  {
+    // Step4-A 杉並区。人手レビュー未承認(pending)のスナップショットだが、正規化JSONは
+    // 他区と同様に静的コミットする(公開ゲート=ADR-007/loadでソース非approvedのため未公開)。
+    municipalityCode: '13115',
+    snapshotFile: 'data/sources/13115/snapshots/src-13115-waste_sorting-001.csv',
+    sourceId: 'src-13115-waste_sorting-001',
+    mergeCautionIntoNotes: true,
+  },
 ];
 
 function main(): void {
@@ -52,6 +62,7 @@ function main(): void {
       municipalityCode: target.municipalityCode,
       sourceId: target.sourceId,
       itemCategorySwapped: target.itemCategorySwapped,
+      mergeCautionIntoNotes: target.mergeCautionIntoNotes,
     });
 
     const outDir = resolve(repoRoot, `data/normalized/${target.municipalityCode}`);

@@ -23,11 +23,15 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
     expect(villages).toHaveLength(8);
   });
 
-  it('supported は3区(世田谷/江東/新宿)のみ', () => {
+  it('supported は4区(世田谷/江東/新宿/杉並)。杉並はStep4-Aで整備し2026-07-25人手レビュー承認済み', () => {
+    // なぜ: 静的 supported は「MVP整備対象」という product 意図を表す。杉並(13115)はStep4-Aで
+    // データ整備しsupported=trueにし、2026-07-25の人手レビュー承認(ユーザー決裁)により
+    // 全ソースがapprovedとなったため、公開ビュー(loadPublishData)でも supported=true になる
+    // (gate.test.ts / load.ts のapproved判定で担保)。
     const supported = MUNICIPALITIES.filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
-    expect(supported).toEqual(['13104', '13108', '13112']);
+    expect(supported).toEqual(['13104', '13108', '13112', '13115']);
   });
 
   it('全件が Municipality スキーマに適合し、officialUrl を持つ', () => {

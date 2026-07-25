@@ -59,6 +59,18 @@ function main(): void {
   for (const p of data.excludedProcedures) {
     console.log(`[publish]   - staged (dataStatus=${p.dataStatus}): ${p.municipalityCode}/${p.id}`);
   }
+  // ADR-007 第4項: ソース未approvedのため除外した非手続きデータ(施設・ごみ・分別辞書)。
+  if (data.excludedNonProcedureSources.length > 0) {
+    console.log(
+      `[publish] excluded ${data.excludedNonProcedureSources.length} non-procedure source(s) ` +
+        `(facilities/waste; source not approved) from publish (ADR-007 staging; not seeded).`,
+    );
+    for (const s of data.excludedNonProcedureSources) {
+      console.log(
+        `[publish]   - staged (source not approved): ${s.municipalityCode}/${s.sourceId}`,
+      );
+    }
+  }
   console.log('[publish] seed counts:', JSON.stringify(counts, null, 2));
 
   const seedDir = resolve(apiDir, '.wrangler');

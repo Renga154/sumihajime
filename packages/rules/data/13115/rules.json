@@ -1,0 +1,128 @@
+{
+  "municipalityCode": "13115",
+  "ruleVersion": "2026-07-25.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "杉並区の新しい住所に住み始めてから14日以内。住み始める前は受付できません。区役所の休日(土曜・日曜・祝日・年末年始)が14日目に当たる場合は、その日以後の最初の開庁日が届出期限です。",
+      "sourceIds": ["src-13115-resident_registration-001", "src-13115-relocation_hub-001"],
+      "applicabilityReasonTemplate": "他の区市町村や外国から杉並区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "杉並区に住み始めた日から14日以内かつ転出予定日から30日以内に転入届をし、その転入届を行った日から90日以内に継続利用の手続きを行うこと。期限を過ぎるとカードが失効します。",
+      "sourceIds": ["src-13115-my_number-001", "src-13115-resident_registration-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "加入事由の発生日(杉並区に転入した日)以降14日以内。転入手続きの際に窓口でお申し出ください。区の電子申請からも申請できます。",
+      "sourceIds": ["src-13115-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険等に加入していない方は、杉並区の国民健康保険への加入手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "国民年金第1号被保険者の方は、区役所(区民係)または区民事務所で転入の届出をしてください。納付は基礎年金番号で管理されるため前住所記載の納付書はそのまま使用できます。期限は本ページに記載がありません。",
+      "sourceIds": ["src-13115-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金(第1号)に加入している方の住所変更に関する案内です。詳細(マイナンバーと基礎年金番号の連携状況等)は年金事務所へご確認ください。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生・転入等の事由発生の翌日から15日以内に申請(認定請求)してください。申請しないと受給できません。起算日は前住所地での転出予定日等のため引越し日からは算定できません。早めの申請を推奨します。",
+      "sourceIds": ["src-13115-child_benefits-001"],
+      "applicabilityReasonTemplate": "0歳〜高校生年代(18歳到達後最初の3月31日)までの児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "原則、申請月の1日(転入日が1日以外の場合はその日)から認定。転入日の翌日から数えて15日以内に申請すれば転入日に遡って資格を認定します。15日を経過した場合は子ども医療・手当係へご相談ください。",
+      "sourceIds": ["src-13115-child_medical-001"],
+      "applicabilityReasonTemplate": "0歳〜18歳到達後最初の3月31日までの児童がいる世帯が対象です(健康保険に加入していること)。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "新しい住所地に住み始めてから14日以内に住民登録の転入届をし、その際に『転入学通知書』を受け取ってください。前籍校で『在学証明書』『教科用図書給与証明書』を受け取り、転入先の学校へ提出します。日数固定の期限は公式ページに記載がありません。",
+      "sourceIds": ["src-13115-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯、または就学・保育のニーズがある世帯が対象の、区立小・中学校への転入学手続きです。杉並区の交付書類名は『転入学通知書』です。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "杉並区に転入予定がある(または在勤・在学、里帰り出産の)場合のみ、区外在住中でも杉並区の保育施設を申込めます。『転入に関する確認書』等が必要です。申込締切日・必要書類は『保育施設利用のご案内』でご確認ください(月・年度により異なるため日数固定の期限は設定していません)。",
+      "sourceIds": ["src-13115-childcare-001"],
+      "applicabilityReasonTemplate": "未就学のお子さまがいる、または就学・保育のニーズがある世帯で、杉並区の保育施設の利用を希望する方向けの入口案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転入(所在地変更)の場合は、新しい住所地で登録変更の手続きをしてください(前住所地での手続きは不要)。マイクロチップ未装着の犬は区の窓口(保健所等)での手続きが必要です(明確な日数の期限は公式ページに記載なし)。",
+      "sourceIds": ["src-13115-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していないため、区窓口での飼い犬の登録変更の手続きが必要です。",
+      "needsConfirmationReason": "犬のマイクロチップ装着有無が未確認のため、届出先(区窓口 または 環境省指定登録機関のマイクロチップ情報登録サイト)が確定できません。装着状況をご確認ください(装着・登録済みなら区への届出は不要です)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集曜日を確認してください)。杉並区の収集曜日は町名・地域ごとに決められており、区の『ごみと資源 収集曜日検索』や地域別カレンダー・全域版PDFでご確認ください。",
+      "sourceIds": ["src-13115-waste_guide-001"],
+      "applicabilityReasonTemplate": "お住まいの地域の資源・ごみ収集曜日を確認してください(祝日・年末年始は変更の可能性あり)。"
+    }
+  ]
+}

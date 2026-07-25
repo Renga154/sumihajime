@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { WasteSchedule } from '@tmn/schemas';
-import { getMunicipalities, getWaste } from '../api/client';
+import { ApiError, getMunicipalities, getWaste } from '../api/client';
 import { useAppState } from '../state/AppState';
 import { useAsync } from '../lib/useAsync';
 import { weekOfMonthLabel, weekdayLabel } from '../lib/format';
@@ -18,9 +18,22 @@ export function WastePage() {
 
   const base = useAsync(async () => {
     if (!municipalityCode) return null;
-    const [munis, waste] = await Promise.all([getMunicipalities(), getWaste(municipalityCode)]);
+    const munis = await getMunicipalities();
     const muni = munis.find((m) => m.code === municipalityCode) ?? null;
-    return { muni, waste };
+    // なぜ: 収集曜日データを持たない対応自治体がある(例: 杉並区=第三者SaaSのJSウィジェット依存で
+    // 機械取得不可、千代田区=PDFのみ)。この場合 API は 404(waste_data_unavailable)を返す、または
+    // dataset はあっても地区が0件になる。いずれもエラー表示ではなく「未対応+公式導線」の空状態へ
+    // フォールバックする(汎用実装。他自治体でも同じ挙動)。真のエラー(通信断等)は従来どおり投げる。
+    try {
+      const waste = await getWaste(municipalityCode);
+      if (waste.areas.length === 0) return { muni, waste: null };
+      return { muni, waste };
+    } catch (e) {
+      if (e instanceof ApiError && e.code === 'waste_data_unavailable') {
+        return { muni, waste: null };
+      }
+      throw e;
+    }
   }, [municipalityCode]);
 
   const [areaId, setAreaId] = useState('');
@@ -53,7 +66,14 @@ export function WastePage() {
       {base.loading && <Loading label="地区一覧を読み込み中です…" />}
       {base.error != null && <ErrorMessage error={base.error} />}
 
-      {base.data && (
+      {base.data && base.data.waste === null && (
+        <WasteScheduleUnavailable
+          municipalityName={base.data.muni?.name ?? municipalityCode}
+          officialUrl={base.data.muni?.officialUrl}
+        />
+      )}
+
+      {base.data && base.data.waste && (
         <>
           {/* C-9: cautionは常に表示。 */}
           <div
@@ -128,16 +148,67 @@ export function WastePage() {
               </p>
             </section>
           )}
-
-          {/* FR-014 補強: 品目名から分別区分を調べる検索(収集曜日セクションと並置)。 */}
-          <WasteSortingSearch
-            municipalityCode={municipalityCode}
-            municipalityName={base.data.muni?.name ?? municipalityCode}
-            officialUrl={base.data.muni?.officialUrl}
-          />
         </>
       )}
+
+      {/* FR-014 補強: 品目名から分別区分を調べる検索。収集曜日データの有無にかかわらず常に表示
+          (分別辞書は収集曜日とは別データ。未整備なら本コンポーネント側で公式導線へ縮退する)。 */}
+      {base.data && (
+        <WasteSortingSearch
+          municipalityCode={municipalityCode}
+          municipalityName={base.data.muni?.name ?? municipalityCode}
+          officialUrl={base.data.muni?.officialUrl}
+        />
+      )}
     </div>
+  );
+}
+
+/**
+ * なぜ: 収集曜日データを整備していない対応自治体(例: 杉並区=第三者SaaSのJSウィジェット依存で
+ * 機械取得不可、千代田区=PDFのみ)向けの空状態。原則3/9(推測しない・未対応を対応済みに見せない)に
+ * 従い、曜日を推測表示せず「未対応である旨」と公式サイトへの導線のみを提示する汎用フォールバック。
+ */
+function WasteScheduleUnavailable({
+  municipalityName,
+  officialUrl,
+}: {
+  municipalityName: string;
+  officialUrl?: string;
+}) {
+  return (
+    <Card>
+      <div className="flex gap-2.5">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          className="mt-0.5 h-5 w-5 shrink-0 text-slate-400"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 7a1 1 0 112 0 1 1 0 01-2 0zm2 3a1 1 0 10-2 0v4a1 1 0 102 0v-4z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <div>
+          <h2 className="font-semibold text-slate-900">
+            この自治体の収集曜日はまだデータ対応していません
+          </h2>
+          <p className="mt-1 text-sm text-slate-700">
+            {municipalityName}
+            の資源・ごみの収集曜日は、本アプリではまだデータとして提供していません。お住まいの地域の収集曜日は、公式サイトの収集曜日検索・地域別カレンダー等でご確認ください。
+          </p>
+          {officialUrl && (
+            <p className="mt-3 text-sm">
+              <ExternalLink href={officialUrl}>
+                {municipalityName}の公式サイトで確認する
+              </ExternalLink>
+            </p>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }
 
