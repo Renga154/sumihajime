@@ -122,6 +122,14 @@ export type Rule = z.infer<typeof ruleSchema>;
 export const ruleSetSchema = z.strictObject({
   municipalityCode: z.string().regex(/^\d{5}$/),
   ruleVersion: z.string().min(1),
+  /**
+   * なぜ: ADR-007(公開単位=verified手続きのみ)。rules.json ファイルが staging(未公開の
+   * partial手続き向けルール)を含む場合、ファイル全体の `ruleVersion` は前進するが、実際に
+   * 公開(D1シード)される rule_set は verified 部分集合のみで内容は不変である。この「公開
+   * 済み成果物の版」を誠実に表すため、publish 時に採用する版を任意で明示する。未指定なら
+   * publish は `ruleVersion` をそのまま公開版として用いる(staging を含まない通常ケース)。
+   */
+  publishedRuleVersion: z.string().min(1).optional(),
   rules: z.array(ruleSchema),
 });
 export type RuleSet = z.infer<typeof ruleSetSchema>;

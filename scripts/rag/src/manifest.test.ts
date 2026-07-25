@@ -18,10 +18,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 
 describe('loadApprovedHtmlSources', () => {
-  it('世田谷8+江東13+新宿12の承認済みHTMLソースを返す(CSV/candidateは除外)', () => {
+  it('世田谷12+江東13+新宿12の承認済みHTMLソースを返す(CSV/candidateは除外)', () => {
     const sources = loadApprovedHtmlSources(repoRoot);
-    expect(sources).toHaveLength(33);
-    expect(sources.filter((s) => s.municipalityCode === '13112')).toHaveLength(8);
+    expect(sources).toHaveLength(37);
+    expect(sources.filter((s) => s.municipalityCode === '13112')).toHaveLength(12);
     expect(sources.filter((s) => s.municipalityCode === '13108')).toHaveLength(13);
     expect(sources.filter((s) => s.municipalityCode === '13104')).toHaveLength(12);
     for (const s of sources) {
@@ -42,8 +42,8 @@ describe('buildChunkManifest', () => {
 
   it('全チャンクが対象自治体スコープ内で、id/メタデータが健全', () => {
     expect(manifest.municipalityCodes).toEqual([...RAG_MUNICIPALITIES]);
-    expect(manifest.sourceCount).toBe(33);
-    expect(manifest.chunkCount).toBeGreaterThan(33);
+    expect(manifest.sourceCount).toBe(37);
+    expect(manifest.chunkCount).toBeGreaterThan(37);
 
     const ids = new Set<string>();
     for (const c of manifest.chunks) {

@@ -322,28 +322,28 @@ describe('Shinjuku (13104) — 3自治体差分の実証(デモの根拠)', () =
     expect(koto.dueDescription).not.toContain('3ヶ月');
   });
 
-  it('同一プロフィール(子育て)で新宿は学校転入・保育が該当し、世田谷は該当手続き自体が存在しない', () => {
-    const shinjuku = profile({
-      municipalityCode: SHINJUKU,
-      town: '愛住町',
+  it('同一プロフィール(子育て)で3区(新宿・江東・世田谷)とも学校転入・保育が該当する(Step3で世田谷にも整備→差分解消の変化点)', () => {
+    // なぜ: Step3(2026-07-25)以前は世田谷に school_childcare が未整備で「新宿・江東のみ該当」
+    // という差分だった。Step3で世田谷にも procedure_school_transfer / childcare_application を
+    // 追加(江東・新宿と同一の条件式)したため、同一の子育てプロフィールでは3区とも該当する。
+    // この差分の「変化点」を回帰ガードとして固定する(残る自治体差分=マイナンバー期限等は別testで維持)。
+    const family = (code: string, town: string) => ({
+      municipalityCode: code,
+      town,
       memberCount: 4,
-      ageBands: ['age0_2', 'elementary', 'adult'],
+      ageBands: ['age0_2', 'elementary', 'adult'] as Profile['household']['ageBands'],
       flags: { hasMyNumberCard: true, needsNationalPension: false },
     });
-    const setagaya = profile({
-      municipalityCode: '13112',
-      town: '世田谷4丁目',
-      memberCount: 4,
-      ageBands: ['age0_2', 'elementary', 'adult'],
-      flags: { hasMyNumberCard: true, needsNationalPension: false },
-    });
-    const shinjukuIds = applicableIds(shinjuku, shinjukuRuleSet);
-    const setagayaIds = applicableIds(setagaya, setagayaRuleSet);
-    expect(shinjukuIds).toContain('procedure_school_transfer');
-    expect(shinjukuIds).toContain('procedure_childcare_application');
-    expect(setagayaIds).not.toContain('procedure_school_transfer');
-    expect(setagayaIds).not.toContain('procedure_childcare_application');
-    expect(shinjukuIds).not.toEqual(setagayaIds);
+    const shinjukuIds = applicableIds(profile(family(SHINJUKU, '愛住町')), shinjukuRuleSet);
+    const kotoIds = applicableIds(profile(family('13108', '青海')), kotoRuleSet);
+    const setagayaIds = applicableIds(profile(family('13112', '世田谷4丁目')), setagayaRuleSet);
+    for (const ids of [shinjukuIds, kotoIds, setagayaIds]) {
+      expect(ids).toContain('procedure_school_transfer');
+      expect(ids).toContain('procedure_childcare_application');
+    }
+    // 3区とも同じ子育て該当集合になる(学校転入・保育の該当有無ではもはや区別できない)。
+    expect(setagayaIds).toEqual(shinjukuIds);
+    expect(setagayaIds).toEqual(kotoIds);
   });
 });
 

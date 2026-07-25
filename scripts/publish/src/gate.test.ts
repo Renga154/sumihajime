@@ -67,7 +67,8 @@ describe('publish gate — real repository data (13112)', () => {
     // なぜ: 実データ(世田谷)の公開物 sourceId が全て approved 台帳を指すことを機械検証。
     const { data, statements } = buildSeed(repoRoot);
     expect(data.approvedSources.length).toBeGreaterThan(0);
-    expect(data.procedures.length).toBe(8);
+    // 2026-07-25 人手レビュー承認(Step3)により世田谷は全10手続きが公開対象。
+    expect(data.procedures.length).toBe(10);
     expect(data.ruleSets[0]?.municipalityCode).toBe('13112');
     expect(statements.length).toBeGreaterThan(0);
     // すべての手続きの sourceIds は approved 集合に含まれる。
@@ -152,5 +153,58 @@ describe('publish gate — Shinjuku (13104) after human review approval (T-016)'
     const { data } = buildSeed(repoRoot, SUPPORTED);
     const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
     expect(codes).toEqual(['13104', '13108', '13112']);
+  });
+});
+
+describe('publish gate — Setagaya school-transfer & childcare after human review approval (Step3)', () => {
+  // なぜ: Step3 で追加した世田谷(13112)の学校転入・保育の2手続きは、
+  // 2026-07-25 人手レビュー承認(ユーザー決裁)により registry.csv の4ソースがapproved化、
+  // procedures.jsonのdataStatusがpartial→verifiedへ、rules.jsonのpublishedRuleVersionが除去
+  // され ruleVersion(2026-07-25.1)がそのまま公開版になった。
+  // 承認前は本describeが「partial手続き+pendingソースはseed/ゲート対象から除外される」ことを
+  // 検証していた(除外ロジック自体の機械検証はfixtureベースの先頭describeで恒久的に担保)。
+  // 承認後は逆に、世田谷の全10手続き・除外0件で公開ゲートが通過することを固定する。
+  const APPROVED_STEP3_IDS = ['procedure_childcare_application', 'procedure_school_transfer'];
+  const APPROVED_SOURCES = [
+    'src-13112-school_transfer-001',
+    'src-13112-school_transfer-002',
+    'src-13112-childcare-001',
+    'src-13112-childcare-002',
+  ];
+
+  it('(a) 承認後: 世田谷の全10手続きが公開対象(除外0件)、既定buildSeedは通過する', () => {
+    const data = loadPublishData(repoRoot); // 既定=13112のみ
+    // 公開対象は verified 10手続き全件(除外なし)。
+    expect(data.procedures.length).toBe(10);
+    expect(data.procedures.every((p) => p.dataStatus === 'verified')).toBe(true);
+    expect(APPROVED_STEP3_IDS.every((id) => data.procedures.some((p) => p.id === id))).toBe(true);
+    // 除外(staging)は発生しない。
+    expect(data.excludedProcedures).toEqual([]);
+    expect(data.excludedRuleRefs).toEqual([]);
+    // Step3で承認した4ソースは approved 集合に含まれ、公開参照(references)にも含まれる。
+    const referenced = new Set(data.references.flatMap((r) => r.sourceIds));
+    for (const sid of APPROVED_SOURCES) {
+      expect(data.approvedSourceIds.has(sid)).toBe(true);
+      expect(referenced.has(sid)).toBe(true);
+    }
+    // ゲートは通過し、既定シード(統合テストが使う)は緑を保つ。
+    expect(() => buildSeed(repoRoot)).not.toThrow();
+  });
+
+  it('(b) 回帰ガード: 公開対象(verified)が非approvedソースを参照したら従来どおり PublishGateError で全停止する', () => {
+    const data = loadPublishData(repoRoot);
+    // なぜ: 承認によりゲートが無条件で緑になったわけではないことの証明。もし verified 手続き/ルールが
+    // 非approvedソースを参照する状態になれば、ゲートは必ず発火する(不変条件は維持)。
+    const input: PublishGateInput = {
+      approvedSourceIds: data.approvedSourceIds,
+      references: [
+        ...data.references,
+        {
+          owner: 'procedure_version (hypothetical verified referencing non-approved)',
+          sourceIds: ['src-13115-facilities-001'], // 杉並(13115)は未整備のためcandidateのまま
+        },
+      ],
+    };
+    expect(() => assertPublishGate(input)).toThrow(PublishGateError);
   });
 });

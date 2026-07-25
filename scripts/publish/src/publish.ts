@@ -50,6 +50,15 @@ function main(): void {
     statements: statements.length,
   };
   console.log('[publish] gate passed (all published sourceIds are approved).');
+  // ADR-007: 公開単位=verified手続きのみ。partial/stale(staging)は seed から除外した。
+  // 除外はゲート違反ではなく「人手レビュー未了データを公開しない」正常動作(件数を明示)。
+  console.log(
+    `[publish] excluded ${data.excludedProcedures.length} non-verified procedure(s) and ` +
+      `${data.excludedRuleRefs.length} associated rule(s) from publish (ADR-007 staging; not seeded).`,
+  );
+  for (const p of data.excludedProcedures) {
+    console.log(`[publish]   - staged (dataStatus=${p.dataStatus}): ${p.municipalityCode}/${p.id}`);
+  }
   console.log('[publish] seed counts:', JSON.stringify(counts, null, 2));
 
   const seedDir = resolve(apiDir, '.wrangler');
