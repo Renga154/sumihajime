@@ -1,4 +1,4 @@
-# web — 東京転入ToDo フロントエンド
+# web — スミハジメ フロントエンド
 
 React + TypeScript + Vite + Tailwind CSS v4 の SPA。`apps/api`(Cloudflare Worker)が
 `dist/` を静的アセットとして配信し、`/api/*` は同じ Worker が処理する(単一 Worker 構成)。

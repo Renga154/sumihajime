@@ -59,9 +59,9 @@ export function Layout() {
           <Link to="/" className="flex items-center gap-2.5 no-underline">
             <LogoMark />
             <span className="flex flex-col leading-tight">
-              <span className="text-lg font-bold tracking-tight text-slate-900">東京転入ToDo</span>
+              <span className="text-lg font-bold tracking-tight text-slate-900">スミハジメ</span>
               <span className="text-xs font-medium text-slate-500">
-                非公式・公式根拠つきチェックリスト
+                東京の新生活ToDo(非公式・公式根拠つき)
               </span>
             </span>
           </Link>

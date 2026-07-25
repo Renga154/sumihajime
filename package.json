@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "東京転入ToDo — 東京転入者向けの公式根拠付きToDoチェックリスト (MVP monorepo)",
+  "description": "スミハジメ 〜東京の新生活ToDo〜 — 東京転入者向けの公式根拠付きToDoチェックリスト (MVP monorepo)",
   "packageManager": "pnpm@10.32.1",
   "engines": {
     "node": ">=22",

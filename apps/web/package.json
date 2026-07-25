@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "東京転入ToDo React + Vite SPA.",
+  "description": "スミハジメ 〜東京の新生活ToDo〜 React + Vite SPA.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
