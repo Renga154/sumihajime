@@ -298,12 +298,66 @@ describe('publish gate — Chiyoda (13101) after human review approval (Step4-B)
   });
 });
 
-describe('publish gate — five-ward publish (Step4 integration)', () => {
-  // なぜ: Step4統合後の対応5区(千代田/新宿/江東/世田谷/杉並)がそろって公開ゲートを通過し、
-  // 5区分のルールセットが seed されることを固定する(横断の回帰ガード)。
-  const SUPPORTED = ['13101', '13104', '13108', '13112', '13115'];
+describe('publish gate — Shinagawa (13109) after human review approval (Step5-A)', () => {
+  // なぜ: 2026-07-26 に品川(13109)が人手レビュー承認(ユーザー決裁「2区とも承認」)。
+  // registry.csvの全12ソースがapproved化、procedures.jsonの全10手続きがdataStatus=verifiedへ、
+  // facilities.jsonのreviewStatusがapprovedへ更新された。承認前は本describeが「品川の全項目が
+  // 除外(staging)扱いでゲートを通過する」ことを検証していた(除外ロジック自体の機械検証は
+  // fixtureベースの先頭describeで恒久的に担保)。承認後は逆に、品川を含む6区の公開が
+  // 除外0件で成立することを固定する(waste_scheduleは収集日CSVの鮮度未確認による恒久的
+  // 誠実縮退のため waste.json自体を作らず、収集曜日のみ引き続き0件)。
+  const SUPPORTED = ['13112', '13108', '13104', '13115', '13101', '13109'];
 
-  it('5区の buildSeed はゲートを通過し、5区分のルールセットを含む', () => {
+  it('supported全件(品川含む)の buildSeed はゲートを通過する', () => {
+    expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    const violations = findGateViolations({
+      approvedSourceIds: data.approvedSourceIds,
+      references: data.references,
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('承認後: 品川の全10手続き・施設・ごみ分別辞書が公開対象(除外0件)', () => {
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    const shinagawaProcs = data.procedures.filter((p) => p.municipalityCode === '13109');
+    expect(shinagawaProcs).toHaveLength(10);
+    expect(shinagawaProcs.every((p) => p.dataStatus === 'verified')).toBe(true);
+    expect(data.ruleSets.some((rs) => rs.municipalityCode === '13109')).toBe(true);
+    expect(data.facilities.some((f) => f.municipalityCode === '13109')).toBe(true);
+    expect(data.wasteSortingItems.some((i) => i.municipalityCode === '13109')).toBe(true);
+    // 除外(staging)は発生しない(waste_scheduleはwaste.json自体が存在しないため対象外)。
+    expect(data.excludedProcedures.filter((p) => p.municipalityCode === '13109')).toEqual([]);
+    expect(data.excludedNonProcedureSources.filter((s) => s.municipalityCode === '13109')).toEqual(
+      [],
+    );
+    // 公開ビューの municipalities で 13109 は supported=true になる(承認済み)。
+    const shinagawa = data.municipalities.find((m) => m.code === '13109');
+    expect(shinagawa?.supported).toBe(true);
+  });
+
+  it('欠落する waste.json(収集曜日を作らない)でも load は失敗しない(waste_scheduleは恒久的誠実縮退)', () => {
+    // なぜ: 品川は waste.json を作らない(収集日CSVが2017年更新のままで現行年度と確認できない
+    // 恒久的な誠実縮退)。loadPublishData がファイル欠落で例外にならず、13109 の収集曜日は
+    // 承認後も seed に0件で通ることを固定する。
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    expect(data.wasteAreas.some((a) => a.municipalityCode === '13109')).toBe(false);
+    expect(data.wasteDatasets.some((d) => d.municipalityCode === '13109')).toBe(false);
+  });
+
+  it('承認後のseedは6区分のルールセットを含む', () => {
+    const { data } = buildSeed(repoRoot, SUPPORTED);
+    const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
+    expect(codes).toEqual(['13101', '13104', '13108', '13109', '13112', '13115']);
+  });
+});
+
+describe('publish gate — six-ward publish (Step5 integration)', () => {
+  // なぜ: Step5-A統合後の対応6区(千代田/新宿/江東/品川/世田谷/杉並)がそろって公開ゲートを通過し、
+  // 6区分のルールセットが seed されることを固定する(横断の回帰ガード)。
+  const SUPPORTED = ['13101', '13104', '13108', '13109', '13112', '13115'];
+
+  it('6区の buildSeed はゲートを通過し、6区分のルールセットを含む', () => {
     expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
     const { data } = buildSeed(repoRoot, SUPPORTED);
     const violations = findGateViolations({
@@ -312,6 +366,6 @@ describe('publish gate — five-ward publish (Step4 integration)', () => {
     });
     expect(violations).toEqual([]);
     const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
-    expect(codes).toEqual(['13101', '13104', '13108', '13112', '13115']);
+    expect(codes).toEqual(['13101', '13104', '13108', '13109', '13112', '13115']);
   });
 });

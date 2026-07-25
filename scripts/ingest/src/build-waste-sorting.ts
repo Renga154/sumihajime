@@ -64,6 +64,18 @@ const TARGETS: Target[] = [
     snapshotFile: 'data/sources/13101/snapshots/src-13101-waste_sorting-001.csv',
     sourceId: 'src-13101-waste_sorting-001',
   },
+  {
+    // なぜ: Step5-A 品川区(13109)ごみ分別辞書(東京都オープンデータ・自治体標準準拠、
+    // last-modified 2026-01-15=現行年度で鮮度良好)。品目=「ゴミの品目」/分別区分=「分別区分」で
+    // 江東・新宿・千代田と同じ並び=itemCategorySwapped不要。品川CSVは「注意点」列に実データを持つ
+    // (例:『汚れの落とせないもの、紙製のものは燃やすごみにお出しください。』)ため杉並と同様に
+    // mergeCautionIntoNotes で notes へ統合する。なお収集曜日CSV(gomisyusyubi.csv)は
+    // HTTP Last-Modified が2017-03-15で9年更新なしのため正規化せず(waste.json不在=誠実縮退)。
+    municipalityCode: '13109',
+    snapshotFile: 'data/sources/13109/snapshots/src-13109-waste_sorting-001.csv',
+    sourceId: 'src-13109-waste_sorting-001',
+    mergeCautionIntoNotes: true,
+  },
 ];
 
 function main(): void {

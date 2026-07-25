@@ -1,0 +1,120 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Shinagawa (13109) — provenance integrity & scope safety > 決定論: 同一入力で同一結果 + スナップショット(回帰ガード) 1`] = `
+{
+  "outcomes": [
+    {
+      "applicabilityReason": "他の区市町村や外国から品川区に転入したすべての方に必要な届出です。",
+      "applicable": "applicable",
+      "dueDate": "2026-08-15",
+      "priority": "urgent",
+      "procedureId": "procedure_resident_registration",
+      "sourceIds": [
+        "src-13109-resident_registration-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。",
+      "applicable": "applicable",
+      "dueDescription": "住み始めた日から14日以内かつ引っ越し予定日から30日以内に転入届をし、その転入届の届出日から90日以内に継続利用の申し出をしてください。期限を過ぎるとマイナンバーカードは失効します(失効時の再発行手数料1,000円)。",
+      "priority": "high",
+      "procedureId": "procedure_mynumber_continued_use",
+      "sourceIds": [
+        "src-13109-my_number-001",
+        "src-13109-resident_registration-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "職場の健康保険等に加入していない方は、品川区の国民健康保険への加入の届出が必要です。",
+      "applicable": "applicable",
+      "dueDate": "2026-08-15",
+      "priority": "high",
+      "procedureId": "procedure_national_health_insurance",
+      "sourceIds": [
+        "src-13109-national_health_insurance-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "国民年金(第1号被保険者)の加入・種別変更等の届出に関する案内です。詳細(マイナンバーと基礎年金番号の連携状況等)は年金事務所へご確認ください。",
+      "applicable": "not_applicable",
+      "dueDescription": "国民年金の届出は区役所の国民年金の窓口・住民異動を扱う地域センター・品川年金事務所で受け付けています。このページには転入に伴う住所変更の届出の日数の期限の記載はありません。届出の要否・方法は窓口または品川年金事務所へご確認ください。",
+      "priority": "normal",
+      "procedureId": "procedure_national_pension_address",
+      "sourceIds": [
+        "src-13109-national_pension-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "高校卒業まで(18歳に達する日以後の最初の3月31日まで)の児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。",
+      "applicable": "applicable",
+      "dueDescription": "出生日や転入した日(前住所地の転出予定日)の翌日から15日以内に申請すれば、出生日や転入した日の翌月分から支給されます。起算日は前住所地での転出予定日等のため引越し日からは算定できません。早めの申請を推奨します。",
+      "priority": "high",
+      "procedureId": "procedure_child_allowance",
+      "sourceIds": [
+        "src-13109-child_benefits-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "品川区に住民登録があり健康保険に加入している、18歳に達した日以後最初の3月31日までの子を養育している保護者が対象です。",
+      "applicable": "applicable",
+      "dueDescription": "異動日(転入日)から6カ月以内に申請すると異動日から資格が発生します。6カ月を超えて申請した場合は申請日からの資格となります。",
+      "priority": "high",
+      "procedureId": "procedure_child_medical",
+      "sourceIds": [
+        "src-13109-child_medical-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "小・中学生(義務教育の学齢)のお子さまがいる世帯が品川区へ転入する場合に必要な、区立学校への転入学手続きです。品川区で交付される書類の名称は公式ページに記載がないため設定していません(他区の名称を持ち込みません)。",
+      "applicable": "applicable",
+      "dueDescription": "前に通っていた学校から『在学証明書』と『教科書給与証明書』を受け取り、品川区で転入届を提出する際に学務課で入学関係書類を受け取ってください。転入届と同時に手続きできます。日数固定の期限はこのページには記載がありません。",
+      "priority": "high",
+      "procedureId": "procedure_school_transfer",
+      "sourceIds": [
+        "src-13109-school_transfer-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "保育を必要とする未就学のお子さまがいる世帯で、品川区の保育施設の利用を希望する方(区外から申し込む方)向けの案内です。",
+      "applicable": "applicable",
+      "dueDescription": "品川区外からの申請は電子申請(マイナポータル)ができず、郵送(簡易書留・消印有効)または区役所窓口で申し込みます。申込締切日・必要書類は品川区の入園案内(区外からの申請ページ)でご確認ください(入園希望月・年度により異なるため日数固定の期限は設定していません)。",
+      "priority": "normal",
+      "procedureId": "procedure_childcare_application",
+      "sourceIds": [
+        "src-13109-childcare-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "犬のマイクロチップ装着有無が未確認のため、届出先(品川区の窓口 または 環境省のマイクロチップ情報登録サイト)が確定できません。装着状況をご確認ください(装着・環境省登録済みなら区への届出は不要です)。",
+      "applicable": "needs_confirmation",
+      "dueDescription": "転入前の市区町村で交付された鑑札を持参し、品川区の窓口で品川区の鑑札に交換してください(明確な日数の期限はこのページには記載がありません)。マイクロチップを装着し環境省に登録済みの場合は環境省サイトでの手続きで完結し、品川区への届出は不要です。",
+      "priority": "normal",
+      "procedureId": "procedure_dog_registration_transfer",
+      "sourceIds": [
+        "src-13109-dog_registration-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "転入したすべての方に、生活開始にあたって資源・ごみの分け方と収集日の確認をおすすめします。",
+      "applicable": "applicable",
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集日を確認してください)。品川区の収集曜日は地区(町丁目)ごとに決められており、品川区公式『ごみ・資源収集日一覧』(地区別)または令和8年版ごみ・リサイクルカレンダーでご確認ください。ごみ・資源は収集日の朝8時までにお出しください。",
+      "priority": "normal",
+      "procedureId": "procedure_waste_check",
+      "sourceIds": [
+        "src-13109-waste_guide-001",
+      ],
+      "warnings": [],
+    },
+  ],
+  "ruleVersion": "2026-07-26.1",
+}
+`;
