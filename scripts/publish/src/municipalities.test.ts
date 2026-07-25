@@ -43,6 +43,17 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
     for (const c of codes) expect(c).toMatch(/^\d{5}$/);
   });
 
+  it('note(利用者に表示される表示専用文言)に内部用語を含まない(Step2)', () => {
+    // なぜ: note は LandingPage で利用者に表示される。開発の進捗・工程用語(タスクID・Wave・
+    // MVP・縦切り・レビュー/承認/pending)が利用者の目に触れないことを固定する。
+    const internalJargon = /MVP|T-0\d|Wave\s*\d|Wave\d|縦切り|人手レビュー|pending|承認後|準備中/i;
+    for (const m of MUNICIPALITIES) {
+      if (m.note != null) {
+        expect(m.note, `${m.name} の note に内部用語: ${m.note}`).not.toMatch(internalJargon);
+      }
+    }
+  });
+
   it('既存6自治体の従前 officialUrl を維持する', () => {
     const url = (code: string) => MUNICIPALITIES.find((m) => m.code === code)?.officialUrl;
     expect(url('13112')).toBe('https://www.city.setagaya.lg.jp/');

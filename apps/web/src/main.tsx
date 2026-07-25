@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, redirect, RouterProvider } from 'react-router-dom';
 import './index.css';
 import { AppStateProvider } from './state/AppState';
 import { Layout } from './components/Layout';
@@ -22,7 +22,10 @@ const router = createBrowserRouter([
       { path: '/procedures/:id', element: <ProcedureDetailPage /> },
       { path: '/facilities', element: <FacilitiesPage /> },
       { path: '/waste', element: <WastePage /> },
-      { path: '/coverage', element: <CoveragePage /> },
+      // 透明性ページ(来歴・鮮度・出典)。Step2でメインナビから外しフッター導線へ移設。
+      { path: '/about-data', element: <CoveragePage /> },
+      // 旧URL /coverage は直リンク互換のため /about-data へリダイレクトする。
+      { path: '/coverage', loader: () => redirect('/about-data') },
     ],
   },
 ]);

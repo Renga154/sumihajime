@@ -9,13 +9,15 @@ import { NavLink, Outlet, Link } from 'react-router-dom';
  * 依存しない(CDN/画像URL禁止)。ブランドカラー(brand)で信頼感を、アクセントで親しみを添える。
  */
 
+// なぜ: メインナビは利用者の主要動線のみに絞る(Step2)。来歴・鮮度・出典の透明性情報は
+// 一般利用者にとってはノイズになりうるため、メインナビから外し、フッターの
+// 「このサービスのデータについて」(/about-data)からたどれるようにする。
 const navItems = [
   { to: '/', label: 'ホーム', end: true },
   { to: '/wizard', label: '入力', end: false },
   { to: '/checklist', label: 'チェックリスト', end: false },
   { to: '/facilities', label: '窓口一覧', end: false },
   { to: '/waste', label: 'ごみ収集', end: false },
-  { to: '/coverage', label: '対応状況・来歴', end: false },
 ];
 
 function LogoMark() {
@@ -113,6 +115,17 @@ export function Layout() {
           </p>
           <p className="mt-2 pl-6">
             入力内容（引越し日・世帯・条件など）はお使いの端末内にのみ保存され、サーバーには保存されません。
+          </p>
+          <p className="mt-3 pl-6">
+            <Link
+              to="/about-data"
+              className="font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+            >
+              このサービスのデータについて
+            </Link>
+            <span className="ml-1.5 text-slate-500">
+              — 対応自治体・データの新しさ・出典を公開しています
+            </span>
           </p>
         </div>
       </footer>

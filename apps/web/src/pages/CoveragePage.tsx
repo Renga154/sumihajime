@@ -24,16 +24,17 @@ import { Badge } from '../components/Badge';
 import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
 
 /**
- * 対応状況・データの来歴ダッシュボード(§7 / FR-020・FR-024 / Wave3)。
- * 本プロダクトの核である「公式根拠と来歴の徹底」(CLAUDE.md原則2・3・10)を、利用者・審査員に
- * 見える形で提示する:
- *  1. 鮮度サマリー(ソース総数・最終確認からの経過日数分布・年度データの残日数カウントダウン)
- *  2. 自治体の対応状況(既存のカバレッジ表)
- *  3. データソース台帳テーブル(自治体別。CC BYは帰属表示)
- *  4. オープンデータ品質レポート(改善への建設的な貢献)
+ * 「このサービスのデータについて」(透明性ページ / §7 / FR-020・FR-024)。
+ * 本プロダクトの核である「公式根拠と来歴の徹底」(CLAUDE.md原則2・3・10)を、利用者に安心して
+ * 使ってもらうために、平易な言葉で公開する。構成は利用者の関心順(Step2):
+ *  1. 対応している自治体と内容(カバレッジ表)
+ *  2. データの新しさ(鮮度サマリー)
+ *  3. 出典一覧(データソース台帳。CC BYは帰属表示)
+ *  4. オープンデータ品質レポート(改善への建設的な貢献。技術寄りの詳細は末尾)
  *
  * データは公開API(/api/sources, /api/municipalities)からのみ取得し、判定ロジックは持たない
  * (鮮度計算は lib/provenance の純関数)。自治体名は台帳に無いため municipalities から引く。
+ * 開発トラッキング(タスクID・進捗)はリポジトリのdocsが正であり、この画面には出さない。
  */
 
 const sourceTypeLabel: Record<SourceType, string> = {
@@ -95,22 +96,25 @@ export function CoveragePage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-bold text-slate-900">対応状況・データの来歴</h1>
-        <p className="text-sm text-slate-600">
-          どの自治体・カテゴリに対応しているか、表示内容がどの公式データに基づくか、そのデータを
-          いつ確認したかを公開しています。公式根拠と来歴を辿れることが、本サービスの土台です。
+        <h1 className="text-2xl font-bold text-slate-900">このサービスのデータについて</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          安心してお使いいただけるよう、どの自治体・内容に対応しているか、表示している情報がどの公式
+          データに基づき、いつ確認したものかを、このページですべて公開しています。情報のもとをたどれる
+          状態にしておくことが、本サービスの土台です。
         </p>
       </header>
 
-      {state.loading && <Loading label="来歴データを読み込み中です…" />}
+      {state.loading && <Loading label="データを読み込み中です…" />}
       {state.error != null && <ErrorMessage error={state.error} />}
 
       {state.data && (
         <>
-          <FreshnessSection freshness={state.data.freshness} today={state.data.today} />
-
           <section aria-labelledby="cov-heading" className="space-y-3">
-            <SectionHeading id="cov-heading">自治体の対応状況</SectionHeading>
+            <SectionHeading id="cov-heading">対応している自治体と内容</SectionHeading>
+            <p className="text-sm text-slate-600">
+              対応している自治体と、カテゴリごとの対応状況です。未対応の自治体は、対応済みのように
+              見せることはしません。
+            </p>
             <ul className="space-y-3">
               {state.data.munis.map((m) => (
                 <li key={m.code}>
@@ -120,11 +124,13 @@ export function CoveragePage() {
             </ul>
           </section>
 
+          <FreshnessSection freshness={state.data.freshness} today={state.data.today} />
+
           <section aria-labelledby="ledger-heading" className="space-y-3">
-            <SectionHeading id="ledger-heading">データソース台帳</SectionHeading>
+            <SectionHeading id="ledger-heading">出典一覧（データソース台帳）</SectionHeading>
             <p className="text-sm text-slate-600">
-              本サービスが利用する公式データの一覧です。クリエイティブ・コモンズ 表示（CC BY）等の
-              ライセンスに基づくデータは、提供元・帰属表示・ライセンスを明記しています。
+              本サービスが利用している公式データの一覧です。クリエイティブ・コモンズ 表示（CC
+              BY）等の ライセンスに基づくデータは、提供元・帰属表示・ライセンスを明記しています。
             </p>
             {state.data.groups.map((g) => (
               <SourceLedgerGroup key={g.code} group={g} />
@@ -153,7 +159,7 @@ function FreshnessSection({ freshness, today }: { freshness: FreshnessSummary; t
   const { total, within7, within30, older, unknown, yearData } = freshness;
   return (
     <section aria-labelledby="fresh-heading" className="space-y-3">
-      <SectionHeading id="fresh-heading">データの鮮度</SectionHeading>
+      <SectionHeading id="fresh-heading">データの新しさ</SectionHeading>
       <p className="text-sm text-slate-600">
         基準日 {formatDate(today)}（日本時間）時点での、公式データの最終確認状況です。
       </p>

@@ -90,9 +90,9 @@ test('a11y: 窓口一覧(施設地図込み)に重大違反なし', async ({ pag
   await assertNoSerious(page);
 });
 
-test('a11y: 対応状況・データの来歴ダッシュボードに重大違反なし', async ({ page }) => {
-  await page.goto('/coverage');
-  await expect(page.getByRole('heading', { name: '対応状況・データの来歴' })).toBeVisible();
+test('a11y: 透明性ページ「このサービスのデータについて」に重大違反なし', async ({ page }) => {
+  await page.goto('/about-data');
+  await expect(page.getByRole('heading', { name: 'このサービスのデータについて' })).toBeVisible();
   // 台帳テーブルの描画完了(非同期ロード)を待ってから検査する。
   await expect(page.getByRole('heading', { name: 'データソース台帳' })).toBeVisible();
   await assertNoSerious(page);

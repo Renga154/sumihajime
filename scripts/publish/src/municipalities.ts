@@ -35,7 +35,8 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13104',
     name: '新宿区',
     supported: true,
-    note: '対応準備中(MVP対象。データ整備済み・人手レビュー承認後に有効)',
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない(Step2)。
+    note: '対応済み',
     officialUrl: 'https://www.city.shinjuku.lg.jp/',
   },
   {
@@ -57,7 +58,7 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13108',
     name: '江東区',
     supported: true,
-    note: '対応準備中(MVP対象。データ整備済み・人手レビュー承認後に有効)',
+    note: '対応済み',
     officialUrl: 'https://www.city.koto.lg.jp/',
   },
   {
@@ -74,11 +75,11 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   { code: '13111', name: '大田区', supported: false, officialUrl: 'http://www.city.ota.tokyo.jp/' },
   {
-    // 縦切り対応済み(MVP基準ペルソナ)。従前のnote・officialUrlを維持する。
+    // 対応済み。note は利用者向けの「表示専用」文言のみ(内部の進捗・工程用語は出さない=Step2)。
     code: '13112',
     name: '世田谷区',
     supported: true,
-    note: 'MVP対象(縦切り対応済み)',
+    note: '対応済み',
     officialUrl: 'https://www.city.setagaya.lg.jp/',
   },
   {

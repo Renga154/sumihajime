@@ -11,7 +11,7 @@ import { renderWithProviders } from '../test/utils';
 vi.mock('../api/client', () => ({
   ApiError: class ApiError extends Error {},
   getMunicipalities: vi.fn(async () => [
-    { code: '13112', name: '世田谷区', supported: true, note: 'MVP対象', coverage: [] },
+    { code: '13112', name: '世田谷区', supported: true, note: '対応済み', coverage: [] },
     {
       code: '13104',
       name: '新宿区',
