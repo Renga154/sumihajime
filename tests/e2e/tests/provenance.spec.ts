@@ -16,6 +16,8 @@ test('透明性ページ: 鮮度サマリー・台帳テーブル・CC BYバッ�
 
   // 1. 鮮度サマリー: ソース総数タイルと、年度データの残日数カウントダウン。
   await expect(page.getByText('公式ソース総数')).toBeVisible();
+  // Step4統合後、承認済み公式ソースは72件(世田谷/江東/新宿の既存46 + 杉並14 + 千代田12)。
+  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('72');
   await expect(page.getByRole('heading', { name: 'データの新しさ' })).toBeVisible();
   await expect(page.getByText(/残り\s*\d+日/).first()).toBeVisible();
 

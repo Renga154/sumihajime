@@ -10,13 +10,18 @@ import {
 
 /**
  * なぜ: RAG索引の「コーパス構築」部分(ネットワーク非依存の純ロジック)。承認済みかつ
- * source_type=html の 世田谷区(13112)ソースのスナップショットから本文抽出→チャンク化し、
+ * source_type=html の対応自治体ソースのスナップショットから本文抽出→チャンク化し、
  * メタデータ付きの RagChunk[] を作る(§5.4 実行時クロール禁止=スナップショットのみ使用)。
  * embeddings/Vectorize投入は build.ts が担う。
  */
 
-/** 索引対象 = 人手レビュー承認済みの対応自治体(世田谷13112・江東13108・新宿13104)。 */
-export const RAG_MUNICIPALITIES = ['13112', '13108', '13104'] as const;
+/**
+ * 索引対象 = 人手レビュー承認済みの対応自治体(世田谷13112・江東13108・新宿13104・杉並13115・千代田13101)。
+ * なぜ: Step4で杉並・千代田を追加。両区の承認済みHTMLスナップショットもコーパスに含める。
+ * 実際の Vectorize 投入(embeddings)は build.ts を後段で実行して行い、投入完了までは
+ * coverage.csv の rag 列は unavailable のまま(未対応を対応済みに見せない=CLAUDE.md原則9)。
+ */
+export const RAG_MUNICIPALITIES = ['13112', '13108', '13104', '13115', '13101'] as const;
 
 function toDateTime(v: string): string {
   const s = (v ?? '').trim();

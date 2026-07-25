@@ -18,14 +18,16 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 
 describe('loadApprovedHtmlSources', () => {
-  it('世田谷12+江東13+新宿12の承認済みHTMLソースを返す(CSV/candidateは除外)', () => {
+  it('世田谷12+江東13+新宿12+杉並12+千代田10の承認済みHTMLソースを返す(CSV/candidateは除外)', () => {
     const sources = loadApprovedHtmlSources(repoRoot);
-    expect(sources).toHaveLength(37);
+    expect(sources).toHaveLength(59);
     expect(sources.filter((s) => s.municipalityCode === '13112')).toHaveLength(12);
     expect(sources.filter((s) => s.municipalityCode === '13108')).toHaveLength(13);
     expect(sources.filter((s) => s.municipalityCode === '13104')).toHaveLength(12);
+    expect(sources.filter((s) => s.municipalityCode === '13115')).toHaveLength(12);
+    expect(sources.filter((s) => s.municipalityCode === '13101')).toHaveLength(10);
     for (const s of sources) {
-      expect(s.sourceId).toMatch(/^src-131(12|08|04)-/);
+      expect(s.sourceId).toMatch(/^src-131(12|08|04|15|01)-/);
       expect(s.url).toMatch(/^https:\/\//);
       expect(s.lastVerifiedAt).toMatch(/T\d{2}:\d{2}:\d{2}/); // datetimeに正規化
     }
@@ -42,12 +44,12 @@ describe('buildChunkManifest', () => {
 
   it('全チャンクが対象自治体スコープ内で、id/メタデータが健全', () => {
     expect(manifest.municipalityCodes).toEqual([...RAG_MUNICIPALITIES]);
-    expect(manifest.sourceCount).toBe(37);
-    expect(manifest.chunkCount).toBeGreaterThan(37);
+    expect(manifest.sourceCount).toBe(59);
+    expect(manifest.chunkCount).toBeGreaterThan(59);
 
     const ids = new Set<string>();
     for (const c of manifest.chunks) {
-      expect(['13112', '13108', '13104']).toContain(c.metadata.municipalityCode);
+      expect(['13112', '13108', '13104', '13115', '13101']).toContain(c.metadata.municipalityCode);
       expect(c.metadata.sourceId.startsWith(`src-${c.metadata.municipalityCode}-`)).toBe(true);
       expect(c.id).toBe(`${c.metadata.sourceId}#${c.seq}`);
       expect(ids.has(c.id)).toBe(false); // idは一意

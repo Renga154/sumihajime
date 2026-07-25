@@ -244,9 +244,9 @@ describe('publish gate — Suginami (13115) after human review approval (Step4-A
     expect(data.wasteSortingItems.some((i) => i.municipalityCode === '13115')).toBe(true);
     // 除外(staging)は発生しない(waste_scheduleはwaste.json自体が存在しないため対象外)。
     expect(data.excludedProcedures.filter((p) => p.municipalityCode === '13115')).toEqual([]);
-    expect(
-      data.excludedNonProcedureSources.filter((s) => s.municipalityCode === '13115'),
-    ).toEqual([]);
+    expect(data.excludedNonProcedureSources.filter((s) => s.municipalityCode === '13115')).toEqual(
+      [],
+    );
     // 公開ビューの municipalities で 13115 は supported=true になる(承認済み)。
     const suginami = data.municipalities.find((m) => m.code === '13115');
     expect(suginami?.supported).toBe(true);
