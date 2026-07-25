@@ -1,0 +1,128 @@
+{
+  "municipalityCode": "13111",
+  "ruleVersion": "2026-07-26.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "大田区に住み始めた日から14日以内(住み始める前の届出はできません)。",
+      "sourceIds": ["src-13111-resident_registration-001"],
+      "applicabilityReasonTemplate": "他の区市町村や国外から大田区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転入した日から14日以内かつ転出予定日から30日以内に転入届をし、その転入届をした日から90日以内に継続利用の手続きを行うこと。いずれかを過ぎるとカードが失効します。署名用電子証明書は住所変更で自動失効するため、必要な方は改めて発行手続きが必要です。",
+      "sourceIds": ["src-13111-my_number-001", "src-13111-resident_registration-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う住所変更(継続利用)の手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "異動があった日(転入した日)から14日以内に世帯主が届出。届出が遅れてもさかのぼって加入し、保険料もさかのぼって納めることになります。",
+      "sourceIds": ["src-13111-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険等に加入していない方は、大田区の国民健康保険への加入手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "本ページ(国民年金加入等の手続き)は索引ページで日数期限の記載はありません。転入に伴う手続きの要否・期限は該当項目別ページおよび年金事務所でご確認ください。",
+      "sourceIds": ["src-13111-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金に加入している方の手続きに関する案内です(具体的な期限・窓口は項目別ページ・年金事務所で要確認)。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "異動日(出生日や受給資格者の前住所地の転出予定日)の翌日から15日以内に申請すると要件発生月から支給(15日特例)。起算日が前住所地の転出予定日のため引越し日からは算定できません。早めの申請を推奨します。",
+      "sourceIds": ["src-13111-child_benefits-001"],
+      "applicabilityReasonTemplate": "高校生年代までの児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生日・転入日から6か月以内に申請すると出生日または転入日に遡って資格が発生します(6か月経過後は申請月の初日から)。月単位の期限のため日付は算定せず公式文言のとおり表示します(大田区固有の期間)。",
+      "sourceIds": ["src-13111-child_medical-001"],
+      "applicabilityReasonTemplate": "0歳から18歳到達後最初の3月31日までの児童を養育している世帯が対象です。医療証の交付申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "住所別に定めた通学区域の指定校の『就学通知書』が交付されます(転入届窓口で即日交付または郵送)。転入予定がある方は必ず学務課学事係にご連絡ください。日数固定の期限の記載はありません。",
+      "sourceIds": ["src-13111-school_transfer-001", "src-13111-school_transfer-002"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯、または就学・保育のニーズがある世帯が対象の、区立小・中学校への転入学手続きです。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "5月から12月の申込みは申込月の前月7日まで(7日が閉庁日のときは翌開庁日まで)。2月・3月は受付なし、1月・4月はしおり参照。月・年度により異なるため日数固定の期限は設定していません。",
+      "sourceIds": ["src-13111-childcare-001"],
+      "applicabilityReasonTemplate": "未就学のお子さまがいる、または就学・保育のニーズがある世帯で、大田区の保育園等の利用を希望する(入園月初日までに転入予定の)方向けの入口案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "引っ越し(所在地変更)に伴う登録内容の変更手続きが必要です(明確な日数の期限はこのページに記載なし)。マイクロチップ未装着等の場合の具体的手続きは公式ページの案内に従ってください。",
+      "sourceIds": ["src-13111-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していないため、大田区での飼い犬の登録内容変更の手続きが必要です。",
+      "needsConfirmationReason": "犬のマイクロチップ装着有無が未確認のため、届出先(区の窓口 または 環境大臣指定登録機関のサイト)が確定できません。装着・登録状況をご確認ください(装着・登録済みなら区への登録は不要です)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの町丁目の収集曜日を区公式の収集曜日PDF・収集カレンダーで確認してください)。資源とごみは収集日当日の朝8時までに出してください。",
+      "sourceIds": ["src-13111-waste_guide-001", "src-13111-waste_schedule-001"],
+      "applicabilityReasonTemplate": "お住まいの町丁目の資源・ごみ収集曜日を区公式ページで確認してください(本サービスは収集曜日データを表示していません)。"
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import { MUNICIPALITIES } from './municipalities.js';
 
 /**
  * なぜ: 東京都62市区町村(23区+26市+5町+8村)の誠実リスト化を固定する。
- * supported は縦切り整備済みの3区のみ、それ以外は未対応(=CLAUDE.md原則9)。
+ * supported は縦切り整備済みの7区のみ、それ以外は未対応(=CLAUDE.md原則9)。
  * 全件が Municipality スキーマ(5桁コード・URL)に適合し、code は一意であることを担保する。
  */
 describe('MUNICIPALITIES (東京都62市区町村)', () => {
@@ -23,16 +23,17 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
     expect(villages).toHaveLength(8);
   });
 
-  it('supported は6区(千代田/新宿/江東/品川/世田谷/杉並)。Step5-Aで品川を整備し2026-07-26人手レビュー承認済み', () => {
-    // なぜ: 静的 supported は「MVP整備対象」という product 意図を表す。Step4で杉並(13115)・
-    // 千代田(13101)を承認済みで整備し、Step5-Aで品川(13109)を整備し supported=true にした。
-    // 2026-07-26の人手レビュー承認(ユーザー決裁「2区とも承認」)により品川の全ソースが
-    // approved化されたため、公開ビュー(loadPublishData)でも supported=true になる
-    // (gate.test.ts / load.ts のapproved判定で担保)。
+  it('supported は7区(千代田/新宿/江東/品川/大田/世田谷/杉並)。Step5で品川・大田を整備し2026-07-26人手レビュー承認済み', () => {
+    // なぜ: 静的 supported は「MVP整備対象」という product 意図を表す。Step4-Aで杉並(13115)、
+    // Step4-Bで千代田(13101)、Step5-Aで品川(13109)、Step5-Bで大田(13111)のデータを整備し
+    // supported=true にした。7区すべて人手レビュー承認済み。品川・大田は 2026-07-26 の承認
+    // (ユーザー決裁「2区とも承認」)により全ソースが approved・全手続きが verified となったため、
+    // 公開ビュー(loadPublishData)でも supported=true になる(gate.test.ts / load.ts の approved
+    // 判定で担保)。ここで検証するのは静的な整備意図。
     const supported = MUNICIPALITIES.filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
-    expect(supported).toEqual(['13101', '13104', '13108', '13109', '13112', '13115']);
+    expect(supported).toEqual(['13101', '13104', '13108', '13109', '13111', '13112', '13115']);
   });
 
   it('全件が Municipality スキーマに適合し、officialUrl を持つ', () => {

@@ -303,7 +303,7 @@ describe('publish gate — Shinagawa (13109) after human review approval (Step5-
   // registry.csvの全12ソースがapproved化、procedures.jsonの全10手続きがdataStatus=verifiedへ、
   // facilities.jsonのreviewStatusがapprovedへ更新された。承認前は本describeが「品川の全項目が
   // 除外(staging)扱いでゲートを通過する」ことを検証していた(除外ロジック自体の機械検証は
-  // fixtureベースの先頭describeで恒久的に担保)。承認後は逆に、品川を含む6区の公開が
+  // fixtureベースの先頭describeで恒久的に担保)。承認後は逆に、品川を含む区の公開が
   // 除外0件で成立することを固定する(waste_scheduleは収集日CSVの鮮度未確認による恒久的
   // 誠実縮退のため waste.json自体を作らず、収集曜日のみ引き続き0件)。
   const SUPPORTED = ['13112', '13108', '13104', '13115', '13101', '13109'];
@@ -352,12 +352,66 @@ describe('publish gate — Shinagawa (13109) after human review approval (Step5-
   });
 });
 
-describe('publish gate — six-ward publish (Step5 integration)', () => {
-  // なぜ: Step5-A統合後の対応6区(千代田/新宿/江東/品川/世田谷/杉並)がそろって公開ゲートを通過し、
-  // 6区分のルールセットが seed されることを固定する(横断の回帰ガード)。
-  const SUPPORTED = ['13101', '13104', '13108', '13109', '13112', '13115'];
+describe('publish gate — Ota (13111) after human review approval (Step5-B)', () => {
+  // なぜ: 2026-07-26 に大田(13111)が人手レビュー承認(ユーザー決裁「2区とも承認」)。
+  // registry.csvの全14ソースがapproved化、procedures.jsonの全10手続きがdataStatus=verifiedへ、
+  // facilities.jsonのreviewStatusがapprovedへ更新された。承認後に、大田を含む公開が
+  // 除外0件で成立することを固定する。収集曜日(waste_schedule)はオープンデータ(XLSX)が令和7年度
+  // 版で公式サイトの令和8年度版より1年度遅れのため waste.json 自体を作らず(誠実縮退)、収集曜日データ
+  // は引き続き非公開(0件)。品目別ごみ分別辞書(waste_sorting)は都カタログにCSVが無く未整備(0件)。
+  // ソース src-13111-waste_schedule-001 の approved 化は来歴記録のためであり、waste.json 不在により
+  // 公開経路には一切載らない。
+  const SUPPORTED = ['13101', '13104', '13108', '13111', '13112', '13115'];
 
-  it('6区の buildSeed はゲートを通過し、6区分のルールセットを含む', () => {
+  it('supported全件(大田含む)の buildSeed はゲートを通過する', () => {
+    expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    const violations = findGateViolations({
+      approvedSourceIds: data.approvedSourceIds,
+      references: data.references,
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('承認後: 大田の全10手続き・施設が公開対象(除外0件)、supported=true', () => {
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    const otaProcs = data.procedures.filter((p) => p.municipalityCode === '13111');
+    expect(otaProcs).toHaveLength(10);
+    expect(otaProcs.every((p) => p.dataStatus === 'verified')).toBe(true);
+    expect(data.ruleSets.some((rs) => rs.municipalityCode === '13111')).toBe(true);
+    expect(data.facilities.some((f) => f.municipalityCode === '13111')).toBe(true);
+    // 除外(staging)は発生しない(waste_schedule/waste_sortingはファイル自体が存在しないため対象外)。
+    expect(data.excludedProcedures.filter((p) => p.municipalityCode === '13111')).toEqual([]);
+    expect(data.excludedNonProcedureSources.filter((s) => s.municipalityCode === '13111')).toEqual(
+      [],
+    );
+    const ota = data.municipalities.find((m) => m.code === '13111');
+    expect(ota?.supported).toBe(true);
+  });
+
+  it('収集曜日・分別辞書は非公開のまま: waste.json / waste-sorting.json 不在で公開物0件', () => {
+    // なぜ: waste_schedule はXLSXが1年度遅れのため waste.json を作らない(誠実縮退)。
+    // waste_sorting は都カタログにCSVが無く未整備。両者ともファイル欠落で load は失敗せず、
+    // 大田の収集曜日・分別辞書の公開物は0件で通ることを固定する(承認後も非公開を維持)。
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    expect(data.wasteAreas.some((a) => a.municipalityCode === '13111')).toBe(false);
+    expect(data.wasteDatasets.some((d) => d.municipalityCode === '13111')).toBe(false);
+    expect(data.wasteSortingItems.some((i) => i.municipalityCode === '13111')).toBe(false);
+  });
+
+  it('承認後のseedは6区分のルールセットを含む', () => {
+    const { data } = buildSeed(repoRoot, SUPPORTED);
+    const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
+    expect(codes).toEqual(['13101', '13104', '13108', '13111', '13112', '13115']);
+  });
+});
+
+describe('publish gate — seven-ward publish (Step5 integration)', () => {
+  // なぜ: Step5統合後の対応7区(千代田/新宿/江東/品川/大田/世田谷/杉並)がそろって公開ゲートを
+  // 通過し、7区分のルールセットが seed されることを固定する(横断の回帰ガード)。
+  const SUPPORTED = ['13101', '13104', '13108', '13109', '13111', '13112', '13115'];
+
+  it('7区の buildSeed はゲートを通過し、7区分のルールセットを含む', () => {
     expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
     const { data } = buildSeed(repoRoot, SUPPORTED);
     const violations = findGateViolations({
@@ -366,6 +420,6 @@ describe('publish gate — six-ward publish (Step5 integration)', () => {
     });
     expect(violations).toEqual([]);
     const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
-    expect(codes).toEqual(['13101', '13104', '13108', '13109', '13112', '13115']);
+    expect(codes).toEqual(['13101', '13104', '13108', '13109', '13111', '13112', '13115']);
   });
 });

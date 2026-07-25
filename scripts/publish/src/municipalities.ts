@@ -2,7 +2,7 @@ import type { Municipality } from '@tmn/schemas';
 
 /**
  * なぜ: 東京都62市区町村(23区+26市+5町+8村)を municipalities テーブルへ投入する静的マスタ。
- * supported=true は縦切り整備済みの3区(世田谷/江東/新宿)のみ。残る59はチェックリスト未対応だが、
+ * supported=true は縦切り整備済みの7区(千代田/新宿/江東/品川/大田/世田谷/杉並)のみ。残る55はチェックリスト未対応だが、
  * FR-021「未対応でも公式サイトへ誘導」のため officialUrl を全件に持たせ、CLAUDE.md原則9
  * 「未対応を対応済みに見せない」を LandingPage 側の折りたたみグループ表示で担保する。
  *
@@ -85,7 +85,19 @@ export const MUNICIPALITIES: Municipality[] = [
     supported: false,
     officialUrl: 'https://www.city.meguro.tokyo.jp/',
   },
-  { code: '13111', name: '大田区', supported: false, officialUrl: 'http://www.city.ota.tokyo.jp/' },
+  {
+    // なぜ: Step5-Bで大田区データ(手続き10件/窓口施設26件/収集曜日XLSXパーサ)を整備しsupportedへ。
+    // 収集曜日はオープンデータ(XLSX)が令和7年度版で公式サイトの令和8年度版より1年度遅れのため
+    // 誤案内回避で非公開(誠実縮退)。分別辞書CSVは大田区都カタログに無く未整備。2026-07-26の
+    // 人手レビュー承認(ユーザー決裁「2区とも承認」)により全ソースがapproved化・全手続きがverified化
+    // されたため、公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
+    code: '13111',
+    name: '大田区',
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
+    officialUrl: 'http://www.city.ota.tokyo.jp/',
+  },
   {
     // 対応済み。note は利用者向けの「表示専用」文言のみ(内部の進捗・工程用語は出さない=Step2)。
     code: '13112',

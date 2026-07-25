@@ -30,6 +30,10 @@ describe('sourceSchema (§12.3 registry)', () => {
     expect(sourceSchema.safeParse({ ...validSource, sourceType: 'blog' }).success).toBe(false);
   });
 
+  it("accepts sourceType 'xlsx' (Step5-B: 大田区の収集曜日オープンデータはXLSX配信)", () => {
+    expect(sourceSchema.safeParse({ ...validSource, sourceType: 'xlsx' }).success).toBe(true);
+  });
+
   it('rejects an invalid reviewStatus enum value', () => {
     expect(sourceSchema.safeParse({ ...validSource, reviewStatus: 'unofficial' }).success).toBe(
       false,
