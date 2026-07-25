@@ -208,3 +208,33 @@ describe('publish gate — Setagaya school-transfer & childcare after human revi
     expect(() => assertPublishGate(input)).toThrow(PublishGateError);
   });
 });
+
+describe('publish gate — Chiyoda (13101) after human review approval (Step4-B)', () => {
+  // なぜ: 2026-07-25 に人手レビュー承認済み(台帳の全13101ソースがapproved。収集曜日は公式PDF
+  // のみで機械判読可能データが無いため waste.json を作らない「誠実縮退」= waste_schedule は
+  // 非公開のまま)。世田谷/江東/新宿/千代田の4自治体がそろって公開ゲートを通過することを固定する。
+  const SUPPORTED = ['13112', '13108', '13104', '13101'];
+
+  it('承認後: 千代田を含めた4自治体の公開(supported全件)がゲートを通過する', () => {
+    expect(() => buildSeed(repoRoot, SUPPORTED)).not.toThrow();
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    const violations = findGateViolations({
+      approvedSourceIds: data.approvedSourceIds,
+      references: data.references,
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('承認後のseedは4自治体分のルールセットを含む', () => {
+    const { data } = buildSeed(repoRoot, SUPPORTED);
+    const codes = data.ruleSets.map((rs) => rs.municipalityCode).sort();
+    expect(codes).toEqual(['13101', '13104', '13108', '13112']);
+  });
+
+  it('誠実縮退: 千代田は waste.json 不在のため収集曜日の公開物(wasteDataset)を持たない', () => {
+    // なぜ: waste_schedule を「未対応」として正しく非公開に留めることの回帰ガード
+    // (公式PDFのみ=機械判読データ無しにつき推測で曜日を作らない)。
+    const data = loadPublishData(repoRoot, SUPPORTED);
+    expect(data.wasteDatasets.some((d) => d.municipalityCode === '13101')).toBe(false);
+  });
+});

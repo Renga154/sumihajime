@@ -81,7 +81,7 @@ interface Task {
 }
 
 describe('GET /api/municipalities', () => {
-  it('returns 62 municipalities; 世田谷(13112)・江東(13108)・新宿(13104)がsupported(2026-07-22承認)', async () => {
+  it('returns 62 municipalities; 世田谷(13112)・江東(13108)・新宿(13104)・千代田(13101)がsupported(千代田は2026-07-25承認)', async () => {
     const res = await request('/api/municipalities');
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -97,7 +97,7 @@ describe('GET /api/municipalities', () => {
       .filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
-    expect(supported).toEqual(['13104', '13108', '13112']);
+    expect(supported).toEqual(['13101', '13104', '13108', '13112']);
     // 各自治体に公式導線URL(FR-021)。出典ページの表記どおり http/https いずれもあり得る。
     for (const m of body) expect(m.officialUrl).toMatch(/^https?:\/\//);
     // 世田谷にはカバレッジ行がある(FR-024)。
@@ -231,9 +231,10 @@ describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)
     const res = await request('/api/sources');
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>[];
-    // 台帳には承認済み46件がシードされる(publish/load は approved のみ挿入)。
+    // 台帳には承認済み58件がシードされる(publish/load は approved のみ挿入)。
     // 2026-07-25 Step3承認で世田谷の学校転入・保育の4ソースが追加approved化(42→46)。
-    expect(body.length).toBe(46);
+    // 2026-07-25 Step4-B承認で千代田(13101)の12ソースが追加approved化(46→58)。
+    expect(body.length).toBe(58);
 
     for (const s of body) {
       // 公開に必要な列は揃う。

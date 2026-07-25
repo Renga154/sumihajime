@@ -16,8 +16,8 @@ import { MunicipalityScopeMismatchError } from './errors.js';
  * なぜ: Step4-B 千代田区(13101)縦切りデータの来歴・型・決定論・自治体差分・「誠実縮退」を
  * CIで機械検証する。
  * (a) rules/procedures/facilities/waste-sorting が全て @tmn/schemas でparse成功
- * (b) 2026-07-25時点で人手レビュー未承認(dataStatus=partial / reviewStatus=pending_human_review)
- *     であることの回帰ガード(承認前は必ず partial=公開ゲートが未承認ソースを弾く)
+ * (b) 2026-07-25 人手レビュー承認済み(dataStatus=verified / reviewStatus=approved)
+ *     であることの回帰ガード(公開ゲートは approved ソースのみ通過)
  * (c) 誠実縮退: 収集曜日は公式PDFのみのため waste.json を作らない。waste_check手続きは
  *     公式カレンダー(PDF)とアプリ「分けちよ！」へ誘導し、収集曜日データを持たないことを実証
  * (d) ペルソナ別評価で子育て世帯の該当増加を明示アサート
@@ -121,13 +121,13 @@ describe('Chiyoda (13101) — schema validation (来歴・型検証; CI gate)', 
     expect(chiyodaRuleSet.publishedRuleVersion).toBeUndefined();
   });
 
-  it('procedures.json — 10 ProcedureVersions parse; 全件が人手レビュー未承認(partial)+ sourceIds + lastVerifiedAt', () => {
+  it('procedures.json — 10 ProcedureVersions parse; 2026-07-25人手レビュー承認済み(verified)+ sourceIds + lastVerifiedAt', () => {
     const procedures = parseProcedures();
     expect(procedures.length).toBe(10);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(CHIYODA);
-      // Step4-B時点では未承認。承認前は必ず partial(公開ゲートが未承認ソースを弾く=ADR-007)。
-      expect(pv.dataStatus).toBe('partial');
+      // 2026-07-25 人手レビュー承認済み(公開ゲートは approved ソースのみ通過=ADR-007)。
+      expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
       expect(pv.lastVerifiedAt).toBe('2026-07-25T00:00:00Z');
       // dueDateは静的には持たず、dueDescription(公式文言)のみ(実行時にルールが算定)。
