@@ -67,9 +67,15 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.koto.lg.jp/',
   },
   {
+    // なぜ: Step5-Aで品川区データ(手続き10件/窓口施設7件=本庁舎3階戸籍住民課+住民異動を扱う
+    // 6地域センター/ごみ分別辞書415品目)を整備しsupportedへ。収集曜日は収集日CSVが2017年更新の
+    // ままで現行年度(令和8年度)と確認できないため誠実縮退(waste.jsonなし)。全ソースは pending だが
+    // publish の承認ゲート(load.ts)で公開ビュー上の supported は承認済みソース有無に従う(承認まで false)。
     code: '13109',
     name: '品川区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.shinagawa.tokyo.jp/',
   },
   {
