@@ -1,4 +1,4 @@
-# CLAUDE.md — 東京転入ToDo（仮称）
+# CLAUDE.md — スミハジメ 〜東京の新生活ToDo〜
 
 ## 1. プロジェクトの使命
 
