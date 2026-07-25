@@ -23,11 +23,14 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
     expect(villages).toHaveLength(8);
   });
 
-  it('supported は3区(世田谷/江東/新宿)のみ', () => {
+  it('supported は4区(千代田/新宿/江東/世田谷)のみ', () => {
+    // なぜ: Step4-Bで千代田(13101)を supported に追加(手続き10件・窓口施設7件・分別辞書446品目)。
+    // 静的 supported は「MVP整備対象」であり、公開ビュー(seed→D1)の supported は承認済みソース有無に
+    // 従う(load.ts)。千代田は全ソース pending のため承認まで公開ビューでは非対応表示のまま(原則9)。
     const supported = MUNICIPALITIES.filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
-    expect(supported).toEqual(['13104', '13108', '13112']);
+    expect(supported).toEqual(['13101', '13104', '13108', '13112']);
   });
 
   it('全件が Municipality スキーマに適合し、officialUrl を持つ', () => {

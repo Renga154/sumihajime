@@ -1,0 +1,70 @@
+{
+  "municipalityCode": "13101",
+  "sourceId": "src-13101-facilities-001",
+  "reviewStatus": "pending_human_review",
+  "extractionNote": "窓口系抽出: 出典の千代田区公共施設一覧CSV(東京都オープンデータ・GIF施設情報標準準拠, UTF-8 BOM, 230データ行)から、施設_名称が「本庁舎」(=千代田区役所本庁舎。九段南1-2-1)または「〜出張所・区民館」(麹町/富士見/神保町/神田公園/万世橋/和泉橋の6出張所)の行を採用=本庁舎1+出張所6=7件。転入届の受付窓口は転入届ページ(src-13101-resident_registration-001)の公式文言『区役所総合窓口課または区内の出張所』に一致するため、本庁舎(総合窓口課)と6出張所を窓口系とした。事務室(万世橋出張所・区民館5階/6階事務室等)・ストックヤード・防災備蓄倉庫・旧万世橋出張所の行は窓口ではないため除外(施設_名称で厳密一致フィルタ)。住所は出典CSVの『所在地_連結表記』列をそのまま採用(捏造補完なし)。",
+  "dataQualityNotes": [
+    "出典CSV(230データ行)は緯度・経度列が全行空欄のため、7施設すべて lat/lng は未設定(捏造回避)。地図表示(ADR-005)ではピンを打てないが一覧・住所表示は可能。座標が必要になった場合は区公式の施設案内ページ等からの補完を人手レビューで検討する(新宿区の若松町特別出張所と同様のオープンデータ欠落の実例)。",
+    "本庁舎の施設_名称は出典CSV上『本庁舎』(所在地『東京都千代田区九段南一丁目2-1』)。各手続きページは同一庁舎を『区役所総合窓口課』『区役所2階』等と表記する。区民館併設の出張所は出典CSV表記どおり『〜出張所・区民館』を名称とした。",
+    "受付時間(hours)は出典CSVの『開始時間/終了時間』列が窓口手続き用の値として一貫しないため設定しない(各手続きの受付窓口・時間は procedures.json / 公式ページ参照)。",
+    "本データは人手レビュー未承認(pending human review)。公開ゲート(ADR-007)は未承認ソース参照を弾くため、承認まで公開(D1シード)されない。"
+  ],
+  "facilities": [
+    {
+      "facilityId": "13101-fac-001",
+      "municipalityCode": "13101",
+      "name": "本庁舎",
+      "category": "本庁舎",
+      "address": "東京都千代田区九段南一丁目2-1",
+      "sourceId": "src-13101-facilities-001"
+    },
+    {
+      "facilityId": "13101-fac-002",
+      "municipalityCode": "13101",
+      "name": "麹町出張所・区民館",
+      "category": "出張所",
+      "address": "東京都千代田区麹町二丁目8",
+      "sourceId": "src-13101-facilities-001"
+    },
+    {
+      "facilityId": "13101-fac-003",
+      "municipalityCode": "13101",
+      "name": "富士見出張所・区民館",
+      "category": "出張所",
+      "address": "東京都千代田区富士見一丁目6-7",
+      "sourceId": "src-13101-facilities-001"
+    },
+    {
+      "facilityId": "13101-fac-004",
+      "municipalityCode": "13101",
+      "name": "神保町出張所・区民館",
+      "category": "出張所",
+      "address": "東京都千代田区神田神保町二丁目40",
+      "sourceId": "src-13101-facilities-001"
+    },
+    {
+      "facilityId": "13101-fac-005",
+      "municipalityCode": "13101",
+      "name": "神田公園出張所・区民館",
+      "category": "出張所",
+      "address": "東京都千代田区神田司町二丁目2",
+      "sourceId": "src-13101-facilities-001"
+    },
+    {
+      "facilityId": "13101-fac-006",
+      "municipalityCode": "13101",
+      "name": "万世橋出張所・区民館",
+      "category": "出張所",
+      "address": "東京都千代田区外神田一丁目1-13",
+      "sourceId": "src-13101-facilities-001"
+    },
+    {
+      "facilityId": "13101-fac-007",
+      "municipalityCode": "13101",
+      "name": "和泉橋出張所・区民館",
+      "category": "出張所",
+      "address": "東京都千代田区神田佐久間町一丁目11-7",
+      "sourceId": "src-13101-facilities-001"
+    }
+  ]
+}

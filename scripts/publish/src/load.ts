@@ -224,9 +224,17 @@ export function loadWasteFor(
 ): {
   areas: WasteArea[];
   schedules: WasteSchedule[];
-  dataset: WasteDataset;
+  dataset: WasteDataset | null;
 } {
-  const raw = readJson(repoRoot, `data/normalized/${code}/waste.json`) as WasteJson;
+  // なぜ: 収集曜日が公式PDFのみで機械判読可能なデータが提供されない自治体(Step4-B 千代田=13101)は
+  // waste.json を作らない(推測で曜日を作らない=誠実縮退)。ごみ分別辞書(waste-sorting)が別途
+  // 未整備自治体で空配列を返すのと同様に、waste.json 不在は欠落として扱いエラーにしない。dataset=null を
+  // 返し、呼び出し側は waste の公開物・ゲート参照を生成しない(=収集曜日カテゴリは非公開・非対応表示)。
+  const rel = `data/normalized/${code}/waste.json`;
+  if (!existsSync(resolve(repoRoot, rel))) {
+    return { areas: [], schedules: [], dataset: null };
+  }
+  const raw = readJson(repoRoot, rel) as WasteJson;
   return {
     areas: raw.wasteAreas.map((a) => wasteAreaSchema.parse(a)),
     schedules: raw.wasteSchedules.map((s) => wasteScheduleSchema.parse(s)),
@@ -342,7 +350,8 @@ export function loadPublishData(
     facilities.push(...facs);
     wasteAreas.push(...waste.areas);
     wasteSchedules.push(...waste.schedules);
-    wasteDatasets.push(waste.dataset);
+    // waste.dataset は waste.json 不在(誠実縮退の自治体)では null。その場合は公開物に載せない。
+    if (waste.dataset) wasteDatasets.push(waste.dataset);
     wasteSortingItems.push(...sortingItems);
 
     for (const p of procs) {
@@ -357,7 +366,10 @@ export function loadPublishData(
     // 施設・ごみも公開物なので参照ソースをゲート対象に含める(distinctで冗長を避ける)。
     const facilitySourceIds = [...new Set(facs.map((f) => f.sourceId))];
     references.push({ owner: `facilities (${code})`, sourceIds: facilitySourceIds });
-    references.push({ owner: `waste dataset (${code})`, sourceIds: [waste.dataset.sourceId] });
+    // waste.json 不在(誠実縮退)の自治体は収集曜日の公開物が無いためゲート参照も生成しない。
+    if (waste.dataset) {
+      references.push({ owner: `waste dataset (${code})`, sourceIds: [waste.dataset.sourceId] });
+    }
     // なぜ: ごみ分別辞書はファイル未整備の自治体もあるため、その場合は参照0件
     // (=ゲート対象なし)で自然にスキップされる。
     const sortingSourceIds = [...new Set(sortingItems.map((i) => i.sourceId))];

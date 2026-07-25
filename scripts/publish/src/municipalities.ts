@@ -17,9 +17,14 @@ import type { Municipality } from '@tmn/schemas';
 export const MUNICIPALITIES: Municipality[] = [
   // ── 23特別区(code=131xx) ──
   {
+    // なぜ: Step4-Bで千代田区データ(手続き10件/窓口施設7件=本庁舎+出張所6/ごみ分別辞書446品目)を
+    // 整備しsupportedへ。収集曜日は公式PDFのみのため誠実縮退(waste.jsonなし)。全ソースは pending だが
+    // publish の承認ゲート(load.ts)で公開ビュー上の supported は承認済みソース有無に従う(承認まで false)。
     code: '13101',
     name: '千代田区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.chiyoda.lg.jp/',
   },
   { code: '13102', name: '中央区', supported: false, officialUrl: 'https://www.city.chuo.lg.jp/' },
