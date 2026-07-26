@@ -13,6 +13,8 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/playwright-report/**',
       '**/test-results/**',
+      // 提出スライドの生成スクリプト(スタンドアロンCJS。アプリのlint規約対象外)
+      'docs/submission/slides/**',
     ],
   },
   js.configs.recommended,

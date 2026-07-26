@@ -21,26 +21,14 @@ const navItems = [
 ];
 
 function LogoMark() {
+  // 正式ロゴ(家+扉+チェック)。装飾画像のため alt は空にする。
   return (
-    <span
+    <img
+      src="/logo.png"
+      alt=""
       aria-hidden="true"
-      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 shadow-sm ring-1 ring-brand-900/10"
-    >
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
-        {/* 東京の街並みを抽象化した三本のビル。 */}
-        <rect x="3" y="11" width="4" height="9" rx="1" className="fill-white/55" />
-        <rect x="9.5" y="7" width="5" height="13" rx="1" className="fill-white/80" />
-        <rect x="17" y="13" width="4" height="7" rx="1" className="fill-white/55" />
-        {/* 完了チェック(ToDoの達成)。 */}
-        <path
-          d="M8.5 5.4l2 2 4.2-4.2"
-          stroke="var(--color-accent-400)"
-          strokeWidth="2.1"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </span>
+      className="h-9 w-9 shrink-0 rounded-xl shadow-sm ring-1 ring-brand-900/10"
+    />
   );
 }
 
