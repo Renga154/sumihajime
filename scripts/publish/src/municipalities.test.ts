@@ -23,14 +23,15 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
     expect(villages).toHaveLength(8);
   });
 
-  it('supported は9区(千代田/新宿/江東/品川/大田/世田谷/杉並/板橋/練馬)。Batch6-Aで板橋・練馬を整備し2026-08-07人手レビュー承認済み', () => {
+  it('supported は13区(千代田/新宿/江東/品川/大田/世田谷/中野/杉並/豊島/北/荒川/板橋/練馬)。Batch7で中野・豊島・北・荒川を整備し2026-08-07人手レビュー承認済み', () => {
     // なぜ: 静的 supported は「MVP整備対象」という product 意図を表す。Step4-Aで杉並(13115)、
     // Step4-Bで千代田(13101)、Step5-Aで品川(13109)、Step5-Bで大田(13111)、Batch6-Aで
-    // 板橋(13119)・練馬(13120)のデータを整備し supported=true にした。9区すべて人手レビュー
-    // 承認済み。板橋・練馬は 2026-08-07 の承認(ユーザー決裁「2区とも承認」)により全ソースが
-    // approved・全手続き(自治体以外のライフライン等4件を含む)が verified となったため、
-    // 公開ビュー(loadPublishData)でも supported=true になる(gate.test.ts / load.ts の approved
-    // 判定で担保)。ここで検証するのは静的な整備意図。
+    // 板橋(13119)・練馬(13120)、Batch7で中野(13114)・豊島(13116)・北(13117)・荒川(13118)の
+    // データを整備し supported=true にした。13区すべて人手レビュー承認済み。Batch7の4区は
+    // 2026-08-07 の承認(ユーザー決裁「4区とも承認」)により全ソースが approved・全手続き
+    // (自治体以外のライフライン等4件を含む)が verified となったため、公開ビュー
+    // (loadPublishData)でも supported=true になる(gate.test.ts / load.ts の approved 判定で
+    // 担保)。ここで検証するのは静的な整備意図。
     const supported = MUNICIPALITIES.filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
@@ -41,10 +42,23 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
       '13109',
       '13111',
       '13112',
+      '13114',
       '13115',
+      '13116',
+      '13117',
+      '13118',
       '13119',
       '13120',
     ]);
+  });
+
+  it('北区(13117)の officialUrl は移行後の新ドメイン(city.kita.lg.jp)である', () => {
+    // なぜ: 都リンク集の href は旧ドメイン(http://www.city.kita.tokyo.jp/)のままで、実測で
+    // https://www.city.kita.lg.jp/ への301恒久リダイレクトを確認した(2026-08-07)。registry.csv に
+    // 登録した北区の出典URLは全件が新ドメインのため、出典整合性のため officialUrl も揃える。
+    // 旧ドメインへ巻き戻ったら落ちるようにしておく。
+    const kita = MUNICIPALITIES.find((m) => m.code === '13117');
+    expect(kita?.officialUrl).toBe('https://www.city.kita.lg.jp/');
   });
 
   it('全件が Municipality スキーマに適合し、officialUrl を持つ', () => {

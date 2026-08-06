@@ -9,16 +9,26 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "urgent",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "新しい住所に住み始めてから14日以内に転入届を出してください(届け出が遅れると過料がかかる場合があります)。届出先は中野区役所 戸籍住民課住民記録係(本庁舎2階4番)または区内5か所の地域事務所です。",
       "sourceIds": ["src-13114-resident_registration-001"],
       "applicabilityReasonTemplate": "他の区市町村や国外から中野区に転入したすべての方に必要な届出です。"
     },
     {
       "procedureId": "procedure_mynumber_continued_use",
-      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "hasMyNumberCard",
+        "equals": true
+      },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "継続利用の届出期間は転入届出日から90日以内です。転入届自体を転出予定日から30日以内に行わなかった場合もカードは失効します。日曜日に転入・転居の手続きをした場合は、当日中に継続利用の手続きはできません。",
       "sourceIds": ["src-13114-my_number-001"],
       "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。"
@@ -31,16 +41,26 @@
         "equals": true
       },
       "priority": "high",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "事由発生後14日以内に国民健康保険の加入の届出をしてください。届出が遅れるとその間の医療費は全額自己負担となり、保険料はさかのぼって納めることになります。届出先は中野区役所2階6番窓口または地域事務所です。",
       "sourceIds": ["src-13114-national_health_insurance-001"],
       "applicabilityReasonTemplate": "職場の健康保険などに加入していない方は、中野区の国民健康保険への加入の届出が必要です。"
     },
     {
       "procedureId": "procedure_national_pension_address",
-      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalPension",
+        "equals": true
+      },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "国内での引越しをしたときは、第1号被保険者の方は住民異動届(転入届)をお出しください。そのほかの手続きは原則必要ありません。第2号・第3号被保険者の方は、本人または配偶者の勤務先で手続きをしてください(区役所では取り扱えません)。日数固定の期限はこのページには記載がありません。",
       "sourceIds": ["src-13114-national_pension-001"],
       "applicabilityReasonTemplate": "国民年金の被保険者の方に、引っ越しに伴う手続きの要否をお知らせします。中野区は『第1号被保険者は住民異動届のみで、そのほかの手続きは原則不要』と案内しています。"
@@ -52,7 +72,9 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "前住所地での転出予定日の翌日から15日以内(土・日・祝含む)に認定請求をしてください。15日以内に請求すれば事由発生のあった日の翌月分から支給されます。起算日は前住所地での転出予定日のため、引越し日からは算定できません。",
       "sourceIds": ["src-13114-child_benefits-002", "src-13114-child_benefits-001"],
       "applicabilityReasonTemplate": "出生から高校生年代(18歳年度末まで)のお子さんを養育している保護者が対象です。中野区に転入した場合は認定請求が必要です。"
@@ -64,7 +86,9 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "区外からの転入により中野区発行の医療証を新規で申請します。申請期限(いつまでに申請すれば転入日にさかのぼって助成されるか)は中野区の公式ページに記載がないため要確認です。子ども総合窓口(電話 03-3228-3253)へお問い合わせください。",
       "sourceIds": ["src-13114-child_medical-001"],
       "applicabilityReasonTemplate": "住民票が中野区にあり、国内の健康保険に加入している0歳〜18歳のお子さんを養育している保護者が対象です(所得制限はありません)。",
@@ -74,12 +98,21 @@
       "procedureId": "procedure_school_transfer",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["elementary", "junior_senior"]
+          }
         ]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "住所の異動届(転入届)の手続きの際に『転入学通知書』を発行します。同通知書と、前居住地の学校から発行された『在学証明書』および『教科用図書給与証明書』を持って、指定された学校で手続きを行ってください。日数固定の期限はこのページには記載がありません。",
       "sourceIds": ["src-13114-school_transfer-001"],
       "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が中野区へ転入する場合に必要な、区立学校への転入学手続きです。中野区は住所異動届の際に『転入学通知書』を交付します。"
@@ -88,12 +121,21 @@
       "procedureId": "procedure_childcare_application",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["age0_2", "age3_5"]
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "中野区へ転入予定の方は、申込書類の提出先が中野区役所保育入園係になります。入所希望月ごとの締切日17時までにご提出ください(電子申請・郵送・窓口)。入園が内定した場合は、入園月前月の最終営業日までに転入手続きと支給認定申請を行ってください(行わない場合は内定を取り消します)。締切日は入所希望月・年度により異なるため日数固定の期限は設定していません。",
       "sourceIds": ["src-13114-childcare-001"],
       "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、中野区の保育施設の利用を希望する方(区外から申し込む方)向けの案内です。"
@@ -102,12 +144,24 @@
       "procedureId": "procedure_dog_registration_transfer",
       "condition": {
         "all": [
-          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
-          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasDog",
+            "equals": true
+          },
+          {
+            "predicate": "flagEquals",
+            "flag": "dogHasMicrochip",
+            "equals": false
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 30 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 30
+      },
       "dueDescription": "飼い犬の所在地が変わったときは30日以内に届出が必要です。マイクロチップを環境省のサイトへ登録していない場合は、届出書と鑑札を持参して区の受付窓口(中野区保健所2階衛生環境係・区役所2階戸籍住民課1番窓口・地域事務所5か所)へお越しください。",
       "sourceIds": ["src-13114-dog_registration-001"],
       "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを環境省のサイトへ登録していないため、中野区の窓口での届出が必要です。",
@@ -120,10 +174,69 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集曜日を確認してください)。中野区の収集曜日は地域ごとに決められており、中野区公式『ごみ収集・資源回収曜日一覧』の地域別ページでご確認ください。本サービスは収集曜日データを保持していません。",
       "sourceIds": ["src-13114-waste_guide-001"],
       "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたってごみ・資源の分け方と収集曜日の確認をおすすめします。"
+    },
+    {
+      "procedureId": "procedure_water_supply",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "東京都水道局は「次のお手続きについては、3〜4日前までに必ずお手続きください」と案内しています(使用開始申込み・使用中止届のいずれも)。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。",
+      "sourceIds": ["src-13000-water_supply-001", "src-13000-sewerage-001"],
+      "applicabilityReasonTemplate": "水道は住まいを移るすべての方に必要なライフラインの手続きです(区の手続きではなく東京都水道局への手続きです)。"
+    },
+    {
+      "procedureId": "procedure_postal_forwarding",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "日本郵便は「転居届を提出されてから登録までに3〜7営業日を要しますので、転居される際には、お早めに転居届を提出してください」と案内しています。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。転送期間は届出日から1年間です(転送開始希望日からではありません)。",
+      "sourceIds": ["src-00000-postal_forwarding-001"],
+      "applicabilityReasonTemplate": "旧住所あての郵便物等を新住所へ転送してもらうための、住所が変わるすべての方向けの手続きです(区の手続きではなく日本郵便への手続きです)。"
+    },
+    {
+      "procedureId": "procedure_utilities_contact",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "出典である国(デジタル庁)の公式ページには、電気・ガスの手続きの期限に関する記載がありません。受付の締切や必要な連絡時期は契約先の事業者ごとに異なるため、契約先へご確認ください(要確認)。",
+      "sourceIds": ["src-00000-utilities_contact-001"],
+      "applicabilityReasonTemplate": "電気・ガスは引越しに伴い契約先の民間事業者への手続きが必要になるライフラインです(区の手続きではありません)。"
+    },
+    {
+      "procedureId": "procedure_driver_license_change",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsVehicleGuidance",
+        "equals": true
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "警視庁の当該ページには「◯日以内」という日数の期限の記載がありません(要確認)。転入届で住民票の住所が変わったあとに手続きしてください。",
+      "sourceIds": ["src-13000-driver_license-001"],
+      "applicabilityReasonTemplate": "車・バイク等の追加案内が必要と回答された方向けの、運転免許証の住所変更(記載事項変更)の手続きです(区の手続きではなく警視庁への手続きです)。"
     }
   ]
 }

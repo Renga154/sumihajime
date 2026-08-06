@@ -2,7 +2,7 @@ import type { Municipality } from '@tmn/schemas';
 
 /**
  * なぜ: 東京都62市区町村(23区+26市+5町+8村)を municipalities テーブルへ投入する静的マスタ。
- * supported=true は縦切り整備済みの9区(千代田/新宿/江東/品川/大田/世田谷/杉並/板橋/練馬)のみ。残る53はチェックリスト未対応だが、
+ * supported=true は縦切り整備済みの13区(千代田/新宿/江東/品川/大田/世田谷/中野/杉並/豊島/北/荒川/板橋/練馬)のみ。残る49はチェックリスト未対応だが、
  * FR-021「未対応でも公式サイトへ誘導」のため officialUrl を全件に持たせ、CLAUDE.md原則9
  * 「未対応を対応済みに見せない」を LandingPage 側の折りたたみグループ表示で担保する。
  *
@@ -11,6 +11,10 @@ import type { Municipality } from '@tmn/schemas';
  *   (スナップショット data/sources/tokyo/snapshots/ に保存+SHA-256、registry.csv に登録)。
  * 名称・officialUrl は上記出典ページに記載された各自治体公式サイトの href のみを採用する
  *   (推測ドメイン禁止=CLAUDE.md原則3/5。http/https も出典の表記どおり)。
+ *   唯一の例外は北区(13117)で、都リンク集の href(http://www.city.kita.tokyo.jp/)が旧ドメインの
+ *   ままであり、実測で https://www.city.kita.lg.jp/ への301恒久リダイレクトを確認したため、
+ *   registry.csv に登録した北区の出典URL(すべて www.city.kita.lg.jp)と揃えて新ドメインを採用する
+ *   (推測ではなく実測したリダイレクト先。2026-08-07 人手レビュー時に確認)。
  * code は総務省「全国地方公共団体コード」5桁。既存6自治体(世田谷/江東/新宿/杉並/千代田/八王子)の
  *   note・officialUrl は人手レビュー済みの従前値を維持し、新規58はnote無し(=未対応)とする。
  */
@@ -113,9 +117,20 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'http://www.city.shibuya.tokyo.jp/',
   },
   {
+    // なぜ: Batch7で中野区データ(手続き10件/窓口施設6件=本庁舎1+地域事務所5)を整備。
+    // 2026-08-07の人手レビュー承認(ユーザー決裁「4区とも承認」)により全ソースがapproved化・
+    // 全手続き(自治体以外のライフライン等4件を含む)がverified化されたため、公開ビュー
+    // (seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
+    // 同日の決裁「wagmapを完全一致で個別許可」で取得許可ホストに www2.wagmap.jp を追加したため、
+    // 区の公式オープンデータ(配信は外部GIS基盤)からごみ分別辞書942品目を新規に取り込み、
+    // 施設も緯度経度付きへ差し替えた。収集曜日CSVは『最終確認日』列が全行2021-02-08のままで
+    // 現行年度と確認できないため恒久的に誠実縮退(waste.jsonなし)。
+    // 子ども医療費助成は公式ページに申請期限の記載が無いため『要確認』のまま公開する(同決裁)。
     code: '13114',
     name: '中野区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.tokyo-nakano.lg.jp/',
   },
   {
@@ -130,16 +145,46 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.suginami.tokyo.jp/',
   },
   {
+    // なぜ: Batch7で豊島区データ(手続き10件/窓口施設3件=区役所3階総合窓口課+東部/西部区民事務所)を
+    // 整備。公共施設一覧CSVはファイル名が『R4』(令和4年度)のままで中身の年度整合を確認できないため
+    // 採用せず公式ページ由来・座標なし(誠実縮退)。収集曜日・分別辞書は都カタログに機械判読可能な
+    // データが無く恒久的に unavailable。2026-08-07の人手レビュー承認(ユーザー決裁「4区とも承認」)に
+    // より全ソースがapproved化・全手続き(ライフライン等4件を含む)がverified化された。
+    // 子ども医療費助成の申請期限は2か月(北/荒川の3カ月・中野の記載なしと相違)。
     code: '13116',
     name: '豊島区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'http://www.city.toshima.lg.jp/',
   },
-  { code: '13117', name: '北区', supported: false, officialUrl: 'http://www.city.kita.tokyo.jp/' },
   {
+    // なぜ: Batch7で北区データ(手続き10件/窓口施設3件=王子・赤羽・滝野川の区民事務所)を整備。
+    // 都カタログ登録が7件のみで窓口・ごみのCSVが存在しないため付帯データは恒久的に unavailable。
+    // 2026-08-07の人手レビュー承認(ユーザー決裁「4区とも承認」)により全ソースがapproved化・
+    // 全手続き(ライフライン等4件を含む)がverified化された。マイナンバーカード継続利用の90日ルールは
+    // 北区公式ページのどこにも記載が見当たらないため、他区(中野・豊島・荒川)の90日を当てはめず
+    // 「未確認」表示のまま公開する(同決裁。CLAUDE.md原則3)。
+    // officialUrl は都リンク集由来の旧ドメイン(city.kita.tokyo.jp)から、移行後の新ドメインへ修正した
+    // (旧ドメインは301稼働中だが registry.csv の出典URLと同じ新ドメインに揃え出典整合性を保つ)。
+    code: '13117',
+    name: '北区',
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
+    officialUrl: 'https://www.city.kita.lg.jp/',
+  },
+  {
+    // なぜ: Batch7で荒川区データ(手続き10件/窓口施設6件=区役所本庁舎/北庁舎+区民事務所4。
+    // 自治体標準CSV由来で緯度経度あり/ごみ分別辞書223品目)を整備。収集曜日は機械判読可能な
+    // CSVが無いため恒久的に unavailable(誠実縮退)。2026-08-07の人手レビュー承認
+    // (ユーザー決裁「4区とも承認」)により全ソースがapproved化・全手続き(ライフライン等4件を
+    // 含む)がverified化された。子ども医療費助成の申請期限は3カ月(豊島の2か月と相違)。
     code: '13118',
     name: '荒川区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.arakawa.tokyo.jp/',
   },
   {

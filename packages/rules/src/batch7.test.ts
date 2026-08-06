@@ -16,19 +16,26 @@ import { MunicipalityScopeMismatchError } from './errors.js';
  * なぜ: Batch7(中野13114 / 荒川13118 / 豊島13116 / 北13117)の縦切りデータの来歴・型・
  * 決定論・**区ごとに異なる期限** をCIで機械検証する。ユーザー決裁(2026-08-07
  * 「23区全対応・案A=手続き中心で埋め、付帯データは取れる区だけ」)に基づく追加であり、
- * 4区とも人手レビュー未了(全ソース review_status=pending / 全手続き dataStatus=partial)。
+ * 4区とも 2026-08-07 に人手レビュー承認済み(ユーザー決裁「4区とも承認」。全ソース
+ * review_status=approved / 全手続き dataStatus=verified)。
  *
  * 本バッチで特に固定したい不変条件:
  * (a) **子ども医療費助成の期限が区ごとに違う**: 豊島=2か月 / 北=3カ月 / 荒川=3カ月 /
  *     中野=公式ページに記載なし(要確認)。共通デフォルト値を作らない(CLAUDE.md原則3)。
+ *     中野の「要確認」は承認後も埋めない(ユーザー決裁で明示的にそのまま公開)。
  * (b) **北区のマイナンバーカード継続利用の90日ルールは公式ページで確認できない**ため
  *     「未確認」と表示する。他区(中野・豊島・荒川)で確認できた90日を北区に当てはめない。
+ *     これも承認後の公開データに残る(ユーザー決裁で明示的にそのまま公開)。
  * (c) 児童手当の15日特例の起算日が区で違う: 北区だけ「事由発生日(転入日)の翌日」基準の
  *     ため moveDate から算定でき(offsetDays 15)、他3区は「前住所地の転出予定日」基準の
  *     ため算定しない(unknown)。
  * (d) 犬の届出期限も区で違う: 中野=30日以内と明記(offsetDays 30)、他3区は日数記載なし(unknown)。
- * (e) 付帯データの誠実縮退: 4区とも waste.json は作らない。waste-sorting.json は荒川のみ。
- * (f) 公開ゲート(ADR-007): 4区の全ソースが registry.csv で pending であること。
+ * (e) 付帯データの誠実縮退: 4区とも waste.json(収集曜日)は作らない。waste-sorting.json は
+ *     荒川(223品目)と中野(942品目)のみで、豊島・北は作らない。
+ * (f) 公開ゲート(ADR-007): 4区の全ソースが registry.csv で approved であること。
+ * (g) 自治体以外(ライフライン等)の手続き4件(ADR-009)は全対応区で同一内容のため、その検証は
+ *     non-municipal.test.ts が全区横断で行う。本ファイルの区固有アサーションは区の手続き10件を
+ *     対象にする(NON_MUNICIPAL_IDS で除外)。
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -42,6 +49,25 @@ const BATCH7 = [NAKANO, ARAKAWA, TOSHIMA, KITA] as const;
 const RULE_VERSION = '2026-08-07.1';
 const LAST_VERIFIED = '2026-08-07T00:00:00Z';
 
+/**
+ * なぜ: 2026-08-06 追加の「自治体以外(ライフライン等)の手続き」4件(ADR-009)。全対応区で
+ * municipalityCode 以外まったく同一の内容であり、区固有データの回帰ガードである本ファイルの
+ * 対象外とする(4件そのものの検証は non-municipal.test.ts が全区横断で行う)。
+ * ペルソナ評価には影響するため、常に該当する3件(水道・郵便・電気ガス)は期待値へ加える。
+ * 運転免許は needsVehicleGuidance フラグ依存のため既定プロフィールでは非該当。
+ */
+const NON_MUNICIPAL_IDS = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+  'procedure_driver_license_change',
+];
+const NON_MUNICIPAL_ALWAYS_APPLICABLE = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+];
+
 function readJson(relFromRoot: string): unknown {
   return JSON.parse(readFileSync(resolve(repoRoot, relFromRoot), 'utf-8'));
 }
@@ -53,6 +79,11 @@ function ruleSetOf(code: string): RuleSet {
 function proceduresOf(code: string) {
   const raw = readJson(`data/normalized/${code}/procedures.json`) as { procedures: unknown[] };
   return raw.procedures.map((p) => procedureVersionSchema.parse(p));
+}
+
+/** 区の手続き10件のみ(ライフライン4件は non-municipal.test.ts の担当)。 */
+function municipalProceduresOf(code: string) {
+  return proceduresOf(code).filter((p) => !NON_MUNICIPAL_IDS.includes(p.id));
 }
 
 function facilitiesOf(code: string) {
@@ -124,34 +155,44 @@ function familyIn(code: string): Profile {
   });
 }
 
-describe('Batch7 — schema validation & pending status (CI gate)', () => {
+describe('Batch7 — schema validation & approved status (CI gate)', () => {
   it.each(BATCH7)(
-    '%s: rules.json が RuleSet として parse し 10ルール・自治体スコープ一致',
+    '%s: rules.json が RuleSet として parse し 14ルール(区10+ライフライン4)・自治体スコープ一致',
     (code) => {
       const rs = RULE_SETS[code] as RuleSet;
       expect(rs.municipalityCode).toBe(code);
       expect(rs.ruleVersion).toBe(RULE_VERSION);
-      expect(rs.rules.length).toBe(10);
+      // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
+      expect(rs.publishedRuleVersion).toBeUndefined();
+      expect(rs.rules.length).toBe(14);
+      expect(rs.rules.filter((r) => !NON_MUNICIPAL_IDS.includes(r.procedureId))).toHaveLength(10);
     },
   );
 
-  it.each(BATCH7)('%s: procedures.json が10件 parse し 全件 partial(人手レビュー未了)', (code) => {
-    const procedures = proceduresOf(code);
-    expect(procedures.length).toBe(10);
-    for (const pv of procedures) {
-      expect(pv.municipalityCode).toBe(code);
-      // ADR-007: 公開単位は verified のみ。partial は公開(D1シード)対象に入らない。
-      expect(pv.dataStatus).toBe('partial');
-      expect(pv.version).toBe(RULE_VERSION);
-      expect(pv.lastVerifiedAt).toBe(LAST_VERIFIED);
-      expect(pv.sourceIds.length).toBeGreaterThan(0);
-      // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持する。
-      expect(pv.dueDate).toBeUndefined();
-      expect(pv.dueDescription).toBeDefined();
-    }
-  });
+  it.each(BATCH7)(
+    '%s: procedures.json の区の手続き10件が parse し 全件 verified(2026-08-07人手レビュー承認)',
+    (code) => {
+      const procedures = municipalProceduresOf(code);
+      expect(procedures.length).toBe(10);
+      expect(proceduresOf(code)).toHaveLength(14);
+      for (const pv of procedures) {
+        expect(pv.municipalityCode).toBe(code);
+        // ADR-007: 公開単位は verified のみ。2026-08-07 承認(ユーザー決裁「4区とも承認」)で公開対象へ。
+        expect(pv.dataStatus).toBe('verified');
+        expect(pv.version).toBe(RULE_VERSION);
+        expect(pv.lastVerifiedAt).toBe(LAST_VERIFIED);
+        expect(pv.sourceIds.length).toBeGreaterThan(0);
+        // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持する。
+        expect(pv.dueDate).toBeUndefined();
+        expect(pv.dueDescription).toBeDefined();
+        // 承認により pending 前提の caution は除去されている。
+        expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBeFalsy();
+        expect(pv.cautions?.some((c) => c.includes('review_status=pending'))).toBeFalsy();
+      }
+    },
+  );
 
-  it.each(BATCH7)('%s: procedures と rules が同一の10 procedureId を過不足なく覆う', (code) => {
+  it.each(BATCH7)('%s: procedures と rules が同一の14 procedureId を過不足なく覆う', (code) => {
     const procIds = proceduresOf(code)
       .map((p) => p.id)
       .sort();
@@ -160,10 +201,16 @@ describe('Batch7 — schema validation & pending status (CI gate)', () => {
   });
 
   it('facilities.json — 窓口件数(中野6 / 荒川6 / 豊島3 / 北3)と座標の有無', () => {
-    // 中野: 本庁舎1 + 地域事務所5(公式ページ由来・緯度経度なし)。
+    // 中野: 本庁舎1 + 地域事務所5。2026-08-07のユーザー決裁「wagmapを完全一致で個別許可」で
+    // 取得可能になった区公式オープンデータCSV(GIF標準準拠)由来のため緯度経度は実値。
     const nakano = facilitiesOf(NAKANO);
     expect(nakano.length).toBe(6);
-    for (const f of nakano) expect(f.lat).toBeUndefined();
+    for (const f of nakano) {
+      expect(typeof f.lat).toBe('number');
+      expect(typeof f.lng).toBe('number');
+      // 座標の出典は本庁舎=区役所CSV / 地域事務所=地域事務所CSV。HTMLページ由来のIDは残さない。
+      expect(['src-13114-facilities-002', 'src-13114-facilities-003']).toContain(f.sourceId);
+    }
 
     // 荒川: 区役所本庁舎/北庁舎 + 区民事務所4(自治体標準CSV由来・緯度経度は実値)。
     const arakawa = facilitiesOf(ARAKAWA);
@@ -188,35 +235,84 @@ describe('Batch7 — schema validation & pending status (CI gate)', () => {
     );
   });
 
-  it('coverage.csv — 4区は全カテゴリ unavailable(未対応を一部対応に見せない)', () => {
-    // なぜ: 4区は人手レビュー未了で公開データが1件も無く municipalities.ts の supported も
-    // false のため、利用者から見て実際に使えるカテゴリが存在しない。ここで partial(一部対応)
-    // と記録すると、CoveragePage が「未対応」バッジの直下に「一部対応」の表を出してしまい、
-    // 未対応の区を部分対応に見せることになる(CLAUDE.md原則9)。承認時に引き上げる。
+  it('coverage.csv — 承認後は区の手続きカテゴリが verified・未整備の付帯データは unavailable のまま', () => {
+    // なぜ: 2026-08-07の承認(ユーザー決裁「4区とも承認」)で公開対象になったカテゴリだけを
+    // verified に引き上げ、機械判読可能なデータが存在しない付帯データ(収集曜日・分別辞書・RAG)は
+    // unavailable のまま据え置く。ここを一律 verified にすると未整備を対応済みに見せてしまう
+    // (CLAUDE.md原則9)。逆に一律 unavailable のままだと公開済みを未対応に見せてしまう。
     const rows = readFileSync(resolve(repoRoot, 'docs/data-sources/coverage.csv'), 'utf-8')
       .split(/\r?\n/)
       .filter((l) => l.trim().length > 0);
     const header = (rows[0] as string).split(',');
-    const categoryColumns = header.slice(2, 13); // 11カテゴリ列 + overall_status。
-    expect(categoryColumns).toHaveLength(11);
+    // 2:resident_registration 〜 9:facilities(区の手続き+窓口)、10:waste_schedule、
+    // 11:waste_sorting、12:rag、13:non_municipal、14:overall_status。
+    expect(header.slice(2, 15)).toEqual([
+      'resident_registration',
+      'my_number',
+      'national_health_insurance',
+      'national_pension',
+      'child_benefits',
+      'school_childcare',
+      'dog_registration',
+      'facilities',
+      'waste_schedule',
+      'waste_sorting',
+      'rag',
+      'non_municipal',
+      'overall_status',
+    ]);
+    // 中野・荒川はごみ分別辞書を持つ(中野は wagmap 許可により新規取得)。豊島・北は持たない。
+    const expected: Record<string, string[]> = {
+      [NAKANO]: [
+        ...Array<string>(8).fill('verified'),
+        'unavailable',
+        'verified',
+        'unavailable',
+        'verified',
+        'partial',
+      ],
+      [ARAKAWA]: [
+        ...Array<string>(8).fill('verified'),
+        'unavailable',
+        'verified',
+        'unavailable',
+        'verified',
+        'partial',
+      ],
+      [TOSHIMA]: [
+        ...Array<string>(8).fill('verified'),
+        'unavailable',
+        'unavailable',
+        'unavailable',
+        'verified',
+        'partial',
+      ],
+      [KITA]: [
+        ...Array<string>(8).fill('verified'),
+        'unavailable',
+        'unavailable',
+        'unavailable',
+        'verified',
+        'partial',
+      ],
+    };
     for (const code of BATCH7) {
       const row = rows.find((l) => l.startsWith(`${code},`));
       expect(row, `coverage row missing for ${code}`).toBeDefined();
       const cells = (row as string).split(',');
-      for (let i = 2; i <= 13; i++) {
-        expect(cells[i], `${code} / ${header[i]}`).toBe('unavailable');
-      }
+      expect(cells.slice(2, 15), code).toEqual(expected[code]);
     }
   });
 
   it.each(BATCH7)('%s: waste.json(収集曜日)を作らない — 誠実縮退の回帰ガード', (code) => {
-    // 中野=収集曜日CSVの最終確認日が2021年 かつ 配信ホストが区公式ドメイン外、
+    // 中野=収集曜日CSVの「最終確認日」列が全42行2021-02-08のままで現行年度と確認できない
+    // (2026-08-07にホスト許可を得て再取得し確認済み。ホスト制限は理由ではなくなった)、
     // 荒川=収集曜日CSVが無くHTML表パーサ未整備、豊島/北=都オープンデータにCSVが存在しない。
     // いずれも推測で曜日を作らないため waste.json を作らない。
     expect(existsSync(resolve(repoRoot, `data/normalized/${code}/waste.json`))).toBe(false);
   });
 
-  it('waste-sorting.json は荒川のみ整備(223品目)。中野・豊島・北は作らない', () => {
+  it('waste-sorting.json は荒川(223品目)と中野(942品目)のみ。豊島・北は作らない', () => {
     const raw = readJson(`data/normalized/${ARAKAWA}/waste-sorting.json`) as { items: unknown[] };
     const items = raw.items.map((i) => wasteSortingItemSchema.parse(i));
     expect(items.length).toBe(223);
@@ -229,11 +325,46 @@ describe('Batch7 — schema validation & pending status (CI gate)', () => {
     // 荒川CSVは「注意点」列に実データを持つため notes へ統合されている。
     expect(items.filter((i) => i.notes && i.notes.length > 0).length).toBeGreaterThan(0);
 
-    for (const code of [NAKANO, TOSHIMA, KITA]) {
+    for (const code of [TOSHIMA, KITA]) {
       expect(existsSync(resolve(repoRoot, `data/normalized/${code}/waste-sorting.json`))).toBe(
         false,
       );
     }
+  });
+
+  it('中野のごみ分別辞書 — wagmap配信の独自列CSVを専用アダプタで正規化した942品目', () => {
+    // なぜ: 2026-08-07のユーザー決裁「wagmapを完全一致で個別許可」で初めて取得できたデータ。
+    // 列構成が自治体標準オープンデータセットと異なるため中野専用アダプタ(layout=nakano_gis)を
+    // 使っており、列マッピングを取り違えると品目名と分別区分が入れ替わる(世田谷の前例)。
+    const raw = readJson(`data/normalized/${NAKANO}/waste-sorting.json`) as {
+      sourceId: string;
+      items: unknown[];
+    };
+    expect(raw.sourceId).toBe('src-13114-waste_sorting-001');
+    const items = raw.items.map((i) => wasteSortingItemSchema.parse(i));
+    expect(items.length).toBe(942);
+    for (const i of items) {
+      expect(i.municipalityCode).toBe(NAKANO);
+      expect(i.sourceId).toBe('src-13114-waste_sorting-001');
+      // 出典CSVに料金列が無いため feeNote は作らない(他区の「無料/有料」を持ち込まない)。
+      expect(i.feeNote).toBeUndefined();
+      // ID列が無いため行順から採番した代理キー。捏造ではないことがIDの形から分かる。
+      expect(i.itemId).toMatch(/^13114R\d{5}$/);
+    }
+    // itemId は (municipalityCode, itemId) で一意。
+    expect(new Set(items.map((i) => i.itemId)).size).toBe(items.length);
+    // 品目名と分別区分が入れ替わっていないこと(name=品目 / category=種別)。
+    const iron = items.find((i) => i.name === 'アイロン');
+    expect(iron?.category).toBe('陶器・ガラス・金属ごみ');
+    expect(iron?.reading).toBe('あいろん');
+    // 「種別」は中野区の分別区分の集合であって、データセット名(『ごみ分別一覧』)ではない。
+    expect(new Set(items.map((i) => i.category))).not.toContain('ごみ分別一覧');
+    expect(new Set(items.map((i) => i.category)).size).toBe(15);
+    // セル内改行は1行へ畳んである(D1・検索結果で扱える形)。
+    for (const i of items) {
+      expect(`${i.name}${i.reading ?? ''}${i.notes ?? ''}`).not.toMatch(/[\r\n]/);
+    }
+    expect(items.some((i) => i.name === 'アンプ／※オーディオ機器')).toBe(true);
   });
 });
 
@@ -426,6 +557,7 @@ describe('Batch7 — ペルソナ評価(正例・負例・境界)', () => {
         'procedure_national_pension_address',
         'procedure_resident_registration',
         'procedure_waste_check',
+        ...NON_MUNICIPAL_ALWAYS_APPLICABLE,
       ].sort(),
     );
     for (const id of [
@@ -535,19 +667,38 @@ describe('Batch7 — provenance integrity & scope safety', () => {
   );
 
   it.each(BATCH7)(
-    '%s: registry.csv の当該行は全て review_status=pending(未承認データを公開しない)',
+    '%s: registry.csv の当該行は全て review_status=approved かつ reviewer 記録あり(2026-08-07決裁)',
     (code) => {
       const rows = registryRows.filter((l) => l.startsWith(`src-${code}-`));
       expect(rows.length).toBeGreaterThan(0);
       for (const row of rows) {
         const cells = row.split(',');
-        // 列順: ... 15:content_hash, 16:effective_from, 17:effective_to, 18:review_status
-        expect(cells[17], row.slice(0, 60)).toBe('pending');
+        // 列順: ... 15:content_hash, 16:effective_from, 17:effective_to, 18:review_status, 19:reviewer
+        expect(cells[17], row.slice(0, 60)).toBe('approved');
+        expect(cells[18], row.slice(0, 60)).toBe('maintainer (2026-08-07 human review)');
         // content_hash(SHA-256 16進64桁)が記録されていること。
         expect(cells[14], row.slice(0, 60)).toMatch(/^[0-9a-f]{64}$/);
       }
     },
   );
+
+  it('中野の wagmap 由来3ソースは配信ホストが区公式ドメイン外であることを notes に明記している', () => {
+    // なぜ: SSRF許可リストの個別拡張(ユーザー決裁2026-08-07)で初めて取得できたデータであり、
+    // 「都カタログ登録=公式ドメイン配信」ではないことを来歴に残す運用上の約束(opendata-gaps §12)。
+    const ids = [
+      'src-13114-waste_sorting-001',
+      'src-13114-facilities-002',
+      'src-13114-facilities-003',
+    ];
+    for (const id of ids) {
+      const row = registryRows.find((l) => l.startsWith(`${id},`));
+      expect(row, `registry row missing: ${id}`).toBeDefined();
+      expect(row as string).toContain('https://www2.wagmap.jp/');
+      expect(row as string).toContain('www2.wagmap.jp 上に');
+      expect(row as string).toContain('完全一致で個別許可');
+      expect(row as string).toContain('CC BY 4.0');
+    }
+  });
 
   it.each(BATCH7)('%s: 出典スナップショットが存在し content_hash と一致する', async (code) => {
     const { createHash } = await import('node:crypto');

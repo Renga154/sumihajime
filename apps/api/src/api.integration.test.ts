@@ -81,7 +81,7 @@ interface Task {
 }
 
 describe('GET /api/municipalities', () => {
-  it('returns 62 municipalities; 千代田(13101)・新宿(13104)・江東(13108)・品川(13109)・大田(13111)・世田谷(13112)・杉並(13115)・板橋(13119)・練馬(13120)がsupported(板橋・練馬は2026-08-07承認)', async () => {
+  it('returns 62 municipalities; 千代田(13101)・新宿(13104)・江東(13108)・品川(13109)・大田(13111)・世田谷(13112)・中野(13114)・杉並(13115)・豊島(13116)・北(13117)・荒川(13118)・板橋(13119)・練馬(13120)がsupported(中野・豊島・北・荒川は2026-08-07承認)', async () => {
     const res = await request('/api/municipalities');
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -104,7 +104,11 @@ describe('GET /api/municipalities', () => {
       '13109',
       '13111',
       '13112',
+      '13114',
       '13115',
+      '13116',
+      '13117',
+      '13118',
       '13119',
       '13120',
     ]);
@@ -243,14 +247,16 @@ describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)
     const res = await request('/api/sources');
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>[];
-    // 台帳には承認済み126件がシードされる(publish/load は approved のみ挿入。sql.ts は
+    // 台帳には承認済み182件がシードされる(publish/load は approved のみ挿入。sql.ts は
     // supported の絞り込みなく approvedSources 全件を挿入する)。
     // 2026-07-25 Step3承認で世田谷の学校転入・保育の4ソースが追加approved化(42→46)、
     // 同日Step4-A承認で杉並(13115)の14ソース(46→60)、Step4-B承認で千代田(13101)の12ソース(60→72)、
     // 2026-07-26 Step5-A承認で品川(13109)の12ソース(72→84)、同日Step5-B承認で大田(13111)の14ソース(84→98)、
     // 2026-08-07 人手レビュー承認でライフライン等4手続きの出典5件が追加approved化(98→103。ADR-009)、
-    // 同日さらに練馬(13120)の11ソース+板橋(13119)の12ソースが人手レビュー承認(103→126。ユーザー決裁「2区とも承認」)。
-    expect(body.length).toBe(126);
+    // 同日さらに練馬(13120)の11ソース+板橋(13119)の12ソースが人手レビュー承認(103→126。ユーザー決裁「2区とも承認」)、
+    // 同日さらにBatch7の4区が人手レビュー承認(ユーザー決裁「4区とも承認」)。中野13→16(wagmap許可で
+    // ごみ分別一覧・地域事務所・区役所の3ソースを追加登録)+豊島11+北15+荒川14で126→182。
+    expect(body.length).toBe(182);
 
     for (const s of body) {
       // 公開に必要な列は揃う。

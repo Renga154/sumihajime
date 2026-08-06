@@ -122,3 +122,79 @@ describe('parseWasteSortingCsv — 異常系', () => {
     expect(items[0]?.itemId).toBe('S1');
   });
 });
+
+describe('parseWasteSortingCsv — 中野形式(layout=nakano_gis。GIS配信の独自列構成)', () => {
+  const header = 'ごみの品目,インデックス,種別,説明,GIS搭載用住所,経度,緯度,分類';
+  const opts = {
+    municipalityCode: '13114',
+    sourceId: 'src-13114-waste_sorting-001',
+    layout: 'nakano_gis' as const,
+  };
+
+  it('品目/よみ/種別/説明を name/reading/category/notes へ割り当て、座標列は捨てる', () => {
+    const csv =
+      // 実スナップショットと同じく UTF-8 BOM 付きで与える。
+      `\uFEFF${header}\n` +
+      'アイスピック,あいすぴっく,陶器・ガラス・金属ごみ,危険のないよう紙などで包んでください。,' +
+      '中野区中野4-11-19,139.662926236846,35.7088740640065,ごみ分別一覧\n';
+    const items = parseWasteSortingCsv(csv, opts);
+    expect(items).toEqual([
+      {
+        itemId: '13114R00001',
+        municipalityCode: '13114',
+        name: 'アイスピック',
+        reading: 'あいすぴっく',
+        category: '陶器・ガラス・金属ごみ',
+        notes: '危険のないよう紙などで包んでください。',
+        sourceId: 'src-13114-waste_sorting-001',
+      },
+    ]);
+  });
+
+  it('説明が空欄の行は notes を作らない(空文字を入れない)', () => {
+    const csv = `${header}\nアイロン,あいろん,陶器・ガラス・金属ごみ,,中野区中野4-11-19,139.6,35.7,ごみ分別一覧\n`;
+    const items = parseWasteSortingCsv(csv, opts);
+    expect(items[0]?.notes).toBeUndefined();
+    // 出典に料金列が無いため feeNote は作らない(他区の「無料/有料」を持ち込まない)。
+    expect(items[0]?.feeNote).toBeUndefined();
+  });
+
+  it('itemId は出典の行順から採番する(出典にID列が無いため)', () => {
+    const csv =
+      `${header}\n` +
+      'アイロン,あいろん,陶器・ガラス・金属ごみ,,中野区中野4-11-19,139.6,35.7,ごみ分別一覧\n' +
+      'アイロン台,あいろんだい,粗大ごみ,,中野区中野4-11-19,139.6,35.7,ごみ分別一覧\n';
+    expect(parseWasteSortingCsv(csv, opts).map((i) => i.itemId)).toEqual([
+      '13114R00001',
+      '13114R00002',
+    ]);
+  });
+
+  it('セル内改行は品目名・よみでは「／」に、説明では連結して1行へ畳む', () => {
+    const csv =
+      `${header}\n` +
+      '"アンプ\n※オーディオ機器","あんぷ\n※おーでぃおきき",粗大ごみ,' +
+      '"一辺が30㎝以下の場合は\n陶器・ガラス・金属ごみです。",中野区中野4-11-19,139.6,35.7,ごみ分別一覧\n';
+    const item = parseWasteSortingCsv(csv, opts)[0];
+    expect(item?.name).toBe('アンプ／※オーディオ機器');
+    expect(item?.reading).toBe('あんぷ／※おーでぃおきき');
+    expect(item?.notes).toBe('一辺が30㎝以下の場合は陶器・ガラス・金属ごみです。');
+  });
+
+  it('既定(layout未指定)では中野の列構成を解釈できない — 自治体標準の必須列が無いため例外', () => {
+    // なぜ: 分岐を足しても既定の経路は従来どおりであること(既存区の出力不変)の裏書き。
+    const csv = `${header}\nアイロン,あいろん,陶器・ガラス・金属ごみ,,中野区中野4-11-19,139.6,35.7,ごみ分別一覧\n`;
+    expect(() => parseWasteSortingCsv(csv, { municipalityCode: '13114', sourceId: 'x' })).toThrow(
+      /ID/,
+    );
+  });
+
+  it('列数が合わない行は正規化せず例外(壊れた出典を黙って通さない)', () => {
+    const csv = `${header}\nアイロン,あいろん,陶器・ガラス・金属ごみ\n`;
+    expect(() => parseWasteSortingCsv(csv, opts)).toThrow(/columns but/);
+  });
+
+  it('ヘッダのみのCSVは空配列', () => {
+    expect(parseWasteSortingCsv(`${header}\n`, opts)).toEqual([]);
+  });
+});

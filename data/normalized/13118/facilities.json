@@ -69,5 +69,9 @@
       "hours": "月火水木金 8:30〜17:15",
       "sourceId": "src-13118-facilities-001"
     }
+  ],
+  "reviewStatus": "approved",
+  "dataQualityNotes": [
+    "2026-08-07 ユーザー(maintainer)決裁「4区とも承認」により人手レビュー承認済み(reviewStatus=approved)。"
   ]
 }

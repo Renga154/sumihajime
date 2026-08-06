@@ -31,9 +31,24 @@ function normalizeHeader(h: string): string {
   return idx === -1 ? h : h.slice(idx + 1);
 }
 
+/**
+ * 出典CSVの列構成。
+ * - `municipal_standard`: デジタル庁「自治体標準オープンデータセット」準拠
+ *   (ID / ゴミの品目 / 分別区分 / 注意点 / 料金種別 / 備考 …)。既定。
+ * - `nakano_gis`: 中野区(13114)がGIS配信基盤(www2.wagmap.jp)から公開する独自列構成
+ *   (ごみの品目 / インデックス / 種別 / 説明 / GIS搭載用住所 / 経度 / 緯度 / 分類)。
+ */
+export type WasteSortingCsvLayout = 'municipal_standard' | 'nakano_gis';
+
 export interface WasteSortingCsvOptions {
   municipalityCode: string;
   sourceId: string;
+  /**
+   * 出典CSVの列構成(既定 `municipal_standard`)。`nakano_gis` を指定したときだけ
+   * 中野区専用の列マッピングを使う。既定値のときの挙動は従前と完全に同一
+   * (既存区7件の waste-sorting.json は1バイトも変わらない)。
+   */
+  layout?: WasteSortingCsvLayout;
   /**
    * true の場合、CSVの「品目」列と「分別区分」列の値を入れ替えてマッピングする
    * (世田谷のCSVが2列の中身を入れ替えて出力しているため。上部コメント参照)。既定false。
@@ -66,12 +81,93 @@ function findCol(header: string[], matcher: (h: string) => boolean, label: strin
   return idx;
 }
 
+/**
+ * なぜ: 中野区CSVの「ごみの品目」「インデックス」「説明」には、出典側の見た目の折り返しとして
+ * セル内改行が入る(942行中82行)。改行をそのまま name/reading/notes へ持ち込むと、検索結果や
+ * D1の1行フィールドとして扱いづらいため、**文字を足さず**に1行へ畳む。
+ *  - 品目名・よみ: 改行は『アンプ / ※オーディオ機器』のように別名を区切っているため『／』へ置換
+ *    (出典CSVが同種の区切りに使う記号と同じ。前例: 荒川『油（食用）／植物性』)。
+ *  - 説明: 日本語の文中折り返しであり区切り記号ではないため、単純に連結する
+ *    (『一辺が30㎝以下で\nプラスチックのみ…』→『一辺が30㎝以下でプラスチックのみ…』)。
+ * いずれも文言の追加・削除・言い換えは行わない(CLAUDE.md原則3)。
+ */
+function foldLabelNewlines(s: string): string {
+  return s
+    .split(/\r\n|\r|\n/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+    .join('／');
+}
+
+function foldProseNewlines(s: string): string {
+  return s
+    .split(/\r\n|\r|\n/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+    .join('');
+}
+
+/**
+ * 中野区(13114)のGIS配信CSV → WasteSortingItem[]。
+ *
+ * 列マッピング(出典に存在する値のみを採用。存在しない列は作らない=CLAUDE.md原則3):
+ *   ごみの品目 → name / インデックス(よみがな) → reading / 種別 → category / 説明 → notes
+ * 採用しない列と理由:
+ *   - GIS搭載用住所・経度・緯度: 全942行が中野区役所(中野4-11-19)の同一値で、品目ごとの位置
+ *     ではなく地図レイヤの代表点。品目情報として意味を持たないため捨てる。
+ *   - 分類: 全行 "ごみ分別一覧"(データセット名)で、分別区分ではないため捨てる。
+ * 料金に関する列は出典に存在しないため feeNote は設定しない(他区の「無料/有料」を持ち込まない)。
+ *
+ * itemId: 出典CSVにID列が無いため、出典ファイルの行順から機械的に採番する
+ * (`13114R00001` 形式。R=row)。他区の `131181S00001` 等が出典のID列そのままであるのと
+ * 区別できるよう、自治体コード5桁 + `R` を接頭辞にする。値を捏造するのではなく出典の行順を
+ * 写しただけであることをIDの形で明示する意図。(municipalityCode, itemId) の一意性は保たれる。
+ */
+function parseNakanoGisWasteSortingCsv(
+  rows: string[][],
+  opts: WasteSortingCsvOptions,
+): WasteSortingItem[] {
+  const [header, ...dataRows] = rows;
+  if (!header) return [];
+
+  const itemCol = findCol(header, (h) => normalizeHeader(h) === 'ごみの品目', 'ごみの品目');
+  const readingCol = findCol(header, (h) => normalizeHeader(h) === 'インデックス', 'インデックス');
+  const categoryCol = findCol(header, (h) => normalizeHeader(h) === '種別', '種別');
+  const notesCol = findCol(header, (h) => normalizeHeader(h) === '説明', '説明');
+
+  return dataRows.map((row, i) => {
+    if (row.length !== header.length) {
+      throw new Error(
+        `waste-sorting CSV (${opts.sourceId}): row ${i + 2} has ${row.length} columns but ` +
+          `header has ${header.length}. Refusing to normalize a malformed source.`,
+      );
+    }
+    const name = foldLabelNewlines((row[itemCol] ?? '').trim());
+    const reading = foldLabelNewlines((row[readingCol] ?? '').trim());
+    const category = (row[categoryCol] ?? '').trim();
+    const notes = foldProseNewlines((row[notesCol] ?? '').trim());
+
+    return wasteSortingItemSchema.parse({
+      itemId: `${opts.municipalityCode}R${String(i + 1).padStart(5, '0')}`,
+      municipalityCode: opts.municipalityCode,
+      name,
+      ...(reading.length > 0 ? { reading } : {}),
+      category,
+      ...(notes.length > 0 ? { notes } : {}),
+      sourceId: opts.sourceId,
+    });
+  });
+}
+
 /** ごみ分別辞書CSV(世田谷/江東/新宿共通フォーマット)→ WasteSortingItem[]。 */
 export function parseWasteSortingCsv(
   csvText: string,
   opts: WasteSortingCsvOptions,
 ): WasteSortingItem[] {
   const rows = parseCsv(csvText).filter((r) => r.some((c) => c.trim().length > 0));
+  if (opts.layout === 'nakano_gis') {
+    return parseNakanoGisWasteSortingCsv(rows, opts);
+  }
   const [header, ...dataRows] = rows;
   if (!header) return [];
 

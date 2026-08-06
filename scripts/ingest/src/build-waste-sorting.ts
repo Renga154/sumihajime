@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decodeBuffer } from './encoding.js';
-import { parseWasteSortingCsv } from './waste-sorting.js';
+import { parseWasteSortingCsv, type WasteSortingCsvLayout } from './waste-sorting.js';
 
 /**
  * なぜ: Wave1-B。承認済みスナップショット(data/sources/<code>/snapshots/…csv)を
@@ -33,6 +33,8 @@ interface Target {
   mergeCautionIntoNotes?: boolean;
   /** 板橋CSVは「料金種別」を持たず「粗大ごみ回収料金」(円)を持つため feeNote をそこから作る。 */
   bulkyFeeAmountAsFeeNote?: boolean;
+  /** 中野CSVは自治体標準と列構成が異なるGIS配信形式(waste-sorting.ts参照)。 */
+  layout?: WasteSortingCsvLayout;
 }
 
 const TARGETS: Target[] = [
@@ -104,6 +106,20 @@ const TARGETS: Target[] = [
     sourceId: 'src-13118-waste_sorting-001',
     mergeCautionIntoNotes: true,
   },
+  {
+    // なぜ: 中野区(13114)ごみ分別一覧。都オープンデータカタログ登録(CC BY 4.0・作成者=中野区)だが
+    // 実ファイルの配信は区が利用するGIS基盤 www2.wagmap.jp 上にある。2026-08-07のユーザー決裁
+    // 「完全一致で個別許可」により当該ホストのみを取得許可リストへ追加したため取り込めるようになった
+    // (docs/research/opendata-gaps.md §12 の (a)(b) がいずれも解消)。
+    // 列構成は自治体標準オープンデータセットと異なる独自形式のため layout='nakano_gis' を使う
+    // (ごみの品目/インデックス/種別/説明。ID列・料金列は存在しない)。UTF-8 BOM。
+    // HTTP Last-Modified 2026-07-15 で鮮度良好。なお同じ配信基盤にある収集曜日CSVは
+    // 「最終確認日」列が全42行 2021-02-08 のままのため引き続き採用しない(waste.json は作らない)。
+    municipalityCode: '13114',
+    snapshotFile: 'data/sources/13114/snapshots/src-13114-waste_sorting-001.csv',
+    sourceId: 'src-13114-waste_sorting-001',
+    layout: 'nakano_gis',
+  },
 ];
 
 function main(): void {
@@ -121,6 +137,7 @@ function main(): void {
       itemCategorySwapped: target.itemCategorySwapped,
       mergeCautionIntoNotes: target.mergeCautionIntoNotes,
       bulkyFeeAmountAsFeeNote: target.bulkyFeeAmountAsFeeNote,
+      layout: target.layout,
     });
 
     const outDir = resolve(repoRoot, `data/normalized/${target.municipalityCode}`);
