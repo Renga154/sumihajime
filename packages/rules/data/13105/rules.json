@@ -1,0 +1,131 @@
+{
+  "municipalityCode": "13105",
+  "ruleVersion": "2026-08-07.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "引越した日から14日以内です。引越す前(住み始める前)は手続きできません。届出は文京シビックセンター2階の戸籍住民課住民記録係のみで受け付けており、郵送・メールでの受付はしていません(地域活動センター内の区民サービスコーナーでも取り扱っていません)。異動日を1年以上遡って転入する場合は、居住し続けていることが確認できる疎明資料の原本が必要です。",
+      "sourceIds": ["src-13105-resident_registration-001"],
+      "applicabilityReasonTemplate": "他の区市町村または外国から文京区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "引越し日(文京区の新住所に住み始めた日)から14日以内に必ず転入届を行ってください。14日以内に手続きを行わなかった場合、カードは失効します。また転入届を14日以内に出していても、転入届出から90日以内にカードの継続利用手続きを行わない場合はカードが失効します。なおマイナンバーカードの現在の有効期限を超えると上記期間内かどうかを問わず失効し、再発行手数料は有料になります。",
+      "sourceIds": ["src-13105-my_number-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "手続きは異動の事実があった日から原則14日以内にお願いします。加入手続きが遅れると保険料を最長2年間さかのぼって納めることになり、その間の医療費は全額自己負担になります。なお出生や転入などによる国民健康保険への加入はオンラインで行うことはできません(電子申請が使えるのは勤務先の健康保険をやめた場合等に限られます)。",
+      "sourceIds": [
+        "src-13105-national_health_insurance-001",
+        "src-13105-national_health_insurance-002"
+      ],
+      "applicabilityReasonTemplate": "職場の健康保険などに加入していない方は、文京区の国民健康保険への加入の届出が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "文京区の『国民年金の届出・申請方法』ページには電子申請(マイナポータル)・窓口・郵送の各チャネルで扱う手続きが列挙されていますが、国内の区市町村間の転入に伴う住所変更の届出およびその期限の記載がありません。転入に伴う届出の要否は国保年金課国民年金係または文京年金事務所へご確認ください。",
+      "sourceIds": ["src-13105-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金(第1号被保険者)の加入・種別変更等の届出に関する案内です。国内転入に伴う届出の要否は文京区公式ページに記載がないため、窓口または年金事務所へご確認ください。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "手当は申請した翌月分から支給対象となります。出生・転出予定日等の事由発生日の翌日から15日以内に申請すれば、月をまたがっていても出生・転出予定日等の翌月分から支給されます。起算日は前住所地での転出予定日のため、引越し日からは算定できません。添付書類が揃っていなくても受付可能なので早めに手続きしてください。マイナポータルによる児童手当認定請求の電子申請も可能です。",
+      "sourceIds": ["src-13105-child_benefits-002", "src-13105-child_benefits-001"],
+      "applicabilityReasonTemplate": "高校修了前(18歳に到達した日以降最初の3月31日まで)の児童を養育している世帯が対象です。文京区に転入した場合は新たに認定請求が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "受給資格の開始日から3ヶ月を経過した後に交付申請をされた場合は、受け付けた月の1日から助成対象となります(3ヶ月以内の申請であれば資格開始日に遡って助成されます)。",
+      "sourceIds": ["src-13105-child_medical-001"],
+      "applicabilityReasonTemplate": "文京区内に住所があり健康保険に加入している、18歳到達後最初の3月31日までの子どもを養育している方が対象です。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "住所等の詳細が決まったら学務課学事係へ事前相談(任意)をしたうえで、戸籍住民課で転入届を行い、在籍していた学校が交付した『在学証明書』と『教科書給与証明書』を持参して学務課学事係で入学・転学手続きを行います。その後、就学予定校での学校面談を経て初回登校日が決まります。手続きの日から登校開始まで通常数日から1週間程度かかります。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13105-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が文京区へ転入する場合に必要な、区立小・中学校への転入学手続きです。文京区で交付される書類の名称は公式ページに記載がないため設定していません(記載のない名称を推測で補うことはしません)。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "入所月の1日までに文京区に転入できる場合(または海外在住の場合)は文京区へ直接お申し込みください(電子申請が推奨されています)。入所月の1日までに転入できない場合または転入予定がない場合は、現在お住まいの市区町村を通じてお申し込みください(この場合は申込める保育施設が制限され、調整指数『区民』の対象外になります)。『転入に関する確認書』と賃貸借契約書・売買契約書の提出が必要です。締切日は入園希望月・年度により異なるため日数固定の期限は設定していません。",
+      "sourceIds": ["src-13105-childcare-001"],
+      "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、文京区の認可保育所等の利用を希望する方(区外から申し込む方)向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "他自治体から文京区への転居(犬を伴う)の場合は、文京保健所に鑑札を持参のうえ変更の手続きを行ってください。無償で文京区発行の鑑札と交換します。明確な日数の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13105-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していない(または装着しているが環境省の指定登録機関に登録していない)ため、文京保健所での登録事項変更の手続きが必要です。",
+      "needsConfirmationReason": "犬のマイクロチップの装着・環境省の指定登録機関への登録状況が未確認のため、届出先(文京保健所 または 環境省の指定登録機関である公益社団法人日本獣医師会の専用サイト)が確定できません。登録状況をご確認ください(指定登録機関への登録がある場合、変更手続きは保健所の窓口では行えません)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集日を確認してください)。必ず収集日の朝8時までに集積所にお出しください。文京区の収集日は町名・丁目ごとに可燃(週2回)・不燃(月2回)・資源(週1回)・プラスチック(週1回)が決められており、文京区公式『ごみと資源の収集日』ページでご確認ください。本サービスは文京区の収集日データを保持していません。",
+      "sourceIds": ["src-13105-waste_guide-001"],
+      "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたってごみ・資源の分け方と収集日の確認をおすすめします。"
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "municipalityCode": "13103",
+  "ruleVersion": "2026-08-07.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "港区に住み始めた日から14日以内です。住み始める前の届出はできません。届出期間を経過している場合は、賃貸契約書等の住み始めた日が分かる書類が必要になることがあります。マイナンバーカードによる転出届をした方は、転出予定日から30日を越えると手続きできない場合があります。届出先は各総合支所区民課窓口サービス係または台場分室です。",
+      "sourceIds": ["src-13103-resident_registration-001"],
+      "applicabilityReasonTemplate": "他の区市町村または外国から港区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "港区の公式ページで確認できたのは『新しい住所に住み始めた日から14日以内かつ転出予定日から30日以内に転入先区市町村で転入手続きをしてください。手続きが遅れるとマイナンバーカードが失効します』までです。**継続利用の手続きそのものをいつまでに行わなければカードが失効するのか**は、港区の公式ページでは確認できませんでした(未確認)。継続利用の期限は各総合支所区民課窓口サービス係へご確認ください。",
+      "sourceIds": [
+        "src-13103-my_number-001",
+        "src-13103-my_number-002",
+        "src-13103-resident_registration-001"
+      ],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。ただし港区の公式ページでは継続利用の手続きの期限が未確認のため、期限は窓口へご確認ください。",
+      "needsConfirmationReason": "港区の公式ページに継続利用の失効期限の記載が見当たらないため、期限を確定できません。記載のない期限を推測で補うことはしません。各総合支所区民課窓口サービス係へご確認ください。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "予定日付の届け出はできません。必ず事由発生日以降、14日以内にお届けください。届出先は各総合支所区民課窓口サービス係(芝地区総合支所は相談担当)および台場分室です。",
+      "sourceIds": ["src-13103-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険などに加入していない方は、港区の国民健康保険への加入の届出が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "港区の『国民年金の概要』ページで届出が必要とされているのは、退職して厚生年金をやめたとき・配偶者の扶養を外れたとき・外国から転入したときであり、国内の区市町村間の転入に伴う住所変更の届出およびその期限の記載がありません。転入に伴う届出の要否は国保年金課国民年金係または港年金事務所へご確認ください。",
+      "sourceIds": ["src-13103-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金(第1号被保険者)の加入・種別変更等の届出に関する案内です。国内転入に伴う届出の要否は港区公式ページに記載がないため、窓口または年金事務所へご確認ください。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生、転入日(前住地の転出予定日)の翌日から15日以内に申請してください。申請が遅れると遅れた分の手当が受給できません。15日目が閉庁日の場合は翌開庁日までに申請してください。起算日は前住所地での転出予定日のため、引越し日からは算定できません。",
+      "sourceIds": ["src-13103-child_benefits-001"],
+      "applicabilityReasonTemplate": "高校生年代までの児童を養育している世帯が対象です。港区に転入した場合は新たに申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生・転入日から15日以内に申請した場合は、出生・転入日から資格が発生します(15日以内であれば申請が翌月になっても出生・転入日に遡って助成が受けられます)。申請は子ども給付係への郵送、各総合支所区民課保健福祉係への持参、マイナポータルによる電子申請のいずれかです。なおこのページには児童手当のような『転入日=前住地の転出予定日』という定義がないため、引越し日からの期限は算定していません。",
+      "sourceIds": ["src-13103-child_medical-001", "src-13103-child_medical-002"],
+      "applicabilityReasonTemplate": "港区内に住所があり健康保険に加入している、18歳到達後最初の3月31日までの子どもを養育している方が対象です。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "各総合支所区民課・台場分室で転入手続きを行い、以前在籍していた学校から渡された『在学証明書』と『教科用図書給与証明書』を指定した学校に持参してください。港区は学校選択希望制を実施しており、転入学時に学校選択を希望する場合は選択希望できない学校・学年があるため学務課へお問い合わせください。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13103-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が港区へ転入する場合に必要な、区立小・中学校への転入学手続きです。港区で交付される書類の名称は公式ページに記載がないため設定していません(記載のない名称を推測で補うことはしません)。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "港区に転入予定の方は、現在お住まいの自治体を通じて申込手続きを行ってください(申込を受けた自治体が港区と入園に向けた協議を行います)。港区の締切日までに港区へ届くよう、申し込み期限に余裕を持って8開庁日前までにお申し込みください。転入先の住所が確認できる書類(売買契約書・賃貸契約書等)の提出と、入園する月の前月末日までの転入・住民登録が条件です。締切日は入園希望月・年度により異なるため日数固定の期限は設定していません。",
+      "sourceIds": ["src-13103-childcare-001"],
+      "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、港区の保育園等の利用を希望する方(区外から申し込む方)向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "他の区市町村から港区に転入したときは、前住所地の鑑札を持参して区窓口(各総合支所区民課保健福祉係)で転入の手続きをしてください。明確な日数の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13103-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していない(または装着しているが環境省のデータベースに登録していない)ため、港区の窓口での登録の手続きが必要です。",
+      "needsConfirmationReason": "犬のマイクロチップの装着・環境省データベースへの登録状況が未確認のため、届出先(港区の各総合支所区民課保健福祉係 または 環境省の『犬と猫のマイクロチップ情報登録』サイト)が確定できません。登録状況をご確認ください(環境省データベースで変更登録を行えば区窓口での申請は不要です)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集曜日を確認してください)。港区は集積所の所在地ごとに収集曜日カレンダーをPDFで公開しています。指定の曜日の午前8時まで(一部の繁華街地域などは午前7時30分まで)に出してください。年末年始と日曜日を除き、土曜日・祝祭日も収集を行っています。本サービスは港区の収集曜日データを保持していません。",
+      "sourceIds": ["src-13103-waste_guide-001"],
+      "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたってごみ・資源の分け方と収集曜日の確認をおすすめします。"
+    }
+  ]
+}

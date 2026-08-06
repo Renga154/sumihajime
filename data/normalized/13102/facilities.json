@@ -1,0 +1,43 @@
+{
+  "municipalityCode": "13102",
+  "version": "2026-08-07.1",
+  "note": "Batch8 中央区(13102) 窓口施設。東京都オープンデータカタログに登録された中央区『公共施設一覧』CSVはID列が全行『1.31E+11』(科学的記数法での破損)であり施設の一意識別ができないため採用しない。代わりに転入届の公式ページに実値で記載されている住民異動の受付窓口4か所(区役所本庁舎1階の区民生活課住民記録係と日本橋・月島・晴海の各特別出張所区民係)のみを正規化する。出典ページに緯度経度が無いため lat/lng は設定しない(捏造回避)。全件が人手レビュー未了(出典 review_status=pending)。",
+  "facilities": [
+    {
+      "facilityId": "13102-fac-honcho",
+      "municipalityCode": "13102",
+      "name": "中央区役所 区民生活課住民記録係(本庁舎1階)",
+      "category": "区役所",
+      "address": "東京都中央区築地一丁目1番1号",
+      "hours": "月曜日・火曜日・木曜日・金曜日(祝日を除く) 8:30〜17:00／水曜日(祝日を除く) 8:30〜19:00／日曜日(開庁日) 9:00〜17:00",
+      "sourceId": "src-13102-resident_registration-001"
+    },
+    {
+      "facilityId": "13102-fac-nihonbashi",
+      "municipalityCode": "13102",
+      "name": "日本橋特別出張所区民係",
+      "category": "特別出張所",
+      "address": "東京都中央区日本橋蛎殻町一丁目31番1号",
+      "hours": "月曜日・火曜日・木曜日・金曜日(祝日を除く) 8:30〜17:00／水曜日(祝日を除く) 8:30〜19:00",
+      "sourceId": "src-13102-resident_registration-001"
+    },
+    {
+      "facilityId": "13102-fac-tsukishima",
+      "municipalityCode": "13102",
+      "name": "月島特別出張所区民係",
+      "category": "特別出張所",
+      "address": "東京都中央区月島四丁目1番1号",
+      "hours": "月曜日・火曜日・木曜日・金曜日(祝日を除く) 8:30〜17:00／水曜日(祝日を除く) 8:30〜19:00",
+      "sourceId": "src-13102-resident_registration-001"
+    },
+    {
+      "facilityId": "13102-fac-harumi",
+      "municipalityCode": "13102",
+      "name": "晴海特別出張所区民係",
+      "category": "特別出張所",
+      "address": "東京都中央区晴海四丁目8番1号",
+      "hours": "月曜日・火曜日・木曜日・金曜日(祝日を除く) 8:30〜17:00／水曜日(祝日を除く) 8:30〜19:00",
+      "sourceId": "src-13102-resident_registration-001"
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "municipalityCode": "13107",
+  "ruleVersion": "2026-08-07.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "実際に墨田区に住み始めてから14日以内に転入の届出をしてください。引っ越し前の転入手続はできません。墨田区に住み始めてから1年以上経過してからの転入については現住確認書類(賃貸の契約書など)が必要な場合があります。届出先は区役所1階窓口課住民異動係または各出張所です(外国籍の方の国外からの転入手続は本庁のみの受付です)。",
+      "sourceIds": ["src-13107-resident_registration-001"],
+      "applicabilityReasonTemplate": "他の区市町村または外国から墨田区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転入届の特例により手続をされた方は、転入届出日から90日以内にマイナンバーカードまたは住基カードを引っ越し先の役所にお持ちになり、暗証番号を入力することで引っ越し先でも引き続きご利用いただけます。転入届自体は引っ越し後14日以内に行う必要があります。",
+      "sourceIds": ["src-13107-my_number-001", "src-13107-resident_registration-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "14日以内の手続をお願いします。14日を過ぎた後の手続の場合、その間にかかった医療費について給付ができないことがあります。資格の取得日は加入義務が発生した日までさかのぼります。",
+      "sourceIds": ["src-13107-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険などに加入していない方は、墨田区の国民健康保険への加入の届出が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "墨田区の『国民年金 加入・変更等の届け出』ページで届け出が必要とされているのは、20歳になって加入のお知らせが届かないとき・会社等を退職したとき・扶養されなくなったときであり、国内の区市町村間の転入に伴う住所変更の届出およびその期限の記載がありません。転入に伴う届出の要否は国保年金課国民年金係または墨田年金事務所へご確認ください。",
+      "sourceIds": ["src-13107-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金(第1号被保険者)の加入・種別変更等の届出に関する案内です。国内転入に伴う届出の要否は墨田区公式ページに記載がないため、窓口または年金事務所へご確認ください。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "手当は原則として申請の翌月分から受給資格が発生します。例外として、月末に出生・転入された方は出生日や転入日の翌日から数えて15日以内に申請をすれば、当該出生日や転入日の翌月分から受給資格が発生します。墨田区はこの『転入日』を『前住所地で転出手続をした際の転出予定日』と明記しているため、引越し日からは算定できません。申請が遅れた場合、遡っての支給はできません。必要書類が揃っていなくても申請できます。",
+      "sourceIds": ["src-13107-child_benefits-001"],
+      "applicabilityReasonTemplate": "高校生年代までの児童を養育している世帯が対象です。墨田区に転入した場合は新たに申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生または転入の場合は、出生(転入)日の翌日から15日以内に申請すると、出生(転入)日から有効の医療証が交付されます。15日を過ぎると出生(転入)日に資格が遡れない等の不利益を受ける場合があります。なおこのページには児童手当のような『転入日=前住所地の転出予定日』という定義がないため、引越し日からの期限は算定していません。",
+      "sourceIds": ["src-13107-child_medical-001"],
+      "applicabilityReasonTemplate": "墨田区内に住所があり健康保険に加入している子どもを養育している方が対象です。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転入先の住所・転入日等が決まったら、墨田区教育委員会の『転入学児童・生徒情報入力フォーム』からお子さまの情報を入力してください。確認のうえ学務課から転学手続きが案内されます(入力内容は翌日朝までに確認されます)。また最終登校日までに在籍校から『在学証明書』『教科書給与証明書』の発行を受けてください。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13107-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が墨田区へ転入する場合に必要な、区立小・中学校への転入学手続きです。墨田区で交付される書類の名称は公式ページに記載がないため設定していません(記載のない名称を推測で補うことはしません)。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転入予定での申込みは、入所希望月の前月末日までに墨田区へ転入することが条件です。転入することがわかる書類(賃貸借契約書・売買契約書等の写し)と区指定様式の『転入に関する誓約書』等の添付が必要です。転入後は必ず入所希望月の前月末日までに子ども施設課入園係へ申込み手続きを行ってください。締切日は入園希望月・年度により異なるため日数固定の期限は設定していません。",
+      "sourceIds": ["src-13107-childcare-001"],
+      "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、墨田区の認可保育施設の利用を希望する方(区外から申し込む方)向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 30 },
+      "dueDescription": "犬の所在地、飼い主の氏名・住所等に変更があったときは30日以内に届け出てください。墨田区外から区内に転入された場合は生活衛生課に届出をしてください。他区市町村の鑑札をお持ちになると墨田区の新しい鑑札と無料で交換します(鑑札を紛失した場合は再交付手数料1600円がかかります)。",
+      "sourceIds": ["src-13107-dog_registration-001", "src-13107-dog_registration-002"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していない(または装着しているが環境省のデータベースに登録していない)ため、墨田区生活衛生課での登録事項変更の届出が必要です。",
+      "needsConfirmationReason": "犬のマイクロチップの装着・環境省データベースへの登録状況が未確認のため、届出先(墨田区生活衛生課 または 環境省の『犬と猫のマイクロチップ情報登録』サイト)が確定できません。登録状況をご確認ください(環境省サイトで情報の変更登録を行えば墨田区への手続きは原則不要です)。なお墨田区は『変更があったときは30日以内』と期限を明記しているため、届出先が確定していなくても期限は表示しています。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集曜日を確認してください)。墨田区は地域ごとに資源・ごみの収集曜日が決められており、決められた曜日の朝8時までに出してください。令和8年度版『資源とごみの収集カレンダー』は墨田区公式ページでご確認ください。本サービスは墨田区の収集曜日データを保持していません(分別方法の辞書データのみ整備済みです)。",
+      "sourceIds": ["src-13107-waste_guide-001"],
+      "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたってごみ・資源の分け方と収集曜日の確認をおすすめします。"
+    }
+  ]
+}
