@@ -1,0 +1,61 @@
+{
+  "municipalityCode": "13114",
+  "version": "2026-08-07.1",
+  "note": "Batch7 中野区(13114) 窓口施設。中野区は東京都オープンデータカタログにGIF標準の統一『公共施設一覧』CSVを持たず、施設種別ごとに167件のデータセットへ分散している。さらに実ファイルの配信ホストが区公式ドメイン外(www2.wagmap.jp)で本サービスの再取得・差分監視(公式ドメイン限定)の対象外のため、CSVは採用しない。代わりに中野区公式『地域事務所の所在地(区内5か所)』ページ(住所・電話が実値で記載)から住民異動を扱う窓口5件を、区役所本庁舎は国民健康保険の郵送先として公式に記載された所在地から1件を正規化する。出典CSVに緯度経度が無い(=座標は捏造しない)ため lat/lng は設定しない(前例: 品川区13109・新宿区若松町)。全件が人手レビュー未了(出典 review_status=pending)。",
+  "facilities": [
+    {
+      "facilityId": "13114-fac-honcho",
+      "municipalityCode": "13114",
+      "name": "中野区役所(戸籍住民課住民記録係 本庁舎2階4番窓口)",
+      "category": "本庁舎",
+      "address": "〒164-8501 東京都中野区中野四丁目11番19号",
+      "hours": "火曜日を除く平日8時30分〜17時00分／火曜日8時30分〜20時00分／日曜日9時00分〜16時00分(祝休日・年末年始を除く)",
+      "sourceId": "src-13114-national_health_insurance-001"
+    },
+    {
+      "facilityId": "13114-fac-minaminakano",
+      "municipalityCode": "13114",
+      "name": "南中野地域事務所",
+      "category": "地域事務所",
+      "address": "〒164-0013 東京都中野区弥生町五丁目11番26号",
+      "hours": "月曜日から金曜日8時30分〜17時00分(祝休日・年末年始を除く)",
+      "sourceId": "src-13114-facilities-001"
+    },
+    {
+      "facilityId": "13114-fac-toubu",
+      "municipalityCode": "13114",
+      "name": "東部地域事務所",
+      "category": "地域事務所",
+      "address": "〒164-0011 東京都中野区中央二丁目18番21号",
+      "hours": "月曜日から金曜日8時30分〜17時00分(祝休日・年末年始を除く)",
+      "sourceId": "src-13114-facilities-001"
+    },
+    {
+      "facilityId": "13114-fac-egota",
+      "municipalityCode": "13114",
+      "name": "江古田地域事務所",
+      "category": "地域事務所",
+      "address": "〒165-0023 東京都中野区江原町二丁目3番15号",
+      "hours": "月曜日から金曜日8時30分〜17時00分(祝休日・年末年始を除く)",
+      "sourceId": "src-13114-facilities-001"
+    },
+    {
+      "facilityId": "13114-fac-nogata",
+      "municipalityCode": "13114",
+      "name": "野方地域事務所",
+      "category": "地域事務所",
+      "address": "〒165-0027 東京都中野区野方五丁目3番1号",
+      "hours": "月曜日から金曜日8時30分〜17時00分(祝休日・年末年始を除く)",
+      "sourceId": "src-13114-facilities-001"
+    },
+    {
+      "facilityId": "13114-fac-saginomiya",
+      "municipalityCode": "13114",
+      "name": "鷺宮地域事務所",
+      "category": "地域事務所",
+      "address": "〒165-0032 東京都中野区鷺宮三丁目22番5号",
+      "hours": "月曜日から金曜日8時30分〜17時00分(祝休日・年末年始を除く)",
+      "sourceId": "src-13114-facilities-001"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { decodeBuffer } from './encoding.js';
 import { parseWasteSortingCsv } from './waste-sorting.js';
 
 /**
@@ -76,11 +77,30 @@ const TARGETS: Target[] = [
     sourceId: 'src-13109-waste_sorting-001',
     mergeCautionIntoNotes: true,
   },
+  {
+    // なぜ: Batch7 荒川区(13118)ごみの分別方法一覧(東京都オープンデータ・自治体標準準拠、
+    // 区公式ドメイン配信 www.city.arakawa.tokyo.jp、HTTP Last-Modified 2026-03-22 で鮮度良好)。
+    // 品目=「ゴミの品目」/分別区分=「分別区分」で江東・新宿・千代田と同じ並び=itemCategorySwapped不要。
+    // 荒川CSVは「注意点」列に実データを持つ(例:『最大辺が30cmを超えるものは粗大ごみです。』)ため
+    // 杉並・品川と同様に mergeCautionIntoNotes で notes へ統合する。
+    // なお本ファイルは **Shift-JIS**(同じ荒川区でも公共施設一覧CSVはUTF-8 BOM)であり、区単位ではなく
+    // ファイル単位で文字コードを判定する必要がある(下の decodeBuffer による自動判定で対応)。
+    municipalityCode: '13118',
+    snapshotFile: 'data/sources/13118/snapshots/src-13118-waste_sorting-001.csv',
+    sourceId: 'src-13118-waste_sorting-001',
+    mergeCautionIntoNotes: true,
+  },
 ];
 
 function main(): void {
   for (const target of TARGETS) {
-    const csvText = readFileSync(resolve(repoRoot, target.snapshotFile), 'utf-8');
+    // なぜ: 出典CSVの文字コードは自治体ごとではなく **ファイルごと** に異なる(荒川区は
+    // ごみ分別=Shift-JIS / 公共施設=UTF-8 BOM)。utf-8 決め打ちで読むと Shift-JIS が
+    // 文字化けし、品目名・分別区分が壊れたまま正規化されるため、生バイトから自動判定する。
+    // 既存の UTF-8(BOM有無問わず)ソースは decodeBuffer でも同一のテキストになる=出力不変。
+    const csvText = decodeBuffer(
+      new Uint8Array(readFileSync(resolve(repoRoot, target.snapshotFile))),
+    ).text;
     const items = parseWasteSortingCsv(csvText, {
       municipalityCode: target.municipalityCode,
       sourceId: target.sourceId,

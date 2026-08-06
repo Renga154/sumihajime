@@ -1,0 +1,128 @@
+{
+  "municipalityCode": "13116",
+  "ruleVersion": "2026-08-07.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "豊島区の新しい住所に住み始めてから14日以内です。住み始める前の日に受付はできません。区役所の休日(日曜日、祝日、年末年始)が14日目に当たる場合は、その日以後の最初の開庁日が届出期限です。届出先は豊島区役所3階総合窓口課・東部区民事務所・西部区民事務所です。",
+      "sourceIds": ["src-13116-resident_registration-001"],
+      "applicabilityReasonTemplate": "他の区市町村または国外から豊島区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "手続きできる期間は転入手続きをした日から90日以内です。90日以内に継続利用手続きがされない場合、転入日から15日経過した転入届があった場合、転出予定日から30日経過した転入届があった場合は、マイナンバーカードが失効します。",
+      "sourceIds": ["src-13116-my_number-001", "src-13116-resident_registration-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "加入・変更・喪失などの事由が発生したときは、必ず14日以内に届出をしてください。届出先は豊島区役所 国民健康保険課または東部・西部区民事務所です。保険料の納付方法は口座振替のため、加入手続の際に同時に申込が必要です。",
+      "sourceIds": ["src-13116-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "他の健康保険に加入していない方は、豊島区の国民健康保険への加入の届出が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "他自治体から転入した20歳以上60歳未満の方のうち、第1号被保険者(自営業、学生など)の方は、住民票の住所変更の届け出をしていただければ国民年金の届け出は必要ありません。第2号・第3号被保険者の方は勤務先を通して届け出をしてください。海外からの転入等で公的年金制度に未加入の方は、高齢者医療年金課(区役所3階10番窓口・平日のみ)での手続きが必要です。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13116-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金の被保険者の方に、転入に伴う手続きの要否をお知らせします。豊島区は『第1号被保険者は住民票の住所変更の届け出をすれば国民年金の届け出は不要』と案内しています。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "原則として申請した月の翌月分から支給されます。月末などに転入した場合は、前住所の転出予定日の翌日から起算して15日以内(閉庁日を含めて数えます)に申請すれば、転出予定日の翌月分から支給されます。15日目が土曜日・日曜日・祝日にあたる場合は直後の開庁日を15日目とします。起算日は前住所地での転出予定日のため、引越し日からは算定できません。",
+      "sourceIds": ["src-13116-child_benefits-001"],
+      "applicabilityReasonTemplate": "高校生年代までのお子様を養育している方が対象です。豊島区に転入した場合は申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "医療費の助成は原則として医療証交付の申請日(郵送の場合は到着日)から開始です。ただし、転入日の翌日から2か月以内に申請した場合は、転入日までさかのぼって助成されます。",
+      "sourceIds": ["src-13116-child_medical-001"],
+      "applicabilityReasonTemplate": "高校生相当年齢まで(18歳に達した日以降の最初の3月31日まで)の児童を養育している方が対象です(保護者の所得制限はありません)。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "住民票の転入後、学務課学事グループで転入学・編入学の手続きをしてください。その後、指定された学校で面談を実施します。その際、転入前の学校より発行される在学証明書・教科書給与証明書を持参してください(海外からの転入の場合は不要)。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13116-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が豊島区へ転入する場合に必要な、区立学校への転入学手続きです。豊島区で交付される書類の名称は公式ページに記載がないため設定していません(他区の名称を持ち込みません)。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "豊島区への転入予定がある方の受付窓口は豊島区保育課入園グループです。入園月の前月末までに、保護者とお子さんの住民登録の異動・引っ越しと、保育課入園グループでの手続きを終える必要があります。入園月の前月末までに転入手続き・保育課での手続き・面接・健康診断が終了しない場合は内定取消となります。締切日は入園希望月・年度により異なるため日数固定の期限は設定していません。",
+      "sourceIds": ["src-13116-childcare-001"],
+      "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、豊島区の認可保育施設の利用を希望する方(区外から申し込む方)向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "マイクロチップ未装着の場合は、前住所地で発行された『鑑札』を持参して豊島区保健所窓口(生活衛生課管理・事業グループ4番窓口)へお越しください。マイクロチップが装着され環境省の登録サイトに登録されている場合はマイクロチップ登録サイトで手続きし、保健所への来所は不要です。明確な日数の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13116-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していない(環境省の登録サイトに登録していない)ため、豊島区保健所窓口での手続きが必要です。",
+      "needsConfirmationReason": "犬のマイクロチップの装着・環境省登録サイトへの登録状況が未確認のため、届出先(豊島区保健所窓口 または 環境省のマイクロチップ登録サイト)が確定できません。登録状況をご確認ください(登録済みならマイクロチップが鑑札とみなされ、保健所への来所は不要です)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集日と利用できる集積所を確認してください)。ごみや資源は決められた曜日の朝8時までに決められた集積所に出してください(池袋駅周辺の繁華街地域は朝7時30分まで)。ごみ・資源を出せる集積所は各世帯1か所だけのため、大家さんや不動産屋さんに必ず確認してください。本サービスは収集曜日データを保持していません。",
+      "sourceIds": ["src-13116-waste_guide-001"],
+      "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたってごみ・資源の分け方と収集日の確認をおすすめします。"
+    }
+  ]
+}
