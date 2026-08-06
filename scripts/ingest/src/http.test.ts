@@ -42,6 +42,9 @@ describe('許可ホストの拡張(2026-08-07)', () => {
       'www.city.ota.tokyo.jp',
       'www.city.nerima.tokyo.jp',
       'www.city.itabashi.tokyo.jp',
+      // Batch10(足立区13121 / 江戸川区13123)。いずれも当該区の公式サイトであることを監査で確認済み。
+      'www.city.adachi.tokyo.jp',
+      'www.city.edogawa.tokyo.jp',
     ]) {
       expect(isOfficialHost(h)).toBe(true);
     }

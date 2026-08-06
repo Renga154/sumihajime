@@ -28,6 +28,8 @@ const ALLOWED_HOST_EXACT = [
   'www.city.ota.tokyo.jp',
   'www.city.nerima.tokyo.jp',
   'www.city.itabashi.tokyo.jp',
+  'www.city.adachi.tokyo.jp',
+  'www.city.edogawa.tokyo.jp',
   // 日本郵便(郵便法上の郵便事業提供者。転居届の一次情報源。ADR-009)
   'www.post.japanpost.jp',
   // 中野区のオープンデータ配信先。区公式ページからリンクされた公式データだが配信は

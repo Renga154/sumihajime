@@ -1,0 +1,128 @@
+{
+  "municipalityCode": "13123",
+  "ruleVersion": "2026-08-07.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "住みはじめた日から14日以内です。住みはじめる前に転入の届出をすることはできません。届出場所は区役所区民課または各事務所(小松川・葛西・小岩・東部・鹿骨)の戸籍住民係で、必ず窓口に来て届出をする必要があります。この届出を怠ると50000円以下の過料に処せられることがあります。",
+      "sourceIds": ["src-13123-resident_registration-001"],
+      "applicabilityReasonTemplate": "他の市区町村または国外から江戸川区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "継続利用の手続きには次の2点を満たしていることが必要です。(1)江戸川区に住み始めた日から14日以内に転入届を提出していること。(2)転入届の届出日から90日以内であること。これらの条件を満たしていない場合はカードが廃止となり使用できなくなります(再発行には手数料がかかります)。起算日が転入届の届出日のため引越し日からは算定できません。",
+      "sourceIds": ["src-13123-my_number-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "江戸川区に転入したときは14日以内に加入の届出が必要です。転入による加入は窓口での手続きが必要で、電子申請(ぴったりサービス)は職場の健康保険をやめたとき等に限られます。届出窓口は区役所区民課・各事務所の保険年金係です。",
+      "sourceIds": ["src-13123-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険などに加入していない方は、江戸川区の国民健康保険への加入の届出が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "江戸川区の国民年金の届け出のページには、国内の他区市町村から転入したときの国民年金の届出についての記載がありません。外国から転入されたとき(第1号被保険者)は届出が必要と明記されています。厚生年金(第2号被保険者)およびその配偶者(第3号被保険者)の手続きは勤務先にお問い合わせください。窓口は区役所区民課・各事務所の保険年金係で郵送やマイナポータルからの電子申請にも対応しています。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13123-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金の被保険者の方に、転入に伴う手続きの要否をお知らせします。江戸川区の公式ページは国内の他区市町村からの転入に伴う届出を届出一覧に挙げていません。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "申請日の翌月が手当の支給開始月となります。月の後半に転入した場合は、前住所地の転出予定日の翌日から数えて15日以内に申請すると転入した月に申請があったものとみなされます(15日特例)。起算日は前住所地での転出予定日のため引越し日からは算定できません。申請が遅れた場合にさかのぼって支給することはできません。窓口は本庁舎東棟2階4番の児童家庭課でのみ受付し各事務所では受付していません。",
+      "sourceIds": ["src-13123-child_benefits-001"],
+      "applicabilityReasonTemplate": "18歳到達後の最初の年度末まで(高校生年代まで)の日本国内に住んでいる児童を養育している、江戸川区内に住民票のある生計中心者の方が対象です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "事由発生日(お子さんが生まれた日・江戸川区に転入をした日・生活保護が廃止になった日・施設を退所した日)から3か月以内に申請をすることで、事由発生日から助成対象になります。3か月を過ぎると申請日から助成対象となります。これは児童手当の15日特例とは別の期限体系です。",
+      "sourceIds": ["src-13123-child_medical-001"],
+      "applicabilityReasonTemplate": "江戸川区内に住んでいる高校3年生相当の年齢まで(18歳到達後の最初の3月31日まで)のお子さんで、各種医療保険から給付が行われる方が対象です(保護者の所得制限はありません)。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "区役所区民課・各事務所の戸籍住民係にて転入手続きをする際、学齢期のお子様がいる方には通学区域の学校が指定された『転入学通知書』が発行されます。転入学通知書と在籍校が発行した転学関係書類(在学証明書・教科用図書給与証明書)を指定校に提出してください。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13123-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子様がいる世帯が江戸川区へ転入する場合に必要な、区立学校への転校手続きです。江戸川区で交付される書類の名称は『転入学通知書』です。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "認可保育施設の利用申し込みは、申込日時点で対象児童の住民票が江戸川区にない場合『転入予定の方を除いて』オンライン申請の受付ができないと明記されています(転入予定の方はオンライン申請が可能です)。入園希望月の締切日を過ぎた申請は入園希望月の翌月からの利用調整になります。締切日は入園希望月・年度により異なるため日数固定の期限は設定していません。",
+      "sourceIds": ["src-13123-childcare-001"],
+      "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、江戸川区の認可保育施設の利用を希望する方(区外から申し込む方)向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 30 },
+      "dueDescription": "引っ越しなどにより犬の所在地・飼い主の氏名や住所などに変更があった場合は、30日以内に届出をしなければなりません。マイクロチップが装着されていない犬は、前住所地の自治体の鑑札を持参して受付窓口(江戸川保健所・各健康サポートセンター・区役所区民課庶務係・各事務所庶務係)で登録事項の変更届を提出してください(江戸川区の鑑札と交換します)。他自治体から江戸川区への所在地変更専用のオンライン申請フォームも利用できます。",
+      "sourceIds": ["src-13123-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していない(環境省の登録サイトに登録していない)ため、江戸川区の窓口での登録事項の変更届が必要です。",
+      "needsConfirmationReason": "犬のマイクロチップの装着・環境省登録サイトへの登録状況が未確認のため、届出先(江戸川保健所・各健康サポートセンター・区役所区民課庶務係・各事務所庶務係 または 環境省のマイクロチップ登録サイト)が確定できません。登録状況をご確認ください(装着済みなら区の窓口での申請は不要です)。なお30日以内という期限はマイクロチップの装着の有無にかかわらず共通で定められています。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集曜日を確認してください)。江戸川区は資源が週1回・燃やすごみが週2回・燃やさないごみが月2回で、地域(町名・丁目)ごとに曜日が決まっています。ごみや資源は決められた曜日の朝8時までに集積所に出してください。本サービスは収集曜日データを保持していません。",
+      "sourceIds": ["src-13123-waste_guide-001"],
+      "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたってごみ・資源の収集曜日と出し方の確認をおすすめします。"
+    }
+  ]
+}
