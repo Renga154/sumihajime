@@ -9,18 +9,21 @@ import { MunicipalityScopeMismatchError } from './errors.js';
 
 /**
  * なぜ: Batch6-A 練馬区(13120)縦切りデータの来歴・型・決定論・自治体差分をCIで機械検証する。
- * 練馬は人手レビュー未了(pending)で、ごみ関連データを一切持たない誠実縮退を含むため、
- * 既存区と異なる次の点を固定する:
- * (a) 全手続きが dataStatus=partial + 「人手レビュー未了」caution(ADR-007で公開ゲートから除外=staging)
+ * 練馬は2026-08-07に人手レビュー承認(ユーザー決裁「2区とも承認」)済みで、ごみ関連データを
+ * 一切持たない誠実縮退を含むため、既存区と異なる次の点を固定する:
+ * (a) 全手続きが dataStatus=verified(2026-08-07承認)で、公開ゲート(ADR-007)の対象。
+ *     自治体以外(ライフライン等)の手続き4件(ADR-009)を含め14件
  * (b) waste.json(収集曜日)と waste-sorting.json(品目別分別辞書)の**両方**を作らない回帰ガード。
  *     都カタログ(organization:t131202)に収集・分別のCSVが1件も存在せず、公式サイトも
- *     町丁目別HTML表+PDFカレンダー+50音順HTMLのみのため、推測でデータを作らない
+ *     町丁目別HTML表+PDFカレンダー+50音順HTMLのみのため、推測でデータを作らない(承認後も恒久的な誠実縮退)
  * (c) 施設は転入届窓口の区民事務所6件。GIF準拠CSV由来のため緯度経度あり(既存区で座標を持つのは江東・新宿等)
  * (d) 自治体差分: マイナンバー継続利用=90日(世田谷/新宿の14日と相違)/児童手当=15日特例/
  *     **子ども医療費助成は公式ページに期限の記載が一切ないため日数を出さない**
  *     (千代田/世田谷/新宿の3か月・杉並の15日・品川/大田の6か月・板橋の14日をいずれも混入させない)/
  *     学校の交付書類名は『入学通知書』(杉並/板橋の『転入学通知書』・世田谷の『学校指定通知書』を持ち込まない)
- * (e) ペルソナ別評価・越境・sourceIds実在・決定論(既存区テストと同型)
+ * (e) ペルソナ別評価・越境・sourceIds実在・決定論(既存区テストと同型)。ライフライン4件そのものの
+ *     検証は non-municipal.test.ts が全区横断で行うため、本ファイルの区固有アサーションは
+ *     区の手続き10件を対象にする(NON_MUNICIPAL_IDS で除外)。
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -48,6 +51,28 @@ const itabashiRuleSet: RuleSet = ruleSetSchema.parse(itabashiRulesRaw);
 
 const parseProcedures = () => proceduresRaw.procedures.map((x) => procedureVersionSchema.parse(x));
 const parseFacilities = () => facilitiesRaw.facilities.map((x) => facilitySchema.parse(x));
+
+/**
+ * なぜ: 2026-08-06 追加の「自治体以外(ライフライン等)の手続き」4件(ADR-009)。全対応区で
+ * municipalityCode 以外まったく同一の内容であり、区固有データの回帰ガードである本ファイルの
+ * 対象外とする(4件そのものの検証は non-municipal.test.ts が全区横断で行う)。
+ * ペルソナ評価には影響するため、常に該当する3件(水道・郵便・電気ガス)は期待値へ加える。
+ * 運転免許は needsVehicleGuidance フラグ依存のため既定プロフィールでは非該当。
+ */
+const NON_MUNICIPAL_IDS = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+  'procedure_driver_license_change',
+];
+const NON_MUNICIPAL_ALWAYS_APPLICABLE = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+];
+
+const parseMunicipalProcedures = () =>
+  parseProcedures().filter((p) => !NON_MUNICIPAL_IDS.includes(p.id));
 
 const NERIMA = '13120';
 
@@ -99,31 +124,39 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
   return o;
 }
 
-describe('Nerima (13120) — schema validation & pending status (CI gate)', () => {
-  it('rules.json parses as a RuleSet, scoped to 13120, 10 rules, ruleVersion 2026-08-07.1', () => {
+describe('Nerima (13120) — schema validation & approved status (CI gate)', () => {
+  it('rules.json parses as a RuleSet, scoped to 13120, 14 rules, ruleVersion 2026-08-07.1', () => {
     expect(nerimaRuleSet.municipalityCode).toBe(NERIMA);
     expect(nerimaRuleSet.ruleVersion).toBe('2026-08-07.1');
-    expect(nerimaRuleSet.rules.length).toBe(10);
+    // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
+    expect(nerimaRuleSet.publishedRuleVersion).toBeUndefined();
+    expect(nerimaRuleSet.rules.length).toBe(14);
+    // 内訳: 区の手続き10件 + 自治体以外(ライフライン等)4件(ADR-009)。
+    expect(
+      nerimaRuleSet.rules.filter((r) => !NON_MUNICIPAL_IDS.includes(r.procedureId)),
+    ).toHaveLength(10);
   });
 
-  it('procedures.json — 10 ProcedureVersions parse; 全件 partial(人手レビュー未了)+ pending caution', () => {
-    const procedures = parseProcedures();
+  it('procedures.json — 10 ProcedureVersions parse; 全件 verified(2026-08-07人手レビュー承認)', () => {
+    // 区の手続き10件のみを対象にする(ライフライン4件は non-municipal.test.ts が検証)。
+    const procedures = parseMunicipalProcedures();
     expect(procedures.length).toBe(10);
+    expect(parseProcedures()).toHaveLength(14);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(NERIMA);
-      // Batch6-A時点では未承認のため partial(ADR-007で公開ゲートから除外=staging)。
-      expect(pv.dataStatus).toBe('partial');
+      // 2026-08-07 人手レビュー承認(ユーザー決裁「2区とも承認」)によりverified(ADR-007の公開単位)。
+      expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
       expect(pv.lastVerifiedAt).toBe('2026-08-07T00:00:00Z');
       // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持。
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();
-      // 未承認であることを利用者へ誠実に開示する caution を全手続きに含む。
-      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(true);
+      // 承認によりpending系のcaution文言は除去されている。
+      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(false);
     }
   });
 
-  it('procedures と rules は同一の10 procedureId を過不足なく覆う', () => {
+  it('procedures と rules は同一の14 procedureId を過不足なく覆う', () => {
     const procIds = parseProcedures()
       .map((p) => p.id)
       .sort();
@@ -174,6 +207,7 @@ describe('Nerima (13120) — persona evaluations', () => {
         'procedure_national_pension_address',
         'procedure_resident_registration',
         'procedure_waste_check',
+        ...NON_MUNICIPAL_ALWAYS_APPLICABLE,
       ].sort(),
     );
     const jusho = outcomeFor(single, nerimaRuleSet, 'procedure_resident_registration');
@@ -341,13 +375,20 @@ describe('Nerima (13120) — provenance integrity & scope safety', () => {
     for (const f of parseFacilities()) expect(registeredIds.has(f.sourceId)).toBe(true);
   });
 
-  it('全 sourceId が 13120 名前空間(他区のソースを参照しない)', () => {
+  it('区の手続きの sourceId は 13120 名前空間(他区のソースを参照しない)。ライフライン4件は共通ソース(src-13000-/src-00000-)を参照する', () => {
     const ids = [
-      ...nerimaRuleSet.rules.flatMap((r) => r.sourceIds),
-      ...parseProcedures().flatMap((p) => p.sourceIds),
+      ...nerimaRuleSet.rules
+        .filter((r) => !NON_MUNICIPAL_IDS.includes(r.procedureId))
+        .flatMap((r) => r.sourceIds),
+      ...parseMunicipalProcedures().flatMap((p) => p.sourceIds),
       ...parseFacilities().map((f) => f.sourceId),
     ];
     for (const sid of ids) expect(sid.startsWith('src-13120-')).toBe(true);
+    // ライフライン4件は区固有ソースを増やさず、既存7区と共通の承認済みソースのみを参照する。
+    const nonMunicipalIds = parseProcedures()
+      .filter((p) => NON_MUNICIPAL_IDS.includes(p.id))
+      .flatMap((p) => p.sourceIds);
+    for (const sid of nonMunicipalIds) expect(sid.startsWith('src-131')).toBe(false);
   });
 
   it('越境: 13120プロフィール × 13112/13104/13119ルールセット は必ず例外(誤適用防止)', () => {

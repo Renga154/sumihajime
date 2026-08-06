@@ -14,18 +14,26 @@ import { MunicipalityScopeMismatchError } from './errors.js';
 
 /**
  * なぜ: Batch6-A 板橋区(13119)縦切りデータの来歴・型・決定論・自治体差分をCIで機械検証する。
- * 板橋は人手レビュー未了(pending)で、既存7区に無い期限値を2つ持つため、次の点を固定する:
- * (a) 全手続きが dataStatus=partial + 「人手レビュー未了」caution(ADR-007で公開ゲートから除外=staging)
+ * 板橋は2026-08-07に人手レビュー承認(ユーザー決裁「2区とも承認」)済みで、既存7区に無い期限値を
+ * 2つ持つため、次の点を固定する:
+ * (a) 全手続きが dataStatus=verified(2026-08-07承認)で、公開ゲート(ADR-007)の対象。
+ *     自治体以外(ライフライン等)の手続き4件(ADR-009)を含め14件
  * (b) waste.json(収集曜日)は作らない(誠実縮退)。都カタログに町名別収集曜日CSVが無く、
- *     ゴミ集積所一覧CSVも実データ1行のみのため、推測で曜日を作らない
+ *     ゴミ集積所一覧CSVも実データ1行のみのため、推測で曜日を作らない(承認後も恒久的な誠実縮退)
  * (c) waste-sorting.json(分別辞書)は1,125品目を整備。他区と列構成が異なり「料金種別」を持たず
  *     「粗大ごみ回収料金」から feeNote を生成している(bulkyFeeAmountAsFeeNote)
  * (d) 施設は本庁舎1階+区民事務所6件の計7件。公共施設一覧CSVがExcel由来の破損(ID列全行同一値・
  *     番地列の42.7%が日付誤変換)を抱えるため不採用とし、公式ページの住所を採用=座標なし
  * (e) **既存7区に無い板橋固有の期限**: 子ども医療費助成の遡及=原則14日以内
  *     (千代田/世田谷/新宿=3か月・杉並=15日・品川/大田=6か月・練馬=記載なし)/
- *     犬の登録事項変更=30日以内(既存7区はいずれも転入時の日数期限の記載が無く unknown だった)
- * (f) ペルソナ別評価・越境・sourceIds実在・決定論(既存区テストと同型)
+ *     犬の登録事項変更=30日以内(既存7区はいずれも転入時の日数期限の記載が無く unknown だった)。
+ *     起算日の法的根拠として狂犬病予防法第4条第4項を procedures.json の caution に明記した
+ *     (ユーザー決裁により他区へは展開しない=板橋固有のまま)
+ * (f) 学校転入ソース(src-13119-school_transfer-001)はページ更新日2020-03-06と他P0出典より
+ *     古いことを caution に明記のうえ公開する
+ * (g) ペルソナ別評価・越境・sourceIds実在・決定論(既存区テストと同型)。ライフライン4件そのものの
+ *     検証は non-municipal.test.ts が全区横断で行うため、本ファイルの区固有アサーションは
+ *     区の手続き10件を対象にする(NON_MUNICIPAL_IDS で除外)。
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -57,6 +65,28 @@ const nerimaRuleSet: RuleSet = ruleSetSchema.parse(nerimaRulesRaw);
 const parseProcedures = () => proceduresRaw.procedures.map((x) => procedureVersionSchema.parse(x));
 const parseFacilities = () => facilitiesRaw.facilities.map((x) => facilitySchema.parse(x));
 const parseSorting = () => wasteSortingRaw.items.map((x) => wasteSortingItemSchema.parse(x));
+
+/**
+ * なぜ: 2026-08-06 追加の「自治体以外(ライフライン等)の手続き」4件(ADR-009)。全対応区で
+ * municipalityCode 以外まったく同一の内容であり、区固有データの回帰ガードである本ファイルの
+ * 対象外とする(4件そのものの検証は non-municipal.test.ts が全区横断で行う)。
+ * ペルソナ評価には影響するため、常に該当する3件(水道・郵便・電気ガス)は期待値へ加える。
+ * 運転免許は needsVehicleGuidance フラグ依存のため既定プロフィールでは非該当。
+ */
+const NON_MUNICIPAL_IDS = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+  'procedure_driver_license_change',
+];
+const NON_MUNICIPAL_ALWAYS_APPLICABLE = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+];
+
+const parseMunicipalProcedures = () =>
+  parseProcedures().filter((p) => !NON_MUNICIPAL_IDS.includes(p.id));
 
 const ITABASHI = '13119';
 
@@ -108,28 +138,49 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
   return o;
 }
 
-describe('Itabashi (13119) — schema validation & pending status (CI gate)', () => {
-  it('rules.json parses as a RuleSet, scoped to 13119, 10 rules, ruleVersion 2026-08-07.1', () => {
+describe('Itabashi (13119) — schema validation & approved status (CI gate)', () => {
+  it('rules.json parses as a RuleSet, scoped to 13119, 14 rules, ruleVersion 2026-08-07.1', () => {
     expect(itabashiRuleSet.municipalityCode).toBe(ITABASHI);
     expect(itabashiRuleSet.ruleVersion).toBe('2026-08-07.1');
-    expect(itabashiRuleSet.rules.length).toBe(10);
+    // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
+    expect(itabashiRuleSet.publishedRuleVersion).toBeUndefined();
+    expect(itabashiRuleSet.rules.length).toBe(14);
+    // 内訳: 区の手続き10件 + 自治体以外(ライフライン等)4件(ADR-009)。
+    expect(
+      itabashiRuleSet.rules.filter((r) => !NON_MUNICIPAL_IDS.includes(r.procedureId)),
+    ).toHaveLength(10);
   });
 
-  it('procedures.json — 10 ProcedureVersions parse; 全件 partial(人手レビュー未了)+ pending caution', () => {
-    const procedures = parseProcedures();
+  it('procedures.json — 10 ProcedureVersions parse; 全件 verified(2026-08-07人手レビュー承認)', () => {
+    // 区の手続き10件のみを対象にする(ライフライン4件は non-municipal.test.ts が検証)。
+    const procedures = parseMunicipalProcedures();
     expect(procedures.length).toBe(10);
+    expect(parseProcedures()).toHaveLength(14);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(ITABASHI);
-      expect(pv.dataStatus).toBe('partial');
+      expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
       expect(pv.lastVerifiedAt).toBe('2026-08-07T00:00:00Z');
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();
-      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(true);
+      // 承認によりpending系のcaution文言は除去されている。
+      expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(false);
     }
   });
 
-  it('procedures と rules は同一の10 procedureId を過不足なく覆う', () => {
+  it('犬の登録事項変更: 起算日の法的根拠(狂犬病予防法第4条第4項)を caution に明記している(板橋固有)', () => {
+    const dog = parseMunicipalProcedures().find(
+      (p) => p.id === 'procedure_dog_registration_transfer',
+    )!;
+    expect(dog.cautions?.some((c) => c.includes('狂犬病予防法第4条第4項'))).toBe(true);
+  });
+
+  it('学校転入ソースの現行性の古さ(2020-03-06)を caution に明記している(板橋固有)', () => {
+    const school = parseMunicipalProcedures().find((p) => p.id === 'procedure_school_transfer')!;
+    expect(school.cautions?.some((c) => c.includes('2020-03-06'))).toBe(true);
+  });
+
+  it('procedures と rules は同一の14 procedureId を過不足なく覆う', () => {
     const procIds = parseProcedures()
       .map((p) => p.id)
       .sort();
@@ -193,6 +244,7 @@ describe('Itabashi (13119) — persona evaluations', () => {
         'procedure_national_pension_address',
         'procedure_resident_registration',
         'procedure_waste_check',
+        ...NON_MUNICIPAL_ALWAYS_APPLICABLE,
       ].sort(),
     );
     const jusho = outcomeFor(single, itabashiRuleSet, 'procedure_resident_registration');
@@ -381,14 +433,21 @@ describe('Itabashi (13119) — provenance integrity & scope safety', () => {
     for (const i of parseSorting()) expect(registeredIds.has(i.sourceId)).toBe(true);
   });
 
-  it('全 sourceId が 13119 名前空間(他区のソースを参照しない)', () => {
+  it('区の手続きの sourceId は 13119 名前空間(他区のソースを参照しない)。ライフライン4件は共通ソース(src-13000-/src-00000-)を参照する', () => {
     const ids = [
-      ...itabashiRuleSet.rules.flatMap((r) => r.sourceIds),
-      ...parseProcedures().flatMap((p) => p.sourceIds),
+      ...itabashiRuleSet.rules
+        .filter((r) => !NON_MUNICIPAL_IDS.includes(r.procedureId))
+        .flatMap((r) => r.sourceIds),
+      ...parseMunicipalProcedures().flatMap((p) => p.sourceIds),
       ...parseFacilities().map((f) => f.sourceId),
       ...parseSorting().map((i) => i.sourceId),
     ];
     for (const sid of ids) expect(sid.startsWith('src-13119-')).toBe(true);
+    // ライフライン4件は区固有ソースを増やさず、既存7区と共通の承認済みソースのみを参照する。
+    const nonMunicipalIds = parseProcedures()
+      .filter((p) => NON_MUNICIPAL_IDS.includes(p.id))
+      .flatMap((p) => p.sourceIds);
+    for (const sid of nonMunicipalIds) expect(sid.startsWith('src-131')).toBe(false);
   });
 
   it('404の旧児童手当URLを台帳へ登録していない(現行URL 1063955 配下のみを使う)', () => {

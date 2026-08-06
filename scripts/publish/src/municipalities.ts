@@ -2,7 +2,7 @@ import type { Municipality } from '@tmn/schemas';
 
 /**
  * なぜ: 東京都62市区町村(23区+26市+5町+8村)を municipalities テーブルへ投入する静的マスタ。
- * supported=true は縦切り整備済みの7区(千代田/新宿/江東/品川/大田/世田谷/杉並)のみ。残る55はチェックリスト未対応だが、
+ * supported=true は縦切り整備済みの9区(千代田/新宿/江東/品川/大田/世田谷/杉並/板橋/練馬)のみ。残る53はチェックリスト未対応だが、
  * FR-021「未対応でも公式サイトへ誘導」のため officialUrl を全件に持たせ、CLAUDE.md原則9
  * 「未対応を対応済みに見せない」を LandingPage 側の折りたたみグループ表示で担保する。
  *
@@ -143,15 +143,32 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.arakawa.tokyo.jp/',
   },
   {
+    // なぜ: Batch6-Aで板橋区データ(手続き10件/窓口施設7件=本庁舎1+区民事務所6/
+    // ごみ分別辞書1,125品目)を整備。収集曜日は都カタログに町名別CSVが無く恒久的に誠実縮退
+    // (waste.jsonなし)。2026-08-07の人手レビュー承認(ユーザー決裁「2区とも承認」)により
+    // 全ソースがapproved化・全手続き(自治体以外のライフライン等4件を含む)がverified化された
+    // ため、公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved
+    // 判定で担保)。犬の登録事項変更の30日期限(狂犬病予防法第4条第4項)は板橋固有で他区へ
+    // 展開しない(同決裁)。
     code: '13119',
     name: '板橋区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.itabashi.tokyo.jp/',
   },
   {
+    // なぜ: Batch6-Aで練馬区データ(手続き10件/窓口施設6件=転入届窓口の区民事務所6か所。
+    // GIF準拠CSV由来で緯度経度あり)を整備。収集曜日・分別辞書はいずれも都カタログに
+    // 機械判読可能なデータが存在せず恒久的に誠実縮退(waste.json・waste-sorting.jsonなし)。
+    // 2026-08-07の人手レビュー承認(ユーザー決裁「2区とも承認」)により全ソースがapproved化・
+    // 全手続き(自治体以外のライフライン等4件を含む)がverified化されたため、公開ビュー
+    // (seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13120',
     name: '練馬区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.nerima.tokyo.jp/',
   },
   {

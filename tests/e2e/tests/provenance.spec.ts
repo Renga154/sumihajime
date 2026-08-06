@@ -17,8 +17,9 @@ test('透明性ページ: 鮮度サマリー・台帳テーブル・CC BYバッ�
   // 1. 鮮度サマリー: ソース総数タイルと、年度データの残日数カウントダウン。
   await expect(page.getByText('公式ソース総数')).toBeVisible();
   // Step5統合後、承認済み公式ソースは98件(Step4時点の72 + 品川12 + 大田14)。
-  // 2026-08-07 人手レビュー承認(ADR-009)でライフライン等4手続きの出典5件が追加approved化(98→103)。
-  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('103');
+  // 2026-08-07 人手レビュー承認(ADR-009)でライフライン等4手続きの出典5件が追加approved化(98→103)、
+  // 同日さらに練馬(13120)の11ソース+板橋(13119)の12ソースが人手レビュー承認(103→126)。
+  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('126');
   await expect(page.getByRole('heading', { name: 'データの新しさ' })).toBeVisible();
   await expect(page.getByText(/残り\s*\d+日/).first()).toBeVisible();
 

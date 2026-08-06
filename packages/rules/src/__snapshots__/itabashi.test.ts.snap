@@ -114,6 +114,51 @@ exports[`Itabashi (13119) — provenance integrity & scope safety > 決定論: �
       ],
       "warnings": [],
     },
+    {
+      "applicabilityReason": "水道は住まいを移るすべての方に必要なライフラインの手続きです(区の手続きではなく東京都水道局への手続きです)。",
+      "applicable": "applicable",
+      "dueDescription": "東京都水道局は「次のお手続きについては、3〜4日前までに必ずお手続きください」と案内しています(使用開始申込み・使用中止届のいずれも)。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。",
+      "priority": "normal",
+      "procedureId": "procedure_water_supply",
+      "sourceIds": [
+        "src-13000-water_supply-001",
+        "src-13000-sewerage-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "旧住所あての郵便物等を新住所へ転送してもらうための、住所が変わるすべての方向けの手続きです(区の手続きではなく日本郵便への手続きです)。",
+      "applicable": "applicable",
+      "dueDescription": "日本郵便は「転居届を提出されてから登録までに3〜7営業日を要しますので、転居される際には、お早めに転居届を提出してください」と案内しています。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。転送期間は届出日から1年間です(転送開始希望日からではありません)。",
+      "priority": "normal",
+      "procedureId": "procedure_postal_forwarding",
+      "sourceIds": [
+        "src-00000-postal_forwarding-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "電気・ガスは引越しに伴い契約先の民間事業者への手続きが必要になるライフラインです(区の手続きではありません)。",
+      "applicable": "applicable",
+      "dueDescription": "出典である国(デジタル庁)の公式ページには、電気・ガスの手続きの期限に関する記載がありません。受付の締切や必要な連絡時期は契約先の事業者ごとに異なるため、契約先へご確認ください(要確認)。",
+      "priority": "normal",
+      "procedureId": "procedure_utilities_contact",
+      "sourceIds": [
+        "src-00000-utilities_contact-001",
+      ],
+      "warnings": [],
+    },
+    {
+      "applicabilityReason": "車・バイク等の追加案内が必要と回答された方向けの、運転免許証の住所変更(記載事項変更)の手続きです(区の手続きではなく警視庁への手続きです)。",
+      "applicable": "not_applicable",
+      "dueDescription": "警視庁の当該ページには「◯日以内」という日数の期限の記載がありません(要確認)。転入届で住民票の住所が変わったあとに手続きしてください。",
+      "priority": "normal",
+      "procedureId": "procedure_driver_license_change",
+      "sourceIds": [
+        "src-13000-driver_license-001",
+      ],
+      "warnings": [],
+    },
   ],
   "ruleVersion": "2026-08-07.1",
 }

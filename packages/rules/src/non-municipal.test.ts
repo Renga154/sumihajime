@@ -12,7 +12,7 @@ import { evaluate } from './evaluate.js';
  * 回帰ガードなので、この4件のように「全区で同一であること」自体が要件のデータはここに集約する。
  *
  * ここで固定する不変条件:
- * (a) 4件が対応7区すべてに存在し、内容は municipalityCode 以外まったく同一である
+ * (a) 4件が対応9区すべてに存在し、内容は municipalityCode 以外まったく同一である
  * (b) 該当判定: 水道・郵便・電気ガスは全員該当 / 運転免許は needsVehicleGuidance が true のときだけ
  * (c) 期限を推測で作らない(4件とも dueRule=unknown → dueDate は生成されない)
  * (d) 2026-08-07 人手レビュー承認(ユーザー決裁。ADR-009)により公開される
@@ -24,7 +24,17 @@ import { evaluate } from './evaluate.js';
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 
-const WARDS: readonly string[] = ['13101', '13104', '13108', '13109', '13111', '13112', '13115'];
+const WARDS: readonly string[] = [
+  '13101',
+  '13104',
+  '13108',
+  '13109',
+  '13111',
+  '13112',
+  '13115',
+  '13119',
+  '13120',
+];
 
 const NON_MUNICIPAL_IDS = [
   'procedure_water_supply',
