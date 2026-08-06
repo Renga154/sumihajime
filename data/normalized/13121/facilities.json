@@ -1,0 +1,160 @@
+{
+  "municipalityCode": "13121",
+  "version": "2026-08-07.1",
+  "note": "Batch10 足立区(13121) 窓口施設。東京都オープンデータカタログの足立区(組織t131211)には GIF標準の『公共施設一覧』CSV が存在せず(登録データセットは全10件でスポーツ施設・都市公園・公営住宅・公立図書館のみ)、代替候補のスポーツ施設一覧・公営住宅一覧CSVもID列・緯度経度列がほぼ全行空欄で窓口案内には使えない。そのため公式ページ『区民事務所のご案内』(src-13121-facilities-002)の区民事務所一覧表から17件(区役所南館1階の戸籍住民課+区民事務所16か所)を人手で構造化した。転入届の公式ページ(src-13121-resident_registration-001)が『届出場所=区内16ケ所の区民事務所 / 足立区役所南館1階戸籍住民課』と明記しており住民異動を扱う窓口の範囲はこの17件と一致する。出典ページに緯度経度が無いため lat/lng は設定しない(捏造回避。前例: 品川区13109・中野区13114・豊島区13116・北区13117)。hours は同ページの『業務日時』節(月曜日から金曜日 午前8時30分から午後5時まで。千住区民事務所のみ午後7時まで)の実値であり、戸籍住民課は同ページの区民事務所一覧表の1行目として掲載されているためこの業務日時を適用した(区役所本庁舎の休日開庁(毎月第4日曜日)は本ページに記載が無いため hours に含めていない。人手レビューで要確認)。所在地は同ページの表記(例: 伊興1-24-12)に『東京都足立区』を補って正規化した。全件が人手レビュー未了(出典 review_status=pending)。",
+  "facilities": [
+    {
+      "facilityId": "13121-fac-honcho",
+      "municipalityCode": "13121",
+      "name": "足立区役所 戸籍住民課(南館1階)",
+      "category": "区役所",
+      "address": "東京都足立区中央本町1-17-1",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-ikou",
+      "municipalityCode": "13121",
+      "name": "伊興区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区伊興1-24-12",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-umeda",
+      "municipalityCode": "13121",
+      "name": "梅田区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区梅田7-33-1",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-okimoto",
+      "municipalityCode": "13121",
+      "name": "興本区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区本木東町17-10",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-konan",
+      "municipalityCode": "13121",
+      "name": "江南区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区小台2-4-18",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-kohoku",
+      "municipalityCode": "13121",
+      "name": "江北区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区江北3-39-4",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-sano",
+      "municipalityCode": "13121",
+      "name": "佐野区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区佐野2-43-5",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-shikahama",
+      "municipalityCode": "13121",
+      "name": "鹿浜区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区鹿浜6-8-1",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-shinden",
+      "municipalityCode": "13121",
+      "name": "新田区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区新田2-2-2",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-senju",
+      "municipalityCode": "13121",
+      "name": "千住区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区千住3-92",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後7時まで(毎月の最終業務日は午後5時まで。午後5時以降は国外からの転入届・引越しワンストップサービスを利用した転入の届出・特例転入等は取扱いできません)",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-takenotsuka",
+      "municipalityCode": "13121",
+      "name": "竹の塚区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区竹の塚2-25-17",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-toneri",
+      "municipalityCode": "13121",
+      "name": "舎人区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区舎人1-3-26",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-nakagawa",
+      "municipalityCode": "13121",
+      "name": "中川区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区中川4-43-4",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-nishiarai",
+      "municipalityCode": "13121",
+      "name": "西新井区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区西新井1-4-17",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-hanahata",
+      "municipalityCode": "13121",
+      "name": "花畑区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区花畑4-16-8",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-higashiayase",
+      "municipalityCode": "13121",
+      "name": "東綾瀬区民事務所(仮設庁舎)",
+      "category": "区民事務所",
+      "address": "東京都足立区東綾瀬2-3-21",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    },
+    {
+      "facilityId": "13121-fac-hozuka",
+      "municipalityCode": "13121",
+      "name": "保塚区民事務所",
+      "category": "区民事務所",
+      "address": "東京都足立区保塚町7-16",
+      "hours": "月曜日から金曜日(祝祭日および年末年始は除く) 午前8時30分から午後5時まで",
+      "sourceId": "src-13121-facilities-002"
+    }
+  ]
+}

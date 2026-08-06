@@ -1,0 +1,61 @@
+{
+  "municipalityCode": "13123",
+  "version": "2026-08-07.1",
+  "note": "Batch10 江戸川区(13123) 窓口施設。東京都オープンデータカタログの江戸川区(組織t131237)は登録266件と件数こそ多いが大半が公園彫刻・パブリックアートの個別写真データセットで、GIF標準の『公共施設一覧』CSVは存在しない(131237_public_facility.csv はHTTP 404・キーワード検索でも該当なし)。そのため公式ページ『区役所・事務所・区民館』(src-13123-facilities-001)と各事務所の施設ページ(src-13123-facilities-002 から -006)から窓口6件(区役所区民課+小松川・葛西・小岩・東部・鹿骨の各事務所)を人手で構造化した。転入届の公式ページ(src-13123-resident_registration-001)が『届出場所=区役所区民課・各事務所の戸籍住民係』と明記しており住民異動を扱う窓口の範囲はこの6件と一致する。所在地と受付時間はそれぞれの施設ページの実値のみを採用し、出典ページに緯度経度が無いため lat/lng は設定しない(捏造回避)。全件が人手レビュー未了(出典 review_status=pending)。",
+  "facilities": [
+    {
+      "facilityId": "13123-fac-honcho",
+      "municipalityCode": "13123",
+      "name": "江戸川区役所 区民課(本庁舎)",
+      "category": "区役所",
+      "address": "東京都江戸川区中央1丁目4番1号",
+      "hours": "午前8時30分から午後5時(第1水曜日・第3水曜日は区民課の窓口の一部を午後7時30分まで延長。祝日を除く)",
+      "sourceId": "src-13123-facilities-001"
+    },
+    {
+      "facilityId": "13123-fac-komatsugawa",
+      "municipalityCode": "13123",
+      "name": "小松川事務所(小松川区民館内)",
+      "category": "事務所",
+      "address": "東京都江戸川区平井4丁目1番1号",
+      "hours": "午前8時30分から午後5時(閉庁日は土曜日・日曜日・祝休日・年末年始 12月29日から1月3日)",
+      "sourceId": "src-13123-facilities-002"
+    },
+    {
+      "facilityId": "13123-fac-kasai",
+      "municipalityCode": "13123",
+      "name": "葛西事務所(葛西区民館内)",
+      "category": "事務所",
+      "address": "東京都江戸川区中葛西3丁目10番1号",
+      "hours": "午前8時30分から午後5時(閉庁日は土曜日・日曜日・祝休日・年末年始 12月29日から1月3日)",
+      "sourceId": "src-13123-facilities-003"
+    },
+    {
+      "facilityId": "13123-fac-koiwa",
+      "municipalityCode": "13123",
+      "name": "小岩事務所(小岩区民館内)",
+      "category": "事務所",
+      "address": "東京都江戸川区東小岩6丁目9番14号",
+      "hours": "午前8時30分から午後5時(閉庁日は土曜日・日曜日・祝休日・年末年始 12月29日から1月3日)",
+      "sourceId": "src-13123-facilities-004"
+    },
+    {
+      "facilityId": "13123-fac-tobu",
+      "municipalityCode": "13123",
+      "name": "東部事務所(東部区民館内)",
+      "category": "事務所",
+      "address": "東京都江戸川区東瑞江1丁目17番1号",
+      "hours": "午前8時30分から午後5時(閉庁日は土曜日・日曜日・祝休日・年末年始 12月29日から1月3日)",
+      "sourceId": "src-13123-facilities-005"
+    },
+    {
+      "facilityId": "13123-fac-shishibone",
+      "municipalityCode": "13123",
+      "name": "鹿骨事務所(鹿骨区民館内)",
+      "category": "事務所",
+      "address": "東京都江戸川区鹿骨1丁目54番2号",
+      "hours": "午前8時30分から午後5時(閉庁日は土曜日・日曜日・祝休日・年末年始 12月29日から1月3日)",
+      "sourceId": "src-13123-facilities-006"
+    }
+  ]
+}
