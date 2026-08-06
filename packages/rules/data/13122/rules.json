@@ -1,0 +1,128 @@
+{
+  "municipalityCode": "13122",
+  "ruleVersion": "2026-08-07.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "葛飾区に住み始めてから14日以内に届出をしてください。マイナンバーカードによる「転入届の特例」による転出を行った場合は、実際の転入日から14日以内かつ転出する自治体で届け出た転出予定日から30日以内に転入の届出を行ってください。届出先はお近くの区民事務所か区役所(戸籍住民課)です。区民サービスコーナーでは住所の届出は取り扱っていません。",
+      "sourceIds": ["src-13122-resident_registration-001", "src-13122-facilities-002"],
+      "applicabilityReasonTemplate": "他の区市町村または国外から葛飾区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転入手続きをした日から90日を過ぎると手続きできません。また、実際に引っ越した日から14日以内に新住所地での転入届出を行わなかった場合や、転出予定日から30日以内に転入届出を行わなかった場合には、その個人番号カードは失効し継続利用手続きはできなくなります。受付場所は区役所2階戸籍住民課または区民事務所です。",
+      "sourceIds": ["src-13122-my_number-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。手続きできるのは本人または法定代理人および同世帯員だけで、カードの暗証番号の入力が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "国民健康保険(国保)の届出は、世帯主または同一世帯員の方が14日以内に国保年金課資格係または区民事務所へ届出をしてください。葛飾区に転入してきたときは必要なものはなく、転入の届出の際に加入をお申し出ください。加入の届出が遅れた場合、国保は資格発生日にさかのぼって加入し、保険料も最大で2年間さかのぼって納付することになります。",
+      "sourceIds": ["src-13122-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険などに加入していない方は、葛飾区の国民健康保険への加入の届出が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "葛飾区の「国民年金加入や喪失手続き」の届出案内表には、「海外から帰国(転入)したとき」に第1号被保険者として加入する手続きが必要と記載されています(海外在住期間から引き続き厚生年金に加入している方とその扶養配偶者、転入日と同月内に厚生年金に加入する方とその扶養配偶者は手続き不要)。国内の他区市町村から転入したときの届出および日数固定の期限についての記載はありません。届出場所は国保年金課国民年金係(区役所3階)または区民事務所です。届出の要否は国民年金係にご確認ください。",
+      "sourceIds": ["src-13122-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金の被保険者の方に、転入に伴う手続きの要否をお知らせします。葛飾区の届出案内表には国内の他区市町村からの転入に関する記載がないため、届出の要否は窓口でご確認ください。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生日・葛飾区への転入日(前住所地の転出予定日)の月末までに申請してください。出生日・葛飾区への転入日(転出予定日)が月の後半の場合、その翌日から15日以内に申請をすれば、出生日・葛飾区への転入日(転出予定日)の翌月分から手当が支給されます(15日特例)。申請が遅れた場合、さかのぼっての支給はできません。葛飾区は転入日を「前住所地の転出予定日」と併記しているため、引越し日からは算定できません。",
+      "sourceIds": ["src-13122-child_benefits-001"],
+      "applicabilityReasonTemplate": "葛飾区にお住まいで、高校生年代(18歳に達した日以後の最初の3月31日)までのお子さんを養育している方が対象です(所得制限はありません)。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "医療証の資格取得日は、出生の方は出生日、転入の方は転入日です。ただし、対象者となった日から3か月以内に申請をしなかった場合は、申請日が資格取得日となります。申請は区役所等の窓口のほか、郵送や葛飾区公式ホームページからのオンライン申請もできます。",
+      "sourceIds": ["src-13122-child_medical-001"],
+      "applicabilityReasonTemplate": "区内にお住まいで、健康保険に加入している、高校3年生相当年齢(18歳に達した日以後の最初の3月31日)までの児童を養育している方が対象です。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "在学している学校で転退学の手続きをし、最終登校日に「在学証明書」と「教科用図書給与証明書」等の書類を受け取ってください。その書類を持って区民事務所または区役所戸籍住民課で転入の手続きを行い、窓口で書類を提示すると、転入先の学校に入学するための書類が発行されます。窓口で発行された書類と学校から受け取った書類を転校先の学校へ提出してください。住所変更の手続きの際に「在学証明書」と「教科書給与証明書」をお持ちでない場合は手続きできません。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13122-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が葛飾区へ転入する場合に必要な、区立学校への転校手続きです。葛飾区で交付される書類の固有名称は公式ページに記載がないため設定していません(他区の名称を持ち込みません)。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "0歳から就学前までのお子さんで、家庭で保育できない事情がある場合に申し込みできます。申し込みについての詳細は「令和8年度 保育施設利用案内」(PDF)に記載されており、利用案内は保育課(区役所4階401番)、区民事務所・区民サービスコーナー、公立・私立保育所などで配布しています。オンライン申請(保育園等入所オンライン申請)も利用できます。区外からの申込み・転入予定者向けの日数固定の期限は、このページには記載がありません。",
+      "sourceIds": ["src-13122-childcare-001"],
+      "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、葛飾区の保育施設の利用を希望する方向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "環境省データベースに登録されていない犬の場合は、前自治体での鑑札を持参し、保健所生活衛生課か区民事務所で転入の届出をしてください。前自治体の鑑札は葛飾区の鑑札と無料で交換します(紛失した場合は鑑札の再交付となり1,600円の手数料がかかり、再交付は平日8時30分から17時までの受付です)。環境省データベースに登録されている犬の場合は、「犬と猫のマイクロチップ情報登録」の「登録事項の確認・変更」画面で届出でき、窓口での手続きは不要です。区外から転入したときの住所変更の届出について、日数の期限はこのページには記載がありません(『犬を飼い始めてから30日以内(生後90日以内の犬は生後120日以内)』は、新たに犬を飼い始めたときの登録の期限です)。",
+      "sourceIds": ["src-13122-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、環境省データベース(犬と猫のマイクロチップ情報登録)に登録していないため、葛飾区保健所生活衛生課または区民事務所での転入の届出が必要です。",
+      "needsConfirmationReason": "犬のマイクロチップの装着・環境省データベースへの登録状況が未確認のため、届出先(葛飾区保健所生活衛生課・区民事務所 または 犬と猫のマイクロチップ情報登録サイト)が確定できません。登録状況をご確認ください(登録済みなら登録サイトでの届出のみで、窓口での手続きは不要です)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地区の収集日を確認してください)。葛飾区公式サイトの「資源とごみの収集カレンダー」ページに、2026年4月から2027年3月までの地区別カレンダー(添付ファイル)と、地区ごとの1年間の収集曜日がわかる簡易版カレンダーが掲載されています。本サービスは葛飾区の収集曜日データを保持していません。",
+      "sourceIds": ["src-13122-waste_guide-001"],
+      "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたって資源・ごみの分け方と収集日の確認をおすすめします。"
+    }
+  ]
+}

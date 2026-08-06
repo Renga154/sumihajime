@@ -1,0 +1,122 @@
+{
+  "municipalityCode": "13110",
+  "ruleVersion": "2026-08-07.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "目黒区の新しい住所に住み始めてから14日以内です。住み始める前の日に受付はできません。区役所の休日(土曜日・日曜日、祝日、年末年始)が14日目に当たる場合は、その日以後の最初の開庁日が届出期限です。届出先は目黒区総合庁舎 戸籍住民課住民記録係、および北部・中央・南部・西部の各地区サービス事務所です(東部地区サービス事務所では引越しの届出を扱っていません)。",
+      "sourceIds": ["src-13110-resident_registration-001", "src-13110-facilities-001"],
+      "applicabilityReasonTemplate": "他の区市町村または国外から目黒区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "手続きできる期間は転入届出日から90日以内です。90日を経過した場合、カードの有効期限が満了している場合、前々住所地から前住所地へ転入時に継続利用の手続きを行わないまま目黒区へ転入した場合などは継続利用ができず、マイナンバーカードは失効します。なお目黒区のページには、他区にある『転出予定日から30日を経過した転入届』『転入日から14日(または15日)を経過した転入届』による失効条件の記載がありません。",
+      "sourceIds": ["src-13110-my_number-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。転入届の手続きの際にマイナンバーカードをお持ちください。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "異動があった日(転入、退職、扶養削除、出生、保護廃止等)から14日以内に必ず届出をしてください。届出先は国保年金課資格賦課係(目黒区総合庁舎1階)または地区サービス事務所(東部を除く)です。加入の届出がない期間にかかった医療費は全額自己負担になることがあり、資格が発生した日にさかのぼって保険料を納めることになります(最長で過去2年度分)。",
+      "sourceIds": ["src-13110-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "目黒区に住所のある74歳までの方で、職場の健康保険などに加入している方や生活保護を受けている方を除いて、すべての方が国民健康保険への加入が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "目黒区の「国民年金の届出」ページには、転入したときの国民年金の届出および日数固定の期限についての記載がありません(記載されているのは、会社などを退職したとき、第3号被保険者の方が配偶者の扶養から外れたとき、会社などに就職したとき、厚生年金に加入している配偶者の扶養になったときの届出先です)。窓口は区役所・各地区サービス事務所・目黒年金事務所で、マイナポータルによる電子申請もできます。届出の要否は国保年金課国民年金係にご確認ください。",
+      "sourceIds": ["src-13110-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金の被保険者の方に、転入に伴う手続きの要否をお知らせします。目黒区の国民年金の届出ページには転入したときの届出に関する記載がないため、届出の要否は窓口でご確認ください。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "請求の事由発生日の翌日から数えて15日以内に請求してください。目黒区は「事由発生日とは、出生の場合は出生日、転入の場合は前住地の転出予定日です」と明記しています。15日以内に請求すれば事由発生日の翌月分から受給が始まり、15日を経過した場合は請求受付日の翌月分からの開始となります。起算日は前住所地での転出予定日のため、引越し日からは算定できません。",
+      "sourceIds": ["src-13110-child_benefits-001", "src-13110-child_benefits-002"],
+      "applicabilityReasonTemplate": "18歳到達後最初の3月31日までの、国内に居住する児童を養育している方が対象です。目黒区に転入した場合は請求手続きが必要です(所得制限はありません)。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "異動日(出生又は転入)から3か月以内に申請してください。3か月を経過したあとに申請した場合、出生日・転入日まで遡って助成することができなくなります。申請はオンライン申請、来庁申請(目黒区総合庁舎2階 子ども若者課児童手当・医療証係、各地区サービス事務所)、郵送申請から選べます。",
+      "sourceIds": ["src-13110-child_medical-001"],
+      "applicabilityReasonTemplate": "乳幼児医療証・子ども医療証・高校生等医療証の交付を受けるには申請が必要です。出生、転入のときは忘れずに申請してください。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "前籍校で「在学証明書」と「教科用図書給与証明書」を受け取り、転校先となる目黒区の通学区域校へ事前に連絡して面談日を調整してください。目黒区の戸籍住民課または各地区サービス事務所で住民票の転入手続きを行うと、その窓口で通学区域校を指定した「入学指定通知書」が交付されます。面談日にはお子さんと一緒に来校し、在学証明書・教科用図書給与証明書・入学指定通知書を持参してください。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13110-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が目黒区へ転入する場合に必要な、区立学校への転入学手続きです。目黒区で交付される書類の名称は「入学指定通知書」です。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "毎月8日頃が翌月1日入所の申込みの締切です(2月と3月の入所はありません)。受付は祝日を除く月曜日から金曜日の8時30分から17時まで、保育課保育施設利用係窓口・郵送・オンラインで受け付けています。目黒区へ転入予定でその旨の証明書類を用意できる方は目黒区の保育課に直接申し込めます。転入予定の証明ができない方は、お住まいの区市町村の保育担当課で申し込みます。締切日は入所希望月により異なるため日数固定の期限は設定していません。",
+      "sourceIds": ["src-13110-childcare-001"],
+      "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、目黒区の認可保育施設の利用を希望する方(区外から申し込む方)向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 30 },
+      "dueDescription": "変更後30日以内に届出してください。目黒区へ転入した場合は、前住所地の鑑札を持参のうえ区の受付窓口(目黒区総合庁舎6階 生活衛生課生活環境係、または北部・中央・南部・西部の各地区サービス事務所)で手続きします。鑑札がある場合は無料で目黒区の鑑札と交換します(紛失時は再交付手数料1,600円)。前住所地でマイクロチップを鑑札とみなす制度が適用されている場合は、前住所地に照会し登録が確認できれば無料で目黒区の鑑札を交付しますので、15桁のマイクロチップ番号がわかるものを持参してください。",
+      "sourceIds": ["src-13110-dog_registration-001", "src-13110-dog_registration-002"],
+      "applicabilityReasonTemplate": "犬を飼っている方が目黒区へ転入した場合、区の受付窓口での登録事項変更の届出が必要です。目黒区は令和4年6月1日時点において「狂犬病予防法の特例制度」に参加しないため、マイクロチップを環境省の指定登録機関に登録済みであっても、狂犬病予防法における犬の登録などの手続きは従来どおり区の窓口で行う必要があります。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集日を確認してください)。目黒区公式サイトの「資源とごみの収集日・分別検索」で地域名と番地から収集日を検索できます。地域別の資源・ごみ収集日カレンダー(2026年4月から2027年3月まで)と収集曜日一覧表も公開されています。燃やさないごみの「月2回」は毎月該当する最初の曜日が第1となり、第5曜日の収集はありません。古紙の回収曜日は町会や自治会などによって異なります。本サービスは目黒区の収集曜日データを保持していません。",
+      "sourceIds": ["src-13110-waste_guide-001"],
+      "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたって資源・ごみの分け方と収集日の確認をおすすめします。"
+    }
+  ]
+}
