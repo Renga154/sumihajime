@@ -1,0 +1,128 @@
+{
+  "municipalityCode": "13119",
+  "ruleVersion": "2026-08-07.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "新住所に住み始めた日から14日以内に転入届を出してください(住み始める前の手続きはできません)。届出は本庁舎1階と区内6か所の区民事務所で受け付けます(管轄区域はないためどの区民事務所でも受付可能です)。",
+      "sourceIds": ["src-13119-resident_registration-001"],
+      "applicabilityReasonTemplate": "板橋区外から板橋区へ転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転入届は板橋区に住み始めた日から14日以内または転出予定日から30日以内のどちらか早い期日までに手続きし、その転入届日から90日以内に継続利用の申請を行ってください。それまでに手続きできない場合はマイナンバーカードが失効し、再発行時に手数料(1,000円)が発生します。",
+      "sourceIds": ["src-13119-my_number-001", "src-13119-resident_registration-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う券面記載事項変更(継続利用)の手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "原則、異動があった日(転入日など)から14日以内に届出をしてください。加入の手続きが遅れると遡って保険料を支払わなければなりません。資格の取得日は届出日ではなく異動のあった日です。",
+      "sourceIds": ["src-13119-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険等に加入していない方は、板橋区の国民健康保険への加入の届出が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "『国民年金の加入・喪失』は板橋区国民年金係・各区民事務所・板橋年金事務所のいずれの窓口でも受け付けています(加入などの一部の手続きはマイナポータルから電子申請できます)。このページには転入に伴う住所変更の届出の日数の期限の記載はありません。届出の要否・方法は国民年金係または板橋年金事務所へご確認ください。",
+      "sourceIds": ["src-13119-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金(第1号被保険者)の加入・喪失等の届出に関する案内です。詳細(マイナンバーと基礎年金番号の連携状況等)は年金事務所へご確認ください。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生日・転入日(前住所地の転出予定日)等の事由発生日の翌日から起算して15日以内に申請してください。起算日は前住所地での転出予定日等のため引越し日からは算定できません。申請が遅れると手当を受給できない月が発生します(申請書の受付日が申請日となります)。",
+      "sourceIds": ["src-13119-child_benefits-001"],
+      "applicabilityReasonTemplate": "18歳までのお子さんを養育している方が対象です。他区市町村で児童手当を受給していた方が板橋区に転入した場合は新規申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "子ども医療費助成の資格開始日は申請書を受付した日からです。ただし転入の場合は原則として14日以内の申請であれば転入日にさかのぼって資格が得られます。14日を過ぎての申請で転入日からの資格を希望する場合は、交付申請の際に『申立書』も提出してください。",
+      "sourceIds": ["src-13119-child_medical-001"],
+      "applicabilityReasonTemplate": "0歳から18歳までのお子さんを養育している保護者が対象です。板橋区に転入した場合は子ども医療証の交付申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "通学区域校に転校する場合、教育委員会での特別な手続きは必要ありません。転入手続きをする際に、以前通学していた学校から交付された『在学証明書』と『教科書給与証明書』を提示し、窓口で『転入学通知書』を受け取ってください。その後これらの書類を通学区域校へ提出します。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13119-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が板橋区へ転入する場合に必要な、区立学校への転校手続きです。板橋区で交付される書類の名称は『転入学通知書』です(他区の名称は持ち込みません)。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "入所希望月の1日までに板橋区に転入する場合には申込みを制限しません。転入予定のない方はクラス・入所月ごとに申込みが制限され、入所選考でも板橋区民を優先するため指数において減算となります。申込締切日は入所月ごとに異なるため日数固定の期限は設定していません(申込み制限表は公式ページでご確認ください)。",
+      "sourceIds": ["src-13119-childcare-001"],
+      "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、板橋区の認可保育施設の利用を希望する方向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 30 },
+      "dueDescription": "板橋区外から転入したときは30日以内に変更の手続きが必要です。犬鑑札で登録された犬は区の窓口(生活衛生課・各健康福祉センター・各区民事務所)で『飼い犬の登録事項変更届』を提出してください(前所在地の犬鑑札をお持ちの場合は手数料無料、紛失時は再交付1,600円)。板橋区外から転入した犬は電子申請(LoGoフォーム)を利用できません。",
+      "sourceIds": ["src-13119-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、環境省の『犬と猫のマイクロチップ情報登録』サイトに登録していない(犬鑑札で登録された)ため、板橋区の窓口での登録事項変更の届出が必要です。",
+      "needsConfirmationReason": "犬のマイクロチップ装着・環境省データベース登録の有無が未確認のため、届出先(板橋区の窓口 または 環境省のマイクロチップ情報登録サイト)が確定できません。登録状況をご確認ください(環境省サイトに登録済みなら板橋区への届出は不要です)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集曜日を確認してください)。板橋区の収集曜日は地域(町丁目)ごとに決められており、板橋区公式『地域別 資源回収・ごみ収集曜日カレンダー(令和8年度版)』の地域別一覧表から該当する地域別カレンダーPDFでご確認ください。",
+      "sourceIds": ["src-13119-waste_guide-001"],
+      "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたって資源回収・ごみ収集曜日と分け方の確認をおすすめします。"
+    }
+  ]
+}

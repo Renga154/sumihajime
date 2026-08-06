@@ -1,0 +1,74 @@
+{
+  "municipalityCode": "13120",
+  "sourceId": "src-13120-facilities-001",
+  "reviewStatus": "pending",
+  "extractionNote": "窓口系抽出: 練馬区の転入届(住民異動)を受け付ける窓口=区内6か所の区民事務所(練馬・早宮・光が丘・石神井・大泉・関)を採用した。窓口の確定は転入届公式ページ(src-13120-resident_registration-001、『練馬区内6か所の区民事務所の窓口で届出を受付しています(郵送やインターネットではお手続きできません)』)を根拠とし、名称・所在地・緯度経度・電話番号は出典の公共施設一覧CSV(src-13120-facilities-001, 131202_public_facility.csv, 自治体標準オープンデータセット/GIF準拠, UTF-8 BOM, CC BY, HTTP Last-Modified 2026-06-18)の実値のみを採用した(捏造補完なし)。練馬区民事務所は練馬区役所本庁舎1階に所在するため、CSVに別レコードとして存在する『練馬区役所』は住民異動窓口ではない重複として採用しない(国保年金課・子育て支援課などは本庁舎内の別窓口であり、各手続きの窓口は procedures.json の locations で表現する)。",
+  "dataQualityNotes": [
+    "練馬区の転入届(住民異動)を受け付けるのは区内6か所の区民事務所(練馬・早宮・光が丘・石神井・大泉・関)のみで、郵送・インターネットでの届出はできないことを転入届公式ページ(src-13120-resident_registration-001)で確認した。",
+    "出典CSVは自治体標準オープンデータセット(GIF準拠)で緯度経度・POIコード・全国地方公共団体コードを持つため座標を設定できた(6件すべて実値)。一方、江東区版にあった『大区分/小区分/担当課』列がなく、バリアフリー系列(車椅子可・バリアフリートイレ等)の実値は大半が空欄のため、これらは正規化対象にしていない。",
+    "各施設の受付時間(hours)は出典CSVの利用可能曜日・開始時間・終了時間列が区民事務所の行では空欄のため未設定。受付時間は転入届公式ページに記載があるが施設単位ではなく手続き単位のため procedures.json / 公式ページを参照する(推測で施設属性を作らない)。",
+    "人手レビュー未了(pending)。承認後に reviewStatus を approved へ更新する。"
+  ],
+  "facilities": [
+    {
+      "facilityId": "13120-fac-001",
+      "municipalityCode": "13120",
+      "name": "練馬区民事務所(練馬区役所本庁舎1階)",
+      "category": "区民事務所",
+      "address": "東京都練馬区豊玉北6-12-1",
+      "lat": 35.735652,
+      "lng": 139.651533,
+      "sourceId": "src-13120-facilities-001"
+    },
+    {
+      "facilityId": "13120-fac-002",
+      "municipalityCode": "13120",
+      "name": "早宮区民事務所",
+      "category": "区民事務所",
+      "address": "東京都練馬区早宮1-44-19",
+      "lat": 35.754166,
+      "lng": 139.658812,
+      "sourceId": "src-13120-facilities-001"
+    },
+    {
+      "facilityId": "13120-fac-003",
+      "municipalityCode": "13120",
+      "name": "光が丘区民事務所",
+      "category": "区民事務所",
+      "address": "東京都練馬区光が丘2-9-6",
+      "lat": 35.75938,
+      "lng": 139.629299,
+      "sourceId": "src-13120-facilities-001"
+    },
+    {
+      "facilityId": "13120-fac-004",
+      "municipalityCode": "13120",
+      "name": "石神井区民事務所",
+      "category": "区民事務所",
+      "address": "東京都練馬区石神井町3-30-26",
+      "lat": 35.743478,
+      "lng": 139.602737,
+      "sourceId": "src-13120-facilities-001"
+    },
+    {
+      "facilityId": "13120-fac-005",
+      "municipalityCode": "13120",
+      "name": "大泉区民事務所",
+      "category": "区民事務所",
+      "address": "東京都練馬区東大泉1-28-1リズモ大泉学園4階",
+      "lat": 35.749884,
+      "lng": 139.587601,
+      "sourceId": "src-13120-facilities-001"
+    },
+    {
+      "facilityId": "13120-fac-006",
+      "municipalityCode": "13120",
+      "name": "関区民事務所",
+      "category": "区民事務所",
+      "address": "東京都練馬区関町北1-7-2",
+      "lat": 35.72464,
+      "lng": 139.577998,
+      "sourceId": "src-13120-facilities-001"
+    }
+  ]
+}

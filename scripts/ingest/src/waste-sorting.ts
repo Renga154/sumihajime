@@ -40,6 +40,14 @@ export interface WasteSortingCsvOptions {
    */
   itemCategorySwapped?: boolean;
   /**
+   * true の場合、「料金種別」列の代わりに「粗大ごみ回収料金」列(円単位の整数)から feeNote を作る(既定false)。
+   * なぜ: 板橋区(13119)のCSVは自治体標準オープンデータセットの別の列構成を採り、「料金種別」(無料/有料)を
+   * 持たず「粗大ごみ回収料金」(例 "400")を持つ。列名が示す単位(円)はデータセット定義由来であり推測ではない
+   * ため、値がある行のみ『粗大ごみ回収料金 400円』の形で feeNote に載せる(値がなければ feeNote を設定しない)。
+   * 他区のCSVはこの列を持たないため、このオプションを有効にしても出力は不変(後方互換)。
+   */
+  bulkyFeeAmountAsFeeNote?: boolean;
+  /**
    * true の場合、「注意点」列(あれば)を「備考」列とあわせて notes に統合する(既定false)。
    * なぜ: 世田谷/江東/新宿の3区は「注意点」列が全行空欄だったため未使用だったが、杉並区の
    * CSVは「注意点」列に実データ(例:『最大辺がおおむね30cmを超えるもの(220cm以内)は粗大ごみです』)
@@ -70,7 +78,12 @@ export function parseWasteSortingCsv(
   const idCol = findCol(header, (h) => normalizeHeader(h) === 'ID', 'ID');
   const itemCol = findCol(header, (h) => h.includes('品目'), '品目');
   const categoryCol = findCol(header, (h) => normalizeHeader(h) === '分別区分', '分別区分');
-  const feeTypeCol = findCol(header, (h) => normalizeHeader(h) === '料金種別', '料金種別');
+  // なぜ: 「料金種別」列を持たない自治体標準CSV(板橋区13119)があるため、必須にせず -1 を許容する
+  // (欠落を捏造で埋めない=CLAUDE.md原則3。代替として bulkyFeeAmountAsFeeNote を用いる)。
+  const feeTypeCol = header.findIndex((h) => normalizeHeader(h) === '料金種別');
+  const bulkyFeeCol = opts.bulkyFeeAmountAsFeeNote
+    ? findCol(header, (h) => normalizeHeader(h) === '粗大ごみ回収料金', '粗大ごみ回収料金')
+    : -1;
   const remarksCol = findCol(header, (h) => normalizeHeader(h) === '備考', '備考');
   // なぜ: 「注意点」列は3区では空欄だが杉並区では実データを持つ。mergeCautionIntoNotes 有効時のみ
   // 参照する(列が存在しなければ -1 のまま=統合対象なし)。
@@ -90,7 +103,10 @@ export function parseWasteSortingCsv(
     const rawCategory = (row[categoryCol] ?? '').trim();
     const name = opts.itemCategorySwapped ? rawCategory : rawName;
     const category = opts.itemCategorySwapped ? rawName : rawCategory;
-    const feeType = (row[feeTypeCol] ?? '').trim();
+    const feeType = feeTypeCol >= 0 ? (row[feeTypeCol] ?? '').trim() : '';
+    const bulkyFee = bulkyFeeCol >= 0 ? (row[bulkyFeeCol] ?? '').trim() : '';
+    const feeNote =
+      feeType.length > 0 ? feeType : bulkyFee.length > 0 ? `粗大ごみ回収料金 ${bulkyFee}円` : '';
     const remarks = (row[remarksCol] ?? '').trim();
     const caution = cautionCol >= 0 ? (row[cautionCol] ?? '').trim() : '';
     // 注意点・備考の両方(値があるものだけ)を『／』で連結。3区は注意点が空欄のため remarks のみ=不変。
@@ -102,7 +118,7 @@ export function parseWasteSortingCsv(
       name,
       category,
       ...(notes.length > 0 ? { notes } : {}),
-      ...(feeType.length > 0 ? { feeNote: feeType } : {}),
+      ...(feeNote.length > 0 ? { feeNote } : {}),
       sourceId: opts.sourceId,
     });
   });

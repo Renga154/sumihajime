@@ -423,3 +423,75 @@ describe('publish gate — seven-ward publish (Step5 integration)', () => {
     expect(codes).toEqual(['13101', '13104', '13108', '13109', '13111', '13112', '13115']);
   });
 });
+
+describe('publish gate — Nerima (13120) / Itabashi (13119) staged before human review (Batch6-A)', () => {
+  // なぜ: 23区全対応・案A の Batch6-A で練馬(13120)・板橋(13119)のデータを整備したが、
+  // 全ソースが pending・全手続きが dataStatus=partial のため、公開(D1シード)対象には
+  // 一切載らないことを構造的に固定する(CLAUDE.md原則2/9・ADR-007)。
+  // publish CLI は MUNICIPALITIES.supported を渡すため通常は2区を対象にしないが、
+  // ここでは「対象に含めても公開物が0件でゲートを通過する」ことまで検証する。
+  const SUPPORTED_PLUS_STAGED = [
+    '13101',
+    '13104',
+    '13108',
+    '13109',
+    '13111',
+    '13112',
+    '13115',
+    '13119',
+    '13120',
+  ];
+
+  it('2区を公開対象に含めてもゲートは通過し、公開物(手続き/ルール/施設/分別辞書)は0件', () => {
+    expect(() => buildSeed(repoRoot, SUPPORTED_PLUS_STAGED)).not.toThrow();
+    const { data } = buildSeed(repoRoot, SUPPORTED_PLUS_STAGED);
+    const violations = findGateViolations({
+      approvedSourceIds: data.approvedSourceIds,
+      references: data.references,
+    });
+    expect(violations).toEqual([]);
+
+    for (const code of ['13119', '13120']) {
+      expect(data.procedures.filter((p) => p.municipalityCode === code)).toEqual([]);
+      expect(data.ruleSets.filter((rs) => rs.municipalityCode === code)).toEqual([]);
+      expect(data.facilities.filter((f) => f.municipalityCode === code)).toEqual([]);
+      expect(data.wasteSortingItems.filter((i) => i.municipalityCode === code)).toEqual([]);
+      expect(data.wasteAreas.filter((a) => a.municipalityCode === code)).toEqual([]);
+      expect(data.wasteDatasets.filter((d) => d.municipalityCode === code)).toEqual([]);
+      // 除外(staging)の内訳が publish CLI で報告されること。
+      expect(data.excludedProcedures.filter((p) => p.municipalityCode === code).length).toBe(10);
+      expect(
+        data.excludedNonProcedureSources.filter((s) => s.municipalityCode === code).length,
+      ).toBeGreaterThan(0);
+    }
+
+    // ルールセットは承認済み7区のみ。
+    expect(data.ruleSets.map((rs) => rs.municipalityCode).sort()).toEqual([
+      '13101',
+      '13104',
+      '13108',
+      '13109',
+      '13111',
+      '13112',
+      '13115',
+    ]);
+  });
+
+  it('公開ビューの municipalities で 13119/13120 は supported=false(承認済みソースが1件も無いため)', () => {
+    const data = loadPublishData(repoRoot, SUPPORTED_PLUS_STAGED);
+    for (const code of ['13119', '13120']) {
+      const m = data.municipalities.find((x) => x.code === code);
+      expect(m?.supported).toBe(false);
+      // FR-021: 未対応でも公式サイトへ誘導できること。
+      expect(m?.officialUrl).toBeTruthy();
+    }
+  });
+
+  it('registry.csv の 13119/13120 ソースはすべて pending(承認済みが1件も無い)', () => {
+    const data = loadPublishData(repoRoot, SUPPORTED_PLUS_STAGED);
+    const staged = data.approvedSources.filter(
+      (s) => s.municipalityCode === '13119' || s.municipalityCode === '13120',
+    );
+    expect(staged).toEqual([]);
+  });
+});

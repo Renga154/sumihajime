@@ -30,6 +30,8 @@ interface Target {
   itemCategorySwapped?: boolean;
   /** 杉並CSVは「注意点」列に実データを持つため notes に統合する(waste-sorting.ts参照)。 */
   mergeCautionIntoNotes?: boolean;
+  /** 板橋CSVは「料金種別」を持たず「粗大ごみ回収料金」(円)を持つため feeNote をそこから作る。 */
+  bulkyFeeAmountAsFeeNote?: boolean;
 }
 
 const TARGETS: Target[] = [
@@ -76,6 +78,18 @@ const TARGETS: Target[] = [
     sourceId: 'src-13109-waste_sorting-001',
     mergeCautionIntoNotes: true,
   },
+  {
+    // なぜ: Batch6-A 板橋区(13119)ごみ分別辞書(東京都オープンデータ・自治体標準準拠、
+    // HTTP Last-Modified 2026-01-15=現行年度で鮮度良好)。CP932配信のため UTF-8 BOM へ変換して
+    // スナップショット保存済み。板橋CSVは他区と列構成が異なり「料金種別」を持たず
+    // 「粗大ごみ回収料金」(円、473品目に実値)を持つため bulkyFeeAmountAsFeeNote で feeNote を作る。
+    // 「注意点」列は全1,125行が空欄のため mergeCautionIntoNotes は不要(notes は「備考」列のみ)。
+    // 収集曜日は板橋区に機械判読可能なCSVが無いため waste.json は作らない(誠実縮退)。
+    municipalityCode: '13119',
+    snapshotFile: 'data/sources/13119/snapshots/src-13119-waste_sorting-001.csv',
+    sourceId: 'src-13119-waste_sorting-001',
+    bulkyFeeAmountAsFeeNote: true,
+  },
 ];
 
 function main(): void {
@@ -86,6 +100,7 @@ function main(): void {
       sourceId: target.sourceId,
       itemCategorySwapped: target.itemCategorySwapped,
       mergeCautionIntoNotes: target.mergeCautionIntoNotes,
+      bulkyFeeAmountAsFeeNote: target.bulkyFeeAmountAsFeeNote,
     });
 
     const outDir = resolve(repoRoot, `data/normalized/${target.municipalityCode}`);

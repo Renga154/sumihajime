@@ -1,0 +1,128 @@
+{
+  "municipalityCode": "13120",
+  "ruleVersion": "2026-08-07.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "練馬区に住み始めてから14日以内に転入届を出してください(住み始める前の届出はできません)。届出は区内6か所の区民事務所(練馬・早宮・光が丘・石神井・大泉・関)の窓口のみで、郵送やインターネットでは手続きできません。",
+      "sourceIds": ["src-13120-resident_registration-001"],
+      "applicabilityReasonTemplate": "練馬区外から練馬区へ転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "継続利用の手続きができる期間は転入届出日から90日以内です(ただし、転入届を『転出予定日から30日以内』に行っている必要があります)。いずれかを満たさない場合はカードが失効します(失効後の再交付は手数料1,000円、電子証明書が不要のときは800円)。",
+      "sourceIds": ["src-13120-my_number-001", "src-13120-resident_registration-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用(券面記載事項変更)の手続きが必要です。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "事由が発生してから14日以内に届出をしてください。届出が遅れても保険料は加入すべき日までさかのぼって納めることになり、届出されなかった間の医療費は全額自己負担になる場合があります。",
+      "sourceIds": ["src-13120-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険等に加入していない方は、練馬区の国民健康保険への加入の届出が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "『加入・喪失・氏名変更・住所変更』の受付場所は国保年金課国民年金係・区民事務所・練馬年金事務所および郵送です。このページには転入に伴う住所変更の届出の日数の期限の記載はありません。届出の要否・方法は国民年金係または練馬年金事務所へご確認ください。",
+      "sourceIds": ["src-13120-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金(第1号被保険者)の加入・喪失・住所変更等の届出に関する案内です。詳細(マイナンバーと基礎年金番号の連携状況等)は年金事務所へご確認ください。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "出生日や転入日(前住所地の転出予定日)の翌日から15日以内に申請すれば、出生日や転入日の翌月分から手当を支給します。起算日は前住所地での転出予定日のため引越し日からは算定できません。申請が遅れると受給できない月が発生し、手当は遡って支給できません。",
+      "sourceIds": ["src-13120-child_benefits-001"],
+      "applicabilityReasonTemplate": "練馬区に住民登録がある方で、高校生年代まで(18歳に達する日以後の最初の3月31日まで)の児童を養育している主たる生計の維持者が対象です。転入した場合は新たに申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "転入により新たに住民登録された場合は医療証(マル乳・マル子・マル青)の交付申請が必要です(申請がなければ発行されません)。練馬区の公式ページには申請期限や遡って助成を受けられる期間の記載がないため、本サービスでは期限を設定していません(要確認)。期限の有無は児童手当係へご確認ください。",
+      "sourceIds": ["src-13120-child_medical-001"],
+      "applicabilityReasonTemplate": "健康保険に加入している練馬区内在住の高校生年代まで(18歳になった後の最初の3月31日まで)の子どもを養育している保護者が対象です。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "前の学校から『在学証明書』と『教科用図書給与証明書』を受け取り、区民事務所で住所変更の届出をする際に『在学証明書』を提示すると、その場で『入学通知書』が交付されます。その後すみやかに3点の書類を入学する学校へ持参してください。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13120-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が練馬区へ転入する場合に必要な、区立学校への転校手続きです。練馬区で交付される書類の名称は『入学通知書』です(他区の名称は持ち込みません)。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "申込みは毎月受け付けています(3月入園の利用調整は行っていません)。オンライン申請の受付は各月の締切日の17時15分までです。練馬区外在住の方は転入予定ありの場合と転入予定なしの場合で手続きが異なり、転入予定がない場合は申込制限があります(締切日は月・年度により異なるため日数固定の期限は設定していません)。",
+      "sourceIds": ["src-13120-childcare-001"],
+      "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、練馬区の保育施設の利用を希望する方向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "前住所地の犬鑑札をもって練馬区へ転入の届出をしてください。練馬区保健所・各保健相談所・各区民事務所の窓口、または電子申請で届け出られます(転入の届出について日数の期限はこのページには記載がありません)。環境省のデータベースに登録済みの場合は環境省から練馬区へ情報が通知されるため、区への手続きは不要です。",
+      "sourceIds": ["src-13120-dog_registration-001"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着して環境省のデータベースに登録していないため、練馬区への転入の届出が必要です。",
+      "needsConfirmationReason": "犬のマイクロチップ装着・環境省データベース登録の有無が未確認のため、届出先(練馬区の窓口/電子申請 または 環境省のマイクロチップ情報登録サイト)が確定できません。登録状況をご確認ください(環境省データベースに登録済みなら区への届出は不要です)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集曜日を確認してください)。練馬区の収集曜日は町丁目ごとに決められており、練馬区公式『地域別収集曜日一覧』(50音順の地域別ページ)と年間カレンダー(令和8年4月〜9年3月)でご確認ください。",
+      "sourceIds": ["src-13120-waste_guide-001"],
+      "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたって資源・ごみの分け方と収集曜日の確認をおすすめします。"
+    }
+  ]
+}
