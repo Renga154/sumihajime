@@ -15,7 +15,8 @@ import { evaluate } from './evaluate.js';
  * (a) 4件が対応7区すべてに存在し、内容は municipalityCode 以外まったく同一である
  * (b) 該当判定: 水道・郵便・電気ガスは全員該当 / 運転免許は needsVehicleGuidance が true のときだけ
  * (c) 期限を推測で作らない(4件とも dueRule=unknown → dueDate は生成されない)
- * (d) 人手レビュー未了のあいだは公開されない(dataStatus=partial かつ 出典は registry で非approved)
+ * (d) 2026-08-07 人手レビュー承認(ユーザー決裁。ADR-009)により公開される
+ *     (dataStatus=verified かつ 出典は registry で approved)
  * (e) 中立性: 特定の電力・ガス会社や民間引越しポータル事業者を名指ししない
  * (f) 既存の区の手続き10件を壊していない
  */
@@ -216,7 +217,7 @@ describe('非自治体手続き — 期限を推測で作らない(原則3)', ()
   });
 });
 
-describe('非自治体手続き — 人手レビュー未了は公開しない(ADR-007 staging)', () => {
+describe('非自治体手続き — 人手レビュー承認済みで公開される(ADR-007 / ADR-009 2026-08-07決裁)', () => {
   const registry = readFileSync(resolve(repoRoot, 'docs/data-sources/registry.csv'), 'utf-8');
   const rows = registry
     .split(/\r?\n/)
@@ -224,25 +225,27 @@ describe('非自治体手続き — 人手レビュー未了は公開しない(A
     .filter((l) => l.trim().length > 0)
     .map((l) => l.split(',')); // source_id / review_status は引用符を含まない先頭列と定位置列
 
-  it.each(WARDS)('%s: 4件とも dataStatus=partial(公開ゲートで除外される状態)', (code) => {
-    for (const p of nonMunicipalOf(code)) {
-      expect(p.dataStatus).toBe('partial');
-      expect(p.lastVerifiedAt).toBe('2026-08-06T00:00:00Z');
-      expect(p.sourceIds.length).toBeGreaterThan(0);
-    }
-  });
+  it.each(WARDS)(
+    '%s: 4件とも dataStatus=verified(2026-08-07 人手レビュー承認により公開対象)',
+    (code) => {
+      for (const p of nonMunicipalOf(code)) {
+        expect(p.dataStatus).toBe('verified');
+        expect(p.lastVerifiedAt).toBe('2026-08-06T00:00:00Z');
+        expect(p.sourceIds.length).toBeGreaterThan(0);
+      }
+    },
+  );
 
-  it('5つの出典が registry.csv に実在し、いまは approved ではない', () => {
+  it('5つの出典が registry.csv に実在し、2026-08-07 人手レビューにより approved である', () => {
     const ids = new Set(rows.map((r) => r[0]));
     for (const sid of NON_MUNICIPAL_SOURCE_IDS) {
       expect(ids.has(sid)).toBe(true);
     }
-    // 人手レビュー承認後は、この期待値を pending → approved へ更新する運用(ADR-009)。
     const statusIdx = (registry.split(/\r?\n/)[0] ?? '').split(',').indexOf('review_status');
     expect(statusIdx).toBeGreaterThan(0);
     for (const sid of NON_MUNICIPAL_SOURCE_IDS) {
       const row = rows.find((r) => r[0] === sid)!;
-      expect(row[statusIdx]).toBe('pending');
+      expect(row[statusIdx]).toBe('approved');
     }
   });
 

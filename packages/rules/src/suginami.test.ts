@@ -130,8 +130,9 @@ describe('Suginami (13115) — schema validation & approved status (CI gate)', (
   it('rules.json parses as a RuleSet, scoped to 13115, 10 rules, ruleVersion 2026-07-25.1', () => {
     expect(suginamiRuleSet.municipalityCode).toBe(SUGINAMI);
     expect(suginamiRuleSet.ruleVersion).toBe('2026-08-06.1');
-    // ADR-007 §5: 追加分は staging のため、公開される rule_set の版は据え置く。
-    expect(suginamiRuleSet.publishedRuleVersion).toBe('2026-07-25.1');
+    // 2026-08-07 人手レビュー承認(ADR-009)。publishedRuleVersion は除去済みで、
+    // ruleVersion がそのまま公開版になる(ADR-007)。
+    expect(suginamiRuleSet.publishedRuleVersion).toBeUndefined();
     expect(suginamiRuleSet.rules.length).toBe(14);
     // 内訳: 区の手続き10件 + 自治体以外(ライフライン等)4件(ADR-009)。
     expect(

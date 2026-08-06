@@ -90,8 +90,9 @@ describe('publish gate — real repository data (13112)', () => {
     // なぜ: 実データ(世田谷)の公開物 sourceId が全て approved 台帳を指すことを機械検証。
     const { data, statements } = buildSeed(repoRoot);
     expect(data.approvedSources.length).toBeGreaterThan(0);
-    // 2026-07-25 人手レビュー承認(Step3)により世田谷は全10手続きが公開対象。
-    expect(data.procedures.length).toBe(10);
+    // 2026-08-07 人手レビュー承認(ADR-009)により世田谷は区の10手続き+ライフライン等4件の
+    // 計14手続きが公開対象になった。
+    expect(data.procedures.length).toBe(14);
     expect(data.ruleSets[0]?.municipalityCode).toBe('13112');
     expect(statements.length).toBeGreaterThan(0);
     // すべての手続きの sourceIds は approved 集合に含まれる。
@@ -102,16 +103,19 @@ describe('publish gate — real repository data (13112)', () => {
     }
   });
 
-  it('公開される rule_set の版は publishedRuleVersion(据え置き)であり、staging追加で前進しない', () => {
-    // なぜ: ADR-007 §5。2026-08-06 にライフライン4ルールを足して rules.json の ruleVersion は
-    // 2026-08-06.1 へ前進したが、公開される部分集合(verified 10ルール)は内容が不変。
-    // 公開版まで前進させると「公開済みルールが変わった」と誤認させるため据え置く(誠実な版付け)。
+  it('公開される rule_set の版は ruleVersion そのもの(publishedRuleVersion除去後)であり、除外は0件', () => {
+    // なぜ: ADR-007 §5 / ADR-009。2026-08-06 に足したライフライン4ルールは
+    // 2026-08-07 の人手レビュー承認により publishedRuleVersion(据え置き)が除去され、
+    // rules.json の ruleVersion(2026-08-06.1)がそのまま公開版になった。
     const data = loadPublishData(repoRoot);
-    expect(data.ruleSets[0]?.ruleVersion).toBe('2026-07-25.1');
-    expect(data.ruleSets[0]?.rules).toHaveLength(10);
-    expect(
-      data.ruleSets[0]?.rules.some((r) => NON_MUNICIPAL_STAGED_IDS.includes(r.procedureId)),
-    ).toBe(false);
+    expect(data.ruleSets[0]?.ruleVersion).toBe('2026-08-06.1');
+    expect(data.ruleSets[0]?.publishedRuleVersion).toBeUndefined();
+    expect(data.ruleSets[0]?.rules).toHaveLength(14);
+    // 承認によりライフライン4件も公開される rules に含まれる(除外されない)。
+    const ruleIds = data.ruleSets[0]?.rules.map((r) => r.procedureId) ?? [];
+    for (const id of NON_MUNICIPAL_STAGED_IDS) expect(ruleIds).toContain(id);
+    expect(stagedIdsFor(data, '13112')).toEqual([]);
+    expect(data.excludedRuleRefs).toEqual([]);
   });
 
   it('synthesizes unique facility_ids (源データの壊れたIDを機械置換)', () => {
@@ -200,8 +204,8 @@ describe('publish gate — Setagaya school-transfer & childcare after human revi
   // 承認前は本describeが「partial手続き+pendingソースはseed/ゲート対象から除外される」ことを
   // 検証していた(除外ロジック自体の機械検証はfixtureベースの先頭describeで恒久的に担保)。
   // 承認後は逆に、世田谷の区の全10手続きで公開ゲートが通過することを固定する。
-  // なお 2026-08-06 のライフライン4件追加により publishedRuleVersion は 2026-07-25.1 で
-  // 再び据え置かれている(ADR-007 §5 / ADR-009。公開内容は不変)。
+  // 2026-08-06 に追加したライフライン4件は 2026-08-07 の人手レビュー承認(ADR-009)により
+  // publishedRuleVersion(据え置き)が除去され、区の10件と合わせて計14件が公開対象になった。
   const APPROVED_STEP3_IDS = ['procedure_childcare_application', 'procedure_school_transfer'];
   const APPROVED_SOURCES = [
     'src-13112-school_transfer-001',
@@ -210,17 +214,15 @@ describe('publish gate — Setagaya school-transfer & childcare after human revi
     'src-13112-childcare-002',
   ];
 
-  it('(a) 承認後: 世田谷の区の10手続きが公開対象(除外はライフライン4件のみ)、既定buildSeedは通過する', () => {
+  it('(a) 承認後: 世田谷の区の10手続き+ライフライン等4件の計14件が公開対象、既定buildSeedは通過する', () => {
     const data = loadPublishData(repoRoot); // 既定=13112のみ
-    // 公開対象は verified 10手続き全件(区の手続き)。
-    expect(data.procedures.length).toBe(10);
+    // 公開対象は verified 14手続き全件(区の10件 + ライフライン等4件。ADR-009)。
+    expect(data.procedures.length).toBe(14);
     expect(data.procedures.every((p) => p.dataStatus === 'verified')).toBe(true);
     expect(APPROVED_STEP3_IDS.every((id) => data.procedures.some((p) => p.id === id))).toBe(true);
-    // 除外(staging)は 2026-08-06 追加のライフライン4件のみ(出典がpendingのため。ADR-009)。
-    expect(stagedIdsFor(data, '13112')).toEqual([...NON_MUNICIPAL_STAGED_IDS].sort());
-    expect(data.excludedRuleRefs.map((r) => r.procedureId).sort()).toEqual(
-      [...NON_MUNICIPAL_STAGED_IDS].sort(),
-    );
+    // 2026-08-07 承認によりライフライン4件の除外(staging)は無くなった(ADR-009)。
+    expect(stagedIdsFor(data, '13112')).toEqual([]);
+    expect(data.excludedRuleRefs).toEqual([]);
     // Step3で承認した4ソースは approved 集合に含まれ、公開参照(references)にも含まれる。
     const referenced = new Set(data.references.flatMap((r) => r.sourceIds));
     for (const sid of APPROVED_SOURCES) {
@@ -272,17 +274,17 @@ describe('publish gate — Suginami (13115) after human review approval (Step4-A
     expect(violations).toEqual([]);
   });
 
-  it('承認後: 杉並の全10手続き・施設・ごみ分別辞書が公開対象(除外0件)', () => {
+  it('承認後: 杉並の全14手続き(区の10件+ライフライン等4件)・施設・ごみ分別辞書が公開対象(除外0件)', () => {
     const data = loadPublishData(repoRoot, SUPPORTED);
     const suginamiProcs = data.procedures.filter((p) => p.municipalityCode === '13115');
-    expect(suginamiProcs).toHaveLength(10);
+    expect(suginamiProcs).toHaveLength(14);
     expect(suginamiProcs.every((p) => p.dataStatus === 'verified')).toBe(true);
     expect(data.ruleSets.some((rs) => rs.municipalityCode === '13115')).toBe(true);
     expect(data.facilities.some((f) => f.municipalityCode === '13115')).toBe(true);
     expect(data.wasteSortingItems.some((i) => i.municipalityCode === '13115')).toBe(true);
     // 除外(staging)は発生しない(waste_scheduleはwaste.json自体が存在しないため対象外)。
-    // 除外(staging)は 2026-08-06 追加のライフライン4件のみ(出典がpendingのため。ADR-009)。
-    expect(stagedIdsFor(data, '13115')).toEqual([...NON_MUNICIPAL_STAGED_IDS].sort());
+    // 2026-08-07 承認によりライフライン4件の除外(staging)も無くなった(ADR-009)。
+    expect(stagedIdsFor(data, '13115')).toEqual([]);
     expect(data.excludedNonProcedureSources.filter((s) => s.municipalityCode === '13115')).toEqual(
       [],
     );
@@ -357,17 +359,17 @@ describe('publish gate — Shinagawa (13109) after human review approval (Step5-
     expect(violations).toEqual([]);
   });
 
-  it('承認後: 品川の全10手続き・施設・ごみ分別辞書が公開対象(除外0件)', () => {
+  it('承認後: 品川の全14手続き(区の10件+ライフライン等4件)・施設・ごみ分別辞書が公開対象(除外0件)', () => {
     const data = loadPublishData(repoRoot, SUPPORTED);
     const shinagawaProcs = data.procedures.filter((p) => p.municipalityCode === '13109');
-    expect(shinagawaProcs).toHaveLength(10);
+    expect(shinagawaProcs).toHaveLength(14);
     expect(shinagawaProcs.every((p) => p.dataStatus === 'verified')).toBe(true);
     expect(data.ruleSets.some((rs) => rs.municipalityCode === '13109')).toBe(true);
     expect(data.facilities.some((f) => f.municipalityCode === '13109')).toBe(true);
     expect(data.wasteSortingItems.some((i) => i.municipalityCode === '13109')).toBe(true);
     // 除外(staging)は発生しない(waste_scheduleはwaste.json自体が存在しないため対象外)。
-    // 除外(staging)は 2026-08-06 追加のライフライン4件のみ(出典がpendingのため。ADR-009)。
-    expect(stagedIdsFor(data, '13109')).toEqual([...NON_MUNICIPAL_STAGED_IDS].sort());
+    // 2026-08-07 承認によりライフライン4件の除外(staging)も無くなった(ADR-009)。
+    expect(stagedIdsFor(data, '13109')).toEqual([]);
     expect(data.excludedNonProcedureSources.filter((s) => s.municipalityCode === '13109')).toEqual(
       [],
     );
@@ -413,16 +415,16 @@ describe('publish gate — Ota (13111) after human review approval (Step5-B)', (
     expect(violations).toEqual([]);
   });
 
-  it('承認後: 大田の全10手続き・施設が公開対象(除外0件)、supported=true', () => {
+  it('承認後: 大田の全14手続き(区の10件+ライフライン等4件)・施設が公開対象(除外0件)、supported=true', () => {
     const data = loadPublishData(repoRoot, SUPPORTED);
     const otaProcs = data.procedures.filter((p) => p.municipalityCode === '13111');
-    expect(otaProcs).toHaveLength(10);
+    expect(otaProcs).toHaveLength(14);
     expect(otaProcs.every((p) => p.dataStatus === 'verified')).toBe(true);
     expect(data.ruleSets.some((rs) => rs.municipalityCode === '13111')).toBe(true);
     expect(data.facilities.some((f) => f.municipalityCode === '13111')).toBe(true);
     // 除外(staging)は発生しない(waste_schedule/waste_sortingはファイル自体が存在しないため対象外)。
-    // 除外(staging)は 2026-08-06 追加のライフライン4件のみ(出典がpendingのため。ADR-009)。
-    expect(stagedIdsFor(data, '13111')).toEqual([...NON_MUNICIPAL_STAGED_IDS].sort());
+    // 2026-08-07 承認によりライフライン4件の除外(staging)も無くなった(ADR-009)。
+    expect(stagedIdsFor(data, '13111')).toEqual([]);
     expect(data.excludedNonProcedureSources.filter((s) => s.municipalityCode === '13111')).toEqual(
       [],
     );

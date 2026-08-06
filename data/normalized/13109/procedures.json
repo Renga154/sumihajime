@@ -355,7 +355,7 @@
       "onlineUrl": "https://www.waterworks.metro.tokyo.lg.jp/tetsuduki/shiyou",
       "sourceIds": ["src-13000-water_supply-001", "src-13000-sewerage-001"],
       "lastVerifiedAt": "2026-08-06T00:00:00Z",
-      "dataStatus": "partial",
+      "dataStatus": "verified",
       "cautions": [
         "この手続きは区(自治体)の窓口ではなく、区以外の機関・事業者への手続きです。水道は東京都水道局が所管します。",
         "東京都下水道局は「23区内にお住まいの場合、東京都水道局の水道をご使用で、水道に移転に伴う届出をされれば、下水道局への届出は必要ありません」と案内しています。ただし井戸水など水道水以外の水を公共下水道へ排出する場合は別途届出が必要になることがあるため、その場合は東京都下水道局へご確認ください。",
@@ -395,7 +395,7 @@
       "onlineUrl": "https://www.post.japanpost.jp/service/receive/relocation/",
       "sourceIds": ["src-00000-postal_forwarding-001"],
       "lastVerifiedAt": "2026-08-06T00:00:00Z",
-      "dataStatus": "partial",
+      "dataStatus": "verified",
       "cautions": [
         "この手続きは区(自治体)の窓口ではなく、区以外の機関・事業者への手続きです。郵便の転送は日本郵便が提供するサービスです。",
         "転送期間は届出日から1年間です(転送開始希望日からではありません)。期間経過後は郵便物等が差出人へ返還されるため、継続する場合は再度転居届の提出が必要です。",
@@ -421,7 +421,7 @@
       "channels": [],
       "sourceIds": ["src-00000-utilities_contact-001"],
       "lastVerifiedAt": "2026-08-06T00:00:00Z",
-      "dataStatus": "partial",
+      "dataStatus": "verified",
       "cautions": [
         "この手続きは区(自治体)の窓口ではなく、区以外の機関・事業者への手続きです。電気・ガスは民間事業者との契約です。",
         "本サービスは中立性のため、特定の電力会社・ガス会社・引越しポータル事業者を推奨したり名指ししたりしません。契約先はご自身でご確認ください。",
@@ -466,7 +466,7 @@
       "contact": "警視庁 運転免許本部 免許管理第一係 電話 03-6717-3137(代表)",
       "sourceIds": ["src-13000-driver_license-001"],
       "lastVerifiedAt": "2026-08-06T00:00:00Z",
-      "dataStatus": "partial",
+      "dataStatus": "verified",
       "cautions": [
         "この手続きは区(自治体)の窓口ではなく、区以外の機関・事業者への手続きです。運転免許証の手続きは警視庁(警察)が所管します。",
         "マイナ免許証のみをお持ちの方は、警察に署名用電子証明書を提出しマイナポータルで連携することにより、住所・氏名等の変更を区市町村に届け出れば警察への変更届出が不要になるワンストップサービスを受けることができます(警視庁)。",

@@ -123,9 +123,9 @@ describe('POST /api/checklists — 単身・都外', () => {
 
     // 期限順: 転入届が先頭(最も早い期限)。
     expect(body.tasks[0]?.procedureId).toBe('procedure_resident_registration');
-    // 2026-07-25 Step3承認(学校転入・保育)により publishedRuleVersion が外れ、
+    // 2026-08-07 人手レビュー承認(ライフライン等4件。ADR-009)により publishedRuleVersion が外れ、
     // ruleVersion(=ファイル全体の版)がそのまま公開版になった(ADR-007)。
-    expect(body.ruleVersion).toBe('2026-07-25.1');
+    expect(body.ruleVersion).toBe('2026-08-06.1');
   });
 });
 
@@ -233,12 +233,13 @@ describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)
     const res = await request('/api/sources');
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>[];
-    // 台帳には承認済み98件がシードされる(publish/load は approved のみ挿入。sql.ts は
+    // 台帳には承認済み103件がシードされる(publish/load は approved のみ挿入。sql.ts は
     // supported の絞り込みなく approvedSources 全件を挿入する)。
     // 2026-07-25 Step3承認で世田谷の学校転入・保育の4ソースが追加approved化(42→46)、
     // 同日Step4-A承認で杉並(13115)の14ソース(46→60)、Step4-B承認で千代田(13101)の12ソース(60→72)、
-    // 2026-07-26 Step5-A承認で品川(13109)の12ソース(72→84)、同日Step5-B承認で大田(13111)の14ソース(84→98)。
-    expect(body.length).toBe(98);
+    // 2026-07-26 Step5-A承認で品川(13109)の12ソース(72→84)、同日Step5-B承認で大田(13111)の14ソース(84→98)、
+    // 2026-08-07 人手レビュー承認でライフライン等4手続きの出典5件が追加approved化(98→103。ADR-009)。
+    expect(body.length).toBe(103);
 
     for (const s of body) {
       // 公開に必要な列は揃う。

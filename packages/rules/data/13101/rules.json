@@ -1,7 +1,6 @@
 {
   "municipalityCode": "13101",
   "ruleVersion": "2026-08-06.1",
-  "publishedRuleVersion": "2026-07-25.1",
   "rules": [
     {
       "procedureId": "procedure_resident_registration",
