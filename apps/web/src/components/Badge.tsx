@@ -118,6 +118,28 @@ export function DataStatusBadge({ status }: { status: DataStatus }) {
   );
 }
 
+/**
+ * 「区以外の手続き」バッジ(ADR-009)。
+ * なぜ: 区の窓口へ行っても済まない手続き(東京都水道局・日本郵便・警視庁・契約先の電気ガス会社)を
+ * 一目で区別できるようにする。§15.3 に従い色だけに頼らず、建物から出ていく矢印アイコン+テキストで示す。
+ */
+export function NonMunicipalBadge() {
+  return (
+    <Badge
+      tone="blue"
+      icon={
+        <svg viewBox="0 0 20 20" className={iconCls} fill="currentColor">
+          <path d="M11 3a1 1 0 100 2h2.59l-5.3 5.29a1 1 0 101.42 1.42L15 6.41V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+          <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+        </svg>
+      }
+    >
+      <span className="sr-only">手続き先：</span>
+      区以外の手続き
+    </Badge>
+  );
+}
+
 /** 「要確認」バッジ(needs_confirmation)。 */
 export function NeedsConfirmationBadge() {
   return (

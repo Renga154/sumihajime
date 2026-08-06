@@ -9,7 +9,8 @@ import { formatDate, formatDateFromDateTime } from '../lib/format';
 import { buildChecklistIcs, datedTasks } from '../lib/ics';
 import { useAsync } from '../lib/useAsync';
 import { Card, EmptyState, ErrorMessage, Loading } from '../components/ui';
-import { NeedsConfirmationBadge, PriorityBadge } from '../components/Badge';
+import { NeedsConfirmationBadge, NonMunicipalBadge, PriorityBadge } from '../components/Badge';
+import { isNonMunicipal } from '../lib/provider-scope';
 import { ChatPanel } from '../components/ChatPanel';
 
 /**
@@ -261,6 +262,8 @@ function TaskCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <PriorityBadge priority={task.priority} />
+            {/* ADR-009: 区の窓口では済まない手続き(水道・郵便・電気ガス・免許)を区別する。 */}
+            {isNonMunicipal(task.category) && <NonMunicipalBadge />}
             {needsConfirmation && <NeedsConfirmationBadge />}
             {done && (
               <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800 ring-1 ring-inset ring-green-200">

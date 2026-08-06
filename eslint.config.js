@@ -15,6 +15,9 @@ export default tseslint.config(
       '**/test-results/**',
       // 提出スライドの生成スクリプト(スタンドアロンCJS。アプリのlint規約対象外)
       'docs/submission/slides/**',
+      // エージェント用の一時 git worktree。リポジトリの複製であり、本体を lint すれば足りる
+      // (複製側は ignores のパスが1階層ずれるため、除外しないと同じ違反を二重報告する)。
+      '**/.claude/worktrees/**',
     ],
   },
   js.configs.recommended,

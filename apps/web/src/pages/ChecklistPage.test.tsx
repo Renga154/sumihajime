@@ -58,7 +58,17 @@ const FIXTURE: ChecklistResponse = {
       id: 't-waste',
       procedureId: 'procedure_waste_check',
       title: 'ごみ収集日の確認',
+      category: 'waste_schedule',
       dueDescription: '生活開始まで',
+      applicable: 'applicable',
+    }),
+    // ADR-009: 区の窓口では済まない手続き(東京都水道局)。バッジで区別されることを固定する。
+    makeTask({
+      id: 't-water',
+      procedureId: 'procedure_water_supply',
+      title: '水道(下水道を含む)の使用開始・使用中止の手続き',
+      category: 'water_supply',
+      dueDescription: '3〜4日前までに',
       applicable: 'applicable',
     }),
   ],
@@ -120,6 +130,18 @@ describe('ChecklistPage', () => {
     renderChecklist();
     expect(await screen.findByText('要確認')).toBeInTheDocument();
     expect(screen.getByText('マイクロチップの有無が未確認です。')).toBeInTheDocument();
+  });
+
+  it('区以外の手続きだけに「区以外の手続き」バッジを表示する(ADR-009)', async () => {
+    renderChecklist();
+    const badges = await screen.findAllByText('区以外の手続き');
+    // 4タスク中、非自治体カテゴリ(water_supply)の1件だけに付く。
+    expect(badges).toHaveLength(1);
+    const card = badges[0]?.closest('li');
+    expect(card?.textContent).toContain('水道');
+    // 区の手続き(転入届・ごみ)のカードには付かない。
+    const residentCard = screen.getByText('転入届').closest('li');
+    expect(residentCard?.textContent).not.toContain('区以外の手続き');
   });
 
   it('完了チェックが localStorage に反映される(C-4)', async () => {

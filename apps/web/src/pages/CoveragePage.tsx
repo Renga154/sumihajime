@@ -81,9 +81,17 @@ function groupSourcesByMunicipality(
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([code, list]) => ({
       code,
-      name: nameByCode.get(code) ?? (code === '13000' ? '東京都' : '東京都・共通'),
+      // 13000=東京都の機関(水道局・下水道局・警視庁等)、00000=国/全国共通(デジタル庁・日本郵便)。
+      // どちらも区ではないため、区名と取り違えられない見出しにする(ADR-009)。
+      name: nameByCode.get(code) ?? providerGroupName(code),
       sources: list,
     }));
+}
+
+function providerGroupName(code: string): string {
+  if (code === '13000') return '東京都（都の機関）';
+  if (code === '00000') return '国・全国共通（区以外）';
+  return '東京都・共通';
 }
 
 export function CoveragePage() {

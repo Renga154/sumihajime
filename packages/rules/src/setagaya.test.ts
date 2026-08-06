@@ -42,6 +42,28 @@ const setagayaRuleSet: RuleSet = ruleSetSchema.parse(rulesRaw);
 /** なぜ: zodをrulesの直接依存に加えず、要素スキーマで1件ずつparseして配列を検証する。 */
 const parseProcedures = () =>
   (proceduresRaw.procedures as unknown[]).map((x) => procedureVersionSchema.parse(x));
+
+/**
+ * なぜ: 2026-08-06 追加の「自治体以外(ライフライン等)の手続き」4件(ADR-009)。全対応区で
+ * municipalityCode 以外まったく同一の内容であり、区固有データの回帰ガードである本ファイルの
+ * 対象外とする(4件そのものの検証は non-municipal.test.ts が全区横断で行う)。
+ * ペルソナ評価には影響するため、常に該当する3件(水道・郵便・電気ガス)は期待値へ加える。
+ * 運転免許は needsVehicleGuidance フラグ依存のため既定プロフィールでは非該当。
+ */
+const NON_MUNICIPAL_IDS = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+  'procedure_driver_license_change',
+];
+const NON_MUNICIPAL_ALWAYS_APPLICABLE = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+];
+
+const parseMunicipalProcedures = () =>
+  parseProcedures().filter((p) => !NON_MUNICIPAL_IDS.includes(p.id));
 const parseFacilities = () =>
   (facilitiesRaw.facilities as unknown[]).map((x) => facilitySchema.parse(x));
 const parseAreas = () => (wasteRaw.wasteAreas as unknown[]).map((x) => wasteAreaSchema.parse(x));
@@ -102,15 +124,21 @@ describe('Setagaya (13112) — schema validation (来歴・型検証; CI gate)',
 
   it('rules.json parses as a RuleSet, scoped to 13112, 10 rules, ruleVersion 2026-07-25.1', () => {
     expect(setagayaRuleSet.municipalityCode).toBe(MUNICIPALITY);
-    expect(setagayaRuleSet.ruleVersion).toBe('2026-07-25.1');
-    expect(setagayaRuleSet.rules.length).toBe(10);
-    // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
-    expect(setagayaRuleSet.publishedRuleVersion).toBeUndefined();
+    expect(setagayaRuleSet.ruleVersion).toBe('2026-08-06.1');
+    // ADR-007 §5: 追加分は staging のため、公開される rule_set の版は据え置く。
+    expect(setagayaRuleSet.publishedRuleVersion).toBe('2026-07-25.1');
+    expect(setagayaRuleSet.rules.length).toBe(14);
+    // 内訳: 区の手続き10件 + 自治体以外(ライフライン等)4件(ADR-009)。
+    expect(
+      setagayaRuleSet.rules.filter((r) => !NON_MUNICIPAL_IDS.includes(r.procedureId)),
+    ).toHaveLength(10);
   });
 
   it('procedures.json — 10 ProcedureVersions parse; 全件 verified(8件は2026-07-21承認・不変、2件はStep3 2026-07-25承認)', () => {
-    const procedures = parseProcedures();
+    // 区の手続き10件のみを対象にする(ライフライン4件は non-municipal.test.ts が検証)。
+    const procedures = parseMunicipalProcedures();
     expect(procedures.length).toBe(10);
+    expect(parseProcedures()).toHaveLength(14);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(MUNICIPALITY);
       expect(pv.sourceIds.length).toBeGreaterThan(0);
@@ -181,6 +209,7 @@ describe('Setagaya (13112) — persona evaluations (該当タスクの増減を�
         'procedure_national_pension_address',
         'procedure_resident_registration',
         'procedure_waste_check',
+        ...NON_MUNICIPAL_ALWAYS_APPLICABLE,
       ].sort(),
     );
     // 転入届は urgent かつ moveDate+14日
@@ -277,9 +306,13 @@ describe('Setagaya (13112) — persona evaluations (該当タスクの増減を�
     );
     expect(outcomeFor(off, 'procedure_mynumber_continued_use').applicable).toBe('not_applicable');
     expect(outcomeFor(off, 'procedure_national_pension_address').applicable).toBe('not_applicable');
-    // 転入届とごみ確認は全員該当のまま
+    // 転入届とごみ確認、および全員該当のライフライン3件は残る
     expect(applicableIds(off)).toEqual(
-      ['procedure_resident_registration', 'procedure_waste_check'].sort(),
+      [
+        'procedure_resident_registration',
+        'procedure_waste_check',
+        ...NON_MUNICIPAL_ALWAYS_APPLICABLE,
+      ].sort(),
     );
   });
 });

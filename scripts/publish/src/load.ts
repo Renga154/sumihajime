@@ -144,6 +144,9 @@ export function loadCoverage(repoRoot: string): Coverage[] {
     'waste_schedule',
     'waste_sorting',
     'rag',
+    // ADR-009: 自治体以外(ライフライン等)の手続き。水道・郵便転居・電気ガス・運転免許をまとめた
+    // 1カテゴリとして、区の手続きとは別枠で対応状況を開示する(承認までは unavailable)。
+    'non_municipal',
   ] as const;
   const rows: Coverage[] = [];
   for (const rec of records) {

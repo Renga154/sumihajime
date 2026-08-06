@@ -132,6 +132,13 @@ export function ProcedureDetailPage() {
           </Section>
 
           <Section title="手続きの方法">
+            {/* なぜ: 手続き方法が公式に確定していない場合(例: 契約先により異なる電気・ガス)は
+                空のまま見せず、推測しない旨を明示する(ADR-009 / 原則3)。 */}
+            {state.data.procedure.channels.length === 0 && (
+              <p className="text-sm text-slate-600">
+                手続きの方法は公式には確定していません（公式ページや契約先でご確認ください）。
+              </p>
+            )}
             <ul className="flex flex-wrap gap-2">
               {state.data.procedure.channels.map((ch) => (
                 <li

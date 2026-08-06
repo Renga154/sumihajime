@@ -38,6 +38,29 @@ const otaRuleSet: RuleSet = ruleSetSchema.parse(otaRulesRaw);
 const setagayaRuleSet: RuleSet = ruleSetSchema.parse(setagayaRulesRaw);
 
 const parseProcedures = () => proceduresRaw.procedures.map((x) => procedureVersionSchema.parse(x));
+
+/**
+ * なぜ: 2026-08-06 追加の「自治体以外(ライフライン等)の手続き」4件(ADR-009)。全対応区で
+ * municipalityCode 以外まったく同一の内容であり、区固有データの回帰ガードである本ファイルの
+ * 対象外とする(4件そのものの検証は non-municipal.test.ts が全区横断で行う)。
+ * ペルソナ評価には影響するため、常に該当する3件(水道・郵便・電気ガス)は期待値へ加える。
+ * 運転免許は needsVehicleGuidance フラグ依存のため既定プロフィールでは非該当。
+ */
+const NON_MUNICIPAL_IDS = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+  'procedure_driver_license_change',
+];
+const NON_MUNICIPAL_ALWAYS_APPLICABLE = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+];
+
+const parseMunicipalProcedures = () =>
+  parseProcedures().filter((p) => !NON_MUNICIPAL_IDS.includes(p.id));
+
 const parseFacilities = () => facilitiesRaw.facilities.map((x) => facilitySchema.parse(x));
 
 const OTA = '13111';
@@ -94,13 +117,21 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
 describe('Ota (13111) — schema validation (来歴・型検証; CI gate)', () => {
   it('rules.json parses as a RuleSet, scoped to 13111, 10 rules, ruleVersion 2026-07-26.1', () => {
     expect(otaRuleSet.municipalityCode).toBe(OTA);
-    expect(otaRuleSet.ruleVersion).toBe('2026-07-26.1');
-    expect(otaRuleSet.rules.length).toBe(10);
+    expect(otaRuleSet.ruleVersion).toBe('2026-08-06.1');
+    // ADR-007 §5: 追加分は staging のため、公開される rule_set の版は据え置く。
+    expect(otaRuleSet.publishedRuleVersion).toBe('2026-07-26.1');
+    expect(otaRuleSet.rules.length).toBe(14);
+    // 内訳: 区の手続き10件 + 自治体以外(ライフライン等)4件(ADR-009)。
+    expect(otaRuleSet.rules.filter((r) => !NON_MUNICIPAL_IDS.includes(r.procedureId))).toHaveLength(
+      10,
+    );
   });
 
   it('procedures.json — 10 ProcedureVersions parse; 全件 verified(2026-07-26 人手レビュー承認済み)+ sourceIds + lastVerifiedAt', () => {
-    const procedures = parseProcedures();
+    // 区の手続き10件のみを対象にする(ライフライン4件は non-municipal.test.ts が検証)。
+    const procedures = parseMunicipalProcedures();
     expect(procedures.length).toBe(10);
+    expect(parseProcedures()).toHaveLength(14);
     for (const pv of procedures) {
       expect(pv.municipalityCode).toBe(OTA);
       // 2026-07-26 人手レビュー承認(ユーザー決裁「2区とも承認」)により verified へ昇格。
@@ -156,6 +187,7 @@ describe('Ota (13111) — persona evaluations (子育てペルソナで該当が
         'procedure_national_pension_address',
         'procedure_resident_registration',
         'procedure_waste_check',
+        ...NON_MUNICIPAL_ALWAYS_APPLICABLE,
       ].sort(),
     );
     // 転入届は urgent かつ moveDate+14日。

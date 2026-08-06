@@ -13,6 +13,29 @@ import { dirname } from 'node:path';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
+/**
+ * なぜ: 2026-08-06 に追加した自治体以外(ライフライン等)の4手続きは、出典が registry.csv で
+ * review_status=pending のため dataStatus=partial(ADR-007 の staging)である。よって
+ * 全対応区で「区の10手続きは公開・この4件は必ず除外」が正しい期待値になる。承認されるまで
+ * この4件が公開(D1シード)へ載らないことを、区別のdescribeで恒久的に固定する(ADR-009)。
+ */
+const NON_MUNICIPAL_STAGED_IDS = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+  'procedure_driver_license_change',
+];
+
+function stagedIdsFor(
+  data: ReturnType<typeof loadPublishData>,
+  municipalityCode: string,
+): string[] {
+  return data.excludedProcedures
+    .filter((p) => p.municipalityCode === municipalityCode)
+    .map((p) => p.id)
+    .sort();
+}
+
 describe('publish gate — approved-only enforcement (FR-022〜024)', () => {
   it('passes when every referenced source is approved', () => {
     const input: PublishGateInput = {
@@ -77,6 +100,18 @@ describe('publish gate — real repository data (13112)', () => {
         expect(data.approvedSourceIds.has(sid)).toBe(true);
       }
     }
+  });
+
+  it('公開される rule_set の版は publishedRuleVersion(据え置き)であり、staging追加で前進しない', () => {
+    // なぜ: ADR-007 §5。2026-08-06 にライフライン4ルールを足して rules.json の ruleVersion は
+    // 2026-08-06.1 へ前進したが、公開される部分集合(verified 10ルール)は内容が不変。
+    // 公開版まで前進させると「公開済みルールが変わった」と誤認させるため据え置く(誠実な版付け)。
+    const data = loadPublishData(repoRoot);
+    expect(data.ruleSets[0]?.ruleVersion).toBe('2026-07-25.1');
+    expect(data.ruleSets[0]?.rules).toHaveLength(10);
+    expect(
+      data.ruleSets[0]?.rules.some((r) => NON_MUNICIPAL_STAGED_IDS.includes(r.procedureId)),
+    ).toBe(false);
   });
 
   it('synthesizes unique facility_ids (源データの壊れたIDを機械置換)', () => {
@@ -161,11 +196,12 @@ describe('publish gate — Shinjuku (13104) after human review approval (T-016)'
 describe('publish gate — Setagaya school-transfer & childcare after human review approval (Step3)', () => {
   // なぜ: Step3 で追加した世田谷(13112)の学校転入・保育の2手続きは、
   // 2026-07-25 人手レビュー承認(ユーザー決裁)により registry.csv の4ソースがapproved化、
-  // procedures.jsonのdataStatusがpartial→verifiedへ、rules.jsonのpublishedRuleVersionが除去
-  // され ruleVersion(2026-07-25.1)がそのまま公開版になった。
+  // procedures.jsonのdataStatusがpartial→verifiedへ更新され、区の10手続きが公開版になった。
   // 承認前は本describeが「partial手続き+pendingソースはseed/ゲート対象から除外される」ことを
   // 検証していた(除外ロジック自体の機械検証はfixtureベースの先頭describeで恒久的に担保)。
-  // 承認後は逆に、世田谷の全10手続き・除外0件で公開ゲートが通過することを固定する。
+  // 承認後は逆に、世田谷の区の全10手続きで公開ゲートが通過することを固定する。
+  // なお 2026-08-06 のライフライン4件追加により publishedRuleVersion は 2026-07-25.1 で
+  // 再び据え置かれている(ADR-007 §5 / ADR-009。公開内容は不変)。
   const APPROVED_STEP3_IDS = ['procedure_childcare_application', 'procedure_school_transfer'];
   const APPROVED_SOURCES = [
     'src-13112-school_transfer-001',
@@ -174,15 +210,17 @@ describe('publish gate — Setagaya school-transfer & childcare after human revi
     'src-13112-childcare-002',
   ];
 
-  it('(a) 承認後: 世田谷の全10手続きが公開対象(除外0件)、既定buildSeedは通過する', () => {
+  it('(a) 承認後: 世田谷の区の10手続きが公開対象(除外はライフライン4件のみ)、既定buildSeedは通過する', () => {
     const data = loadPublishData(repoRoot); // 既定=13112のみ
-    // 公開対象は verified 10手続き全件(除外なし)。
+    // 公開対象は verified 10手続き全件(区の手続き)。
     expect(data.procedures.length).toBe(10);
     expect(data.procedures.every((p) => p.dataStatus === 'verified')).toBe(true);
     expect(APPROVED_STEP3_IDS.every((id) => data.procedures.some((p) => p.id === id))).toBe(true);
-    // 除外(staging)は発生しない。
-    expect(data.excludedProcedures).toEqual([]);
-    expect(data.excludedRuleRefs).toEqual([]);
+    // 除外(staging)は 2026-08-06 追加のライフライン4件のみ(出典がpendingのため。ADR-009)。
+    expect(stagedIdsFor(data, '13112')).toEqual([...NON_MUNICIPAL_STAGED_IDS].sort());
+    expect(data.excludedRuleRefs.map((r) => r.procedureId).sort()).toEqual(
+      [...NON_MUNICIPAL_STAGED_IDS].sort(),
+    );
     // Step3で承認した4ソースは approved 集合に含まれ、公開参照(references)にも含まれる。
     const referenced = new Set(data.references.flatMap((r) => r.sourceIds));
     for (const sid of APPROVED_SOURCES) {
@@ -243,7 +281,8 @@ describe('publish gate — Suginami (13115) after human review approval (Step4-A
     expect(data.facilities.some((f) => f.municipalityCode === '13115')).toBe(true);
     expect(data.wasteSortingItems.some((i) => i.municipalityCode === '13115')).toBe(true);
     // 除外(staging)は発生しない(waste_scheduleはwaste.json自体が存在しないため対象外)。
-    expect(data.excludedProcedures.filter((p) => p.municipalityCode === '13115')).toEqual([]);
+    // 除外(staging)は 2026-08-06 追加のライフライン4件のみ(出典がpendingのため。ADR-009)。
+    expect(stagedIdsFor(data, '13115')).toEqual([...NON_MUNICIPAL_STAGED_IDS].sort());
     expect(data.excludedNonProcedureSources.filter((s) => s.municipalityCode === '13115')).toEqual(
       [],
     );
@@ -327,7 +366,8 @@ describe('publish gate — Shinagawa (13109) after human review approval (Step5-
     expect(data.facilities.some((f) => f.municipalityCode === '13109')).toBe(true);
     expect(data.wasteSortingItems.some((i) => i.municipalityCode === '13109')).toBe(true);
     // 除外(staging)は発生しない(waste_scheduleはwaste.json自体が存在しないため対象外)。
-    expect(data.excludedProcedures.filter((p) => p.municipalityCode === '13109')).toEqual([]);
+    // 除外(staging)は 2026-08-06 追加のライフライン4件のみ(出典がpendingのため。ADR-009)。
+    expect(stagedIdsFor(data, '13109')).toEqual([...NON_MUNICIPAL_STAGED_IDS].sort());
     expect(data.excludedNonProcedureSources.filter((s) => s.municipalityCode === '13109')).toEqual(
       [],
     );
@@ -381,7 +421,8 @@ describe('publish gate — Ota (13111) after human review approval (Step5-B)', (
     expect(data.ruleSets.some((rs) => rs.municipalityCode === '13111')).toBe(true);
     expect(data.facilities.some((f) => f.municipalityCode === '13111')).toBe(true);
     // 除外(staging)は発生しない(waste_schedule/waste_sortingはファイル自体が存在しないため対象外)。
-    expect(data.excludedProcedures.filter((p) => p.municipalityCode === '13111')).toEqual([]);
+    // 除外(staging)は 2026-08-06 追加のライフライン4件のみ(出典がpendingのため。ADR-009)。
+    expect(stagedIdsFor(data, '13111')).toEqual([...NON_MUNICIPAL_STAGED_IDS].sort());
     expect(data.excludedNonProcedureSources.filter((s) => s.municipalityCode === '13111')).toEqual(
       [],
     );

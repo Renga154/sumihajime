@@ -11,3 +11,6 @@ tests/e2e/test-results
 data/sources
 # D1マイグレーション(prettierにSQLパーサがないため除外)。
 **/migrations/*.sql
+# エージェント用の一時 git worktree(.claude/worktrees/<id>/ はリポジトリの複製)。
+# 複製側まで整形すると、本体と同じファイルを二重に扱い意図しない差分を生むため除外する。
+.claude/worktrees
