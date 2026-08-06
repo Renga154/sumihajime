@@ -2,7 +2,7 @@ import type { Municipality } from '@tmn/schemas';
 
 /**
  * なぜ: 東京都62市区町村(23区+26市+5町+8村)を municipalities テーブルへ投入する静的マスタ。
- * supported=true は縦切り整備済みの13区(千代田/新宿/江東/品川/大田/世田谷/中野/杉並/豊島/北/荒川/板橋/練馬)のみ。残る49はチェックリスト未対応だが、
+ * supported=true は縦切り整備済みの15区(千代田/新宿/江東/品川/大田/世田谷/中野/杉並/豊島/北/荒川/板橋/練馬/足立/江戸川)のみ。残る47はチェックリスト未対応だが、
  * FR-021「未対応でも公式サイトへ誘導」のため officialUrl を全件に持たせ、CLAUDE.md原則9
  * 「未対応を対応済みに見せない」を LandingPage 側の折りたたみグループ表示で担保する。
  *
@@ -217,9 +217,14 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.nerima.tokyo.jp/',
   },
   {
+    // なぜ: Batch10で足立区データ(手続き10件+自治体以外のライフライン等4件/窓口施設17件)を整備し、
+    // 2026-08-07 ユーザー(maintainer)決裁「2区とも承認」により全件verified・approved化されたため
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13121',
     name: '足立区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.adachi.tokyo.jp/',
   },
   {
@@ -229,9 +234,14 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.katsushika.lg.jp/',
   },
   {
+    // なぜ: Batch10で江戸川区データ(手続き10件+自治体以外のライフライン等4件/窓口施設6件)を整備し、
+    // 2026-08-07 ユーザー(maintainer)決裁「2区とも承認」により全件verified・approved化されたため
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13123',
     name: '江戸川区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.edogawa.tokyo.jp/',
   },
 

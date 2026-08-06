@@ -10,8 +10,10 @@ import { MunicipalityScopeMismatchError } from './errors.js';
 /**
  * なぜ: Batch10(足立13121 / 江戸川13123)の縦切りデータの来歴・型・決定論・**区ごとに異なる
  * 期限** をCIで機械検証する。ユーザー決裁(2026-08-07「23区全対応・案A=手続き中心で埋め、
- * 付帯データは取れる区だけ」)に基づく追加であり、2区とも人手レビュー未了(全ソース
- * review_status=pending / 全手続き dataStatus=partial)。
+ * 付帯データは取れる区だけ」)に基づく追加。2026-08-07にユーザー(maintainer)決裁
+ * 「2区とも承認」により人手レビュー承認され、全10手続きが dataStatus=verified、対応する
+ * registry.csv のソースが review_status=approved へ更新された。あわせて自治体以外
+ * (ライフライン等)の手続き4件(ADR-009)を共通テンプレートから追加し14件になった。
  *
  * 本バッチで特に固定したい不変条件:
  * (a) **子ども医療費助成の期限が区ごとに違う**: 江戸川=3か月以内(事由発生日=転入日起算)/
@@ -25,8 +27,11 @@ import { MunicipalityScopeMismatchError } from './errors.js';
  *     新規に飼い始めたときの登録に対する期限であり転入時の変更届の期限ではない。
  * (d) **学校で交付される書類の名称が違う**: 足立=就学通知書 / 江戸川=転入学通知書。
  * (e) マイナンバーカード継続利用は2区とも90日だが起算日が「転入(届出)日」のため算定しない。
- * (f) 付帯データの誠実縮退: 2区とも waste.json / waste-sorting.json を作らない。
- * (g) 公開ゲート(ADR-007): 2区の全ソースが registry.csv で pending であること。
+ * (f) 付帯データの誠実縮退: 2区とも waste.json / waste-sorting.json を作らない
+ *     (承認後も恒久的な誠実縮退。coverage.csv の waste_schedule/waste_sorting は unavailable のまま)。
+ * (g) 公開ゲート(ADR-007): 2区の対応ソースは registry.csv で review_status=approved であること。
+ * (h) ライフライン4件そのものの検証は non-municipal.test.ts が全区横断で行うため、本ファイルの
+ *     区固有アサーションは区の手続き10件を対象にする(NON_MUNICIPAL_IDS で除外)。
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -59,6 +64,27 @@ function facilitiesOf(code: string) {
 const RULE_SETS: Record<string, RuleSet> = Object.fromEntries(
   BATCH10.map((code) => [code, ruleSetOf(code)]),
 );
+
+/**
+ * なぜ: 2026-08-06 追加の「自治体以外(ライフライン等)の手続き」4件(ADR-009)。全対応区で
+ * municipalityCode 以外まったく同一の内容であり、区固有データの回帰ガードである本ファイルの
+ * 対象外とする(4件そのものの検証は non-municipal.test.ts が全区横断で行う)。
+ */
+const NON_MUNICIPAL_IDS = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+  'procedure_driver_license_change',
+];
+const NON_MUNICIPAL_ALWAYS_APPLICABLE = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+];
+
+function municipalProceduresOf(code: string) {
+  return proceduresOf(code).filter((p) => !NON_MUNICIPAL_IDS.includes(p.id));
+}
 
 function profile(overrides: {
   municipalityCode?: string;
@@ -120,34 +146,43 @@ function familyIn(code: string): Profile {
   });
 }
 
-describe('Batch10 — schema validation & pending status (CI gate)', () => {
+describe('Batch10 — schema validation & approved status (CI gate)', () => {
   it.each(BATCH10)(
-    '%s: rules.json が RuleSet として parse し 10ルール・自治体スコープ一致',
+    '%s: rules.json が RuleSet として parse し 14ルール(区10件+ライフライン等4件)・自治体スコープ一致',
     (code) => {
       const rs = RULE_SETS[code] as RuleSet;
       expect(rs.municipalityCode).toBe(code);
       expect(rs.ruleVersion).toBe(RULE_VERSION);
-      expect(rs.rules.length).toBe(10);
+      // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
+      expect(rs.publishedRuleVersion).toBeUndefined();
+      expect(rs.rules.length).toBe(14);
+      expect(rs.rules.filter((r) => !NON_MUNICIPAL_IDS.includes(r.procedureId))).toHaveLength(10);
     },
   );
 
-  it.each(BATCH10)('%s: procedures.json が10件 parse し 全件 partial(人手レビュー未了)', (code) => {
-    const procedures = proceduresOf(code);
-    expect(procedures.length).toBe(10);
-    for (const pv of procedures) {
-      expect(pv.municipalityCode).toBe(code);
-      // ADR-007: 公開単位は verified のみ。partial は公開(D1シード)対象に入らない。
-      expect(pv.dataStatus).toBe('partial');
-      expect(pv.version).toBe(RULE_VERSION);
-      expect(pv.lastVerifiedAt).toBe(LAST_VERIFIED);
-      expect(pv.sourceIds.length).toBeGreaterThan(0);
-      // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持する。
-      expect(pv.dueDate).toBeUndefined();
-      expect(pv.dueDescription).toBeDefined();
-    }
-  });
+  it.each(BATCH10)(
+    '%s: procedures.json — 区の手続き10件 parse し 全件 verified(2026-08-07人手レビュー承認)',
+    (code) => {
+      const procedures = municipalProceduresOf(code);
+      expect(procedures.length).toBe(10);
+      expect(proceduresOf(code)).toHaveLength(14);
+      for (const pv of procedures) {
+        expect(pv.municipalityCode).toBe(code);
+        // ADR-007: 公開単位は verified のみ。
+        expect(pv.dataStatus).toBe('verified');
+        expect(pv.version).toBe(RULE_VERSION);
+        expect(pv.lastVerifiedAt).toBe(LAST_VERIFIED);
+        expect(pv.sourceIds.length).toBeGreaterThan(0);
+        // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持する。
+        expect(pv.dueDate).toBeUndefined();
+        expect(pv.dueDescription).toBeDefined();
+        // 承認によりpending系のcaution文言は除去されている。
+        expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(false);
+      }
+    },
+  );
 
-  it.each(BATCH10)('%s: procedures と rules が同一の10 procedureId を過不足なく覆う', (code) => {
+  it.each(BATCH10)('%s: procedures と rules が同一の14 procedureId を過不足なく覆う', (code) => {
     const procIds = proceduresOf(code)
       .map((p) => p.id)
       .sort();
@@ -185,9 +220,11 @@ describe('Batch10 — schema validation & pending status (CI gate)', () => {
     );
   });
 
-  it('coverage.csv — 2区は全カテゴリ unavailable(未対応を一部対応に見せない)', () => {
-    // なぜ: 2区は人手レビュー未了で公開データが1件も無く municipalities.ts の supported も
-    // false のため、利用者から見て実際に使えるカテゴリが存在しない(CLAUDE.md原則9)。
+  it('coverage.csv — 2区は承認済みカテゴリが verified、収集曜日・分別辞書・ragは恒久的にunavailable', () => {
+    // なぜ: 2026-08-07 承認により手続き系カテゴリ(区の10手続き+ライフライン等4件)は
+    // verified になった一方、waste_schedule/waste_sorting は都カタログに機械判読可能な
+    // データが存在しないため恒久的な誠実縮退で unavailable のまま、rag は未整備のため
+    // unavailable のまま(CLAUDE.md原則8/9)。
     const rows = readFileSync(resolve(repoRoot, 'docs/data-sources/coverage.csv'), 'utf-8')
       .split(/\r?\n/)
       .filter((l) => l.trim().length > 0);
@@ -197,9 +234,15 @@ describe('Batch10 — schema validation & pending status (CI gate)', () => {
       const row = rows.find((l) => l.startsWith(`${code},`));
       expect(row, `coverage row missing for ${code}`).toBeDefined();
       const cells = (row as string).split(',');
-      for (let i = 2; i <= 13; i++) {
-        expect(cells[i], `${code} / ${header[i]}`).toBe('unavailable');
+      // resident_registration(2) .. facilities(9)
+      for (let i = 2; i <= 9; i++) {
+        expect(cells[i], `${code} / ${header[i]}`).toBe('verified');
       }
+      expect(cells[10], `${code} / waste_schedule`).toBe('unavailable');
+      expect(cells[11], `${code} / waste_sorting`).toBe('unavailable');
+      expect(cells[12], `${code} / rag`).toBe('unavailable');
+      expect(cells[13], `${code} / non_municipal`).toBe('verified');
+      expect(cells[14], `${code} / overall_status`).toBe('partial');
     }
   });
 
@@ -398,31 +441,36 @@ describe('Batch10 — 区ごとに異なる期限(共通デフォルト値を作
 });
 
 describe('Batch10 — ペルソナ評価(正例・負例・境界)', () => {
-  it.each(BATCH10)('%s: 単身・都外・マイナンバーあり は5件該当・子育て/犬は非該当', (code) => {
-    const single = profile({ municipalityCode: code, flags: { hasMyNumberCard: true } });
-    const applicable = evaluate(single, RULE_SETS[code] as RuleSet)
-      .outcomes.filter((o) => o.applicable === 'applicable')
-      .map((o) => o.procedureId)
-      .sort();
-    expect(applicable).toEqual(
-      [
-        'procedure_mynumber_continued_use',
-        'procedure_national_health_insurance',
-        'procedure_national_pension_address',
-        'procedure_resident_registration',
-        'procedure_waste_check',
-      ].sort(),
-    );
-    for (const id of [
-      'procedure_child_allowance',
-      'procedure_child_medical',
-      'procedure_school_transfer',
-      'procedure_childcare_application',
-      'procedure_dog_registration_transfer',
-    ]) {
-      expect(outcomeFor(single, code, id).applicable, `${code}/${id}`).toBe('not_applicable');
-    }
-  });
+  it.each(BATCH10)(
+    '%s: 単身・都外・マイナンバーあり は8件該当(区5件+ライフライン3件)・子育て/犬/運転免許は非該当',
+    (code) => {
+      const single = profile({ municipalityCode: code, flags: { hasMyNumberCard: true } });
+      const applicable = evaluate(single, RULE_SETS[code] as RuleSet)
+        .outcomes.filter((o) => o.applicable === 'applicable')
+        .map((o) => o.procedureId)
+        .sort();
+      expect(applicable).toEqual(
+        [
+          'procedure_mynumber_continued_use',
+          'procedure_national_health_insurance',
+          'procedure_national_pension_address',
+          'procedure_resident_registration',
+          'procedure_waste_check',
+          ...NON_MUNICIPAL_ALWAYS_APPLICABLE,
+        ].sort(),
+      );
+      for (const id of [
+        'procedure_child_allowance',
+        'procedure_child_medical',
+        'procedure_school_transfer',
+        'procedure_childcare_application',
+        'procedure_dog_registration_transfer',
+        'procedure_driver_license_change',
+      ]) {
+        expect(outcomeFor(single, code, id).applicable, `${code}/${id}`).toBe('not_applicable');
+      }
+    },
+  );
 
   it.each(BATCH10)('%s: 国保フラグOFF・マイナンバーなしで非該当(負例)', (code) => {
     const off = profile({
@@ -545,14 +593,15 @@ describe('Batch10 — provenance integrity & scope safety', () => {
   );
 
   it.each(BATCH10)(
-    '%s: registry.csv の当該行は全て review_status=pending(未承認データを公開しない)',
+    '%s: registry.csv の当該行は全て review_status=approved(2026-08-07人手レビュー承認)',
     (code) => {
       const rows = registryRows.filter((l) => l.startsWith(`src-${code}-`));
       expect(rows.length).toBeGreaterThan(0);
       for (const row of rows) {
         const cells = row.split(',');
-        // 列順: ... 14:content_hash, 15:effective_from, 16:effective_to, 17:review_status
-        expect(cells[17], row.slice(0, 60)).toBe('pending');
+        // 列順: ... 14:content_hash, 15:effective_from, 16:effective_to, 17:review_status, 18:reviewer
+        expect(cells[17], row.slice(0, 60)).toBe('approved');
+        expect(cells[18], row.slice(0, 60)).toContain('maintainer');
         // content_hash(SHA-256 16進64桁)が記録されていること。
         expect(cells[14], row.slice(0, 60)).toMatch(/^[0-9a-f]{64}$/);
       }

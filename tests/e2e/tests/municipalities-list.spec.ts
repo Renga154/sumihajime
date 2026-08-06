@@ -1,15 +1,17 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Wave2/Step5/Batch6-A/Batch7: 東京都62市区町村の誠実リスト化。対応中13件(千代田/新宿/江東/品川/
- * 大田/世田谷/中野/杉並/豊島/北/荒川/板橋/練馬)を主役に、未対応は「23区/市部/町村部」の
- * 折りたたみグループに収め、各自治体は選択不可で公式サイト導線のみ(CLAUDE.md原則9)。
+ * Wave2/Step5/Batch6-A/Batch7/Batch10: 東京都62市区町村の誠実リスト化。対応中15件(千代田/新宿/
+ * 江東/品川/大田/世田谷/中野/杉並/豊島/北/荒川/板橋/練馬/足立/江戸川)を主役に、未対応は
+ * 「23区/市部/町村部」の折りたたみグループに収め、各自治体は選択不可で公式サイト導線のみ
+ * (CLAUDE.md原則9)。
  */
-test('62リスト: 対応13件+未対応グループの展開と公式リンク', async ({ page }) => {
+test('62リスト: 対応15件+未対応グループの展開と公式リンク', async ({ page }) => {
   await page.goto('/');
 
-  // 対応している自治体は13件(=「この自治体で始める」ボタンは13だけ。Batch7で中野・豊島・北・荒川を追加)。
-  await expect(page.getByRole('button', { name: 'この自治体で始める' })).toHaveCount(13);
+  // 対応している自治体は15件(=「この自治体で始める」ボタンは15だけ。Batch7で中野・豊島・北・荒川、
+  // Batch10で足立・江戸川を追加)。
+  await expect(page.getByRole('button', { name: 'この自治体で始める' })).toHaveCount(15);
 
   // 既定では未対応グループは折りたたまれ、市部の自治体は見えない。
   const hachiojiInitial = page.getByRole('listitem').filter({ hasText: '八王子市' });

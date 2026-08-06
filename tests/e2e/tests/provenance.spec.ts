@@ -19,8 +19,9 @@ test('透明性ページ: 鮮度サマリー・台帳テーブル・CC BYバッ�
   // Step5統合後、承認済み公式ソースは98件(Step4時点の72 + 品川12 + 大田14)。
   // 2026-08-07 人手レビュー承認(ADR-009)でライフライン等4手続きの出典5件が追加approved化(98→103)、
   // 同日さらに練馬(13120)の11ソース+板橋(13119)の12ソースが人手レビュー承認(103→126)、
-  // 同日さらにBatch7の4区(中野16=既存13+wagmap由来3 / 豊島11 / 北15 / 荒川14)が承認(126→182)。
-  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('182');
+  // 同日さらにBatch7の4区(中野16=既存13+wagmap由来3 / 豊島11 / 北15 / 荒川14)が承認(126→182)、
+  // 同日さらにBatch10の足立(13121)16ソース+江戸川(13123)17ソースが人手レビュー承認(182→215)。
+  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('215');
   await expect(page.getByRole('heading', { name: 'データの新しさ' })).toBeVisible();
   await expect(page.getByText(/残り\s*\d+日/).first()).toBeVisible();
 

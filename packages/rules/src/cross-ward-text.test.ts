@@ -79,6 +79,15 @@ interface AllowedMention {
 
 const ALLOWLIST: readonly AllowedMention[] = [
   {
+    municipalityCode: '13121',
+    wardName: '北区',
+    textIncludes: '江北区民事務所',
+    reason:
+      '足立区の地名「江北」(足立区江北)にある区民事務所の施設名で、「江北」+「区民事務所」が連結した結果' +
+      '「北区」に部分一致しているだけ。足立区の地名であり北区とは無関係(足立区に北区の窓口・情報が' +
+      '混入しているわけではない)。区名を伏せると足立区民が実在の施設を検索・来訪できなくなる。',
+  },
+  {
     municipalityCode: '13119',
     wardName: '練馬区',
     textIncludes: '転入予定のない練馬区民は申込みを制限されません',
