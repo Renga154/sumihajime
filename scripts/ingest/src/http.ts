@@ -5,16 +5,42 @@
  * 分類できるように例外を投げる。
  */
 
-/** 許可するホスト接尾辞。東京都内自治体・都オープンデータ・CKAN は全て .lg.jp 配下。 */
-const ALLOWED_HOST_SUFFIXES = ['.lg.jp'] as const;
-/** 例外的に接尾辞一致しない完全一致許可(将来のCKANホスト名等)。現状は .lg.jp で充足。 */
-const ALLOWED_HOST_EXACT = ['lg.jp'] as const;
+/**
+ * 許可するホスト接尾辞。
+ * - `.lg.jp` 地方公共団体(都・区市町村・都オープンデータ・CKAN)
+ * - `.go.jp` 国の機関(デジタル庁等)。いずれも登録主体が限定されており公式性が担保される。
+ *
+ * なぜ `.tokyo.jp` を接尾辞で許可しないか: 東京都内に住所があれば誰でも取得できる
+ * 地域ドメインで、ドメイン自体が公式性の証明にならない。区の公式サイトが .tokyo.jp の
+ * 場合は下の完全一致リストへ個別に登録する。
+ */
+const ALLOWED_HOST_SUFFIXES = ['.lg.jp', '.go.jp'] as const;
+/**
+ * 接尾辞では表現できない、監査で公式性を確認済みのホストだけを完全一致で許可する。
+ * 追加するときは「その組織の公式サイトであること」または「自治体公式ページから
+ * リンクされた公式データの配信先であること」を registry.csv の notes に記録すること。
+ */
+const ALLOWED_HOST_EXACT = [
+  'lg.jp',
+  // 公式サイトが .tokyo.jp の区(いずれも当該区の公式サイトであることを監査で確認済み)
+  'www.city.suginami.tokyo.jp',
+  'www.city.shinagawa.tokyo.jp',
+  'www.city.ota.tokyo.jp',
+  'www.city.nerima.tokyo.jp',
+  'www.city.itabashi.tokyo.jp',
+  // 日本郵便(郵便法上の郵便事業提供者。転居届の一次情報源。ADR-009)
+  'www.post.japanpost.jp',
+  // 中野区のオープンデータ配信先。区公式ページからリンクされた公式データだが配信は
+  // 外部GISサービス上にあるため、ワイルドカードにせずこのホストだけを許可する
+  // (ユーザー決裁 2026-08-07)。
+  'www2.wagmap.jp',
+] as const;
 
 export class DisallowedHostError extends Error {
   constructor(url: string, host: string) {
     super(
       `Refusing to fetch non-official host "${host}" (url: ${url}). ` +
-        `Only official domains are allowed: *.lg.jp (municipal / Tokyo open data / CKAN).`,
+        `Allowed: *.lg.jp / *.go.jp, or a host explicitly audited and listed in ALLOWED_HOST_EXACT.`,
     );
     this.name = 'DisallowedHostError';
   }
