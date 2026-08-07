@@ -17,27 +17,59 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 
+/** registry.csv の承認済みHTMLソース数(自治体別)。索引対象=23区。 */
+const APPROVED_HTML_BY_WARD: Record<string, number> = {
+  '13101': 10,
+  '13102': 12,
+  '13103': 14,
+  '13104': 12,
+  '13105': 14,
+  '13106': 13,
+  '13107': 12,
+  '13108': 13,
+  '13109': 10,
+  '13110': 14,
+  '13111': 12,
+  '13112': 12,
+  '13113': 22,
+  '13114': 13,
+  '13115': 12,
+  '13116': 11,
+  '13117': 15,
+  '13118': 12,
+  '13119': 11,
+  '13120': 10,
+  '13121': 16,
+  '13122': 13,
+  '13123': 17,
+};
+const APPROVED_HTML_TOTAL = Object.values(APPROVED_HTML_BY_WARD).reduce((a, b) => a + b, 0);
+
 describe('loadApprovedHtmlSources', () => {
-  it('世田谷12+江東13+新宿12+杉並12+千代田10+品川10+大田12の承認済みHTMLソースを返す(CSV/xlsx/candidateは除外)', () => {
+  it('23区すべての承認済みHTMLソースを返す(CSV/xlsx/pending/非自治体コードは除外)', () => {
     const sources = loadApprovedHtmlSources(repoRoot);
-    expect(sources).toHaveLength(81);
-    expect(sources.filter((s) => s.municipalityCode === '13112')).toHaveLength(12);
-    expect(sources.filter((s) => s.municipalityCode === '13108')).toHaveLength(13);
-    expect(sources.filter((s) => s.municipalityCode === '13104')).toHaveLength(12);
-    expect(sources.filter((s) => s.municipalityCode === '13115')).toHaveLength(12);
-    expect(sources.filter((s) => s.municipalityCode === '13101')).toHaveLength(10);
-    expect(sources.filter((s) => s.municipalityCode === '13109')).toHaveLength(10);
-    expect(sources.filter((s) => s.municipalityCode === '13111')).toHaveLength(12);
+    expect(sources).toHaveLength(APPROVED_HTML_TOTAL);
+    expect(RAG_MUNICIPALITIES).toHaveLength(23);
+    for (const [code, n] of Object.entries(APPROVED_HTML_BY_WARD)) {
+      expect(
+        sources.filter((s) => s.municipalityCode === code),
+        code,
+      ).toHaveLength(n);
+    }
     for (const s of sources) {
-      expect(s.sourceId).toMatch(/^src-131(12|08|04|15|01|09|11)-/);
+      // なぜ: 非自治体コード(13000 東京都水道局等 / 00000 日本郵便等)を索引しない(ADR-009)。
+      expect(s.municipalityCode).toMatch(/^131(0[1-9]|1\d|2[0-3])$/);
+      expect(s.sourceId).toMatch(new RegExp(`^src-${s.municipalityCode}-`));
       expect(s.url).toMatch(/^https:\/\//);
       expect(s.lastVerifiedAt).toMatch(/T\d{2}:\d{2}:\d{2}/); // datetimeに正規化
     }
-    // 8カテゴリを網羅。
+    // 主要カテゴリを網羅。
     const cats = new Set(sources.map((s) => s.category));
     expect(cats).toContain('resident_registration');
     expect(cats).toContain('child_benefits');
     expect(cats).toContain('dog_registration');
+    expect(cats).toContain('my_number');
+    expect(cats).toContain('child_medical');
   });
 });
 
@@ -46,14 +78,12 @@ describe('buildChunkManifest', () => {
 
   it('全チャンクが対象自治体スコープ内で、id/メタデータが健全', () => {
     expect(manifest.municipalityCodes).toEqual([...RAG_MUNICIPALITIES]);
-    expect(manifest.sourceCount).toBe(81);
-    expect(manifest.chunkCount).toBeGreaterThan(81);
+    expect(manifest.sourceCount).toBe(APPROVED_HTML_TOTAL);
+    expect(manifest.chunkCount).toBeGreaterThan(APPROVED_HTML_TOTAL);
 
     const ids = new Set<string>();
     for (const c of manifest.chunks) {
-      expect(['13112', '13108', '13104', '13115', '13101', '13109', '13111']).toContain(
-        c.metadata.municipalityCode,
-      );
+      expect(RAG_MUNICIPALITIES as readonly string[]).toContain(c.metadata.municipalityCode);
       expect(c.metadata.sourceId.startsWith(`src-${c.metadata.municipalityCode}-`)).toBe(true);
       expect(c.id).toBe(`${c.metadata.sourceId}#${c.seq}`);
       expect(ids.has(c.id)).toBe(false); // idは一意

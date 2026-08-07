@@ -88,4 +88,33 @@ describe('rerankByProcedureIntent', () => {
     rerankByProcedureIntent('転入届', retrieved);
     expect(retrieved).toEqual(copy);
   });
+  it('maxPromoted を超える一致チャンクは昇格させず、検索スコア上位の枠を残す', () => {
+    // なぜ: 1カテゴリのチャンク数が生成窓以上ある区で、昇格だけで窓が埋まり検索最上位が
+    // 1件も渡らない回帰(本番実測: 練馬区。答えは別カテゴリのページ側にあった)への回帰ガード。
+    const retrieved = [
+      mk('mynum-1', 'my_number'),
+      mk('resident-top', 'resident_registration'),
+      mk('mynum-2', 'my_number'),
+      mk('mynum-3', 'my_number'),
+      mk('mynum-4', 'my_number'),
+      mk('mynum-5', 'my_number'),
+    ];
+    const out = rerankByProcedureIntent('マイナンバーカードの継続利用はいつまで？', retrieved, 2);
+    // 昇格は上位2件まで。残りは検索順のまま(resident-top が窓の3番手に残る)。
+    expect(out.map((c) => c.id)).toEqual([
+      'mynum-1',
+      'mynum-2',
+      'resident-top',
+      'mynum-3',
+      'mynum-4',
+      'mynum-5',
+    ]);
+  });
+
+  it('maxPromoted 未指定なら従来どおり一致カテゴリを全件昇格させる', () => {
+    const retrieved = [mk('a', 'childcare'), mk('b', 'my_number'), mk('c', 'my_number')];
+    expect(
+      rerankByProcedureIntent('マイナンバーカードの継続利用', retrieved).map((c) => c.id),
+    ).toEqual(['b', 'c', 'a']);
+  });
 });

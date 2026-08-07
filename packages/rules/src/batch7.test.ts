@@ -263,11 +263,14 @@ describe('Batch7 — schema validation & approved status (CI gate)', () => {
     ]);
     // 中野・荒川はごみ分別辞書を持つ(中野は wagmap 許可により新規取得)。豊島・北は持たない。
     const expected: Record<string, string[]> = {
+      // 並び: waste_schedule / waste_sorting / rag / non_municipal / overall_status。
+      // rag は 2026-08-07 の23区索引化+151問評価(fail=0・自治体混入0。
+      // docs/research/rag-eval-2026-08-07.md)で unavailable → verified へ移行。
       [NAKANO]: [
         ...Array<string>(8).fill('verified'),
         'unavailable',
         'verified',
-        'unavailable',
+        'verified',
         'verified',
         'partial',
       ],
@@ -275,7 +278,7 @@ describe('Batch7 — schema validation & approved status (CI gate)', () => {
         ...Array<string>(8).fill('verified'),
         'unavailable',
         'verified',
-        'unavailable',
+        'verified',
         'verified',
         'partial',
       ],
@@ -283,7 +286,7 @@ describe('Batch7 — schema validation & approved status (CI gate)', () => {
         ...Array<string>(8).fill('verified'),
         'unavailable',
         'unavailable',
-        'unavailable',
+        'verified',
         'verified',
         'partial',
       ],
@@ -291,7 +294,7 @@ describe('Batch7 — schema validation & approved status (CI gate)', () => {
         ...Array<string>(8).fill('verified'),
         'unavailable',
         'unavailable',
-        'unavailable',
+        'verified',
         'verified',
         'partial',
       ],

@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chatResponseSchema } from '@tmn/schemas';
-import { buildChunkManifest, loadApprovedHtmlSources } from '@tmn/rag-index';
+import { RAG_MUNICIPALITIES, buildChunkManifest, loadApprovedHtmlSources } from '@tmn/rag-index';
 import { assertDatasetShape, parseDataset } from './cases.js';
 import { scoreCase } from './scoring.js';
 import { renderReport } from './report.js';
@@ -127,7 +127,9 @@ async function callChat(endpoint: string, c: EvalCase, allowRetry = true): Promi
 
 function readRuleVersions(): string | null {
   const versions: string[] = [];
-  for (const code of ['13112', '13108', '13104', '13115', '13101']) {
+  // なぜ RAG_MUNICIPALITIES を使うか: 索引対象自治体が増えたときに列挙の更新漏れで
+  // レポートのバージョン欄が実態とずれるのを防ぐ(23区化でハードコード5区が陳腐化した)。
+  for (const code of RAG_MUNICIPALITIES) {
     const p = resolve(repoRoot, `packages/rules/data/${code}/rules.json`);
     if (!existsSync(p)) continue;
     try {

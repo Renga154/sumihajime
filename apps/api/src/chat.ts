@@ -37,13 +37,32 @@ type Variables = { requestId: string };
 type Env = { Bindings: Bindings; Variables: Variables };
 
 // なぜ: 生成プロンプトへ渡す抜粋数(LLMのコンテキスト予算)。
-const TOP_K = 6;
+const TOP_K = 8;
 // なぜ: ベクトル検索で取得する候補プール数。TOP_Kより広く取り、決定論的な手続き意図リランク
 // (rerankByProcedureIntent)で「質問が主題とする手続き」のチャンクを TOP_K 内へ引き上げるための余地。
 // コーパス拡張(世田谷=90チャンク; 学校16/保育12が転入届に頻繁言及)で、resident_registration の
 // 正チャンクが埋め込み類似度の上位6から押し出される回帰への対策。returnMetadata:'none' のため
-// Vectorize は topK を広めに取れる。1自治体の総チャンク数(最大90)に対し十分な余裕を持たせる。
+// Vectorize は topK を広めに取れる。
+// なぜ23区化(2026-08-07)でも 50 のままでよいか: 検索は municipalityCode の $eq フィルタで
+// **1自治体に閉じている**ため、候補プールの母数は「全コーパス1756チャンク」ではなく「その区の
+// チャンク数」。23区で最大なのは品川162(次いで世田谷108・足立106)で、これは7区時点の最大値と
+// 同じ(品川は7区に含まれていた)。すなわち区あたりの混雑度は増えておらず、FETCH_K の据え置きは
+// 実測済みの条件と等価。区あたりチャンク数がこれを大きく超えるデータ追加時は再測定すること。
 const FETCH_K = 50;
+// なぜ: 手続き意図リランクで先頭へ昇格させる「一致カテゴリ」チャンクの上限(TOP_K=8 のうち6枠)。
+// 残り2枠は検索スコア最上位に確保する。1カテゴリのチャンク数が TOP_K 以上ある区では、昇格だけで
+// 窓が埋まり検索最上位が1件も渡らないため(本番実測: 練馬区マイナンバー継続利用。答えは転入届
+// ページ側にあり保留へ退行した)。詳細は packages/rag/src/intent.ts の maxPromoted。
+//
+// なぜ TOP_K を 6→8 に広げたうえで上限6にしたか(2026-08-07 実測): 23区には1手続きの案内を
+// 1枚の巨大ページに集約した区があり、1カテゴリだけで数十チャンクになる(品川のmy_numberは52、
+// 港の子ども医療は11)。似た節が大量に並ぶため類似度の差が小さく、答えの節が窓の直下に沈む
+// (実測: 品川 my_number-001#23 は score 0.534 で全体10位、窓の8件は 0.543〜0.623 とわずか0.009差)。
+// 窓6・上限4では 港 子ども医療15日 / 葛飾 子ども医療3か月 / 品川 が保留へ退行した。TOP_K=8・上限6なら
+// 一致カテゴリの枠数は従来(6)を下回らず、検索最上位2件も必ず通る=どちらの取りこぼしも起きない。
+// TOP_K をさらに 12 まで広げても解けないケース(品川の「いつまでに」)は検索ではなく生成側の
+// 言い回し依存であることを実測で確認済みのため、窓は必要最小限の8に留める(distractor増を避ける)。
+const MAX_PROMOTED = 6;
 const TIMEOUT_MS = 15_000;
 const DEFAULT_MIN_SCORE = 0.3;
 
@@ -239,7 +258,13 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
     // 先頭へ安定昇格させ、上位 TOP_K のみを生成へ渡す。これで埋め込み類似度で沈んだ正手続きチャンク
     // (例: 転入届の質問に対する resident_registration)が、学校/保育チャンクに押し出されず載る。
     // 意図が判定できない質問は no-op(検索スコア順のまま)。LLM判定は用いない(決定論原則)。
-    const promptSource = rerankByProcedureIntent(question, orderedChunks).slice(0, TOP_K);
+    // MAX_PROMOTED で「意図一致カテゴリの昇格」を窓の一部に留め、残り(TOP_K-MAX_PROMOTED)は
+    // 検索スコア最上位を必ず通す。カテゴリ判定が実際の所在とずれた区(例: 継続利用の期限を
+    // 転入届ページに書く区)でも答えのチャンクが窓から落ちない(intent.ts の maxPromoted 参照)。
+    const promptSource = rerankByProcedureIntent(question, orderedChunks, MAX_PROMOTED).slice(
+      0,
+      TOP_K,
+    );
 
     const allowedSourceIds = new Set(promptSource.map((r) => r.sourceId));
     const promptChunks: PromptChunk[] = promptSource.map((r) => ({

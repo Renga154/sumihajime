@@ -37,7 +37,7 @@ function summaryTable(s: Summary): string {
   const rows = [
     `| 指標 | 値 | §12閾値 |`,
     `| --- | --- | --- |`,
-    `| 総ケース数 | ${s.total} | 30 |`,
+    `| 総ケース数 | ${s.total} | 30(23区は各区3問以上) |`,
     `| pass / fail / 要レビュー / error | ${s.pass} / ${s.fail} / ${s.needsHumanReview} / ${s.error} | — |`,
     `| retrieval hit rate(正答系) | ${pct(s.retrievalHitRate)} | 高いほど良 |`,
     `| 正自治体出典率(正答系・非保留) | ${pct(s.correctMunicipalitySourceRate)} | **100%** |`,
@@ -72,15 +72,36 @@ export function renderReport(data: EvalReportData): string {
 
   lines.push(`## 1. corpus / index / prompt バージョン`);
   lines.push('');
+  // 特別区23区(13101〜13123)。索引対象が23区全体になったため名称も全区分を持つ。
   const MUNI_NAMES: Record<string, string> = {
-    '13112': '世田谷',
-    '13108': '江東',
-    '13104': '新宿',
-    '13115': '杉並',
     '13101': '千代田',
+    '13102': '中央',
+    '13103': '港',
+    '13104': '新宿',
+    '13105': '文京',
+    '13106': '台東',
+    '13107': '墨田',
+    '13108': '江東',
+    '13109': '品川',
+    '13110': '目黒',
+    '13111': '大田',
+    '13112': '世田谷',
+    '13113': '渋谷',
+    '13114': '中野',
+    '13115': '杉並',
+    '13116': '豊島',
+    '13117': '北',
+    '13118': '荒川',
+    '13119': '板橋',
+    '13120': '練馬',
+    '13121': '足立',
+    '13122': '葛飾',
+    '13123': '江戸川',
   };
   const muniLabel = dataset.corpus.municipalities.map((c) => MUNI_NAMES[c] ?? c).join('・');
-  lines.push(`- 索引対象自治体: ${dataset.corpus.municipalities.join(' / ')}(${muniLabel})`);
+  lines.push(
+    `- 索引対象自治体: ${dataset.corpus.municipalities.length}区(${muniLabel}) = ${dataset.corpus.municipalities.join(' / ')}`,
+  );
   lines.push(`- 索引ソース種別: ${dataset.corpus.indexedSourceType}(CSVソースは未索引=コーパス外)`);
   const srcRows = Object.entries(meta.approvedHtmlSources)
     .map(([code, n]) => `${code}=${n}`)
@@ -201,7 +222,7 @@ export function renderReport(data: EvalReportData): string {
     `6. 出典に title/owner/url/lastVerified を露出 → citation 整合率で検査(${pct(s.citationCorrectnessRate)})`,
   );
   lines.push(
-    `7. 抜粋内インジェクションを無視 → SYSTEM_PROMPT規則4で強制(越境系X02–X05で自区外へ踏み込まないことを併せて確認)`,
+    `7. 抜粋内インジェクションを無視 → SYSTEM_PROMPT規則7で強制(越境系(X-*)で自区外へ踏み込まないことを併せて確認)`,
   );
   lines.push(`8. レイテンシ/コスト → p95 ${s.latency.p95}ms(閾値8000ms)`);
   lines.push('');

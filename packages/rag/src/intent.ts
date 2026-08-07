@@ -59,18 +59,29 @@ export interface CategorizedChunk {
 /**
  * 質問が主題とする category のチャンクを、元の順序(=検索スコア順)を保ったまま先頭へ昇格させる
  * 安定並べ替え。一致カテゴリが無ければ入力をそのまま返す。破壊的変更はしない(新配列を返す)。
+ *
+ * maxPromoted: 先頭へ昇格させる一致チャンクの上限。既定は無制限。
+ * なぜ上限が要るか(本番実測 2026-08-07 / 練馬区): 1カテゴリのチャンク数が生成窓(TOP_K=6)以上ある区
+ * では、昇格した同カテゴリのチャンクだけで窓が埋まり、**検索スコア最上位のチャンクが1件も生成へ
+ * 渡らない**。練馬区は「継続利用は転入届出日から90日以内」を my_number ではなく転入届ページに
+ * 書いているため、マイナンバーの質問で my_number 9チャンクが窓を占有し、答えを含む
+ * resident_registration チャンクが脱落して保留になっていた(答えがコーパスにあるのに保留=過剰保留)。
+ * 上限を設けて数枠を検索スコア順に残すことで、カテゴリ判定が外れた場合の取りこぼしを防ぐ。
+ * これは「意図に合うカテゴリを優先しつつ、検索の最上位も必ず見せる」という一般規則であり、
+ * 特定の区・質問に依存しない。
  */
 export function rerankByProcedureIntent<T extends CategorizedChunk>(
   question: string,
   chunks: readonly T[],
+  maxPromoted = Number.POSITIVE_INFINITY,
 ): T[] {
   const target = questionCategories(question);
   if (target.size === 0) return [...chunks];
-  const matched: T[] = [];
+  const promoted: T[] = [];
   const rest: T[] = [];
   for (const c of chunks) {
-    if (target.has(c.category)) matched.push(c);
+    if (target.has(c.category) && promoted.length < maxPromoted) promoted.push(c);
     else rest.push(c);
   }
-  return [...matched, ...rest];
+  return [...promoted, ...rest];
 }

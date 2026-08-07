@@ -220,10 +220,11 @@ describe('Batch10 — schema validation & approved status (CI gate)', () => {
     );
   });
 
-  it('coverage.csv — 2区は承認済みカテゴリが verified、収集曜日・分別辞書・ragは恒久的にunavailable', () => {
+  it('coverage.csv — 2区は承認済みカテゴリが verified、収集曜日・分別辞書は恒久的にunavailable', () => {
     // なぜ: 2026-08-07 承認により手続き系カテゴリ(区の10手続き+ライフライン等4件)は
     // verified になった一方、waste_schedule/waste_sorting は都カタログに機械判読可能な
-    // データが存在しないため恒久的な誠実縮退で unavailable のまま、rag は未整備のため
+    // データが存在しないため恒久的な誠実縮退で unavailable のまま。rag は 2026-08-07 の
+    // 23区索引化+151問評価(fail=0/混入0)で verified へ移行済み。旧コメント: rag は未整備のため
     // unavailable のまま(CLAUDE.md原則8/9)。
     const rows = readFileSync(resolve(repoRoot, 'docs/data-sources/coverage.csv'), 'utf-8')
       .split(/\r?\n/)
@@ -240,7 +241,7 @@ describe('Batch10 — schema validation & approved status (CI gate)', () => {
       }
       expect(cells[10], `${code} / waste_schedule`).toBe('unavailable');
       expect(cells[11], `${code} / waste_sorting`).toBe('unavailable');
-      expect(cells[12], `${code} / rag`).toBe('unavailable');
+      expect(cells[12], `${code} / rag`).toBe('verified');
       expect(cells[13], `${code} / non_municipal`).toBe('verified');
       expect(cells[14], `${code} / overall_status`).toBe('partial');
     }
