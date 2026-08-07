@@ -1,0 +1,129 @@
+{
+  "municipalityCode": "13106",
+  "ruleVersion": "2026-08-07.1",
+  "rules": [
+    {
+      "procedureId": "procedure_resident_registration",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "urgent",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "台東区に住み始めてから14日以内に届け出てください。届出先は台東区役所戸籍住民サービス課、区民事務所または区民事務所分室です(海外から初めて台東区に住民登録をする場合は戸籍住民サービス課へ)。",
+      "sourceIds": ["src-13106-resident_registration-001"],
+      "applicabilityReasonTemplate": "他の区市町村または外国から台東区に転入したすべての方に必要な届出です。"
+    },
+    {
+      "procedureId": "procedure_mynumber_continued_use",
+      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "台東区の公式ページで確認できたのは『マイナンバーカードの継続利用(転入前の市区町村で発行されたカードを引き続き使用できるようにすること)は日曜開庁日(第2日曜日)も可能で、継続利用には該当カードの持参と暗証番号の入力による照合が必要』という手続方法までです。**継続利用の手続きそのものをいつまでに行わなければカードが失効するのか**は、台東区の公式ページでは確認できませんでした(未確認)。継続利用の期限は戸籍住民サービス課へご確認ください。なお転入届自体の期限は住み始めてから14日以内です。",
+      "sourceIds": ["src-13106-resident_registration-001", "src-13106-my_number-001"],
+      "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。ただし台東区の公式ページでは継続利用の手続きの期限が未確認のため、期限は窓口へご確認ください。",
+      "needsConfirmationReason": "台東区の公式ページに継続利用の失効期限の記載が見当たらないため、期限を確定できません。記載のない期限を推測で補うことはしません。戸籍住民サービス課へご確認ください。"
+    },
+    {
+      "procedureId": "procedure_national_health_insurance",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalHealthInsurance",
+        "equals": true
+      },
+      "priority": "high",
+      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueDescription": "国民健康保険の加入事由が発生した日から14日以内にお手続きください。加入事由発生前は手続きできません。台東区に転入したときは転入手続きが済んでいれば追加の書類は不要です(本人確認書類とマイナンバー確認書類は必要です)。届出は区役所、区民事務所、区民事務所分室で受け付けています。",
+      "sourceIds": ["src-13106-national_health_insurance-001"],
+      "applicabilityReasonTemplate": "職場の健康保険などに加入していない方は、台東区の国民健康保険への加入の届出が必要です。"
+    },
+    {
+      "procedureId": "procedure_national_pension_address",
+      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "台東区の『国民年金の手続き』ページで届出が必要とされているのは、会社等を辞めて国民年金に加入するとき・配偶者扶養を外れたとき・海外から転入するとき等であり、国内の区市町村間の転入に伴う住所変更の届出およびその期限の記載がありません。転入に伴う届出の要否は区民部国民年金係(区役所3階1番窓口)または上野年金事務所へご確認ください。",
+      "sourceIds": ["src-13106-national_pension-001"],
+      "applicabilityReasonTemplate": "国民年金(第1号被保険者)の加入・種別変更等の届出に関する案内です。国内転入に伴う届出の要否は台東区公式ページに記載がないため、窓口または年金事務所へご確認ください。"
+    },
+    {
+      "procedureId": "procedure_child_allowance",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "手当は申請をした月の翌月分から支給されます。ただし月の後半に出生・転入した場合、その日の翌日から数えて15日以内の申請であれば事由の発生した月に申請があったものとして扱われます。申請が遅れた場合、遡っての支給はできません。なおこのページには『転入日』が前住所地の転出予定日を指すのか実際の引越し日を指すのかの定義がないため、引越し日からの期限は算定していません。起算日は子育て・若者支援課へご確認ください。",
+      "sourceIds": ["src-13106-child_benefits-001"],
+      "applicabilityReasonTemplate": "高校生年代までの児童を養育している世帯が対象です。台東区に転入した場合は新たに申請が必要です。"
+    },
+    {
+      "procedureId": "procedure_child_medical",
+      "condition": {
+        "predicate": "ageBandsIntersects",
+        "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "申請日が出生日または転入日から3ヶ月以上経過している場合は、助成は申請月の1日から開始します(3ヶ月以内の申請であれば出生日・転入日に遡ります)。医療証の有効期限は毎年9月30日です。",
+      "sourceIds": ["src-13106-child_medical-001"],
+      "applicabilityReasonTemplate": "台東区内に住所があり健康保険に加入している子どもを養育している方が対象です。"
+    },
+    {
+      "procedureId": "procedure_school_transfer",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+        ]
+      },
+      "priority": "high",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "学務課学事係への事前相談(任意)のうえ、戸籍住民サービス課等で転入・転居手続きを行い、学務課学事係で入学・転学手続き(住民票の住所に基づく学校の指定・必要書類の記入・入学前面談の日程調整)を行います。その後、学校での入学前面談を経て初回登校日が決まります。入学・転学手続きの日から登校開始まで通常数日から1週間程度かかります。日数固定の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13106-school_transfer-001"],
+      "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が台東区へ転入する場合に必要な、区立小・中学校への転入学手続きです。台東区で交付される書類の名称は公式ページに記載がないため設定していません(記載のない名称を推測で補うことはしません)。"
+    },
+    {
+      "procedureId": "procedure_childcare_application",
+      "condition": {
+        "any": [
+          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
+          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "台東区外在住の方が台東区の保育園に入園するには、申込年度に台東区へ転入予定であること等の条件に該当する必要があります。不動産賃貸・売買契約書の写し(転入予定の住所・引き渡し日・契約者の記載が確認できるもの)の提出が必要で、期限までに転入がなかった場合は内定していても内定取消しになります。申込受付期間は一次調整・二次調整で異なり、郵送・電子申請の締切は窓口申請より早く設定されています。年度・入園希望月により異なるため日数固定の期限は設定していません。",
+      "sourceIds": ["src-13106-childcare-001"],
+      "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、台東区の認可保育園等の利用を希望する方(区外から申し込む方)向けの案内です。"
+    },
+    {
+      "procedureId": "procedure_dog_registration_transfer",
+      "condition": {
+        "all": [
+          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
+          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+        ]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "台東区へ引っ越して来たときは、元の住所地で交付されていた『鑑札』を持参して台東保健所へ『飼い犬の登録事項変更届』を提出してください。鑑札は無料で交換します(紛失している場合は再交付手数料1600円がかかります)。この届出は郵送では受付されず必ず窓口へお越しいただく必要があります。明確な日数の期限はこのページには記載がありません。",
+      "sourceIds": ["src-13106-dog_registration-001", "src-13106-dog_registration-002"],
+      "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していない(または装着しているが環境省のデータベースに登録していない)ため、台東保健所での登録事項変更の届出が必要です。",
+      "needsConfirmationReason": "犬のマイクロチップの装着・環境省データベースへの登録状況が未確認のため、届出先(台東保健所 または 環境省の『犬と猫のマイクロチップ情報登録』サイト)が確定できません。登録状況をご確認ください(環境省サイトで届出を行う場合、保健所への届出は不要です)。"
+    },
+    {
+      "procedureId": "procedure_waste_check",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": { "type": "unknown" },
+      "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集曜日を確認してください)。台東区の収集曜日は町丁名の頭文字ごとに4つのページに分かれて公開されています。台東区公式『ごみ収集曜日一覧』ページでご確認ください。本サービスは台東区の収集曜日データを保持していません。",
+      "sourceIds": ["src-13106-waste_guide-001"],
+      "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたってごみ・資源の分け方と収集曜日の確認をおすすめします。"
+    }
+  ]
+}

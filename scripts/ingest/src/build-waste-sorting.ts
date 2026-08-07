@@ -120,6 +120,21 @@ const TARGETS: Target[] = [
     sourceId: 'src-13114-waste_sorting-001',
     layout: 'nakano_gis',
   },
+  {
+    // なぜ: Batch8 墨田区(13107)ゴミの分別方法一覧(自治体標準オープンデータセット準拠、UTF-8 BOM、476品目)。
+    // 全列に「ゴミの分別方法_」接頭辞が付く形式(世田谷と同型)だが、品目=「品目」/分別区分=「分別区分」の
+    // 並びは自治体標準の意図通りなので itemCategorySwapped は不要。「注意点」列に実データを持つため
+    // mergeCautionIntoNotes で notes へ統合する。ID列(131075S00001形式)は全行に実値があり、itemId を
+    // 捏造せずに正規化できる。
+    // 本バッチの他4区が waste-sorting.json を持たない理由(誠実縮退): 中央区はCSVのID列が388行中381行で空欄、
+    // 文京区・港区のCSVは自治体標準の列構成(ID/品目/分別区分/備考)ではなく既存パーサで読めない、
+    // 台東区は東京都カタログ登録のCSV2件がいずれもHTTP 404。いずれも itemId を捏造しないため採用しない。
+    // 配信元は区公式ドメインではなく東京都提供の共有ホスト(opendata.metro.tokyo.lg.jp)。
+    municipalityCode: '13107',
+    snapshotFile: 'data/sources/13107/snapshots/src-13107-waste_sorting-001.csv',
+    sourceId: 'src-13107-waste_sorting-001',
+    mergeCautionIntoNotes: true,
+  },
 ];
 
 function main(): void {

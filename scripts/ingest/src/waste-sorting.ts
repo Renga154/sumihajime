@@ -187,7 +187,9 @@ export function parseWasteSortingCsv(
     ? header.findIndex((h) => normalizeHeader(h) === '注意点')
     : -1;
 
-  return dataRows.map((row, i) => {
+  const items: WasteSortingItem[] = [];
+  const skipped: string[] = [];
+  dataRows.forEach((row, i) => {
     if (row.length !== header.length) {
       throw new Error(
         `waste-sorting CSV (${opts.sourceId}): row ${i + 2} has ${row.length} columns but ` +
@@ -208,14 +210,33 @@ export function parseWasteSortingCsv(
     // 注意点・備考の両方(値があるものだけ)を『／』で連結。3区は注意点が空欄のため remarks のみ=不変。
     const notes = [caution, remarks].filter((s) => s.length > 0).join('／');
 
-    return wasteSortingItemSchema.parse({
-      itemId,
-      municipalityCode: opts.municipalityCode,
-      name,
-      category,
-      ...(notes.length > 0 ? { notes } : {}),
-      ...(feeNote.length > 0 ? { feeNote } : {}),
-      sourceId: opts.sourceId,
-    });
+    // なぜ: 出典CSVに品目名または分別区分が空欄の行が混ざることがある(墨田区13107の
+    // 131075S00210「洗剤の容器・プラスチック製」は分別区分・注意点・備考がすべて空欄)。
+    // 空欄をどのカテゴリとみなすかは出典に書かれておらず、推測で埋めれば誤った分別を公開する
+    // ことになる(CLAUDE.md原則3)。そのため該当行は正規化せず落とす(=辞書に載せない)。
+    // 既存4区のCSVには空欄行が無いため、この分岐を追加しても出力は不変(後方互換)。
+    if (name.length === 0 || category.length === 0) {
+      skipped.push(itemId.length > 0 ? itemId : `row ${i + 2}`);
+      return;
+    }
+
+    items.push(
+      wasteSortingItemSchema.parse({
+        itemId,
+        municipalityCode: opts.municipalityCode,
+        name,
+        category,
+        ...(notes.length > 0 ? { notes } : {}),
+        ...(feeNote.length > 0 ? { feeNote } : {}),
+        sourceId: opts.sourceId,
+      }),
+    );
   });
+  if (skipped.length > 0) {
+    console.warn(
+      `[waste-sorting] ${opts.sourceId}: skipped ${skipped.length} row(s) with an empty ` +
+        `item name or category (source data gap, not inferred): ${skipped.join(', ')}`,
+    );
+  }
+  return items;
 }
