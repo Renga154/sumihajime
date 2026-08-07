@@ -45,9 +45,22 @@ describe('許可ホストの拡張(2026-08-07)', () => {
       // Batch10(足立区13121 / 江戸川区13123)。いずれも当該区の公式サイトであることを監査で確認済み。
       'www.city.adachi.tokyo.jp',
       'www.city.edogawa.tokyo.jp',
+      'www.city.meguro.tokyo.jp',
+      'www.city.shibuya.tokyo.jp',
     ]) {
       expect(isOfficialHost(h)).toBe(true);
     }
+  });
+
+  /**
+   * なぜ: 渋谷区の実質的なオープンデータ(122件・公共施設CSV 527行)は Esri ArcGIS Hub 上の
+   * 区公式ドメイン外ホストで配信されている。中野区の wagmap.jp と同種の論点であり、
+   * 許可リストへの追加はユーザー決裁を要する(Batch9では追加しない決定)。誤って
+   * 追加されたことに気づけるよう、拒否されることをテストで固定する。
+   */
+  it('渋谷区のArcGIS Hub配信ホストは未決裁のため拒否する', () => {
+    expect(isOfficialHost('city-shibuya-data.opendata.arcgis.com')).toBe(false);
+    expect(isOfficialHost('opendata.arcgis.com')).toBe(false);
   });
 
   it('日本郵便と中野区のデータ配信先を許可する', () => {

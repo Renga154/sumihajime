@@ -1,0 +1,70 @@
+{
+  "municipalityCode": "13122",
+  "version": "2026-08-07.1",
+  "note": "Batch9 葛飾区(13122) 窓口施設。東京都オープンデータカタログの葛飾区データセット(t131229)には『公共施設一覧』CSV(449行)があるが ID列が指数表記(1.31E+11)に破損しており、『区内施設一覧』13分割CSVは1ファイル約43MB・約105万行のうち実データが8〜32行のみで99.997%以上が空行という重大な欠陥がある(docs/research/audit-batch9-meguro-shibuya-katsushika.md R-Katsushika-2/R-Katsushika-3)。そのため葛飾区公式の『施設案内 区民事務所・区民サービスコーナー』ページ(所在地・電話が実値)と住民異動届ページから、住所の届出を扱う窓口7件を正規化する。出典ページに緯度経度が無いため lat/lng は設定しない(捏造回避)。区民サービスコーナーは公式の『引越し等の手続きができる窓口一覧』で住所の届出が×(取扱いなし)と明記されているため、住民異動の窓口一覧には含めない。全件が人手レビュー未了(出典 review_status=pending)。",
+  "facilities": [
+    {
+      "facilityId": "13122-fac-honchosha",
+      "municipalityCode": "13122",
+      "name": "葛飾区役所 戸籍住民課(本庁舎2階 217番窓口)",
+      "category": "区役所本庁舎",
+      "address": "〒124-8555 東京都葛飾区立石5-13-1 葛飾区役所2階",
+      "hours": "平日 午前8時30分から午後5時(水曜日のみ午後7時30分まで)。毎月1回日曜日 午前9時から正午まで。休業日は土曜・上記以外の日曜・祝日・年末年始",
+      "sourceId": "src-13122-resident_registration-001"
+    },
+    {
+      "facilityId": "13122-fac-kanamachi",
+      "municipalityCode": "13122",
+      "name": "金町区民事務所",
+      "category": "区民事務所",
+      "address": "〒125-0041 東京都葛飾区東金町1-22-1(金町地区センター内)",
+      "hours": "平日 午前8時30分から午後5時(水曜日のみ午後7時まで)。休業日は土曜・日曜・祝日・年末年始",
+      "sourceId": "src-13122-facilities-002"
+    },
+    {
+      "facilityId": "13122-fac-kameari",
+      "municipalityCode": "13122",
+      "name": "亀有区民事務所",
+      "category": "区民事務所",
+      "address": "〒125-0061 東京都葛飾区亀有3-26-1 リリオ館7階",
+      "hours": "平日 午前8時30分から午後5時(水曜日のみ午後7時まで)。休業日は土曜・日曜・祝日・年末年始",
+      "sourceId": "src-13122-facilities-002"
+    },
+    {
+      "facilityId": "13122-fac-shinkoiwa",
+      "municipalityCode": "13122",
+      "name": "新小岩区民事務所",
+      "category": "区民事務所",
+      "address": "〒124-0024 東京都葛飾区新小岩1-45-1(JR新小岩南口ビル6階 えきにこわ内)",
+      "hours": "平日 午前8時30分から午後7時30分まで(月末(水曜日の場合は前日)は午後5時まで)。土曜・日曜・祝日 午前8時30分から午後5時まで。第3土曜日及びそれに続く日曜日・年末年始は休業",
+      "sourceId": "src-13122-facilities-002"
+    },
+    {
+      "facilityId": "13122-fac-takasago",
+      "municipalityCode": "13122",
+      "name": "高砂区民事務所",
+      "category": "区民事務所",
+      "address": "〒125-0054 東京都葛飾区高砂3-1-39(高砂地区センター内)",
+      "hours": "平日 午前8時30分から午後5時(水曜日のみ午後7時まで)。休業日は土曜・日曜・祝日・年末年始",
+      "sourceId": "src-13122-facilities-002"
+    },
+    {
+      "facilityId": "13122-fac-horikiri",
+      "municipalityCode": "13122",
+      "name": "堀切区民事務所",
+      "category": "区民事務所",
+      "address": "〒124-0006 東京都葛飾区堀切3-8-5(堀切地区センター内)",
+      "hours": "平日 午前8時30分から午後5時(水曜日のみ午後7時まで)。休業日は土曜・日曜・祝日・年末年始",
+      "sourceId": "src-13122-facilities-002"
+    },
+    {
+      "facilityId": "13122-fac-mizumoto",
+      "municipalityCode": "13122",
+      "name": "水元区民事務所",
+      "category": "区民事務所",
+      "address": "〒125-0032 東京都葛飾区水元3-13-22(水元地区センター内)",
+      "hours": "平日 午前8時30分から午後5時(水曜日のみ午後7時まで)。休業日は土曜・日曜・祝日・年末年始",
+      "sourceId": "src-13122-facilities-002"
+    }
+  ]
+}
