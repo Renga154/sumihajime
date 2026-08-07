@@ -54,13 +54,25 @@ describe('許可ホストの拡張(2026-08-07)', () => {
 
   /**
    * なぜ: 渋谷区の実質的なオープンデータ(122件・公共施設CSV 527行)は Esri ArcGIS Hub 上の
-   * 区公式ドメイン外ホストで配信されている。中野区の wagmap.jp と同種の論点であり、
-   * 許可リストへの追加はユーザー決裁を要する(Batch9では追加しない決定)。誤って
-   * 追加されたことに気づけるよう、拒否されることをテストで固定する。
+   * 区公式ドメイン外ホストで配信されている。中野区の wagmap.jp と同種の論点であり
+   * ユーザー決裁を要したが、2026-08-07 に「今許可する」との決裁を得て許可リストへ
+   * 完全一致で追加した(docs/research/opendata-gaps.md 事例15)。
+   *
+   * ここで固定するのは「決裁されたのは渋谷区のこの1ホストだけ」という範囲。
+   * arcgis.com は世界中の誰でもHubサイトを作れる汎用SaaSドメインなので、
+   * 接尾辞許可や兄弟ホストへ広がっていないことを負例で押さえる。
    */
-  it('渋谷区のArcGIS Hub配信ホストは未決裁のため拒否する', () => {
-    expect(isOfficialHost('city-shibuya-data.opendata.arcgis.com')).toBe(false);
+  it('渋谷区のArcGIS Hub配信ホストはユーザー決裁(2026-08-07)により許可する', () => {
+    expect(isOfficialHost('city-shibuya-data.opendata.arcgis.com')).toBe(true);
+  });
+
+  it('決裁の範囲は渋谷区の当該ホストのみで、arcgis.com の他ホストへは広げない', () => {
     expect(isOfficialHost('opendata.arcgis.com')).toBe(false);
+    expect(isOfficialHost('arcgis.com')).toBe(false);
+    expect(isOfficialHost('evil.opendata.arcgis.com')).toBe(false);
+    // 接尾辞一致で通ってしまう実装退行(endsWith 化)を捕まえる負例。
+    expect(isOfficialHost('evil-city-shibuya-data.opendata.arcgis.com')).toBe(false);
+    expect(isOfficialHost('city-shibuya-data.opendata.arcgis.com.evil.com')).toBe(false);
   });
 
   it('日本郵便と中野区のデータ配信先を許可する', () => {

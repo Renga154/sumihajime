@@ -81,7 +81,7 @@ interface Task {
 }
 
 describe('GET /api/municipalities', () => {
-  it('returns 62 municipalities; 千代田(13101)・新宿(13104)・江東(13108)・品川(13109)・大田(13111)・世田谷(13112)・中野(13114)・杉並(13115)・豊島(13116)・北(13117)・荒川(13118)・板橋(13119)・練馬(13120)・足立(13121)・江戸川(13123)がsupported(中野・豊島・北・荒川、足立・江戸川は2026-08-07承認)', async () => {
+  it('returns 62 municipalities; 23特別区すべてが supported(最後の8区=中央・港・文京・台東・墨田・目黒・渋谷・葛飾は2026-08-07承認)', async () => {
     const res = await request('/api/municipalities');
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -97,23 +97,16 @@ describe('GET /api/municipalities', () => {
       .filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
-    expect(supported).toEqual([
-      '13101',
-      '13104',
-      '13108',
-      '13109',
-      '13111',
-      '13112',
-      '13114',
-      '13115',
-      '13116',
-      '13117',
-      '13118',
-      '13119',
-      '13120',
-      '13121',
-      '13123',
-    ]);
+    // 23特別区(13101〜13123)がすべて supported。多摩地域・島しょ(13201〜)は1件も含まない
+    // (未対応を対応済みに見せない=CLAUDE.md原則9)。
+    expect(supported).toHaveLength(23);
+    expect(supported).toEqual(
+      body
+        .filter((m) => m.code.startsWith('131'))
+        .map((m) => m.code)
+        .sort(),
+    );
+    expect(supported.filter((c) => !c.startsWith('131'))).toEqual([]);
     // 各自治体に公式導線URL(FR-021)。出典ページの表記どおり http/https いずれもあり得る。
     for (const m of body) expect(m.officialUrl).toMatch(/^https?:\/\//);
     // 世田谷にはカバレッジ行がある(FR-024)。
@@ -260,7 +253,11 @@ describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)
     // ごみ分別一覧・地域事務所・区役所の3ソースを追加登録)+豊島11+北15+荒川14で126→182。
     // 同日さらにBatch10の足立(13121)16ソース+江戸川(13123)17ソースが人手レビュー承認
     // (ユーザー決裁「2区とも承認」)で182→215。
-    expect(body.length).toBe(215);
+    // 同日さらに残る8区が人手レビュー承認(ユーザー決裁「5区とも承認」= 中央12+港14+文京14+
+    // 台東13+墨田14、「3区とも承認」= 目黒14+渋谷22+葛飾13)で215→331。加えて同日の決裁
+    // 「今許可する」で取得許可した渋谷区のArcGIS Hub配信の施設CSV1件を新規登録し331→332。
+    // これで台帳の全行が approved=23区が出そろった状態。
+    expect(body.length).toBe(332);
 
     for (const s of body) {
       // 公開に必要な列は揃う。

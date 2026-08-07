@@ -9,16 +9,26 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "urgent",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "渋谷区に住みはじめた日から14日以内です(届出が遅れると過料がかかる場合があります)。届出先は暮らしの手続きのフロア(庁舎3階)住民戸籍課・各出張所(月曜日から金曜日8時30分から17時)、区民サービスセンター(月曜日から金曜日11時から19時、土曜日9時から17時)です。転入届は郵送では受付できません。",
       "sourceIds": ["src-13113-resident_registration-001", "src-13113-facilities-001"],
       "applicabilityReasonTemplate": "他の区市町村または国外から渋谷区に転入したすべての方に必要な届出です。"
     },
     {
       "procedureId": "procedure_mynumber_continued_use",
-      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "hasMyNumberCard",
+        "equals": true
+      },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "継続利用の条件は、(1)転出予定日から30日以内であること、(2)既に渋谷区へ転入済みであり、転入届を出した日から90日以内であること、(3)有効期間内のマイナンバーカードであること、(4)サインパネル(青い部分)が満欄でないこと、の4つです。条件外の場合は継続利用の手続きができず、マイナンバーカードは失効します。",
       "sourceIds": ["src-13113-my_number-001"],
       "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、他区市町村から渋谷区に転入する際に継続利用の手続きが必要です。転入後の住所をマイナンバーカードに追加するもので、転入届とあわせて行います。"
@@ -31,16 +41,26 @@
         "equals": true
       },
       "priority": "high",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "世帯主が14日以内に届出をしてください。届出先は庁舎3階住民戸籍課・各出張所・区民サービスセンターです。加入の届出が遅れると、資格が発生したときにさかのぼって保険料を納付することになり、その間の医療費は遅れた理由がやむを得ない場合を除き全額自己負担になります。",
       "sourceIds": ["src-13113-national_health_insurance-001"],
       "applicabilityReasonTemplate": "職場の健康保険などに加入していない方は、渋谷区の国民健康保険への加入の届出が必要です。"
     },
     {
       "procedureId": "procedure_national_pension_address",
-      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalPension",
+        "equals": true
+      },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "渋谷区の「国民年金の手続き・届出(受付窓口早見表)」では、国民年金の加入(資格取得・種別変更)の事由として「会社などをやめたとき、会社員などの配偶者の扶養から外れたとき、国外から転入したとき」が挙げられています。国内の他区市町村から転入したときの届出および日数固定の期限についての記載はありません。窓口は電子申請(マイナポータル)、区役所3階 国民年金係、出張所・区民サービスセンター、渋谷年金事務所です。届出の要否は国民年金係にご確認ください。",
       "sourceIds": ["src-13113-national_pension-001"],
       "applicabilityReasonTemplate": "国民年金の被保険者の方に、転入に伴う手続きの要否をお知らせします。渋谷区の受付窓口早見表には国内の他区市町村からの転入に関する記載がないため、届出の要否は窓口でご確認ください。"
@@ -52,7 +72,9 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "出生・前住所の転出予定日の翌日から15日以内に申請してください。この期間内に認定請求した場合は、転入や出生の属する月の翌月分から支給を開始します。申請が遅れると遅れた分の手当を受給できない場合があります。申請場所は区役所4階子ども政策課子育て給付係、郵送、オンライン申請です。起算日は前住所地での転出予定日のため、引越し日からは算定できません。",
       "sourceIds": ["src-13113-child_benefits-001"],
       "applicabilityReasonTemplate": "高校生年代(18歳になった最初の3月31日まで)までの日本国内に住民登録のある児童を養育し、生計を担っている父または母で、渋谷区に住民登録がある方が対象です。転入前の住所地で児童手当を受給していた場合も、新たに渋谷区での手続きが必要です。"
@@ -64,7 +86,9 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "出生・転入から14日以内に申請すると、出生・転入の日から助成が受けられます。それ以降の申請は、申請書を受け付けた日から助成します。郵送または窓口で申請書類を提出するか、オンラインでも申請できます。",
       "sourceIds": ["src-13113-child_medical-001"],
       "applicabilityReasonTemplate": "区内に住所を有する0歳から18歳に達する日以後の最初の3月31日までの間にあるお子さんを養育している方(保護者)が対象です。保護者(申請者)の所得制限はありません。"
@@ -73,12 +97,21 @@
       "procedureId": "procedure_school_transfer",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["elementary", "junior_senior"]
+          }
         ]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "転入・転居手続きの際に、就学通知書をお渡しします。前の学校の在学証明書などとともに、指定の学校に提出して入学してください。渋谷区立小中学校へ入学せずに国立・私立学校に引き続き就学する方や新たに入学する方は、就学通知書と当該学校の在学証明書または入学承諾書を学務課学事係に提出してください。日数固定の期限はこのページには記載がありません。",
       "sourceIds": ["src-13113-school_transfer-001"],
       "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が渋谷区へ転入する場合に必要な、区立学校への転入学手続きです。渋谷区で交付される書類の名称は「就学通知書」です。"
@@ -87,12 +120,21 @@
       "procedureId": "procedure_childcare_application",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["age0_2", "age3_5"]
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "渋谷区に転入予定がある方は、渋谷区保育課入園相談係の窓口で、渋谷区の各入所希望月の締め切り日までに申し込みます(申し込み書一式、転入手続きに関する同意書、入所希望日の前月末日までに渋谷区に転入することが確認できる書類が必要です)。転入予定がない方は、申し込み日現在お住まいの自治体の保育担当窓口へ、渋谷区の各入所希望月の締め切り日の2週間から10日前までに申し込みます(4月一次募集は申し込みできません)。締め切り日は入所希望月・募集回により異なるため日数固定の期限は設定していません。",
       "sourceIds": ["src-13113-childcare-001", "src-13113-childcare-002"],
       "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、渋谷区の認可保育園等の利用を希望する方(区外から申し込む方)向けの案内です。"
@@ -101,12 +143,22 @@
       "procedureId": "procedure_dog_registration_transfer",
       "condition": {
         "all": [
-          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
-          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasDog",
+            "equals": true
+          },
+          {
+            "predicate": "flagEquals",
+            "flag": "dogHasMicrochip",
+            "equals": false
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "区外からの転入は、前住所地の鑑札を持参して転入の手続きをしてください。前住所地の鑑札が無い場合は「鑑札の再交付」扱いとなり、前住所地での登録を確認します(確認ができない場合は新規登録)。受付窓口は生活衛生課事業係(区役所本庁舎7階)のみで、出張所・区民サービスセンターでは登録手続きは行えません。マイクロチップを装着している犬は「犬と猫のマイクロチップ情報登録」が受付窓口となり、区の窓口での申請は必要ありません。日数の期限はこのページには記載がありません。",
       "sourceIds": ["src-13113-dog_registration-001"],
       "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していない(「犬と猫のマイクロチップ情報登録」に登録していない)ため、渋谷区の生活衛生課事業係(区役所本庁舎7階)での手続きが必要です。",
@@ -119,10 +171,69 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集日を確認してください)。ごみ・資源は収集日の8時までに指定の場所に出してください(一部の繁華街地域は収集日の7時30分まで)。渋谷区公式サイトの「ごみ収集日」ページに町名・丁目ごとの可燃ごみ(週2回)・不燃ごみ(月1回)・資源(週1回)の収集曜日一覧表と、地域別収集日(曜日)一覧表のPDFが掲載されています。年末年始は収集を休んだり変更することがあります。本サービスは渋谷区の収集曜日データを保持していません。",
       "sourceIds": ["src-13113-waste_guide-001"],
       "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたってごみ・資源の分け方と収集日の確認をおすすめします。"
+    },
+    {
+      "procedureId": "procedure_water_supply",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "東京都水道局は「次のお手続きについては、3〜4日前までに必ずお手続きください」と案内しています(使用開始申込み・使用中止届のいずれも)。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。",
+      "sourceIds": ["src-13000-water_supply-001", "src-13000-sewerage-001"],
+      "applicabilityReasonTemplate": "水道は住まいを移るすべての方に必要なライフラインの手続きです(区の手続きではなく東京都水道局への手続きです)。"
+    },
+    {
+      "procedureId": "procedure_postal_forwarding",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "日本郵便は「転居届を提出されてから登録までに3〜7営業日を要しますので、転居される際には、お早めに転居届を提出してください」と案内しています。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。転送期間は届出日から1年間です(転送開始希望日からではありません)。",
+      "sourceIds": ["src-00000-postal_forwarding-001"],
+      "applicabilityReasonTemplate": "旧住所あての郵便物等を新住所へ転送してもらうための、住所が変わるすべての方向けの手続きです(区の手続きではなく日本郵便への手続きです)。"
+    },
+    {
+      "procedureId": "procedure_utilities_contact",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "出典である国(デジタル庁)の公式ページには、電気・ガスの手続きの期限に関する記載がありません。受付の締切や必要な連絡時期は契約先の事業者ごとに異なるため、契約先へご確認ください(要確認)。",
+      "sourceIds": ["src-00000-utilities_contact-001"],
+      "applicabilityReasonTemplate": "電気・ガスは引越しに伴い契約先の民間事業者への手続きが必要になるライフラインです(区の手続きではありません)。"
+    },
+    {
+      "procedureId": "procedure_driver_license_change",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsVehicleGuidance",
+        "equals": true
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "警視庁の当該ページには「◯日以内」という日数の期限の記載がありません(要確認)。転入届で住民票の住所が変わったあとに手続きしてください。",
+      "sourceIds": ["src-13000-driver_license-001"],
+      "applicabilityReasonTemplate": "車・バイク等の追加案内が必要と回答された方向けの、運転免許証の住所変更(記載事項変更)の手続きです(区の手続きではなく警視庁への手続きです)。"
     }
   ]
 }

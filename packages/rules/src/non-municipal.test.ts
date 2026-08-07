@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -12,9 +12,11 @@ import { evaluate } from './evaluate.js';
  * 回帰ガードなので、この4件のように「全区で同一であること」自体が要件のデータはここに集約する。
  *
  * ここで固定する不変条件:
- * (a) 4件が対応15区すべてに存在し、内容は municipalityCode 以外まったく同一である
+ * (a) 4件が対応23区すべてに存在し、内容は municipalityCode 以外まったく同一である
  *     (2026-08-07 に中野13114 / 豊島13116 / 北13117 / 荒川13118 を承認・公開して9区→13区、
- *      続けて足立13121 / 江戸川13123 を承認・公開して13区→15区)
+ *      続けて足立13121 / 江戸川13123 を承認・公開して13区→15区、最後に中央13102 / 港13103 /
+ *      文京13105 / 台東13106 / 墨田13107 / 目黒13110 / 渋谷13113 / 葛飾13122 を承認・公開して
+ *      15区→23区。これで23特別区が出そろった)
  * (b) 該当判定: 水道・郵便・電気ガスは全員該当 / 運転免許は needsVehicleGuidance が true のときだけ
  * (c) 期限を推測で作らない(4件とも dueRule=unknown → dueDate は生成されない)
  * (d) 2026-08-07 人手レビュー承認(ユーザー決裁。ADR-009)により公開される
@@ -26,23 +28,14 @@ import { evaluate } from './evaluate.js';
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 
-const WARDS: readonly string[] = [
-  '13101',
-  '13104',
-  '13108',
-  '13109',
-  '13111',
-  '13112',
-  '13114',
-  '13115',
-  '13116',
-  '13117',
-  '13118',
-  '13119',
-  '13120',
-  '13121',
-  '13123',
-];
+/**
+ * 23特別区すべて。ここは「4件が全対応区に同一内容で存在する」ことの検査対象であり、
+ * 区が増えたときに追記漏れが起きないよう data/normalized 配下の実在ディレクトリから導出する。
+ * (全区が対応済みになった今、明示列挙と自動導出は一致する。差が出たら下の件数assertが落ちる)
+ */
+const WARDS: readonly string[] = readdirSync(resolve(repoRoot, 'data/normalized'))
+  .filter((name) => /^131\d\d$/.test(name))
+  .sort();
 
 const NON_MUNICIPAL_IDS = [
   'procedure_water_supply',
@@ -135,6 +128,14 @@ function outcomeFor(code: string, procedureId: string, flags: Partial<Profile['f
 }
 
 describe('非自治体手続き — 全対応区に同一内容で存在する(ADR-009)', () => {
+  it('検査対象は23特別区すべて(2026-08-07 に23区が出そろった)', () => {
+    // なぜ: WARDS を data/normalized から導出しているため、区が消えても静かに縮む。
+    // 「23区ぶん検査している」ことを件数で固定し、縮退に気づけるようにする。
+    expect(WARDS).toHaveLength(23);
+    expect(WARDS[0]).toBe('13101');
+    expect(WARDS.at(-1)).toBe('13123');
+  });
+
   it.each(WARDS)('%s: 4件の手続きと4件のルールが存在し、区の10件は不変', (code) => {
     const ids = procedures.get(code)!.map((p) => p.id);
     expect(ids).toHaveLength(14);

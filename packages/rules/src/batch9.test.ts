@@ -10,8 +10,10 @@ import { MunicipalityScopeMismatchError } from './errors.js';
 /**
  * なぜ: Batch9(目黒13110 / 渋谷13113 / 葛飾13122)の縦切りデータの来歴・型・決定論・
  * **区ごとに異なる期限と分岐** をCIで機械検証する。ユーザー決裁(2026-08-07
- * 「23区全対応・案A=手続き中心で埋め、付帯データは取れる区だけ」)に基づく追加であり、
- * 3区とも人手レビュー未了(全ソース review_status=pending / 全手続き dataStatus=partial)。
+ * 「23区全対応・案A=手続き中心で埋め、付帯データは取れる区だけ」)に基づく追加。
+ * 2026-08-07にユーザー(maintainer)決裁「3区とも承認」により人手レビュー承認され、区の全10手続きが
+ * dataStatus=verified、対応する registry.csv のソースが review_status=approved へ更新された。
+ * あわせて自治体以外(ライフライン等)の手続き4件(ADR-009)を共通テンプレートから追加し14件になった。
  *
  * 本バッチで特に固定したい不変条件:
  * (a) **目黒区は狂犬病予防法の特例制度に参加していない**。目黒区公式ページは
@@ -32,7 +34,13 @@ import { MunicipalityScopeMismatchError } from './errors.js';
  * (e) 児童手当の15日特例は3区とも「前住所地の転出予定日」起算のため moveDate から算定しない。
  * (f) 学校の交付書類名: 目黒=入学指定通知書 / 渋谷=就学通知書 / 葛飾=名称の記載なし。
  * (g) 付帯データの誠実縮退: 3区とも waste.json / waste-sorting.json を作らない。
- * (h) 公開ゲート(ADR-007): 3区の全ソースが registry.csv で pending であること。
+ * (h) 公開ゲート(ADR-007): 3区の全ソースが registry.csv で approved であること。
+ * (i) 渋谷区の窓口施設は、2026-08-07 のユーザー決裁「今許可する」で取得許可した区公式
+ *     オープンデータ(ArcGIS Hub配信の『渋谷区の施設・事業所』CSV)由来へ差し替えた。ただし
+ *     同CSVは2024-03-30時点のスナップショットで本町出張所の住所が区公式ページと食い違うため、
+ *     当該1件だけは公式ページ由来のまま座標を持たせない(opendata-gaps.md 事例34)。
+ * (j) ライフライン4件そのものの検証は non-municipal.test.ts が全区横断で行うため、本ファイルの
+ *     区固有アサーションは区の手続き10件を対象にする(NON_MUNICIPAL_IDS で除外)。
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -68,6 +76,28 @@ function facilitiesOf(code: string) {
 const RULE_SETS: Record<string, RuleSet> = Object.fromEntries(
   BATCH9.map((code) => [code, ruleSetOf(code)]),
 );
+
+/**
+ * なぜ: 2026-08-06 追加の「自治体以外(ライフライン等)の手続き」4件(ADR-009)。全対応区で
+ * municipalityCode 以外まったく同一の内容であり、区固有データの回帰ガードである本ファイルの
+ * 対象外とする(4件そのものの検証は non-municipal.test.ts が全区横断で行う)。
+ */
+const NON_MUNICIPAL_IDS = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+  'procedure_driver_license_change',
+];
+/** 条件なしで全員該当する3件(運転免許は needsVehicleGuidance が必要なため含めない)。 */
+const NON_MUNICIPAL_ALWAYS_APPLICABLE = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+];
+
+function municipalProceduresOf(code: string) {
+  return proceduresOf(code).filter((p) => !NON_MUNICIPAL_IDS.includes(p.id));
+}
 
 function profile(overrides: {
   municipalityCode?: string;
@@ -138,34 +168,43 @@ function dogOutcome(code: string, dogHasMicrochip: Profile['flags']['dogHasMicro
   );
 }
 
-describe('Batch9 — schema validation & pending status (CI gate)', () => {
+describe('Batch9 — schema validation & approved status (CI gate)', () => {
   it.each(BATCH9)(
-    '%s: rules.json が RuleSet として parse し 10ルール・自治体スコープ一致',
+    '%s: rules.json が RuleSet として parse し 14ルール(区10件+ライフライン等4件)・自治体スコープ一致',
     (code) => {
       const rs = RULE_SETS[code] as RuleSet;
       expect(rs.municipalityCode).toBe(code);
       expect(rs.ruleVersion).toBe(RULE_VERSION);
-      expect(rs.rules.length).toBe(10);
+      // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
+      expect(rs.publishedRuleVersion).toBeUndefined();
+      expect(rs.rules.length).toBe(14);
+      expect(rs.rules.filter((r) => !NON_MUNICIPAL_IDS.includes(r.procedureId))).toHaveLength(10);
     },
   );
 
-  it.each(BATCH9)('%s: procedures.json が10件 parse し 全件 partial(人手レビュー未了)', (code) => {
-    const procedures = proceduresOf(code);
-    expect(procedures.length).toBe(10);
-    for (const pv of procedures) {
-      expect(pv.municipalityCode).toBe(code);
-      // ADR-007: 公開単位は verified のみ。partial は公開(D1シード)対象に入らない。
-      expect(pv.dataStatus).toBe('partial');
-      expect(pv.version).toBe(RULE_VERSION);
-      expect(pv.lastVerifiedAt).toBe(LAST_VERIFIED);
-      expect(pv.sourceIds.length).toBeGreaterThan(0);
-      // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持する。
-      expect(pv.dueDate).toBeUndefined();
-      expect(pv.dueDescription).toBeDefined();
-    }
-  });
+  it.each(BATCH9)(
+    '%s: procedures.json — 区の手続き10件 parse し 全件 verified(2026-08-07人手レビュー承認)',
+    (code) => {
+      const procedures = municipalProceduresOf(code);
+      expect(procedures.length).toBe(10);
+      expect(proceduresOf(code)).toHaveLength(14);
+      for (const pv of procedures) {
+        expect(pv.municipalityCode).toBe(code);
+        // ADR-007: 公開単位は verified のみ。
+        expect(pv.dataStatus).toBe('verified');
+        expect(pv.version).toBe(RULE_VERSION);
+        expect(pv.lastVerifiedAt).toBe(LAST_VERIFIED);
+        expect(pv.sourceIds.length).toBeGreaterThan(0);
+        // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持する。
+        expect(pv.dueDate).toBeUndefined();
+        expect(pv.dueDescription).toBeDefined();
+        // 承認によりpending系のcaution文言は除去されている。
+        expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBeFalsy();
+      }
+    },
+  );
 
-  it.each(BATCH9)('%s: procedures と rules が同一の10 procedureId を過不足なく覆う', (code) => {
+  it.each(BATCH9)('%s: procedures と rules が同一の14 procedureId を過不足なく覆う', (code) => {
     const procIds = proceduresOf(code)
       .map((p) => p.id)
       .sort();
@@ -173,7 +212,7 @@ describe('Batch9 — schema validation & pending status (CI gate)', () => {
     expect(ruleIds).toEqual(procIds);
   });
 
-  it('facilities.json — 窓口件数(目黒5 / 渋谷10 / 葛飾7)と座標の不存在', () => {
+  it('facilities.json — 窓口件数(目黒5 / 渋谷10 / 葛飾7)と座標の有無', () => {
     // 目黒: 総合庁舎戸籍住民課 + 地区サービス事務所4(北部・中央・南部・西部)。
     // 東部地区サービス事務所は公式ページで引越しの届出を扱わない旨が明記されているため除外。
     // 公共施設一覧CSVは配信元 data.bodik.jp が常時403で取得できず公式ページ由来のみ。
@@ -181,29 +220,53 @@ describe('Batch9 — schema validation & pending status (CI gate)', () => {
     expect(meguro.length).toBe(5);
     expect(meguro.map((f) => f.name)).not.toContain('東部地区サービス事務所');
 
-    // 渋谷: 区役所3階住民戸籍課 + 出張所8 + 区民サービスセンター。
-    // 新橋出張所は窓口業務終了と公式ページに明記されているため除外。
+    // 渋谷: 区役所 + 出張所8 + 区民サービスセンター。区公式オープンデータ『渋谷区の施設・事業所』
+    // (527件)から転入届を扱う窓口だけへ絞り込んだ結果。新橋出張所は窓口業務終了と公式ページに
+    // 明記されているため、CSVに現役の施設として1行あるが除外する。北谷・美竹の分庁舎も
+    // 転入届を扱わないため除外する。
     const shibuya = facilitiesOf(SHIBUYA);
     expect(shibuya.length).toBe(10);
     expect(shibuya.map((f) => f.name)).not.toContain('新橋出張所');
+    expect(shibuya.map((f) => f.name)).not.toContain('北谷分庁舎');
+    expect(shibuya.map((f) => f.name)).not.toContain('美竹分庁舎');
 
     // 葛飾: 区役所本庁舎戸籍住民課 + 区民事務所6(金町・亀有・新小岩・高砂・堀切・水元)。
     const katsushika = facilitiesOf(KATSUSHIKA);
     expect(katsushika.length).toBe(7);
     expect(katsushika.map((f) => f.name).filter((n) => n.endsWith('区民事務所')).length).toBe(6);
 
-    // 3区とも出典ページに緯度経度が無いため座標を持たない(捏造回避)。
-    for (const code of BATCH9) {
+    // 目黒・葛飾は出典ページに緯度経度が無いため座標を持たない(捏造回避)。
+    for (const code of [MEGURO, KATSUSHIKA]) {
       for (const f of facilitiesOf(code)) {
         expect(f.lat, `${code}/${f.facilityId}`).toBeUndefined();
         expect(f.lng, `${code}/${f.facilityId}`).toBeUndefined();
       }
     }
+
+    // 渋谷は区公式オープンデータCSV由来のため9件に座標がある。唯一の例外が本町出張所で、
+    // CSVの住所(渋谷区本町4-9-7)が区公式ページ(更新日2025-06-02)の『本町4-39-1』と食い違い、
+    // 座標が現在地を指す保証がないため設定しない(推測で埋めない=CLAUDE.md原則3)。
+    const withCoords = shibuya.filter((f) => typeof f.lat === 'number');
+    expect(withCoords).toHaveLength(9);
+    for (const f of withCoords) {
+      expect(f.sourceId, f.facilityId).toBe('src-13113-facilities-011');
+      // 渋谷区の範囲(緯度35.6〜35.7 / 経度139.6〜139.8)に収まる実値であること。
+      expect(f.lat, f.facilityId).toBeGreaterThan(35.6);
+      expect(f.lat, f.facilityId).toBeLessThan(35.7);
+      expect(f.lng, f.facilityId).toBeGreaterThan(139.6);
+      expect(f.lng, f.facilityId).toBeLessThan(139.8);
+    }
+    const honmachi = shibuya.find((f) => f.name === '本町出張所');
+    expect(honmachi?.lat).toBeUndefined();
+    expect(honmachi?.lng).toBeUndefined();
+    expect(honmachi?.sourceId).toBe('src-13113-facilities-007');
+    expect(honmachi?.address).toContain('本町4-39-1');
   });
 
-  it('coverage.csv — 3区は全カテゴリ unavailable(未対応を一部対応に見せない)', () => {
-    // なぜ: 3区は人手レビュー未了で公開データが1件も無く municipalities.ts の supported も
-    // false のため、利用者から見て実際に使えるカテゴリが存在しない(CLAUDE.md原則9)。
+  it('coverage.csv — 3区は承認済みカテゴリが verified、収集曜日・分別辞書・ragは恒久的にunavailable', () => {
+    // なぜ: 2026-08-07 承認により手続き系カテゴリ(区の10手続き+ライフライン等4件)と施設は
+    // verified になった一方、waste_schedule/waste_sorting は機械判読可能なデータが存在せず
+    // 恒久的な誠実縮退で unavailable、rag は未整備のため unavailable のまま(CLAUDE.md原則8/9)。
     const rows = readFileSync(resolve(repoRoot, 'docs/data-sources/coverage.csv'), 'utf-8')
       .split(/\r?\n/)
       .filter((l) => l.trim().length > 0);
@@ -212,9 +275,15 @@ describe('Batch9 — schema validation & pending status (CI gate)', () => {
       const row = rows.find((l) => l.startsWith(`${code},`));
       expect(row, `coverage row missing for ${code}`).toBeDefined();
       const cells = (row as string).split(',');
-      for (let i = 2; i <= 13; i++) {
-        expect(cells[i], `${code} / ${header[i]}`).toBe('unavailable');
+      // resident_registration(2) .. facilities(9)
+      for (let i = 2; i <= 9; i++) {
+        expect(cells[i], `${code} / ${header[i]}`).toBe('verified');
       }
+      expect(cells[10], `${code} / waste_schedule`).toBe('unavailable');
+      expect(cells[11], `${code} / waste_sorting`).toBe('unavailable');
+      expect(cells[12], `${code} / rag`).toBe('unavailable');
+      expect(cells[13], `${code} / non_municipal`).toBe('verified');
+      expect(cells[14], `${code} / overall_status`).toBe('partial');
     }
   });
 
@@ -439,31 +508,36 @@ describe('Batch9 — 区ごとに異なる期限(共通デフォルト値を作�
 });
 
 describe('Batch9 — ペルソナ評価(正例・負例・境界)', () => {
-  it.each(BATCH9)('%s: 単身・都外・マイナンバーあり は5件該当・子育て/犬は非該当', (code) => {
-    const single = profile({ municipalityCode: code, flags: { hasMyNumberCard: true } });
-    const applicable = evaluate(single, RULE_SETS[code] as RuleSet)
-      .outcomes.filter((o) => o.applicable === 'applicable')
-      .map((o) => o.procedureId)
-      .sort();
-    expect(applicable).toEqual(
-      [
-        'procedure_mynumber_continued_use',
-        'procedure_national_health_insurance',
-        'procedure_national_pension_address',
-        'procedure_resident_registration',
-        'procedure_waste_check',
-      ].sort(),
-    );
-    for (const id of [
-      'procedure_child_allowance',
-      'procedure_child_medical',
-      'procedure_school_transfer',
-      'procedure_childcare_application',
-      'procedure_dog_registration_transfer',
-    ]) {
-      expect(outcomeFor(single, code, id).applicable, `${code}/${id}`).toBe('not_applicable');
-    }
-  });
+  it.each(BATCH9)(
+    '%s: 単身・都外・マイナンバーあり は8件該当(区5件+ライフライン3件)・子育て/犬/運転免許は非該当',
+    (code) => {
+      const single = profile({ municipalityCode: code, flags: { hasMyNumberCard: true } });
+      const applicable = evaluate(single, RULE_SETS[code] as RuleSet)
+        .outcomes.filter((o) => o.applicable === 'applicable')
+        .map((o) => o.procedureId)
+        .sort();
+      expect(applicable).toEqual(
+        [
+          'procedure_mynumber_continued_use',
+          'procedure_national_health_insurance',
+          'procedure_national_pension_address',
+          'procedure_resident_registration',
+          'procedure_waste_check',
+          ...NON_MUNICIPAL_ALWAYS_APPLICABLE,
+        ].sort(),
+      );
+      for (const id of [
+        'procedure_child_allowance',
+        'procedure_child_medical',
+        'procedure_school_transfer',
+        'procedure_childcare_application',
+        'procedure_dog_registration_transfer',
+        'procedure_driver_license_change',
+      ]) {
+        expect(outcomeFor(single, code, id).applicable, `${code}/${id}`).toBe('not_applicable');
+      }
+    },
+  );
 
   it.each(BATCH9)('%s: 国保フラグOFFで非該当(負例)', (code) => {
     const off = profile({ municipalityCode: code, flags: { needsNationalHealthInsurance: false } });
@@ -557,14 +631,14 @@ describe('Batch9 — provenance integrity & scope safety', () => {
   );
 
   it.each(BATCH9)(
-    '%s: registry.csv の当該行は全て review_status=pending(未承認データを公開しない)',
+    '%s: registry.csv の当該行は全て review_status=approved(2026-08-07人手レビュー承認)',
     (code) => {
       const rows = registryRows.filter((l) => l.startsWith(`src-${code}-`));
       expect(rows.length).toBeGreaterThan(0);
       for (const row of rows) {
         const cells = row.split(',');
         // 列順: ... 15:content_hash, 16:effective_from, 17:effective_to, 18:review_status
-        expect(cells[17], row.slice(0, 60)).toBe('pending');
+        expect(cells[17], row.slice(0, 60)).toBe('approved');
         // content_hash(SHA-256 16進64桁)が記録されていること。
         expect(cells[14], row.slice(0, 60)).toMatch(/^[0-9a-f]{64}$/);
       }
@@ -596,11 +670,24 @@ describe('Batch9 — provenance integrity & scope safety', () => {
       expect(rows.length).toBeGreaterThan(0);
       for (const row of rows) {
         const url = new URL(row.split(',')[5] as string);
+        // 唯一の例外が渋谷区のオープンデータ配信先(下で個別に検証する)。
+        if (url.hostname === 'city-shibuya-data.opendata.arcgis.com') continue;
         expect(url.hostname, row.slice(0, 40)).toBe(expectedHost[code]);
       }
     }
-    // 渋谷区の実データ配信先(ArcGIS Hub)は区公式ドメイン外であり、未決裁のため出典にしない。
-    expect(registryRows.some((l) => l.includes('opendata.arcgis.com'))).toBe(false);
+  });
+
+  it('ArcGIS Hub を出典にしてよいのは決裁済みの渋谷区の1ホスト・1ソースだけ', () => {
+    // なぜ: 2026-08-07 ユーザー決裁「今許可する」で許可したのは渋谷区が運用する
+    // city-shibuya-data.opendata.arcgis.com だけ。arcgis.com は誰でもHubサイトを作れる
+    // 汎用SaaSドメインなので、他ホストや他区へ広がっていないことを固定する。
+    const arcgisRows = registryRows.filter((l) => l.includes('arcgis.com'));
+    expect(arcgisRows).toHaveLength(1);
+    const cells = (arcgisRows[0] as string).split(',');
+    expect(cells[0]).toBe('src-13113-facilities-011');
+    expect(cells[3]).toBe(SHIBUYA);
+    expect(new URL(cells[5] as string).hostname).toBe('city-shibuya-data.opendata.arcgis.com');
+    expect(cells[17]).toBe('approved');
   });
 
   it('越境: 各区のプロフィールを他区のルールセットで評価すると必ず例外', () => {

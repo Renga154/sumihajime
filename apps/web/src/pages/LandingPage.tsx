@@ -25,8 +25,10 @@ export function LandingPage() {
   const supported = (data ?? []).filter((m) => m.supported);
   const unsupported = (data ?? []).filter((m) => !m.supported);
 
-  // なぜ: 未対応59自治体を「23区/市部/町村部」に分けて折りたたむ(主役=対応中3を埋もれさせない)。
+  // なぜ: 未対応の自治体を「23区/市部/町村部」に分けて折りたたむ(主役=対応中を埋もれさせない)。
   // 分類は自治体コードの上位桁で決まる(131xx=区, 132xx=市, 133xx/134xx=町村)。
+  // 2026-08-07 に23特別区がすべて対応済みになったため「23区」グループは空になり、末尾の
+  // フィルタで非表示になる(0件のグループを見出しだけ残さない)。未対応は市部26+町村部13の39件。
   const unsupportedGroups: { key: string; label: string; items: MunicipalityWithCoverage[] }[] = [
     { key: 'wards', label: '23区', items: unsupported.filter((m) => m.code.startsWith('131')) },
     { key: 'cities', label: '市部', items: unsupported.filter((m) => m.code.startsWith('132')) },

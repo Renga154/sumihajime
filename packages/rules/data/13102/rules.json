@@ -9,16 +9,26 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "urgent",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "中央区の新しい住所に住み始めてから14日以内です。住み始める前の日では受付できません。区役所の休日(土日、祝日、年末年始)が14日目に当たる場合は、その日以後の最初の開庁日が届出期限です。届出先は区役所区民生活課住民記録係(本庁舎1階)または日本橋・月島・晴海の各特別出張所区民係です。",
       "sourceIds": ["src-13102-resident_registration-001"],
       "applicabilityReasonTemplate": "他の区市町村または外国から中央区に転入したすべての方に必要な届出です。"
     },
     {
       "procedureId": "procedure_mynumber_continued_use",
-      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "hasMyNumberCard",
+        "equals": true
+      },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "カードに中央区の住所を追記して引き続き使用するには継続利用手続きが必要です。転入届と併せて手続きをしてください。継続利用手続きをしないまま転入した日から90日が経過するとカードは失効します。また中央区は『転入日から15日経過または転出予定日から30日経過した転入届があった場合はカードが失効し継続利用手続きができない』という注記も掲げています(中央区の転入届の届出期限は『住み始めてから14日以内』と案内されており数字が異なるため、詳細は区民生活課住民記録係へご確認ください)。",
       "sourceIds": ["src-13102-my_number-001", "src-13102-resident_registration-001"],
       "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。"
@@ -31,16 +41,26 @@
         "equals": true
       },
       "priority": "high",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "国民健康保険に入る方・やめる方・その他変更のある方は、原則として14日以内に届け出てください。他区市町村から転入してきたときの持参物は本人確認書類です。届出先は区役所本庁舎4階保険年金課または日本橋・月島・晴海の各特別出張所です。",
       "sourceIds": ["src-13102-national_health_insurance-001"],
       "applicabilityReasonTemplate": "職場の健康保険などに加入していない方は、中央区の国民健康保険への加入の届出が必要です。"
     },
     {
       "procedureId": "procedure_national_pension_address",
-      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalPension",
+        "equals": true
+      },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "中央区の『国民年金 届出について』ページには、国内の区市町村間の転入に伴う住所変更の届出およびその期限の記載がありません(記載があるのは国外から転入した場合の資格取得の届出です)。転入に伴う届出の要否は区役所本庁舎4階保険年金課年金係または中央年金事務所へご確認ください。",
       "sourceIds": ["src-13102-national_pension-001"],
       "applicabilityReasonTemplate": "国民年金(第1号被保険者)の加入・種別変更等の届出に関する案内です。国内転入に伴う届出の要否は中央区公式ページに記載がないため、窓口または年金事務所へご確認ください。"
@@ -52,7 +72,9 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "児童手当は認定請求した月の翌月分から支給され、手続きが遅れた分を遡って支給することはできません。ただし出生日または転出予定日が月末に近い場合は、その翌日から起算して15日以内に請求を行うことで出生日等の翌月分から支給されます。起算日は前住所地での転出予定日のため、引越し日からは算定できません。",
       "sourceIds": ["src-13102-child_benefits-001", "src-13102-child_benefits-002"],
       "applicabilityReasonTemplate": "高校生年代までの児童を養育している世帯が対象です。中央区に転入した場合は新たに認定請求が必要です。"
@@ -64,7 +86,9 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "中央区の『子ども医療費助成』ページには、医療証の交付申請そのものの申請期限・遡及期限の記載がありません(記載があるのは償還払いの『申請期限は領収日から5年以内』のみで、これは交付申請の遡及とは別の手続きです)。申請期限は要確認です。いつまでに申請すれば転入日に遡って助成が受けられるかは中央区の公式ページから確定できないため、区役所6階子ども子育て支援課子育て給付係へご確認のうえ、早めに申請してください。",
       "sourceIds": ["src-13102-child_medical-001"],
       "applicabilityReasonTemplate": "中央区内に住所があり健康保険に加入している子どもを養育する保護者が対象です(所得による制限はありません)。申請期限は公式ページに記載がないため要確認です。",
@@ -74,12 +98,21 @@
       "procedureId": "procedure_school_transfer",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["elementary", "junior_senior"]
+          }
         ]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "在籍していた学校から『在学証明書』『教科書給与証明書』を受け取り、住所地の指定校へ連絡して在籍の開始日を決め、住民票の異動手続きを行ったうえで学務課へ書類を持参します(電子フォームでの手続きも可能です)。学務課から交付される『就学通知書』を入学する日までに転入学する学校へ提出してください。日数固定の期限はこのページには記載がありません。",
       "sourceIds": ["src-13102-school_transfer-001"],
       "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が中央区へ転入する場合に必要な、区立小・中学校への転入学手続きです。中央区で交付される書類の名称は『就学通知書』です。"
@@ -88,12 +121,21 @@
       "procedureId": "procedure_childcare_application",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["age0_2", "age3_5"]
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "中央区は自治体経由の申込みを不要としており、原則として中央区へ直接お申し込みください。利用希望月の前月末までに転入することを条件に中央区民として利用調整が行われます。中央区の書式(入所申込書・中央区への転入誓約書・不動産の契約書の写し等)が必要です。転入届を提出したら、その日のうち午後5時までに区役所6階保育課保育入園係へお越しください。締切日は入園希望月・年度により異なるため日数固定の期限は設定していません。",
       "sourceIds": ["src-13102-childcare-001"],
       "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、中央区の認可保育所の利用を希望する方(区外から申し込む方)向けの案内です。"
@@ -102,12 +144,22 @@
       "procedureId": "procedure_dog_registration_transfer",
       "condition": {
         "all": [
-          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
-          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasDog",
+            "equals": true
+          },
+          {
+            "predicate": "flagEquals",
+            "flag": "dogHasMicrochip",
+            "equals": false
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "他自治体から転入した場合は、前の自治体の犬鑑札を持参して中央区保健所の窓口で手続きをしてください(鑑札を紛失した場合は再発行手数料1600円がかかります)。明確な日数の期限はこのページには記載がありません。",
       "sourceIds": ["src-13102-dog_registration-001"],
       "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していない(または装着しているが環境省のデータベースに登録していない)ため、中央区保健所での登録の手続きが必要です。",
@@ -120,10 +172,69 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集曜日を確認してください)。中央区の収集曜日は京橋・日本橋・月島の地域ごと、町丁目ごとに決められており、中央区公式『あなたの町のごみ・資源収集曜日』ページでご確認ください。本サービスは中央区の収集曜日データを保持していません。",
       "sourceIds": ["src-13102-waste_guide-001"],
       "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたってごみ・資源の分け方と収集曜日の確認をおすすめします。"
+    },
+    {
+      "procedureId": "procedure_water_supply",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "東京都水道局は「次のお手続きについては、3〜4日前までに必ずお手続きください」と案内しています(使用開始申込み・使用中止届のいずれも)。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。",
+      "sourceIds": ["src-13000-water_supply-001", "src-13000-sewerage-001"],
+      "applicabilityReasonTemplate": "水道は住まいを移るすべての方に必要なライフラインの手続きです(区の手続きではなく東京都水道局への手続きです)。"
+    },
+    {
+      "procedureId": "procedure_postal_forwarding",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "日本郵便は「転居届を提出されてから登録までに3〜7営業日を要しますので、転居される際には、お早めに転居届を提出してください」と案内しています。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。転送期間は届出日から1年間です(転送開始希望日からではありません)。",
+      "sourceIds": ["src-00000-postal_forwarding-001"],
+      "applicabilityReasonTemplate": "旧住所あての郵便物等を新住所へ転送してもらうための、住所が変わるすべての方向けの手続きです(区の手続きではなく日本郵便への手続きです)。"
+    },
+    {
+      "procedureId": "procedure_utilities_contact",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "出典である国(デジタル庁)の公式ページには、電気・ガスの手続きの期限に関する記載がありません。受付の締切や必要な連絡時期は契約先の事業者ごとに異なるため、契約先へご確認ください(要確認)。",
+      "sourceIds": ["src-00000-utilities_contact-001"],
+      "applicabilityReasonTemplate": "電気・ガスは引越しに伴い契約先の民間事業者への手続きが必要になるライフラインです(区の手続きではありません)。"
+    },
+    {
+      "procedureId": "procedure_driver_license_change",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsVehicleGuidance",
+        "equals": true
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "警視庁の当該ページには「◯日以内」という日数の期限の記載がありません(要確認)。転入届で住民票の住所が変わったあとに手続きしてください。",
+      "sourceIds": ["src-13000-driver_license-001"],
+      "applicabilityReasonTemplate": "車・バイク等の追加案内が必要と回答された方向けの、運転免許証の住所変更(記載事項変更)の手続きです(区の手続きではなく警視庁への手続きです)。"
     }
   ]
 }

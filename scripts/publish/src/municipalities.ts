@@ -2,7 +2,8 @@ import type { Municipality } from '@tmn/schemas';
 
 /**
  * なぜ: 東京都62市区町村(23区+26市+5町+8村)を municipalities テーブルへ投入する静的マスタ。
- * supported=true は縦切り整備済みの15区(千代田/新宿/江東/品川/大田/世田谷/中野/杉並/豊島/北/荒川/板橋/練馬/足立/江戸川)のみ。残る47はチェックリスト未対応だが、
+ * supported=true は縦切り整備済みの23特別区すべて(2026-08-07 の人手レビュー承認で23区が出そろった)。
+ * 残る39市町村はチェックリスト未対応だが、
  * FR-021「未対応でも公式サイトへ誘導」のため officialUrl を全件に持たせ、CLAUDE.md原則9
  * 「未対応を対応済みに見せない」を LandingPage 側の折りたたみグループ表示で担保する。
  *
@@ -31,11 +32,26 @@ export const MUNICIPALITIES: Municipality[] = [
     note: '対応済み',
     officialUrl: 'https://www.city.chiyoda.lg.jp/',
   },
-  { code: '13102', name: '中央区', supported: false, officialUrl: 'https://www.city.chuo.lg.jp/' },
   {
+    // なぜ: Batch8で中央区データ(手続き10件+自治体以外のライフライン等4件/窓口施設4件)を整備し、
+    // 2026-08-07 ユーザー(maintainer)決裁「5区とも承認」により全件verified・approved化されたため
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
+    code: '13102',
+    name: '中央区',
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
+    officialUrl: 'https://www.city.chuo.lg.jp/',
+  },
+  {
+    // なぜ: Batch8で港区データ(手続き10件+自治体以外のライフライン等4件/窓口施設5件)を整備し、
+    // 2026-08-07 ユーザー(maintainer)決裁「5区とも承認」により全件verified・approved化されたため
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13103',
     name: '港区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.minato.tokyo.jp/',
   },
   {
@@ -49,16 +65,36 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.shinjuku.lg.jp/',
   },
   {
+    // なぜ: Batch8で文京区データ(手続き10件+自治体以外のライフライン等4件/窓口施設1件)を整備し、
+    // 2026-08-07 ユーザー(maintainer)決裁「5区とも承認」により全件verified・approved化されたため
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13105',
     name: '文京区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.bunkyo.lg.jp/',
   },
-  { code: '13106', name: '台東区', supported: false, officialUrl: 'https://www.city.taito.lg.jp/' },
   {
+    // なぜ: Batch8で台東区データ(手続き10件+自治体以外のライフライン等4件/窓口施設1件)を整備し、
+    // 2026-08-07 ユーザー(maintainer)決裁「5区とも承認」により全件verified・approved化されたため
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
+    code: '13106',
+    name: '台東区',
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
+    officialUrl: 'https://www.city.taito.lg.jp/',
+  },
+  {
+    // なぜ: Batch8で墨田区データ(手続き10件+自治体以外のライフライン等4件/窓口施設6件)を整備し、
+    // 2026-08-07 ユーザー(maintainer)決裁「5区とも承認」により全件verified・approved化されたため
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13107',
     name: '墨田区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.sumida.lg.jp/',
   },
   {
@@ -84,9 +120,14 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.shinagawa.tokyo.jp/',
   },
   {
+    // なぜ: Batch9で目黒区データ(手続き10件+自治体以外のライフライン等4件/窓口施設5件)を整備し、
+    // 2026-08-07 ユーザー(maintainer)決裁「3区とも承認」により全件verified・approved化されたため
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13110',
     name: '目黒区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.meguro.tokyo.jp/',
   },
   {
@@ -111,9 +152,14 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.setagaya.lg.jp/',
   },
   {
+    // なぜ: Batch9で渋谷区データ(手続き10件+自治体以外のライフライン等4件/窓口施設10件)を整備し、
+    // 2026-08-07 ユーザー(maintainer)決裁「3区とも承認」により全件verified・approved化されたため
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13113',
     name: '渋谷区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'http://www.city.shibuya.tokyo.jp/',
   },
   {
@@ -228,9 +274,14 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.city.adachi.tokyo.jp/',
   },
   {
+    // なぜ: Batch9で葛飾区データ(手続き10件+自治体以外のライフライン等4件/窓口施設7件)を整備し、
+    // 2026-08-07 ユーザー(maintainer)決裁「3区とも承認」により全件verified・approved化されたため
+    // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13122',
     name: '葛飾区',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.katsushika.lg.jp/',
   },
   {

@@ -20,8 +20,10 @@ test('透明性ページ: 鮮度サマリー・台帳テーブル・CC BYバッ�
   // 2026-08-07 人手レビュー承認(ADR-009)でライフライン等4手続きの出典5件が追加approved化(98→103)、
   // 同日さらに練馬(13120)の11ソース+板橋(13119)の12ソースが人手レビュー承認(103→126)、
   // 同日さらにBatch7の4区(中野16=既存13+wagmap由来3 / 豊島11 / 北15 / 荒川14)が承認(126→182)、
-  // 同日さらにBatch10の足立(13121)16ソース+江戸川(13123)17ソースが人手レビュー承認(182→215)。
-  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('215');
+  // 同日さらにBatch10の足立(13121)16ソース+江戸川(13123)17ソースが人手レビュー承認(182→215)、
+  // 同日さらに残る8区(Batch8=中央12/港14/文京14/台東13/墨田14、Batch9=目黒14/渋谷22/葛飾13)が
+  // 人手レビュー承認(215→331)、渋谷区のArcGIS Hub配信の施設CSV1件を新規登録して331→332。
+  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('332');
   await expect(page.getByRole('heading', { name: 'データの新しさ' })).toBeVisible();
   await expect(page.getByText(/残り\s*\d+日/).first()).toBeVisible();
 

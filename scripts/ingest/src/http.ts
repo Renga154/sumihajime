@@ -32,10 +32,16 @@ const ALLOWED_HOST_EXACT = [
   'www.city.edogawa.tokyo.jp',
   // Batch9(目黒13110・渋谷13113)。いずれも当該区の公式サイトであることを監査で確認済み
   // (東京都公式「リンク集／都内区市町村」の href と scripts/publish/src/municipalities.ts の
-  // officialUrl に一致する)。渋谷区の実データ配信先である city-shibuya-data.opendata.arcgis.com
-  // (Esri ArcGIS Hub) は区の公式ドメイン外であり、追加はユーザー決裁が必要なため許可しない。
+  // officialUrl に一致する)。
   'www.city.meguro.tokyo.jp',
   'www.city.shibuya.tokyo.jp',
+  // 渋谷区のオープンデータ配信先(Esri ArcGIS Hub 上の区独自ポータル)。区公式サイトの
+  // オープンデータ案内および東京都オープンデータカタログの渋谷区データセット
+  // (t131130d0000000027「オープンデータ一覧」)からリンクされた、渋谷区自身が管理する
+  // 公式データの配信先であることを監査で確認済み(docs/research/opendata-gaps.md 事例15)。
+  // 配信基盤が区公式ドメイン外にあるため、arcgis.com をワイルドカードで開けず
+  // このホストだけを完全一致で許可する(ユーザー決裁 2026-08-07「今許可する」)。
+  'city-shibuya-data.opendata.arcgis.com',
   // 日本郵便(郵便法上の郵便事業提供者。転居届の一次情報源。ADR-009)
   'www.post.japanpost.jp',
   // 中野区のオープンデータ配信先。区公式ページからリンクされた公式データだが配信は

@@ -1,58 +1,76 @@
 {
   "municipalityCode": "13113",
-  "version": "2026-08-07.1",
-  "note": "Batch9 渋谷区(13113) 窓口施設。渋谷区の実質的なオープンデータ(122件)は東京都オープンデータカタログではなく Esri ArcGIS Hub(city-shibuya-data.opendata.arcgis.com)上の独自ポータルにあり、そこには公共施設一覧CSV(527件・緯度経度充填率100%)が存在する。しかし配信ホストが渋谷区の公式ドメイン外であり、取得許可リスト(scripts/ingest/src/http.ts の ALLOWED_HOST_EXACT)への追加はユーザー決裁が必要な論点(docs/research/audit-batch9-meguro-shibuya-katsushika.md R-Shibuya-1)のため、本バッチでは当該CSVを使用せず、渋谷区公式サイト(www.city.shibuya.tokyo.jp)の出張所・区民サービスセンターの各施設ページから住民異動を扱う窓口10件を正規化する。出典ページに緯度経度が無いため lat/lng は設定しない(捏造回避)。新橋出張所は『平成31年3月31日をもって出張所の窓口業務を終了しました』と公式ページに明記されており転入届を扱わないため含めない(自動証明書交付機のみ稼働)。全件が人手レビュー未了(出典 review_status=pending)。",
+  "version": "2026-08-07.2",
+  "note": "Batch9 渋谷区(13113) 窓口施設。2026-08-07のユーザー決裁「今許可する」により取得許可ホストへ city-shibuya-data.opendata.arcgis.com を完全一致で追加したため、渋谷区が自ら運用するオープンデータポータル(Esri ArcGIS Hub。DCATフィードに122データセット)の『渋谷区の施設・事業所』CSV(src-13113-facilities-011。527行・経度緯度の充填率100%・CC BY 4.0)を採用できるようになった。Batch9時点では配信ホストが区公式ドメイン外で許可リストに無かったため公式HTMLページから座標なしで正規化していたが、本コミットでCSV由来の緯度経度付きへ差し替える(docs/research/opendata-gaps.md 事例15 が解消)。527件をそのまま載せず、転入届を扱う窓口だけへ絞り込んだ: サービスの種類が『出張所・区民サービスセンター』(10件)と『区役所・分庁舎』(3件)の計13件のうち、窓口業務を終了した新橋出張所(src-13113-facilities-001に『平成31年3月31日をもって出張所の窓口業務を終了しました』と明記)と、転入届を扱わない北谷分庁舎(福祉事務所)・美竹分庁舎を除いた10件を採用した。各施設の name / address / hours / lat / lng は原則として当該CSVの記載値のみから構成し(推測補完なし=CLAUDE.md原則3)、施設ごとに単一の sourceId を持たせて出典を混ぜない(前例: 中野区13114)。address はCSVの住所表記(例: 渋谷区恵比寿4-2-6)に『東京都』を補って正規化した。例外は本町出張所で、CSVの住所(渋谷区本町4-9-7)が区公式ページ(src-13113-facilities-007。更新日2025-06-02)の『〒151-0071 渋谷区本町4-39-1』と一致しない。CSVはデータセット説明に『令和6年3月30日時点の情報です』と明記された古いスナップショットであり、住所が食い違う以上その座標が現在地を指す保証がないため、本町出張所だけは公式ページ由来のまま緯度経度を設定しない(捏造回避)。出張所の休業日(土曜日・日曜日、祝休日、年末年始)や区民サービスセンターの取扱業務の違いは施設ではなく手続き側の情報であるため procedure_resident_registration の locations / cautions に出典付きで記載している。2026-08-07 ユーザー(maintainer)決裁「3区とも承認」により人手レビュー承認済み。",
+  "reviewStatus": "approved",
+  "dataQualityNotes": [
+    "10件中9件の緯度経度は『渋谷区の施設・事業所』CSV(src-13113-facilities-011)の実値で、経度・緯度とも欠落なし。残る1件(本町出張所)は出典間で住所が食い違うため座標を持たない。",
+    "同CSVはデータセット説明に「令和6年3月30日時点の情報です」と明記されており、2024-03-30時点のスナップショットである。実際に、2019年3月末で窓口業務を終了した新橋出張所が現役の施設として1行含まれている。転入届を扱うかどうかの判定はCSVではなく区公式ページ(src-13113-facilities-001)の取扱業務の記載に従った。",
+    "本町出張所の住所はCSVが「渋谷区本町4-9-7」、区公式ページ(src-13113-facilities-007。更新日2025-06-02)が「〒151-0071 渋谷区本町4-39-1」で不一致。より新しい区公式ページを採用し、CSV側の座標は採用しない(docs/research/opendata-gaps.md 事例34)。",
+    "hours はCSVの『利用可能時間特記事項』の実値であり、休業日(土曜日・日曜日、祝・休日、年末年始)は含まれない。休業日と出張所・区民サービスセンターで取扱業務が異なる旨は procedure_resident_registration の locations / cautions に出典付きで記載している(前例: 中野区13114 は施設 hours を庁舎の通常開庁時間にとどめ、窓口の受付時間を手続き側へ寄せている)。",
+    "2026-08-07 ユーザー(maintainer)決裁「3区とも承認」により人手レビュー承認済み(reviewStatus=approved)。出典CSVは渋谷区自身が運用する公式オープンデータポータルの配信だが、基盤が区公式ドメイン外(Esri ArcGIS Hub)である旨を registry.csv の notes に記録した。"
+  ],
   "facilities": [
     {
       "facilityId": "13113-fac-honchosha",
       "municipalityCode": "13113",
-      "name": "渋谷区役所 暮らしの手続きのフロア(庁舎3階)住民戸籍課",
-      "category": "区役所本庁舎",
-      "address": "〒150-8010 東京都渋谷区宇田川町1-1",
-      "hours": "月曜日から金曜日 8時30分から17時(祝休日・年末年始を除く)",
-      "sourceId": "src-13113-resident_registration-001"
+      "name": "渋谷区役所",
+      "category": "区役所・分庁舎",
+      "address": "東京都渋谷区宇田川町1-1",
+      "lat": 35.6636842,
+      "lng": 139.6977409,
+      "hours": "8時30分～17時",
+      "sourceId": "src-13113-facilities-011"
     },
     {
       "facilityId": "13113-fac-ebisuekimae",
       "municipalityCode": "13113",
       "name": "恵比寿駅前出張所",
-      "category": "出張所",
-      "address": "〒150-0013 東京都渋谷区恵比寿4-2-6",
-      "hours": "月曜日から金曜日 8時30分から17時(土曜日・日曜日、祝休日、年末年始は閉庁)",
-      "sourceId": "src-13113-facilities-003"
+      "category": "出張所・区民サービスセンター",
+      "address": "東京都渋谷区恵比寿4-2-6",
+      "lat": 35.6468081,
+      "lng": 139.7106545,
+      "hours": "8時30分～17時",
+      "sourceId": "src-13113-facilities-011"
     },
     {
       "facilityId": "13113-fac-uehara",
       "municipalityCode": "13113",
       "name": "上原出張所",
-      "category": "出張所",
-      "address": "〒151-0064 東京都渋谷区上原1-18-6",
-      "hours": "月曜日から金曜日 8時30分から17時(土曜日・日曜日、祝休日、年末年始は閉庁)",
-      "sourceId": "src-13113-facilities-004"
+      "category": "出張所・区民サービスセンター",
+      "address": "東京都渋谷区上原1-18-6",
+      "lat": 35.668655,
+      "lng": 139.6829419,
+      "hours": "8時30分～17時",
+      "sourceId": "src-13113-facilities-011"
     },
     {
       "facilityId": "13113-fac-nishihara",
       "municipalityCode": "13113",
       "name": "西原出張所",
-      "category": "出張所",
-      "address": "〒151-0066 東京都渋谷区西原2-28-9",
-      "hours": "月曜日から金曜日 8時30分から17時(土曜日・日曜日、祝休日、年末年始は閉庁)",
-      "sourceId": "src-13113-facilities-005"
+      "category": "出張所・区民サービスセンター",
+      "address": "東京都渋谷区西原2-28-9",
+      "lat": 35.6749488,
+      "lng": 139.6777779,
+      "hours": "8時30分～17時",
+      "sourceId": "src-13113-facilities-011"
     },
     {
       "facilityId": "13113-fac-hatsudai",
       "municipalityCode": "13113",
       "name": "初台出張所",
-      "category": "出張所",
-      "address": "〒151-0061 東京都渋谷区初台1-33-10",
-      "hours": "月曜日から金曜日 8時30分から17時(土曜日・日曜日、祝休日、年末年始は閉庁)",
-      "sourceId": "src-13113-facilities-006"
+      "category": "出張所・区民サービスセンター",
+      "address": "東京都渋谷区初台1-33-10",
+      "lat": 35.6795948,
+      "lng": 139.684876,
+      "hours": "8時30分～17時",
+      "sourceId": "src-13113-facilities-011"
     },
     {
       "facilityId": "13113-fac-honmachi",
       "municipalityCode": "13113",
       "name": "本町出張所",
-      "category": "出張所",
+      "category": "出張所・区民サービスセンター",
       "address": "〒151-0071 東京都渋谷区本町4-39-1",
       "hours": "月曜日から金曜日 8時30分から17時(土曜日・日曜日、祝休日、年末年始は閉庁)",
       "sourceId": "src-13113-facilities-007"
@@ -61,37 +79,45 @@
       "facilityId": "13113-fac-sasazuka",
       "municipalityCode": "13113",
       "name": "笹塚出張所",
-      "category": "出張所",
-      "address": "〒151-0073 東京都渋谷区笹塚3-1-9",
-      "hours": "月曜日から金曜日 8時30分から17時(土曜日・日曜日、祝休日、年末年始は閉庁)",
-      "sourceId": "src-13113-facilities-008"
+      "category": "出張所・区民サービスセンター",
+      "address": "東京都渋谷区笹塚3-1-9",
+      "lat": 35.6776049,
+      "lng": 139.6701224,
+      "hours": "8時30分～17時",
+      "sourceId": "src-13113-facilities-011"
     },
     {
       "facilityId": "13113-fac-sendagaya",
       "municipalityCode": "13113",
       "name": "千駄ヶ谷出張所",
-      "category": "出張所",
-      "address": "〒151-0051 東京都渋谷区千駄ヶ谷4-25-14",
-      "hours": "月曜日から金曜日 8時30分から17時(土曜日・日曜日、祝休日、年末年始は閉庁)",
-      "sourceId": "src-13113-facilities-009"
+      "category": "出張所・区民サービスセンター",
+      "address": "東京都渋谷区千駄ヶ谷4-25-14",
+      "lat": 35.6811569,
+      "lng": 139.7055421,
+      "hours": "8時30分～17時",
+      "sourceId": "src-13113-facilities-011"
     },
     {
       "facilityId": "13113-fac-jingumae",
       "municipalityCode": "13113",
       "name": "神宮前出張所",
-      "category": "出張所",
-      "address": "〒150-0001 東京都渋谷区神宮前6-10-14",
-      "hours": "月曜日から金曜日 8時30分から17時(土曜日・日曜日、祝休日、年末年始は閉庁)",
-      "sourceId": "src-13113-facilities-010"
+      "category": "出張所・区民サービスセンター",
+      "address": "東京都渋谷区神宮前6-10-14",
+      "lat": 35.6675496,
+      "lng": 139.7052181,
+      "hours": "8時30分～17時",
+      "sourceId": "src-13113-facilities-011"
     },
     {
       "facilityId": "13113-fac-kumin-sc",
       "municipalityCode": "13113",
       "name": "区民サービスセンター",
-      "category": "区民サービスセンター",
-      "address": "〒150-0002 東京都渋谷区渋谷2-21-1 渋谷ヒカリエ8階",
-      "hours": "月曜日から金曜日 11時から19時、土曜日 9時から17時(日曜日、祝休日、年末年始は閉庁)。月曜日から金曜日の17時から19時と土曜日は取り扱い業務が異なります",
-      "sourceId": "src-13113-facilities-002"
+      "category": "出張所・区民サービスセンター",
+      "address": "東京都渋谷区渋谷2-21-1渋谷ヒカリエ8階",
+      "lat": 35.6590551,
+      "lng": 139.7035292,
+      "hours": "月曜日～金曜日：11時～19時、土曜日： 9時～17時",
+      "sourceId": "src-13113-facilities-011"
     }
   ]
 }
