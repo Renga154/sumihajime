@@ -153,7 +153,9 @@ export function ChecklistPage() {
               </p>
               <span className="text-2xl font-bold tabular-nums text-brand-700">
                 {tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0}
-                <span className="text-sm font-semibold text-slate-400">%</span>
+                {/* slate-400 は白背景で CR 2.63:1 と WCAG 1.4.3(4.5:1)を満たさない。
+                    単位記号も本文テキストなので slate-600(CR 6.0:1)へ上げる。 */}
+                <span className="text-sm font-semibold text-slate-600">%</span>
               </span>
             </div>
             <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">

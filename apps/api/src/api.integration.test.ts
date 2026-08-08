@@ -305,6 +305,48 @@ describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)
   });
 });
 
+/**
+ * なぜ: トップの訴求文に出す数値は必ず実データ由来にする(手打ちの定数を画面へ書かない)。
+ * このエンドポイントが台帳・自治体表の実件数と一致していることを固定する。区やソースが増減
+ * したときに、トップの表示だけが取り残される事故を防ぐ。
+ */
+describe('GET /api/stats — トップの実測サマリー', () => {
+  it('自治体表・台帳の実件数と一致し、最終確認日を返す', async () => {
+    const [statsRes, munisRes, sourcesRes] = await Promise.all([
+      request('/api/stats'),
+      request('/api/municipalities'),
+      request('/api/sources'),
+    ]);
+    expect(statsRes.status).toBe(200);
+    const stats = (await statsRes.json()) as {
+      supportedMunicipalities: number;
+      totalMunicipalities: number;
+      approvedSources: number;
+      lastVerifiedDate?: string;
+    };
+    const munis = (await munisRes.json()) as { supported: boolean }[];
+    const sources = (await sourcesRes.json()) as { lastVerifiedAt?: string }[];
+
+    expect(stats.totalMunicipalities).toBe(munis.length);
+    expect(stats.supportedMunicipalities).toBe(munis.filter((m) => m.supported).length);
+    expect(stats.approvedSources).toBe(sources.length);
+
+    // 最終確認日は台帳の lastVerifiedAt の最大値(日付部分)と一致する。
+    const latest = sources
+      .map((s) => s.lastVerifiedAt?.slice(0, 10))
+      .filter((d): d is string => typeof d === 'string')
+      .sort()
+      .at(-1);
+    expect(stats.lastVerifiedDate).toBe(latest);
+    expect(stats.lastVerifiedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('個人データも自治体スコープも要求しない(クエリ不要で200)', async () => {
+    const res = await request('/api/stats');
+    expect(res.status).toBe(200);
+  });
+});
+
 describe('GET /api/waste-schedules', () => {
   it('area 未指定 → 118地区一覧 + caution', async () => {
     const res = await request('/api/waste-schedules?municipality=13112');

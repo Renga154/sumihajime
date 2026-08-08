@@ -5,6 +5,7 @@ import {
   facilitiesResponseSchema,
   municipalitiesResponseSchema,
   procedureDetailResponseSchema,
+  serviceStatsSchema,
   sourcesResponseSchema,
   wardDifferencesResponseSchema,
   wasteSchedulesResponseSchema,
@@ -17,6 +18,7 @@ import {
   type MunicipalitiesResponse,
   type ProcedureDetailResponse,
   type Profile,
+  type ServiceStats,
   type SourcesResponse,
   type WardDifferencesResponse,
   type WasteSchedulesResponse,
@@ -119,6 +121,15 @@ export async function getProcedure(
  */
 export async function getSources(): Promise<SourcesResponse> {
   return sourcesResponseSchema.parse(await request('/sources'));
+}
+
+/**
+ * GET /api/stats : 公開データの規模サマリー(対応自治体数・承認済みソース件数・最終確認日)。
+ * トップの訴求文で使う数値をここから取る。/api/sources(台帳全文)を読まずに済ませるための
+ * 軽量エンドポイントで、数値を画面へ手打ちしないための唯一の入口。
+ */
+export async function getServiceStats(): Promise<ServiceStats> {
+  return serviceStatsSchema.parse(await request('/stats'));
 }
 
 /**

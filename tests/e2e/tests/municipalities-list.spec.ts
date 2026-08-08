@@ -11,7 +11,7 @@ test('62リスト: 対応23件+未対応グループの展開と公式リンク'
 
   // 対応している自治体は23件(=「この自治体で始める」ボタンは23だけ)。Batch8で中央・港・文京・
   // 台東・墨田、Batch9で目黒・渋谷・葛飾を承認して23特別区が出そろった。
-  await expect(page.getByRole('button', { name: 'この自治体で始める' })).toHaveCount(23);
+  await expect(page.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(23);
 
   // 既定では未対応グループは折りたたまれ、市部の自治体は見えない。
   const hachiojiInitial = page.getByRole('listitem').filter({ hasText: '八王子市' });
@@ -21,8 +21,8 @@ test('62リスト: 対応23件+未対応グループの展開と公式リンク'
   await page.locator('summary').filter({ hasText: '市部' }).click();
   const hachioji = page.getByRole('listitem').filter({ hasText: '八王子市' });
   await expect(hachioji).toBeVisible();
-  await expect(hachioji.getByRole('button', { name: 'この自治体で始める' })).toHaveCount(0);
-  await expect(hachioji.getByRole('link', { name: '公式サイトを見る' })).toHaveAttribute(
+  await expect(hachioji.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(0);
+  await expect(hachioji.getByRole('link', { name: /公式サイトを見る/ })).toHaveAttribute(
     'href',
     /city\.hachioji\.tokyo\.jp/,
   );
@@ -31,7 +31,7 @@ test('62リスト: 対応23件+未対応グループの展開と公式リンク'
   await page.locator('summary').filter({ hasText: '町村部' }).click();
   const ogasawara = page.getByRole('listitem').filter({ hasText: '小笠原村' });
   await expect(ogasawara).toBeVisible();
-  await expect(ogasawara.getByRole('link', { name: '公式サイトを見る' })).toHaveAttribute(
+  await expect(ogasawara.getByRole('link', { name: /公式サイトを見る/ })).toHaveAttribute(
     'href',
     /vill\.ogasawara\.tokyo\.jp/,
   );
@@ -49,7 +49,7 @@ test('62リスト: 自治体名の絞り込み(漢字・かな・ローマ字)',
 
   // 漢字で絞り込む → 練馬区だけが残り、開始ボタンも1つになる。
   await filter.fill('練馬');
-  await expect(page.getByRole('button', { name: 'この自治体で始める' })).toHaveCount(1);
+  await expect(page.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(1);
   await expect(page.getByRole('listitem').filter({ hasText: '練馬区' })).toBeVisible();
   await expect(page.getByRole('listitem').filter({ hasText: '世田谷区' })).toHaveCount(0);
 
@@ -63,9 +63,9 @@ test('62リスト: 自治体名の絞り込み(漢字・かな・ローマ字)',
   await filter.fill('八王子');
   const hachioji = page.getByRole('listitem').filter({ hasText: '八王子市' });
   await expect(hachioji).toBeVisible();
-  await expect(hachioji.getByRole('button', { name: 'この自治体で始める' })).toHaveCount(0);
+  await expect(hachioji.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(0);
 
   // 絞り込みを消すと全件へ戻る。
   await filter.fill('');
-  await expect(page.getByRole('button', { name: 'この自治体で始める' })).toHaveCount(23);
+  await expect(page.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(23);
 });

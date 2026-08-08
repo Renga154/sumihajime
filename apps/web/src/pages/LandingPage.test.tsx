@@ -21,6 +21,12 @@ vi.mock('../api/client', () => ({
       coverage: [],
     },
   ]),
+  getServiceStats: vi.fn(async () => ({
+    supportedMunicipalities: 23,
+    totalMunicipalities: 62,
+    approvedSources: 332,
+    lastVerifiedDate: '2026-08-07',
+  })),
 }));
 
 import { LandingPage } from './LandingPage';
@@ -41,8 +47,18 @@ describe('LandingPage', () => {
   it('対応自治体のみ「始める」ボタンを表示する', async () => {
     renderLanding();
     expect(await screen.findByText('世田谷区')).toBeInTheDocument();
-    const startButtons = screen.getAllByRole('button', { name: 'この自治体で始める' });
+    const startButtons = screen.getAllByRole('button', { name: /この自治体で始める/ });
     expect(startButtons).toHaveLength(1);
+  });
+
+  it('同名ボタン/リンクのアクセシブル名に自治体名を含める(読み上げの一覧で区別できる)', async () => {
+    renderLanding();
+    await screen.findByText('世田谷区');
+    // 視覚表示は「この自治体で始める」のままだが、アクセシブル名には区名が入る。
+    expect(screen.getByRole('button', { name: 'この自治体で始める 世田谷区' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: '新宿区の公式サイトを見る（別タブで開きます）' }),
+    ).toBeInTheDocument();
   });
 
   it('未対応自治体は「未対応」表示と公式サイトへの外部リンクを持つ(選択不可)', async () => {
@@ -54,6 +70,29 @@ describe('LandingPage', () => {
     const link = screen.getByRole('link', { name: /公式サイトを見る/ });
     expect(link).toHaveAttribute('href', 'https://www.city.shinjuku.lg.jp/');
     expect(link).toHaveAttribute('target', '_blank');
+  });
+});
+
+/**
+ * なぜ(独立点検の指摘): トップに「オープンデータ」「AI」の語が一度も出ず、審査基準の
+ * 「データ活用」がトップで一切伝わっていなかった。掲出した数値が /api/stats の実データ由来で
+ * あること(画面に定数を書かないこと)を、モックの値を変えて追随するかで固定する。
+ */
+describe('LandingPage — オープンデータとAIの訴求', () => {
+  it('オープンデータとAIの扱いをトップに掲出する', async () => {
+    renderLanding();
+    expect(
+      await screen.findByRole('heading', { name: 'オープンデータとAIの使い方' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/オープンデータ（CSV・API）を機械判読/)).toBeInTheDocument();
+    expect(screen.getByText(/出典つきの回答だけ/)).toBeInTheDocument();
+  });
+
+  it('数値は /api/stats の実データを表示する(画面に定数を持たない)', async () => {
+    renderLanding();
+    expect(await screen.findByText('23 / 62')).toBeInTheDocument();
+    expect(screen.getByText('332件')).toBeInTheDocument();
+    expect(screen.getByText('2026年8月7日')).toBeInTheDocument();
   });
 });
 
@@ -99,6 +138,6 @@ describe('LandingPage — 自治体の絞り込み', () => {
     await screen.findByText('世田谷区');
     fireEvent.change(filterInput(), { target: { value: '八王子' } });
     expect(screen.getByText('一致する自治体は見つかりませんでした')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'この自治体で始める' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /この自治体で始める/ })).toBeNull();
   });
 });

@@ -66,6 +66,28 @@ export const sourcesResponseSchema = z.array(sourceLedgerEntrySchema);
 export type SourcesResponse = z.infer<typeof sourcesResponseSchema>;
 
 /**
+ * なぜ: GET /api/stats(トップの「このサービスの約束」で使う実測サマリー)。
+ *
+ * トップに「23区対応 / 公式ソース332件 / 最終確認日」を出したいが、手打ちの数値は必ず古くなる
+ * (区・ソースが増減しても追随しない)。かといって /api/sources(332件の台帳全文)をトップで
+ * 取得するのは初回転送量の観点で本末転倒なので、集計値だけを返す軽量エンドポイントを用意する。
+ * 値はすべて公開済みD1の実データから毎回 COUNT/MAX で導出し、定数を持たない。
+ * 母数(totalMunicipalities)も返すのは「62自治体中23が対応」という誠実な文脈を保つため
+ * (CLAUDE.md原則9: 未対応を対応済みに見せない)。
+ */
+export const serviceStatsSchema = z.strictObject({
+  /** 対応済み自治体数(supported=1)。 */
+  supportedMunicipalities: z.int().nonnegative(),
+  /** 掲載している自治体の総数(対応・未対応の合計)。 */
+  totalMunicipalities: z.int().nonnegative(),
+  /** 承認済み(review_status='approved')の公式ソース件数。 */
+  approvedSources: z.int().nonnegative(),
+  /** 承認済みソースの最終確認日のうち最も新しいもの(YYYY-MM-DD)。台帳が空なら省略。 */
+  lastVerifiedDate: z.iso.date().optional(),
+});
+export type ServiceStats = z.infer<typeof serviceStatsSchema>;
+
+/**
  * なぜ: 計画§8.2「GET /api/procedures/:id → ProcedureVersion全fields+sources」。
  * sourcesは根拠カード用の台帳ビュー。当初は sourceSchema(全列)をそのまま返しており、
  * reviewStatus/reviewer(内部レビュー担当者名)/contentHash/fetchMethod といった内部運用列が

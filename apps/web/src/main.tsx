@@ -1,6 +1,14 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, redirect, RouterProvider } from 'react-router-dom';
+// フォント(DADS準拠の Noto Sans JP / 400・500・700)。@fontsource の分割サブセットCSSは
+// 120個の unicode-range 付き @font-face を宣言し、ブラウザは実際に使う文字を含むスライスだけを
+// 取得する。index.css の @import ではなくJSからimportするのは、vite.config.ts の
+// strip-fontsource-woff-fallback プラグイン(woff レガシーURLの除去)を通すため
+// (CSS内の @import は postcss-import がプラグインを介さずファイルを読むので効かない)。
+import '@fontsource/noto-sans-jp/400.css';
+import '@fontsource/noto-sans-jp/500.css';
+import '@fontsource/noto-sans-jp/700.css';
 import './index.css';
 import { AppStateProvider } from './state/AppState';
 import { Layout } from './components/Layout';

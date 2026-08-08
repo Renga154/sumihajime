@@ -58,44 +58,54 @@ export function WasteSortingSearch({ municipalityCode, municipalityName, officia
         <span className="h-5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
         分別を調べる
       </h2>
-      <p className="mt-0.5 pl-3.5 text-xs text-slate-500">
-        品目名を入力すると、分別区分・注意点の目安を表示します（{municipalityName}
-        のオープンデータより）。
-      </p>
-
-      <Card className="mt-2.5">
-        <label htmlFor={inputId} className="block font-semibold text-slate-900">
-          品目名で調べる
-        </label>
-        <div className="relative mt-2">
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 20 20"
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M9 3.5a5.5 5.5 0 103.4 9.82l3.14 3.14a1 1 0 001.42-1.42l-3.14-3.14A5.5 5.5 0 009 3.5zM5.5 9a3.5 3.5 0 117 0 3.5 3.5 0 01-7 0z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <input
-            id={inputId}
-            type="text"
-            inputMode="text"
-            autoComplete="off"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="例：ペットボトル、乾電池、傘"
-            aria-describedby={statusId}
-            className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 transition-colors focus:border-brand-500"
-          />
-        </div>
-        <p className="mt-1.5 text-xs text-slate-500">
-          入力された品目名はこの端末内でのみ使われ、サーバーへ保存されません。
+      {/*
+        なぜ出し分けるのか(独立点検 P1-11): 分別データ未整備の区でも「{区名}のオープンデータより
+        表示します」という断定の導入文と、動くのに何も返らない検索欄が出ていた。同じ画面の下では
+        「まだ整備されていません」と正しく告知しており、画面内で矛盾していた。存在しないデータを
+        約束しない(原則3・原則9)ため、未整備と分かった時点で導入文と検索欄を出さない。
+      */}
+      {!unavailable && (
+        <p className="mt-0.5 pl-3.5 text-xs text-slate-500">
+          品目名を入力すると、分別区分・注意点の目安を表示します（{municipalityName}
+          のオープンデータより）。
         </p>
-      </Card>
+      )}
+
+      {!unavailable && (
+        <Card className="mt-2.5">
+          <label htmlFor={inputId} className="block font-semibold text-slate-900">
+            品目名で調べる
+          </label>
+          <div className="relative mt-2">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 20"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9 3.5a5.5 5.5 0 103.4 9.82l3.14 3.14a1 1 0 001.42-1.42l-3.14-3.14A5.5 5.5 0 009 3.5zM5.5 9a3.5 3.5 0 117 0 3.5 3.5 0 01-7 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <input
+              id={inputId}
+              type="text"
+              inputMode="text"
+              autoComplete="off"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="例：ペットボトル、乾電池、傘"
+              aria-describedby={statusId}
+              className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 transition-colors focus:border-brand-500"
+            />
+          </div>
+          <p className="mt-1.5 text-xs text-slate-500">
+            入力された品目名はこの端末内でのみ使われ、サーバーへ保存されません。
+          </p>
+        </Card>
+      )}
 
       <div className="mt-3" role="status" aria-live="polite" id={statusId}>
         {result.loading && <Loading label="分別情報を検索中です…" />}

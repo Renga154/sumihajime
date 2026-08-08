@@ -17,7 +17,7 @@ export const WARDS = {
 /** ランディングで対応自治体カードの「この自治体で始める」を押してウィザードへ。 */
 export async function startWithWard(page: Page, wardName: string): Promise<void> {
   const card = page.getByRole('listitem').filter({ hasText: wardName });
-  await card.getByRole('button', { name: 'この自治体で始める' }).click();
+  await card.getByRole('button', { name: /この自治体で始める/ }).click();
   await expect(page).toHaveURL(/\/wizard$/);
 }
 
