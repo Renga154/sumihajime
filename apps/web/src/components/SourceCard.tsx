@@ -1,4 +1,4 @@
-import type { Source } from '@tmn/schemas';
+import type { ProcedureSource } from '@tmn/schemas';
 import { formatDateFromDateTime } from '../lib/format';
 import { ExternalLink } from './ui';
 
@@ -31,7 +31,7 @@ function OfficialSeal() {
   );
 }
 
-export function SourceCard({ source }: { source: Source }) {
+export function SourceCard({ source }: { source: ProcedureSource }) {
   const verified = formatDateFromDateTime(source.lastVerifiedAt);
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 border-l-4 border-l-brand-600 bg-gradient-to-br from-brand-50/70 to-white">

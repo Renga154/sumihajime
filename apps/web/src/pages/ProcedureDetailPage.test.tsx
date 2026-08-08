@@ -63,9 +63,7 @@ const DETAIL_RESPONSE: ProcedureDetailResponse = {
       sourceType: 'html',
       license: 'CC-BY-4.0',
       attributionText: '世田谷区',
-      fetchMethod: 'manual',
       updateFrequency: 'irregular',
-      reviewStatus: 'approved',
     },
   ],
 };

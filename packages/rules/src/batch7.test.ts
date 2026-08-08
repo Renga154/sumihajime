@@ -688,6 +688,11 @@ describe('Batch7 — provenance integrity & scope safety', () => {
   it('中野の wagmap 由来3ソースは配信ホストが区公式ドメイン外であることを notes に明記している', () => {
     // なぜ: SSRF許可リストの個別拡張(ユーザー決裁2026-08-07)で初めて取得できたデータであり、
     // 「都カタログ登録=公式ドメイン配信」ではないことを来歴に残す運用上の約束(opendata-gaps §12)。
+    // 2026-08-08: notes は利用者向け根拠カードとして公開される列であることが判明したため
+    // (internal-identifiers.test.ts)、決裁の主体・内部の許可リスト機構名(ALLOWED_HOST_EXACT等)
+    // といった内部運用語は notes から除いた。ここで検証するのは「配信元が区公式ドメイン外である」
+    // という利用者にも意味のある事実が notes に残っていることであり、誰がどう許可したかという
+    // 内部の意思決定過程ではない。
     const ids = [
       'src-13114-waste_sorting-001',
       'src-13114-facilities-002',
@@ -697,8 +702,8 @@ describe('Batch7 — provenance integrity & scope safety', () => {
       const row = registryRows.find((l) => l.startsWith(`${id},`));
       expect(row, `registry row missing: ${id}`).toBeDefined();
       expect(row as string).toContain('https://www2.wagmap.jp/');
-      expect(row as string).toContain('www2.wagmap.jp 上に');
-      expect(row as string).toContain('完全一致で個別許可');
+      expect(row as string).toContain('www2.wagmap.jp');
+      expect(row as string).toContain('区公式ドメインでの配信ではない');
       expect(row as string).toContain('CC BY 4.0');
     }
   });

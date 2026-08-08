@@ -231,9 +231,28 @@ app.get('/api/procedures/:id', async (c) => {
     );
   }
   const sourcesMap = await getSourcesByIds(c.env.DB, procedure.sourceIds);
+  // なぜ射影するのか: sourcesMap の値は台帳の全列(Source)を持つ。reviewStatus/reviewer
+  // (内部レビュー担当者名)/contentHash/fetchMethod は GET /api/sources と同じく公開しない
+  // (2026-08-08: このエンドポイントだけ射影が抜けており、レビュー担当者名が漏れていた)。
   const sources = procedure.sourceIds
     .map((sid) => sourcesMap.get(sid))
-    .filter((s) => s !== undefined);
+    .filter((s) => s !== undefined)
+    .map((s) => ({
+      sourceId: s.sourceId,
+      sourceTitle: s.sourceTitle,
+      ownerOrganization: s.ownerOrganization,
+      ...(s.municipalityCode ? { municipalityCode: s.municipalityCode } : {}),
+      category: s.category,
+      sourceUrl: s.sourceUrl,
+      sourceType: s.sourceType,
+      license: s.license,
+      attributionText: s.attributionText,
+      ...(s.lastVerifiedAt ? { lastVerifiedAt: s.lastVerifiedAt } : {}),
+      updateFrequency: s.updateFrequency,
+      ...(s.effectiveFrom ? { effectiveFrom: s.effectiveFrom } : {}),
+      ...(s.effectiveTo ? { effectiveTo: s.effectiveTo } : {}),
+      ...(s.notes ? { notes: s.notes } : {}),
+    }));
 
   const body = procedureDetailResponseSchema.parse({ procedure, sources });
   logEvent({

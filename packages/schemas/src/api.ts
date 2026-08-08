@@ -38,22 +38,6 @@ export const municipalitiesResponseSchema = z.array(municipalityWithCoverageSche
 export type MunicipalitiesResponse = z.infer<typeof municipalitiesResponseSchema>;
 
 /**
- * なぜ: 計画§8.2「GET /api/procedures/:id → ProcedureVersion全fields+sources」。
- * sourcesは根拠カード用に台帳の公開ビュー(Source)をそのまま返す。T-006で追加。
- */
-export const procedureDetailResponseSchema = z.strictObject({
-  procedure: procedureVersionSchema,
-  sources: z.array(sourceSchema),
-});
-export type ProcedureDetailResponse = z.infer<typeof procedureDetailResponseSchema>;
-
-/**
- * なぜ: 計画§8.2「GET /api/facilities → Facility[]」。T-006で追加。
- */
-export const facilitiesResponseSchema = z.array(facilitySchema);
-export type FacilitiesResponse = z.infer<typeof facilitiesResponseSchema>;
-
-/**
  * なぜ: 計画§8.2で予約済みの「GET /api/sources(データソース台帳の公開ビュー)」(Wave3)。
  * CLAUDE.md原則2「公開する全タスクに承認済み公式ソースと最終確認日」/ 原則10「ライセンスと
  * 帰属を追跡」を利用者・審査員へ可視化するための台帳ビュー。sourceSchema から公開に必要な
@@ -80,6 +64,32 @@ export type SourceLedgerEntry = z.infer<typeof sourceLedgerEntrySchema>;
 
 export const sourcesResponseSchema = z.array(sourceLedgerEntrySchema);
 export type SourcesResponse = z.infer<typeof sourcesResponseSchema>;
+
+/**
+ * なぜ: 計画§8.2「GET /api/procedures/:id → ProcedureVersion全fields+sources」。
+ * sourcesは根拠カード用の台帳ビュー。当初は sourceSchema(全列)をそのまま返しており、
+ * reviewStatus/reviewer(内部レビュー担当者名)/contentHash/fetchMethod といった内部運用列が
+ * GET /api/sources とは別経路(このエンドポイント)から漏れていた(2026-08-08発覚。notes列の
+ * 内部用語混入と同根の「公開経路が複数あり、片方だけ射影を絞っていた」構造的問題)。
+ * sourceLedgerEntrySchema(公開列のみ)を土台に、根拠カードが利用する notes だけを追加した
+ * 専用ビューに統一する。
+ */
+export const procedureSourceSchema = sourceLedgerEntrySchema.extend({
+  notes: sourceSchema.shape.notes,
+});
+export type ProcedureSource = z.infer<typeof procedureSourceSchema>;
+
+export const procedureDetailResponseSchema = z.strictObject({
+  procedure: procedureVersionSchema,
+  sources: z.array(procedureSourceSchema),
+});
+export type ProcedureDetailResponse = z.infer<typeof procedureDetailResponseSchema>;
+
+/**
+ * なぜ: 計画§8.2「GET /api/facilities → Facility[]」。T-006で追加。
+ */
+export const facilitiesResponseSchema = z.array(facilitySchema);
+export type FacilitiesResponse = z.infer<typeof facilitiesResponseSchema>;
 
 /**
  * なぜ: 計画§8.2「GET /api/waste-schedules?municipality=&area= → WasteSchedule[]+areas[]。

@@ -675,6 +675,43 @@ cache-control: public, max-age=0, must-revalidate
 
 ---
 
+## 追記（2026-08-08）: 出典台帳 notes 列が3度目の漏れ経路になった構造的問題
+
+このレポート自体の点検対象外だが、その後の別作業（`docs/data-sources/registry.csv` の notes 列クリーンアップ）で見つかった構造的な観察を、再発防止のためにここへ記録する。実施したのはデータ修正とテスト追加のみで、本レポートの他セクションの評価には手を加えていない。
+
+**何が起きたか**
+
+`GET /api/procedures/:id` が根拠カード用に返す `sources[].notes` に、要件番号（`C-9`）・タスクID（`T-005`）・内部ソースID（`src-13112-waste_schedule-001`）・決裁者のユーザー名（`maintainer`）・開発工程の記述（「誠実縮退」「Batch7で取得」「SHA-256記録」等）が本番で利用者に露出していた。世田谷区のごみ確認の根拠カードで実例が確認された。同じ列が原因の混入は、他区名の混入（2回）に続いて**これで3回目**。
+
+さらに点検の過程で、`GET /api/procedures/:id` の `sources[]` が `GET /api/sources` とは別経路で台帳の内部列をそのまま返しており、`reviewer`（決裁者名 `maintainer`）・`reviewStatus`・`contentHash`・`fetchMethod` が同じ応答から漏れていたことも判明した（`GET /api/sources` 側は `sourceLedgerEntrySchema` で公開列だけに絞っていたが、手続き詳細側は素通しだった）。こちらも本追記の作業内であわせて修正・デプロイ済み。
+
+**なぜ3度目が起きたのか(構造的な原因)**
+
+`notes` 列は二重の役割を持っている。
+
+1. データ追加・監査時の**内部の来歴記録**(誰がいつ何を根拠に承認したか、どのタスクで取得したか)。
+2. `GET /api/procedures/:id` を通じた**利用者向けの補足説明**(祝日の例外に注意、等)。
+
+この2つの利用目的が同じCSV列・同じDB列に同居しているため、データ追加者が(1)の視点で自然に書いた記述が、そのまま(2)の経路で公開される。個別の記述を直しても、次にデータを追加する人が同じ書き方をすれば同じ混入が再発する(実際に3回起きた)。テキストレビューでは構造的に防げない。
+
+**今回の対処(今回やったこと)**
+
+- registry.csv 全332行の notes を点検し、内部識別子・開発工程語を除去(利用者に有用な事実は残した)。
+- `packages/rules/src/internal-identifiers.test.ts` を追加し、registry.csv の notes 列と `data/normalized/**/procedures.json` / `facilities.json` の公開フィールドに内部識別子(`C-`/`T-`/`ADR-`/`R-`/`src-`)・開発工程語が含まれないことを機械的に固定した。
+- `GET /api/procedures/:id` の `sources[]` を `sourceLedgerEntrySchema` ベースの専用ビュー(`procedureSourceSchema`)に射影し直し、`reviewer`/`reviewStatus`/`contentHash`/`fetchMethod` が漏れないようにした(`apps/api/src/api.integration.test.ts` に回帰テストを追加)。
+
+**今回はやらないが、将来の選択肢として残すこと**
+
+根本的には、この列の二重用途そのものを解消するかどうかの設計判断が必要。選択肢として:
+
+- (a) registry.csv に来歴専用の列(例: `internal_note`)を追加し、`notes` は利用者向け文言のみに限定する。publish は `internal_note` を D1 へ一切書き込まない。
+- (b) `notes` を公開経路(`sourceSchema`/API)から完全に外し、利用者向け補足は別のフィールド(例: `publicCaveat`)として明示的に新設する。
+- (c) 現状維持のまま、今回追加したテストと source-audit スキルのレビュー観点だけで運用上の再発を防ぐ。
+
+今回は(c)のみを実施した(テストによる機械的な固定)。(a)/(b)はスキーマ変更・publish・D1マイグレーション・既存データ移行を伴う設計変更であり、本追記のスコープでは実施しない。
+
+---
+
 ## 付録: 検証に使ったコマンド
 
 ```bash

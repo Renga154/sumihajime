@@ -215,6 +215,24 @@ describe('GET /api/procedures/:id', () => {
     const res = await request('/api/procedures/procedure_resident_registration');
     expect(res.status).toBe(400);
   });
+
+  it('根拠ソースに内部レビュー用メタ(reviewer/reviewStatus/contentHash/fetchMethod)を含まない', async () => {
+    // なぜ: 2026-08-08発覚。このエンドポイントの sources は台帳の全列(Source)をそのまま
+    // 返しており、GET /api/sources とは別経路でレビュー担当者名(reviewer)等が漏れていた
+    // (notes列の内部用語混入と同根: 公開経路が複数あり、片方だけ射影を絞っていた)。
+    const res = await request('/api/procedures/procedure_resident_registration?municipality=13112');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { sources: Record<string, unknown>[] };
+    expect(body.sources.length).toBeGreaterThan(0);
+    for (const s of body.sources) {
+      expect(s.reviewStatus).toBeUndefined();
+      expect(s.reviewer).toBeUndefined();
+      expect(s.contentHash).toBeUndefined();
+      expect(s.fetchMethod).toBeUndefined();
+      expect(s.lastFetchedAt).toBeUndefined();
+      expect(s.sourceLastModifiedAt).toBeUndefined();
+    }
+  });
 });
 
 describe('GET /api/facilities', () => {
