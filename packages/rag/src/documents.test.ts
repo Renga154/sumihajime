@@ -4,6 +4,7 @@ import {
   isoDatePart,
   mentionsOtherMunicipality,
   renderVerifiedDocumentAnswer,
+  renderVerifiedDocumentAnswers,
   type VerifiedProcedureFacts,
 } from './documents.js';
 
@@ -120,6 +121,29 @@ describe('renderVerifiedDocumentAnswer', () => {
     });
     expect(onlyConditional).not.toContain('■ 必ず必要なもの');
     expect(onlyConditional).toContain('■ 場合により必要なもの（あてはまる方のみ）');
+  });
+
+  it('複数手続きを手続き名つきで並べ、どちらの必須書類も落とさない(1文に複数の手続き)', () => {
+    const multi = renderVerifiedDocumentAnswers('テスト区', [
+      facts,
+      {
+        title: 'マイナンバーカードの継続利用',
+        requiredDocuments: [
+          { label: 'マイナンバーカード(異動者全員分)', status: 'required' },
+          { label: '代理人が来る場合は委任状', status: 'conditional' },
+        ],
+        lastVerifiedAt: '2026-08-01T00:00:00Z',
+      },
+    ]);
+    // 手続き名つきの見出しが2つ並ぶ(どちらの手続きの持ち物かが必ず分かる=誤帰属しない)。
+    expect(multi).toContain('「転入届(区外から本区へ引越した方)」に必要なもの');
+    expect(multi).toContain('「マイナンバーカードの継続利用」に必要なもの');
+    // 双方の required が残る。
+    expect(multi).toContain('・窓口にお越しになる方の本人確認できるもの');
+    expect(multi).toContain('・マイナンバーカード(異動者全員分)');
+    // 共通注記は1回だけ、最終確認日は最も古い方(保守的表示)。
+    expect(multi.match(/最終確認日/g)).toHaveLength(1);
+    expect(multi).toContain('最終確認日: 2026-08-01');
   });
 
   it('期限・問い合わせ先が無くても壊れない', () => {

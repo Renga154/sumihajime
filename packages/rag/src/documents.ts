@@ -108,6 +108,11 @@ export function renderVerifiedDocumentAnswer(
   municipalityName: string,
   facts: VerifiedProcedureFacts,
 ): string {
+  return renderVerifiedDocumentAnswers(municipalityName, [facts]);
+}
+
+/** 1手続き分の本文ブロック(末尾の共通注記は含まない)。 */
+function renderProcedureBlock(municipalityName: string, facts: VerifiedProcedureFacts): string[] {
   const required = facts.requiredDocuments.filter((d) => d.status === 'required');
   const conditional = facts.requiredDocuments.filter((d) => d.status === 'conditional');
   const unknown = facts.requiredDocuments.filter((d) => d.status === 'unknown');
@@ -139,13 +144,33 @@ export function renderVerifiedDocumentAnswer(
     lines.push('');
   }
 
-  lines.push(
-    `この回答は${municipalityName}の公式ページを人手で確認した記録（最終確認日: ${isoDatePart(facts.lastVerifiedAt)}）に基づいています。` +
-      'あてはまる条件は方によって異なるため、最終的な内容は下記の公式ページでご確認ください。',
-  );
+  return lines;
+}
 
-  return lines
-    .join('\n')
+/**
+ * 複数手続き分をまとめて1つの回答にする。
+ *
+ * なぜ複数を許すか(本番実測 2026-08-08): 利用者は1文に複数の手続きを書く
+ * (「転入届に必要な持ち物は？マイナンバーカードは必要ですか？」)。以前はカテゴリが複数一致すると
+ * 構造化データ経路を諦めてRAGへ戻していたが、そのRAG回答こそが必須の本人確認書類を落としていた
+ * (葛飾・江戸川で実測)。**どれか1つを推測で選ぶのではなく、該当する手続きをそれぞれ手続き名つきで
+ * 並べる**ことで、誤った手続きへ帰属させることなく取りこぼしを無くす(原則3: 推測しない)。
+ *
+ * 最終確認日は最も古いものを示す(「少なくともこの日時点で確認済み」という保守的な表示)。
+ */
+export function renderVerifiedDocumentAnswers(
+  municipalityName: string,
+  factsList: readonly VerifiedProcedureFacts[],
+): string {
+  if (factsList.length === 0) return '';
+  const blocks = factsList.map((f) => renderProcedureBlock(municipalityName, f).join('\n').trim());
+  const oldest = factsList.map((f) => isoDatePart(f.lastVerifiedAt)).sort()[0]!;
+  const footer =
+    `この回答は${municipalityName}の公式ページを人手で確認した記録（最終確認日: ${oldest}）に基づいています。` +
+    'あてはまる条件は方によって異なるため、最終的な内容は下記の公式ページでご確認ください。';
+
+  return [...blocks, footer]
+    .join('\n\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }

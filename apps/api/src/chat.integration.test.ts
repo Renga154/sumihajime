@@ -251,6 +251,25 @@ describe('POST /api/chat — 必要書類は検証済み構造化データで答
     expect(body.abstained).toBe(true);
   });
 
+  // なぜ: 本番実測(2026-08-08)で「転入届に必要な持ち物は？マイナンバーカードは必要ですか？」のような
+  // 1文に複数手続きを含む質問が構造化経路から外れてRAGへ落ち、そのRAG回答が必須の本人確認書類を
+  // 落としていた(葛飾・江戸川)。複数一致時も手続き名つきで並べて答えることを固定する。
+  it('1文に複数の手続きを含む書類質問でも構造化データで答える(RAGへ落ちない)', async () => {
+    forbidOpenAI();
+    const res = await chat(baseEnv({ VECTORIZE: explodingVectorize }), {
+      municipalityCode: '13112',
+      question: '転入届に必要な持ち物は？マイナンバーカードは必要ですか？',
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { answer: string; abstained: boolean };
+    expect(body.abstained).toBe(false);
+    // 先に言及された転入届が先頭。必須の本人確認書類が落ちない(これが誤答の再発防止点)。
+    expect(body.answer).toContain('■ 必ず必要なもの');
+    expect(body.answer).toContain('本人確認書類');
+    const juminIdx = body.answer.indexOf('転入届');
+    expect(juminIdx).toBeGreaterThan(-1);
+  });
+
   it('手続きが特定できない書類質問はRAG経路へ委ねる(断定しない)', async () => {
     stubOpenAI('回答。\nSOURCES: ' + SOURCE_ID);
     const vz = mockVectorize([{ id: CHUNK_ID, score: 0.7 }]);
