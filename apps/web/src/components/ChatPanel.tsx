@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import type { ChatCitation, ChatResponse } from '@tmn/schemas';
 import { ChatDisabledError, getChatAvailability, getMunicipalities, postChat } from '../api/client';
 import { formatDateFromDateTime } from '../lib/format';
+import { AnswerText } from './AnswerText';
 import { Card, ErrorMessage, ExternalLink, Loading } from './ui';
 
 /**
@@ -221,7 +222,12 @@ export function ChatPanel({
               </span>
             </div>
           )}
-          <p className="whitespace-pre-wrap text-sm text-slate-800">{result.answer}</p>
+          {/*
+            回答本文には公式URLが地の文に埋め込まれて返ることがある(対応対象外自治体の案内、
+            回答へ載せられなかった話題の注記)。AnswerText がその http(s) URLだけをリンクに
+            変える。ここへ渡すのは API 由来の result.answer のみで、質問欄の入力は通さない。
+          */}
+          <AnswerText text={result.answer} />
 
           {result.citations.length > 0 && (
             <div>

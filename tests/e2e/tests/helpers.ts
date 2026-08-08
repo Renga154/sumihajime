@@ -61,7 +61,7 @@ const CITATION = {
  */
 export async function mockChat(
   page: Page,
-  kind: 'normal' | 'abstained' | 'disabled',
+  kind: 'normal' | 'abstained' | 'disabled' | 'link-in-answer',
 ): Promise<void> {
   await page.route('**/api/chat/availability', (route: Route) =>
     route.fulfill({
@@ -74,6 +74,25 @@ export async function mockChat(
   if (kind === 'disabled') return;
 
   await page.route('**/api/chat', (route: Route) => {
+    if (kind === 'link-in-answer') {
+      // 回答本文にURLが地の文として埋まる経路(対応対象外自治体の案内 / 載せられなかった話題の
+      // 注記)を再現する。半角括弧・全角括弧の両方を1応答に含め、リンク化後のDOMをaxeに検査させる。
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          answer: [
+            '八丈町は現在このチャットの対応対象外です。お手続きは八丈町の公式サイト(https://www.town.hachijo.tokyo.jp/)でご確認ください。',
+            '',
+            '■ この回答でご案内できなかったこと',
+            '・粗大ごみ: お尋ねの内容は、この回答ではご案内できませんでした。世田谷区の公式ページ（https://www.city.setagaya.lg.jp/mokuji/kurashi/003/002/index.html）でご確認ください。',
+          ].join('\n'),
+          citations: [],
+          confidence: 'unknown',
+          abstained: true,
+        }),
+      });
+    }
     if (kind === 'abstained') {
       return route.fulfill({
         status: 200,

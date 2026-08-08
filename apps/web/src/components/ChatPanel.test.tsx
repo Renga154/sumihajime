@@ -100,4 +100,31 @@ describe('ChatPanel — RAG有効時', () => {
     expect(screen.getByText('要確認')).toBeInTheDocument();
     expect(screen.queryByText('公式の根拠')).toBeNull();
   });
+
+  /**
+   * なぜ: 対応対象外自治体の案内(apps/api/src/chat.ts)は公式URLを地の文へ埋め込んで返す。
+   * 素の <p> に流すとコピー待ちの文字列で終わるため、次の行動(公式サイトを開く)へ進めない。
+   * 境界条件(括弧の食い込み等)は AnswerText.test.tsx が持ち、ここでは配線だけを固定する。
+   */
+  it('回答本文に埋め込まれた公式URLをリンクとして描画する', async () => {
+    getChatAvailability.mockResolvedValue(true);
+    postChat.mockResolvedValue({
+      answer:
+        '八丈町は現在このチャットの対応対象外です。お手続きは八丈町の公式サイト(https://www.town.hachijo.tokyo.jp/)でご確認ください。',
+      citations: [],
+      confidence: 'unknown',
+      abstained: true,
+    });
+
+    render(<ChatPanel municipalityCode="13401" municipalityName="八丈町" />);
+    await screen.findByRole('heading', { name: /AIに質問する/ });
+
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText(/質問を入力/), '転入届は？');
+    await user.click(screen.getByRole('button', { name: '質問する' }));
+
+    const link = await screen.findByRole('link', { name: /www\.town\.hachijo\.tokyo\.jp/ });
+    expect(link).toHaveAttribute('href', 'https://www.town.hachijo.tokyo.jp/');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
 });

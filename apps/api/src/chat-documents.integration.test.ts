@@ -78,6 +78,15 @@ interface ChatBody {
   abstained: boolean;
 }
 
+// 3話題を1文で尋ねる質問。上限(MAX_DOCUMENT_PROCEDURES=2)を必ず超えるため、3番目は回答へ載らない。
+// 転入届・マイナンバー・国民健康保険は23区すべてで verified かつ requiredDocuments が非空
+// (data/normalized 実測)なので、どの区でも「先頭2件が採用され、国民健康保険が落ちる」で確定する。
+const COMPOUND_QUESTION =
+  '転入届に必要な持ち物は？マイナンバーカードはどうすればいいですか？国民健康保険の手続きも教えてください';
+const DROPPED_CATEGORY = 'national_health_insurance';
+const DROPPED_LABEL = '国民健康保険';
+const UNRESOLVED_HEADING = '■ この回答でご案内できなかったこと';
+
 describe('POST /api/chat — 必要書類は23区すべてで検証済みデータ経路に入る (ADR-010)', () => {
   it.each(WARDS)(
     '%s: LLM・Vectorizeを使わず、requiredの公式文言を落とさず、conditionalを必須と断定しない',
@@ -123,6 +132,60 @@ describe('POST /api/chat — 必要書類は23区すべてで検証済みデー�
         expect(c.sourceId.startsWith(`src-${code}-`), `${code}: 他自治体出典 ${c.sourceId}`).toBe(
           true,
         );
+      }
+    },
+    30_000,
+  );
+});
+
+/**
+ * なぜこの試験が要るか(2026-08-08): 回答に載せられなかった話題を利用者へ明示する仕組みは
+ * packages/rag 側(selectDocumentProcedures / renderVerifiedDocumentAnswers)に実装済みだったが、
+ * apps/api のハンドラが旧ループのままで**一度も呼ばれていなかった**。純関数側のテストは全て緑なのに
+ * 本番の回答からは話題が黙って消える、という状態を検出できるのはこの経路試験だけである。
+ * 「無言で落とさない」(原則3・9)を配線ごと固定する。
+ */
+describe('POST /api/chat — 回答へ載せられなかった話題は必ず本文で明示される', () => {
+  it.each(WARDS)(
+    '%s: 上限で落ちた話題を利用者向けの名前で示し、URLは承認済み台帳からのみ引く',
+    async (code) => {
+      const res = await ask(code, COMPOUND_QUESTION);
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as ChatBody;
+      expect(body.abstained).toBe(false);
+
+      const noticeIdx = body.answer.indexOf(UNRESOLVED_HEADING);
+      expect(noticeIdx, `${code}: 落選の注記が無い(話題が無言で消えている)`).toBeGreaterThan(-1);
+      const notice = body.answer.slice(noticeIdx);
+      expect(notice, `${code}: 落ちた話題名が示されていない`).toContain(DROPPED_LABEL);
+      // 内部enum名を利用者へ見せない。
+      expect(body.answer).not.toContain(DROPPED_CATEGORY);
+
+      // 注記のURLは、その区の**最終確認日を持つ承認済み出典**だけから来ること(原則2・4)。
+      const row = await db
+        .prepare(
+          'SELECT source_ids FROM procedure_versions WHERE municipality_code = ? AND canonical_type = ?',
+        )
+        .bind(code, DROPPED_CATEGORY)
+        .first<{ source_ids: string }>();
+      const sourceIds = row ? (JSON.parse(row.source_ids) as string[]) : [];
+      const allowed: string[] = [];
+      for (const sid of sourceIds) {
+        const s = await db
+          .prepare('SELECT source_url, last_verified_at FROM sources WHERE source_id = ?')
+          .bind(sid)
+          .first<{ source_url: string; last_verified_at: string | null }>();
+        if (s?.last_verified_at) allowed.push(s.source_url);
+      }
+
+      const url = /https?:\/\/\S+?(?=）)/.exec(notice)?.[0];
+      if (allowed.length > 0) {
+        expect(url, `${code}: 承認済み出典があるのに公式URLを示していない`).toBeTruthy();
+        expect(allowed, `${code}: 台帳外のURL ${url}`).toContain(url);
+      } else {
+        // 解決できない区では推測でURLを作らず、公式サイトへの一般的な導線に留める(原則3・5)。
+        expect(url, `${code}: 根拠の無いURLを生成している`).toBeUndefined();
+        expect(notice).toContain('公式サイトでご確認ください');
       }
     },
     30_000,

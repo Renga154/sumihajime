@@ -60,13 +60,20 @@ for (const vp of VIEWPORTS) {
 
     test('チェックリスト・手続き詳細', async ({ page }) => {
       test.setTimeout(90_000);
-      await mockChat(page, 'normal');
+      await mockChat(page, 'link-in-answer');
       await page.goto('/');
       await startWithWard(page, '世田谷区');
       await fillWizardStep1(page, { moveDate: '2026-08-15', origin: '東京都外' });
       await generateChecklist(page);
       await expect(page.getByRole('heading', { name: 'AIに質問する' })).toBeVisible();
       await expectNoSmallTargets(page, 'チェックリスト');
+
+      // AIの回答本文に埋め込まれた公式URLはリンク化される。地の文に混ざる標的なので、
+      // 折り返しを含む実寸で24pxを満たすかは実ブラウザでしか測れない。
+      await page.getByLabel(/質問を入力/).fill('粗大ごみの出し方は？');
+      await page.getByRole('button', { name: '質問する' }).click();
+      await expect(page.getByRole('link', { name: /www\.town\.hachijo\.tokyo\.jp/ })).toBeVisible();
+      await expectNoSmallTargets(page, 'チェックリスト(AI回答の本文リンク込み)');
 
       await page.goto('/procedures/procedure_resident_registration');
       await expect(page.getByRole('heading', { name: '公式の根拠' })).toBeVisible();

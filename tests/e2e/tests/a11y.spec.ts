@@ -61,6 +61,28 @@ test('a11y: チェックリスト(チャットパネル込み)に重大違反な
   await assertNoSerious(page);
 });
 
+/**
+ * なぜ画面を出すだけでなく質問を送るか: 回答本文中のURLをリンク化したのはこの経路だけで、
+ * 未送信の画面にはそのDOMが存在しない。リンク名・コントラスト等をaxeに見せるには、
+ * 実際に回答を描画させる必要がある。
+ */
+test('a11y: AIの回答(本文中の公式リンク込み)に重大違反なし', async ({ page }) => {
+  await mockChat(page, 'link-in-answer');
+  await page.goto('/');
+  await startWithWard(page, '世田谷区');
+  await fillWizardStep1(page, { moveDate: '2026-08-15', origin: '東京都外' });
+  await generateChecklist(page);
+
+  await page.getByLabel(/質問を入力/).fill('粗大ごみの出し方は？');
+  await page.getByRole('button', { name: '質問する' }).click();
+
+  // 回答本文のURLが <a href> として描画されている(ただの文字列ではない)。
+  const link = page.getByRole('link', { name: /www\.town\.hachijo\.tokyo\.jp/ });
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute('href', 'https://www.town.hachijo.tokyo.jp/');
+  await assertNoSerious(page);
+});
+
 test('a11y: 手続き詳細(根拠カード込み)に重大違反なし', async ({ page }) => {
   await mockChat(page, 'normal');
   await page.goto('/');
