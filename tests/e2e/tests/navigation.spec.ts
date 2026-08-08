@@ -24,8 +24,14 @@ test('遷移: 下までスクロールして区を選んでも、次の画面は
 
 test('遷移: ブラウザバックでトップのスクロール位置が復元される', async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => window.scrollTo(0, 1200));
-  const before = await page.evaluate(() => window.scrollY);
+  // なぜページ丈から決めるのか: 固定値(1200)で下げていたが、トップの構成を変えて丈が縮むと
+  // 目標がスクロール可能範囲を超え、テストが「復元の失敗」ではなく「そもそも下げられない」で
+  // 落ちる。丈に依存しない形にして、測っているものを復元の精度だけに絞る(2026-08-09)。
+  const before = await page.evaluate(() => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo(0, Math.max(Math.min(600, max - 1), 0));
+    return window.scrollY;
+  });
   expect(before).toBeGreaterThan(0);
 
   await startWithWard(page, '江東区');

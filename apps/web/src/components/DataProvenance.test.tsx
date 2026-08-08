@@ -73,4 +73,21 @@ describe('DataProvenance', () => {
     render(<DataProvenance stats={STATS} />);
     expect(screen.getByText('23 / 62')).toBeInTheDocument();
   });
+  /**
+   * 折りたたみ形式(トップで自治体選択の直下に置くときの形)。
+   * たたんでも「無くなった」ことにはしない: 見出しはDOMに残し、中身も描画したうえで
+   * details が閉じているだけにする。スクリーンリーダーの見出しジャンプから到達できる。
+   */
+  it('collapsible では details/summary になり、見出しは残る', () => {
+    const { container } = render(<DataProvenance stats={STATS} collapsible />);
+    const details = container.querySelector('details');
+    expect(details).not.toBeNull();
+    expect(details?.open).toBe(false);
+    expect(container.querySelector('summary')).not.toBeNull();
+    // 見出しは summary の中に置く(たたんだ状態でも見出しの一覧から辿れる)。
+    const heading = screen.getByRole('heading', { name: 'オープンデータとAIの使い方' });
+    expect(heading.closest('summary')).not.toBeNull();
+    // 中身は描画されている(開けば読める)。
+    expect(screen.getByText('23 / 62')).toBeInTheDocument();
+  });
 });

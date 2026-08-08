@@ -21,6 +21,16 @@ import { useDocumentTitle } from '../lib/navigation';
  * 一覧の先頭に絞り込み(漢字/かな/ローマ字/コード)を置く。絞り込みは対応・未対応の
  * 双方に等しく効かせ、件数表示も追随させる(未対応を対応済みに見せない原則は維持)。
  */
+
+/**
+ * 対応自治体を既定で何件まで並べるか。
+ *
+ * 8件の根拠(2026-08-09 実測、モバイル375px): カード1枚が約88pxで、23件を常に並べると
+ * この一覧だけで2,014pxを占め、続く節が実質見えない位置まで押し下げられていた。
+ * 8件なら約700pxに収まり、かつ「一覧がある」ことは十分に伝わる。
+ */
+const SUPPORTED_PREVIEW_COUNT = 8;
+
 export function LandingPage() {
   // トップはサイト名そのものを <title> にする(他ページは「ページ名 | サイト名」)。
   useDocumentTitle();
@@ -37,11 +47,28 @@ export function LandingPage() {
     navigate('/wizard');
   }
 
+  const [showAllSupported, setShowAllSupported] = useState(false);
+
   const filtering = normalizeSearchText(query) !== '';
   const all = useMemo(() => data ?? [], [data]);
   const filtered = useMemo(() => filterByQuery(all, query), [all, query]);
   const supported = filtered.filter((m) => m.supported);
   const unsupported = filtered.filter((m) => !m.supported);
+
+  /*
+   * 対応自治体は既定で先頭 SUPPORTED_PREVIEW_COUNT 件だけ出し、残りは「もっと見る」で開く。
+   *
+   * なぜ(2026-08-09 実測): 23件を常に並べるとモバイル375pxでこの一覧だけで2,014pxあり、
+   * 続く節が誰の目にも入らない位置まで押し下げられていた。名前で探す導線(絞り込み)が
+   * 上にあるため、全件を最初から積む必要がない。
+   *
+   * 絞り込み中は必ず全件出す。検索した結果が隠れていては検索の意味がないため。
+   */
+  const truncateSupported =
+    !filtering && !showAllSupported && supported.length > SUPPORTED_PREVIEW_COUNT;
+  const visibleSupported = truncateSupported
+    ? supported.slice(0, SUPPORTED_PREVIEW_COUNT)
+    : supported;
 
   // なぜ: 未対応の自治体を「23区/市部/町村部」に分けて折りたたむ(主役=対応中を埋もれさせない)。
   // 分類は自治体コードの上位桁で決まる(131xx=区, 132xx=市, 133xx/134xx=町村)。
@@ -88,8 +115,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      <DataProvenance stats={statsState.data ?? undefined} />
-
       <Disclaimer />
 
       <section aria-labelledby="muni-heading">
@@ -121,7 +146,8 @@ export function LandingPage() {
               resultText={
                 filtering
                   ? `${filtered.length}件が一致（対応 ${supported.length}件 / 未対応 ${unsupported.length}件）`
-                  : `全${all.length}件を表示中（対応 ${supported.length}件 / 未対応 ${unsupported.length}件）`
+                  : // 一部だけ描画している状態で「全件を表示中」と書くと事実に反する(原則3・9)。
+                    `全${all.length}件（対応 ${supported.length}件 / 未対応 ${unsupported.length}件）`
               }
             />
 
@@ -141,8 +167,14 @@ export function LandingPage() {
                     {supported.length}
                   </span>
                 </h3>
-                <ul className="mt-2 space-y-2">
-                  {supported.map((m) => (
+                {truncateSupported && (
+                  <p className="mt-0.5 pl-3 text-xs text-slate-500">
+                    {supported.length}件のうち{visibleSupported.length}
+                    件を表示しています。上の絞り込みで名前から探せます。
+                  </p>
+                )}
+                <ul id="supported-list" className="mt-2 space-y-2">
+                  {visibleSupported.map((m) => (
                     <li key={m.code}>
                       <Card interactive className="flex items-center justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-2.5">
@@ -192,6 +224,19 @@ export function LandingPage() {
                     </li>
                   ))}
                 </ul>
+                {!filtering && supported.length > SUPPORTED_PREVIEW_COUNT && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllSupported((v) => !v)}
+                    aria-expanded={showAllSupported}
+                    aria-controls="supported-list"
+                    className="tap-target mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-brand-700 transition-colors hover:bg-slate-50"
+                  >
+                    {showAllSupported
+                      ? '表示を減らす'
+                      : `すべて表示（残り${supported.length - SUPPORTED_PREVIEW_COUNT}件）`}
+                  </button>
+                )}
               </div>
             )}
 
@@ -269,6 +314,13 @@ export function LandingPage() {
           </div>
         )}
       </section>
+
+      {/*
+        自治体選択の直下に置く。サービスの作り方の説明であって、利用者が最初に取る行動を
+        変えるものではないため、一等地は主たる操作(自治体選択)に譲る。
+        ただし本作の中核(公式根拠・LLMに判定させない)を示す節なので消さずに残す。
+      */}
+      <DataProvenance stats={statsState.data ?? undefined} collapsible />
     </div>
   );
 }

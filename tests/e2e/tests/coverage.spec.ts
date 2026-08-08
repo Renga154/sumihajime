@@ -24,6 +24,8 @@ test('未対応自治体: 八王子市は選択不可で公式リンクのみ表
   await expect(link).toHaveAttribute('href', /city\.hachioji\.tokyo\.jp/);
 
   // 対応自治体(Step4の杉並・千代田、Step5の品川・大田を含む)には開始ボタンがある(対比)。
+  // 既定では先頭8件しか並ばないため、先に全件を出してから確かめる(2026-08-09)。
+  await page.getByRole('button', { name: /すべて表示/ }).click();
   for (const name of ['世田谷区', '江東区', '新宿区', '杉並区', '千代田区', '品川区', '大田区']) {
     const card = page.getByRole('listitem').filter({ hasText: name });
     await expect(card.getByRole('button', { name: /この自治体で始める/ })).toBeVisible();

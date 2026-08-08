@@ -16,6 +16,16 @@ import { formatDate } from '../lib/format';
 interface DataProvenanceProps {
   /** GET /api/stats の結果。未取得・失敗時は undefined(そのとき数値は一切出さない)。 */
   stats?: ServiceStats;
+  /**
+   * 折りたたんで置くか。
+   *
+   * なぜ既定で開かないのか(2026-08-09 実測): トップの一等地に置いていたとき、主たる操作である
+   * 自治体選択に届くまでモバイル375pxで1.5画面分のスクロールを要していた。この節の内容は
+   * サービスの作り方の説明であり、利用者が最初に取る行動を変えるものではない。
+   * ただし本作の中核(公式根拠・LLMに判定させない)を示す節でもあるため、消さずに
+   * 見出しだけ残してたたむ。開けば全文が読める。
+   */
+  collapsible?: boolean;
 }
 
 interface Chip {
@@ -39,18 +49,11 @@ export function buildStatChips(stats: ServiceStats | undefined): Chip[] {
   return chips;
 }
 
-export function DataProvenance({ stats }: DataProvenanceProps) {
+export function DataProvenance({ stats, collapsible = false }: DataProvenanceProps) {
   const chips = buildStatChips(stats);
 
-  return (
-    <section
-      aria-labelledby="provenance-heading"
-      className="rounded-xl border border-slate-200 bg-white px-5 py-4"
-    >
-      <h2 id="provenance-heading" className="text-sm font-bold text-slate-900">
-        オープンデータとAIの使い方
-      </h2>
-
+  const body = (
+    <>
       {chips.length > 0 && (
         <dl className="mt-2.5 flex flex-wrap gap-2">
           {chips.map((c) => (
@@ -76,6 +79,48 @@ export function DataProvenance({ stats }: DataProvenanceProps) {
           ページへご案内します。
         </li>
       </ul>
+    </>
+  );
+
+  if (collapsible) {
+    return (
+      <details className="group rounded-xl border border-slate-200 bg-white px-5 py-3.5">
+        {/*
+          summary に見出しを入れる。見出し要素を summary の中に置くのは、
+          たたんだ状態でも見出しの一覧(スクリーンリーダーの見出しジャンプ)から
+          この節へ到達できるようにするため。details/summary が開閉状態を
+          自前のARIAなしで伝えるので、aria-expanded は付けない。
+        */}
+        <summary className="tap-target -mx-1 flex cursor-pointer list-none items-center gap-2 rounded px-1 py-0.5">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-90"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 11-1.4-1.4L11.58 10 7.3 5.7a1 1 0 010-1.4z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <h2 className="text-sm font-bold text-slate-900">オープンデータとAIの使い方</h2>
+          <span className="ml-auto text-xs text-slate-500 group-open:hidden">開く</span>
+        </summary>
+        <div className="mt-1 pl-6">{body}</div>
+      </details>
+    );
+  }
+
+  return (
+    <section
+      aria-labelledby="provenance-heading"
+      className="rounded-xl border border-slate-200 bg-white px-5 py-4"
+    >
+      <h2 id="provenance-heading" className="text-sm font-bold text-slate-900">
+        オープンデータとAIの使い方
+      </h2>
+      {body}
     </section>
   );
 }

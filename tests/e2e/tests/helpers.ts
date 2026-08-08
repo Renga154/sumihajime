@@ -14,8 +14,14 @@ export const WARDS = {
   suginami: { code: '13115', name: '杉並区' },
 } as const;
 
-/** ランディングで対応自治体カードの「この自治体で始める」を押してウィザードへ。 */
+/**
+ * ランディングで対応自治体カードの「この自治体で始める」を押してウィザードへ。
+ *
+ * 先に絞り込むのは、対応自治体が既定で先頭8件しか並ばないため(2026-08-09)。
+ * 名前で探してから選ぶのは実際の利用の流れでもあり、表示件数の調整に影響されない。
+ */
 export async function startWithWard(page: Page, wardName: string): Promise<void> {
+  await page.getByLabel('自治体名で絞り込む').fill(wardName);
   const card = page.getByRole('listitem').filter({ hasText: wardName });
   await card.getByRole('button', { name: /この自治体で始める/ }).click();
   await expect(page).toHaveURL(/\/wizard$/);

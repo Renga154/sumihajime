@@ -9,9 +9,24 @@ import { test, expect } from '@playwright/test';
 test('62リスト: 対応23件+未対応グループの展開と公式リンク', async ({ page }) => {
   await page.goto('/');
 
-  // 対応している自治体は23件(=「この自治体で始める」ボタンは23だけ)。Batch8で中央・港・文京・
-  // 台東・墨田、Batch9で目黒・渋谷・葛飾を承認して23特別区が出そろった。
+  // 既定では対応自治体を先頭8件だけ並べる(2026-08-09。23件を常に積むとモバイルで
+  // 一覧だけで2,014pxを占め、続く節が見えない位置まで押し下げられていた)。
+  // 件数の表示は実態と一致していなければならない(原則3・9)。
+  await expect(page.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(8);
+  await expect(page.getByText(/23件のうち8件を表示しています/)).toBeVisible();
+  await expect(page.getByText(/全62件（対応 23件 \/ 未対応 39件）/)).toBeVisible();
+
+  // 「すべて表示」で23件そろう。押すたびに開閉できる。
+  const showAll = page.getByRole('button', { name: /すべて表示（残り15件）/ });
+  await expect(showAll).toHaveAttribute('aria-expanded', 'false');
+  await showAll.click();
   await expect(page.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(23);
+  await expect(page.getByRole('button', { name: /表示を減らす/ })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  await page.getByRole('button', { name: /表示を減らす/ }).click();
+  await expect(page.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(8);
 
   // 既定では未対応グループは折りたたまれ、市部の自治体は見えない。
   const hachiojiInitial = page.getByRole('listitem').filter({ hasText: '八王子市' });
@@ -45,7 +60,7 @@ test('62リスト: 自治体名の絞り込み(漢字・かな・ローマ字)',
   await page.goto('/');
   const filter = page.getByLabel('自治体名で絞り込む');
   await expect(filter).toBeVisible();
-  await expect(page.getByText(/全62件を表示中/)).toBeVisible();
+  await expect(page.getByText(/全62件（対応 23件/)).toBeVisible();
 
   // 漢字で絞り込む → 練馬区だけが残り、開始ボタンも1つになる。
   await filter.fill('練馬');
@@ -65,7 +80,8 @@ test('62リスト: 自治体名の絞り込み(漢字・かな・ローマ字)',
   await expect(hachioji).toBeVisible();
   await expect(hachioji.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(0);
 
-  // 絞り込みを消すと全件へ戻る。
+  // 絞り込みを消すと既定の表示(先頭8件+「すべて表示」)へ戻る。件数表示は23件のまま。
   await filter.fill('');
-  await expect(page.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(23);
+  await expect(page.getByRole('button', { name: /この自治体で始める/ })).toHaveCount(8);
+  await expect(page.getByText(/全62件（対応 23件/)).toBeVisible();
 });

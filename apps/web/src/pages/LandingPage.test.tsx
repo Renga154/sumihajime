@@ -29,6 +29,7 @@ vi.mock('../api/client', () => ({
   })),
 }));
 
+import { getMunicipalities } from '../api/client';
 import { LandingPage } from './LandingPage';
 
 beforeEach(() => {
@@ -109,7 +110,7 @@ describe('LandingPage — 自治体の絞り込み', () => {
     renderLanding();
     await screen.findByText('世田谷区');
     expect(filterInput()).toBeInTheDocument();
-    expect(screen.getByText(/全2件を表示中/)).toBeInTheDocument();
+    expect(screen.getByText(/全2件（対応 1件 \/ 未対応 1件）/)).toBeInTheDocument();
   });
 
   it('漢字で絞り込むと一致した自治体だけが残る', async () => {
@@ -139,5 +140,63 @@ describe('LandingPage — 自治体の絞り込み', () => {
     fireEvent.change(filterInput(), { target: { value: '八王子' } });
     expect(screen.getByText('一致する自治体は見つかりませんでした')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /この自治体で始める/ })).toBeNull();
+  });
+});
+
+/**
+ * なぜ段階表示にしたか(2026-08-09 実測): 対応23件を常に並べるとモバイル375pxで
+ * この一覧だけが2,014pxを占め、続く節が誰の目にも入らない位置まで押し下げられていた。
+ * ただし「隠す」ことで対応件数を実際より少なく見せてはならない(CLAUDE.md原則9)。
+ */
+describe('LandingPage — 対応自治体の段階表示', () => {
+  const many = Array.from({ length: 10 }, (_, i) => ({
+    code: `131${String(i + 1).padStart(2, '0')}`,
+    name: `テスト${i + 1}区`,
+    supported: true,
+    coverage: [],
+  }));
+
+  function renderMany() {
+    vi.mocked(getMunicipalities).mockResolvedValueOnce(many);
+    return renderLanding();
+  }
+
+  it('既定では先頭8件だけを並べ、残りは「すべて表示」に隠す', async () => {
+    renderMany();
+    await screen.findByText('テスト1区');
+    expect(screen.getAllByRole('button', { name: /この自治体で始める/ })).toHaveLength(8);
+    expect(screen.queryByText('テスト9区')).toBeNull();
+    expect(screen.getByRole('button', { name: /すべて表示（残り2件）/ })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+  });
+
+  it('隠していても対応件数は実数を示す(件数を少なく見せない)', async () => {
+    renderMany();
+    await screen.findByText('テスト1区');
+    // 件数表示は10件のまま。「表示中」とは書かない(8件しか描いていないため)。
+    expect(screen.getByText(/全10件（対応 10件 \/ 未対応 0件）/)).toBeInTheDocument();
+    expect(screen.getByText(/10件のうち8件を表示しています/)).toBeInTheDocument();
+  });
+
+  it('「すべて表示」で全件そろい、もう一度押すと戻る', async () => {
+    renderMany();
+    await screen.findByText('テスト1区');
+    fireEvent.click(screen.getByRole('button', { name: /すべて表示/ }));
+    expect(screen.getAllByRole('button', { name: /この自治体で始める/ })).toHaveLength(10);
+    expect(screen.getByText('テスト10区')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /表示を減らす/ }));
+    expect(screen.getAllByRole('button', { name: /この自治体で始める/ })).toHaveLength(8);
+  });
+
+  it('絞り込み中は上限を適用しない(検索した結果が隠れていては検索の意味がない)', async () => {
+    renderMany();
+    await screen.findByText('テスト1区');
+    // 「テスト1」は テスト1区 と テスト10区 の2件に一致する。9件目以降でも隠れない。
+    fireEvent.change(screen.getByLabelText('自治体名で絞り込む'), { target: { value: 'テスト1' } });
+    expect(screen.getByText('テスト10区')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /すべて表示/ })).toBeNull();
   });
 });
