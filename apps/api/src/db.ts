@@ -355,6 +355,42 @@ export async function getApprovedSources(db: D1Database): Promise<Source[]> {
   return res.results.map(rowToSource);
 }
 
+/**
+ * なぜ: GET /api/stats(トップの実測サマリー)。台帳全文(332件)を返さずに集計値だけを
+ * 取るための専用クエリ。承認済み(review_status='approved')に限るのは /api/sources と同じ基準
+ * (未承認データを対外的な件数に数えない)。最終確認日は datetime 文字列の先頭10桁を日付として
+ * 使う(台帳の lastVerifiedAt は ISO datetime)。
+ */
+export async function getServiceStats(db: D1Database): Promise<{
+  supportedMunicipalities: number;
+  totalMunicipalities: number;
+  approvedSources: number;
+  lastVerifiedDate?: string;
+}> {
+  const [muni, src] = await Promise.all([
+    db
+      .prepare(
+        'SELECT COUNT(*) AS total, SUM(CASE WHEN supported = 1 THEN 1 ELSE 0 END) AS supported ' +
+          'FROM municipalities',
+      )
+      .first<Row>(),
+    db
+      .prepare(
+        'SELECT COUNT(*) AS total, MAX(last_verified_at) AS latest FROM sources ' +
+          "WHERE review_status = 'approved'",
+      )
+      .first<Row>(),
+  ]);
+
+  const latest = optString(src?.latest)?.slice(0, 10);
+  return {
+    supportedMunicipalities: Number(muni?.supported ?? 0),
+    totalMunicipalities: Number(muni?.total ?? 0),
+    approvedSources: Number(src?.total ?? 0),
+    ...(latest && /^\d{4}-\d{2}-\d{2}$/.test(latest) ? { lastVerifiedDate: latest } : {}),
+  };
+}
+
 export async function getSourcesByIds(db: D1Database, ids: string[]): Promise<Map<string, Source>> {
   const map = new Map<string, Source>();
   const unique = [...new Set(ids)];

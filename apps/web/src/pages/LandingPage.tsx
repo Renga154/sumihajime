@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { MunicipalityWithCoverage } from '@tmn/schemas';
-import { getMunicipalities } from '../api/client';
+import { getMunicipalities, getServiceStats } from '../api/client';
 import { useAsync } from '../lib/useAsync';
 import { useAppState } from '../state/AppState';
 import { filterByQuery, normalizeSearchText } from '../lib/municipality-search';
 import { Disclaimer } from '../components/Disclaimer';
+import { DataProvenance } from '../components/DataProvenance';
 import { MunicipalityFilter } from '../components/MunicipalityFilter';
 import { Card, EmptyState, ErrorMessage, ExternalLink, SkeletonCard } from '../components/ui';
 import { Badge } from '../components/Badge';
@@ -26,6 +27,9 @@ export function LandingPage() {
   const navigate = useNavigate();
   const { setMunicipalityCode } = useAppState();
   const { data, error, loading } = useAsync(() => getMunicipalities(), []);
+  // トップの実測サマリー。失敗しても自治体選択(主要導線)は無傷にしたいので、
+  // useAsync のエラーはここでは表示せず、数値を出さないだけに縮退する(推測しない)。
+  const statsState = useAsync(() => getServiceStats(), []);
   const [query, setQuery] = useState('');
 
   function start(m: MunicipalityWithCoverage) {
@@ -83,6 +87,8 @@ export function LandingPage() {
           </p>
         </div>
       </section>
+
+      <DataProvenance stats={statsState.data ?? undefined} />
 
       <Disclaimer />
 
@@ -153,13 +159,19 @@ export function LandingPage() {
                             </svg>
                           </span>
                           <div className="min-w-0">
-                            <p className="font-semibold text-slate-900">{m.name}</p>
+                            <p id={`muni-name-${m.code}`} className="font-semibold text-slate-900">
+                              {m.name}
+                            </p>
                             {m.note && <p className="text-xs text-slate-500">{m.note}</p>}
                           </div>
                         </div>
                         <button
                           type="button"
                           onClick={() => start(m)}
+                          // 同名ボタンが23個並ぶため、読み上げのボタン一覧で区別できるよう
+                          // 隣の自治体名を参照してアクセシブル名に含める(視覚表示は不変。WCAG 2.4.9)。
+                          aria-labelledby={`start-${m.code} muni-name-${m.code}`}
+                          id={`start-${m.code}`}
                           className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 active:bg-brand-800"
                         >
                           この自治体で始める
@@ -236,7 +248,10 @@ export function LandingPage() {
                                 </p>
                                 {m.officialUrl && (
                                   <p className="mt-1 text-sm">
-                                    <ExternalLink href={m.officialUrl}>
+                                    <ExternalLink
+                                      href={m.officialUrl}
+                                      ariaLabel={`${m.name}の公式サイトを見る`}
+                                    >
                                       公式サイトを見る
                                     </ExternalLink>
                                   </p>

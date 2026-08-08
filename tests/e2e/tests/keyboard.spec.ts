@@ -8,6 +8,11 @@ import { activeElementInfo, tabUntil } from './helpers';
  */
 test('キーボード操作: Tabのみでランディング→Step1入力→生成まで到達できる', async ({ page }) => {
   await page.goto('/');
+  // 自治体一覧(非同期取得)が描画されてからTabを開始する。描画前にTabを始めると、
+  // まだ存在しないボタンを探して空振りする(タブ順の検証にならない)。以前はフォントの
+  // 読込が遅く load イベントがその代わりになっていたが、フォント分割で load が早くなり
+  // 暗黙の待ちが消えたため、待機を明示する。
+  await expect(page.getByRole('button', { name: /この自治体で始める/ }).first()).toBeVisible();
   // 一切マウスを使わない。読み込み直後のフォーカス起点(body)からTabを開始する。
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 

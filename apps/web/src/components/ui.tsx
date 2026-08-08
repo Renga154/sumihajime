@@ -134,12 +134,27 @@ export function Card({
 }
 
 /** 外部公式リンク(別タブ・rel付き)。 */
-export function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
+/**
+ * 外部リンク。同じ文言のリンクが多数並ぶ画面(自治体一覧の「公式サイトを見る」39個、窓口一覧の
+ * 「地図で見る」施設数ぶん)では、読み上げのリンク一覧で区別できるよう ariaLabel に対象名を
+ * 含める(視覚表示は変えない。WCAG 2.4.9)。sr-only テキストではなく aria-label を使うのは、
+ * 本文中に同じ語(区名・施設名)を二重に出さないため。
+ */
+export function ExternalLink({
+  href,
+  children,
+  ariaLabel,
+}: {
+  href: string;
+  children: ReactNode;
+  ariaLabel?: string;
+}) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer noopener"
+      aria-label={ariaLabel ? `${ariaLabel}（別タブで開きます）` : undefined}
       className="inline-flex items-center gap-1 font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 transition-colors hover:text-brand-800 hover:decoration-brand-500"
     >
       {children}

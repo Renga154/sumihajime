@@ -7,6 +7,7 @@ import {
   municipalitiesResponseSchema,
   municipalityCodeSchema,
   procedureDetailResponseSchema,
+  serviceStatsSchema,
   sourcesResponseSchema,
   wasteSchedulesResponseSchema,
   wardDifferencesResponseSchema,
@@ -34,6 +35,7 @@ import {
   getProcedureVersions,
   getProcedureVersionsForIds,
   getRuleSet,
+  getServiceStats,
   getSourcesByIds,
   getWasteAreas,
   getWasteDataset,
@@ -286,6 +288,24 @@ app.get('/api/facilities', async (c) => {
     municipalityCode: code,
     latencyMs: Date.now() - start,
     count: body.length,
+  });
+  return c.json(body);
+});
+
+/**
+ * GET /api/stats : 公開データの規模サマリー(トップの「このサービスの約束」用)。
+ * 値はすべてD1の実データから毎回導出する(定数を持たない=区やソースが増えれば自動で追随する)。
+ * 個人データを一切含まないため自治体スコープもクエリも取らない。
+ */
+app.get('/api/stats', async (c) => {
+  const start = Date.now();
+  const requestId = c.get('requestId');
+  const body = serviceStatsSchema.parse(await getServiceStats(c.env.DB));
+  logEvent({
+    requestId,
+    event: 'stats.summary',
+    latencyMs: Date.now() - start,
+    count: body.approvedSources,
   });
   return c.json(body);
 });

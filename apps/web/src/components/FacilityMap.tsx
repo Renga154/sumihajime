@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Map as MlMap } from 'maplibre-gl';
 // なぜ: maplibre-gl v6 はワーカーURLを実行時に `new URL('./maplibre-gl-worker.mjs',
 // import.meta.url)` で組み立てる。Vite はこの動的な参照を追えないためワーカーを出力せず、
@@ -32,6 +32,42 @@ interface FacilityMapProps {
   facilities: Facility[];
   /** 地図領域のアクセシブル名。 */
   label?: string;
+  /**
+   * 「地図を飛ばして一覧へ」リンクの飛び先(一覧側の要素id)。渡されたときだけリンクを出す。
+   * 地図は情報の代替手段(下の一覧)を持つため、キーボード利用者が地図を通過せずに
+   * 一覧へ到達できる経路を必ず1つ用意する(WCAG 2.4.1 ブロックスキップ)。
+   */
+  skipTargetId?: string;
+}
+
+/**
+ * maplibre 既定のUI文言は英語(canvas の aria-label は "Map"、ズームボタンは "Zoom in" 等)。
+ * 日本語の公共情報サービスとして読み上げ・ツールチップまで日本語に揃える。
+ */
+function mapLocale(label: string): Record<string, string> {
+  return {
+    'Map.Title': label,
+    'NavigationControl.ZoomIn': '地図を拡大',
+    'NavigationControl.ZoomOut': '地図を縮小',
+    'Popup.Close': '吹き出しを閉じる',
+  };
+}
+
+/**
+ * マーカー要素のアクセシビリティを整える(純粋なDOM操作。単体テスト対象)。
+ *
+ * なぜ: maplibre のマーカーは既定で `tabindex=0` / `aria-label="Map marker"` になる。
+ * 施設が46件あると、同一・英語のタブストップが46個ページ先頭付近に並び、キーボード利用者は
+ * 一覧に着くまでTabを57回押すことになっていた(独立点検 P1-6)。マーカーが伝える情報
+ * (名称・カテゴリ・住所)は下の一覧が完全に代替するため、マーカーはタブ順から外し
+ * (tabindex=-1)、ラベルだけ日本語の施設名にして読み上げ時の識別性を保つ。
+ *
+ * 注意: setPopup() は tabindex が未設定のときだけ 0 を付ける実装のため、
+ * この関数は setPopup() より前に呼ぶ必要がある。
+ */
+export function applyMarkerAccessibility(el: HTMLElement, facilityName: string): void {
+  el.setAttribute('tabindex', '-1');
+  el.setAttribute('aria-label', `${facilityName}の地図上の位置`);
 }
 
 /** lat/lng を両方持つ施設のみ(座標が無い施設は地図に出さない=捏造しない)。 */
@@ -67,10 +103,11 @@ const TILE_TIMEOUT_MS = 10_000;
 export function FacilityMap({
   facilities,
   label = '施設の地図（地理院タイル）',
+  skipTargetId,
 }: FacilityMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<MapStatus>('loading');
-  const points = withCoordinates(facilities);
+  const points = useMemo(() => withCoordinates(facilities), [facilities]);
 
   useEffect(() => {
     if (points.length === 0) return;
@@ -90,6 +127,7 @@ export function FacilityMap({
           container: containerRef.current,
           // 出典は静的オーバーレイで明示するため、maplibre既定の帰属コントロールは無効化する。
           attributionControl: false,
+          locale: mapLocale(label),
           style: {
             version: 8,
             sources: {
@@ -129,10 +167,10 @@ export function FacilityMap({
           const popup = new maplibregl.Popup({ offset: 18, closeButton: true }).setDOMContent(
             buildPopupContent(f),
           );
-          new maplibregl.Marker({ color: '#1f5195' })
-            .setLngLat([f.lng, f.lat])
-            .setPopup(popup)
-            .addTo(instance);
+          const marker = new maplibregl.Marker({ color: '#1f5195' }).setLngLat([f.lng, f.lat]);
+          // setPopup() より前に呼ぶ(tabindex 未設定のマーカーにだけ 0 が付く実装のため)。
+          applyMarkerAccessibility(marker.getElement(), f.name);
+          marker.setPopup(popup).addTo(instance);
           bounds.extend([f.lng, f.lat]);
         }
         if (points.length > 1) {
@@ -150,7 +188,9 @@ export function FacilityMap({
       map?.remove();
     };
     // facilities配列の同一性で再初期化する(施設の入れ替え=自治体切替時)。
-  }, [points]);
+    // points は useMemo で facilities に紐づけてあるため、再描画のたびに地図とマーカー46個を
+    // 作り直すことはない。
+  }, [points, label]);
 
   if (points.length === 0) return null;
 
@@ -169,33 +209,52 @@ export function FacilityMap({
   }
 
   return (
-    <section
-      aria-label={label}
-      className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
-    >
-      {/* aria-hidden は付けない: maplibre のズーム等の操作ボタンは focusable なため、
+    <>
+      {/*
+        地図を飛ばして一覧へ。地図領域のタブストップ(canvas + ズーム2つ)より前に置き、
+        キーボード利用者が地図を通過せずに一覧へ着けるようにする。フォーカス時のみ可視化する
+        (ヘッダーの「本文へスキップ」と同じ作法)。
+      */}
+      {skipTargetId && (
+        <a
+          href={`#${skipTargetId}`}
+          className="sr-only focus:not-sr-only focus:mb-2 focus:inline-block focus:rounded focus:bg-brand-700 focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+        >
+          地図を飛ばして窓口の一覧へ
+        </a>
+      )}
+      <section
+        aria-label={label}
+        className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+      >
+        {/* aria-hidden は付けない: maplibre のズーム等の操作ボタンは focusable なため、
           aria-hidden 内に置くと aria-hidden-focus 違反になる。canvas/コントロールは
           maplibre 自身がラベル付けし、地図領域全体は section の aria-label で命名する。 */}
-      <div ref={containerRef} className="h-72 w-full" />
+        <div ref={containerRef} className="h-72 w-full" />
 
-      {/* 出典表示(地理院タイル利用条件)。タイルが実際に読み込めたときだけ出す。 */}
-      {status === 'ready' && (
-        <p className="absolute bottom-0 right-0 m-0 bg-white/85 px-2 py-0.5 text-[0.7rem] leading-tight text-slate-700">
-          出典:{' '}
-          <a
-            href={GSI_ICHIRAN_URL}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="text-brand-700 underline"
-          >
-            地理院タイル
-          </a>
+        {/* 出典表示(地理院タイル利用条件)。タイルが実際に読み込めたときだけ出す。 */}
+        {status === 'ready' && (
+          <p className="absolute bottom-0 right-0 m-0 bg-white/85 px-2 py-0.5 text-[0.7rem] leading-tight text-slate-700">
+            出典:{' '}
+            <a
+              href={GSI_ICHIRAN_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-brand-700 underline"
+            >
+              地理院タイル
+            </a>
+          </p>
+        )}
+
+        {/*
+          地図の代替手段の明示。地図のピンはキーボードでは選べない(タブ順から外している)ため、
+          「同じ情報が一覧で完全に得られる」ことを読み上げ利用者にも文章で伝える。
+        */}
+        <p className="sr-only">
+          地図には座標データを持つ施設を表示しています。地図上のピンはマウス操作専用です。ピンに表示される名称・カテゴリ・住所を含む全施設の情報は、この下の窓口一覧で同じようにご確認いただけます。地図はキーボードの矢印キーで移動、＋−ボタンで拡大縮小できます。
         </p>
-      )}
-
-      <p className="sr-only">
-        地図には座標データを持つ施設を表示しています。全施設の名称・住所は、この下の一覧でご確認いただけます。
-      </p>
-    </section>
+      </section>
+    </>
   );
 }

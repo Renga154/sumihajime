@@ -2,64 +2,19 @@
 
 /*
  * フォント: デジタル庁デザインシステム(DADS)に倣い本文書体を Noto Sans JP に統一する。
- * CDN/外部フォント読込みは禁止のため npm パッケージ @fontsource/noto-sans-jp から
- * woff2 サブセットのみを Vite に取り込ませる(woff レガシーは同梱せずバンドルを軽量化)。
- * weight は 400(本文)/500(強調)/700(見出し)。ASCII・数字は 13KB の latin サブセットへ、
- * それ以外(かな・漢字・全角記号)は約1MBの japanese サブセットへ unicode-range で振り分け、
- * font-display: swap でフォント読込中もフォールバックで即描画する。
+ * CDN/外部フォント読込みは禁止のため npm パッケージ @fontsource/noto-sans-jp を Vite に
+ * 取り込ませる。weight は 400(本文)/500(強調)/700(見出し)の3つを維持する(見た目は不変)。
+ *
+ * 実体の @font-face は main.tsx が読み込む @fontsource の「分割サブセット」CSS
+ * (400.css / 500.css / 700.css)にある。ここには置かない。
+ *
+ * なぜ分割サブセットか(独立点検 P1-7): 以前は1ウェイト=約1MBの japanese 集約サブセットを
+ * unicode-range 無しで宣言していたため、どのページでも3ウェイト計3.09MB(初回転送の96%)を
+ * 必ず取得していた。@fontsource は Google Fonts と同じ 120 分割の unicode-range 付き
+ * サブセットも同梱しているので、そちらへ切り替える。ブラウザは実際に描画する文字を含む
+ * スライスだけを取りに行くため、見た目を一切変えずに初回転送量だけが落ちる。
+ * woff レガシーは vite.config.ts のプラグインで剥がす(woff2 のみ配信)。
  */
-@font-face {
-  font-family: 'Noto Sans JP';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-japanese-400-normal.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Noto Sans JP';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-japanese-500-normal.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Noto Sans JP';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-japanese-700-normal.woff2') format('woff2');
-}
-/* ASCII/数字は軽量な latin サブセットで先読み(source order 後勝ちで latin を優先)。 */
-@font-face {
-  font-family: 'Noto Sans JP';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-latin-400-normal.woff2') format('woff2');
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Noto Sans JP';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-latin-500-normal.woff2') format('woff2');
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Noto Sans JP';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('@fontsource/noto-sans-jp/files/noto-sans-jp-latin-700-normal.woff2') format('woff2');
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
 
 /*
  * なぜ: §15.3 アクセシビリティ。キーボード操作時のフォーカスを常に可視化し、

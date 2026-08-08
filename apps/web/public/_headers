@@ -1,0 +1,11 @@
+# Cloudflare Workers 静的アセットのレスポンスヘッダ定義(このファイル自体は配信されない)。
+#
+# なぜ(独立点検 P2-8): /assets/* は Vite が内容ハッシュ付きのファイル名で出力する不変資産
+# だが、既定では `max-age=0, must-revalidate` が付き、ページ遷移のたびに JS/CSS/フォントへ
+# 条件付きGETが走っていた(304でも往復のRTTがモバイル回線ではそのまま体感遅延になる)。
+# フォントを120分割のサブセットへ切り替えてリクエスト本数が増えたぶん、影響も大きくなる。
+# 内容が変わればファイル名が変わるので、長期キャッシュ + immutable が安全。
+#
+# index.html は既定(max-age=0, must-revalidate)のまま。新しいデプロイを即座に拾うため。
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
