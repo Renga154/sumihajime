@@ -59,6 +59,44 @@ describe('checklistResponseSchema', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  /**
+   * なぜ optional のままにするか: 端末内の控え(checklist-cache)はこのスキーマで読み直す。
+   * 必須にすると、この項目が無い時点で保存された控えが丸ごと読めなくなり、電波の弱い場所で
+   * チェックリスト本体を失う(原則8)。案内が1つ出ないほうが害が小さい。
+   */
+  it('accepts a response without moveOutScheduledDateImpact (older cached copies stay readable)', () => {
+    const result = checklistResponseSchema.safeParse({
+      tasks: [],
+      ruleVersion: '2026-08-20.1',
+      generatedAt: '2026-08-20T00:00:00Z',
+    });
+    expect(result.success).toBe(true);
+    expect(result.data?.moveOutScheduledDateImpact).toBeUndefined();
+  });
+
+  it('parses moveOutScheduledDateImpact with both buckets', () => {
+    const result = checklistResponseSchema.safeParse({
+      tasks: [],
+      ruleVersion: '2026-08-20.1',
+      generatedAt: '2026-08-20T00:00:00Z',
+      moveOutScheduledDateImpact: {
+        enablesDueDateFor: ['procedure_child_allowance'],
+        advancesDueDateFor: ['procedure_mynumber_continued_use'],
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a partial moveOutScheduledDateImpact (both buckets are required)', () => {
+    const result = checklistResponseSchema.safeParse({
+      tasks: [],
+      ruleVersion: '2026-08-20.1',
+      generatedAt: '2026-08-20T00:00:00Z',
+      moveOutScheduledDateImpact: { enablesDueDateFor: ['procedure_child_allowance'] },
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('chatRequestSchema (§11.3 scope)', () => {

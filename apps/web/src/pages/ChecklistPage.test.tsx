@@ -263,6 +263,162 @@ describe('ChecklistPage — ステップ2/3を入力せずに生成した場合'
 });
 
 /**
+ * なぜ: 前住所地の転出予定日はステップ1の任意項目なので、多くの利用者が空欄のまま進む。
+ * その結果、区が「転出予定日の翌日から15日以内」と明記している児童手当のような手続きでも
+ * 「期限は要確認」としか出ない。入れれば日付が出せることを、その人に実際に効く手続き名を
+ * 添えて伝える(ADR-013)。どの手続きが該当するかは API 応答から受け取り、画面には
+ * 区コードの分岐を書かない。
+ */
+describe('ChecklistPage — 転出予定日の案内', () => {
+  const IMPACT_FIXTURE: ChecklistResponse = {
+    ...FIXTURE,
+    tasks: [
+      makeTask({
+        id: 't-child',
+        procedureId: 'procedure_child_allowance',
+        title: '児童手当の認定請求',
+        priority: 'high',
+        applicable: 'applicable',
+      }),
+      makeTask({
+        id: 't-mynumber',
+        procedureId: 'procedure_mynumber_continued_use',
+        title: 'マイナンバーカードの継続利用',
+        priority: 'high',
+        dueDate: '2026-08-15',
+        applicable: 'applicable',
+      }),
+    ],
+    moveOutScheduledDateImpact: {
+      enablesDueDateFor: ['procedure_child_allowance'],
+      advancesDueDateFor: ['procedure_mynumber_continued_use'],
+    },
+  };
+
+  function seedProfile(over: Record<string, unknown> = {}) {
+    const profile = profileSchema.parse({
+      destination: { municipalityCode: '13112' },
+      moveDate: '2026-08-01',
+      originType: 'outside_tokyo',
+      household: { memberCount: 2, ageBands: ['adult', 'age0_2'] },
+      flags: {
+        hasMyNumberCard: true,
+        needsNationalHealthInsurance: false,
+        needsNationalPension: false,
+        hasSchoolOrChildcareNeeds: true,
+        hasDog: false,
+        needsDisabilityOrCareSupport: false,
+        needsForeignResidentGuidance: false,
+      },
+      ...over,
+    });
+    localStorage.setItem('tmn:profile:13112', JSON.stringify(profile));
+  }
+
+  it('日付を出せるようになる手続き名と、入力画面への導線を表示する', async () => {
+    seedProfile();
+    vi.mocked(postChecklist).mockResolvedValueOnce(IMPACT_FIXTURE);
+    renderChecklist();
+
+    const notice = await screen.findByRole('region', {
+      name: '前住所地の転出予定日を入れると、期限を日付で出せます',
+    });
+    expect(notice).toHaveTextContent('いま「期限は要確認」と表示している児童手当の認定請求');
+    expect(notice).toHaveTextContent('期限を日付で表示し');
+    // 既に日付が出ている手続きは「より早くなることがある」として別の文で伝える。
+    expect(notice).toHaveTextContent(/マイナンバーカードの継続利用は既に日付を表示していますが/);
+    expect(notice).toHaveTextContent(/より早い期限に変わることがあります/);
+    // 未入力のままでもよいことを言い添える(入力を強いない)。
+    expect(notice).toHaveTextContent(/空欄のままで構いません/);
+
+    const link = screen.getByRole('link', { name: '転出予定日を入力する' });
+    expect(link).toHaveAttribute('href', '/wizard?step=1');
+  });
+
+  /**
+   * なぜ role="status" を使わないか: 進捗表示(「n/m件完了」)が既に live region を持っており、
+   * 1画面に複数のステータスを置くと読み上げが競合する。見出しつきの region にする。
+   */
+  it('進捗表示と競合しないよう、role="status" ではなく見出しつきの region にする', async () => {
+    seedProfile();
+    vi.mocked(postChecklist).mockResolvedValueOnce(IMPACT_FIXTURE);
+    renderChecklist();
+
+    const notice = await screen.findByRole('region', {
+      name: '前住所地の転出予定日を入れると、期限を日付で出せます',
+    });
+    expect(notice.getAttribute('role')).toBeNull();
+    // live region は進捗のひとつだけ。
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+  });
+
+  /**
+   * なぜ見出しを分けるか: 新宿のように「期日は既に出ているが、より早くなりうる」だけの区がある。
+   * そこで「期限を日付で出せます」と書くと、入力しても新しい日付は出ないので約束を破ることになる。
+   */
+  it('日付が新たに出るものが無い区では、見出しを「より早い日になることがあります」にする', async () => {
+    seedProfile();
+    vi.mocked(postChecklist).mockResolvedValueOnce({
+      ...IMPACT_FIXTURE,
+      moveOutScheduledDateImpact: {
+        enablesDueDateFor: [],
+        advancesDueDateFor: ['procedure_mynumber_continued_use'],
+      },
+    });
+    renderChecklist();
+
+    const notice = await screen.findByRole('region', {
+      name: '前住所地の転出予定日を入れると、期限がより早い日になることがあります',
+    });
+    // 「日付で出せます」とは言わない(この人には新しい日付が出ないため)。
+    expect(notice).not.toHaveTextContent('いま「期限は要確認」と表示している');
+    expect(notice).toHaveTextContent(/より早い期限に変わることがあります/);
+  });
+
+  it('転出予定日が入力済みなら出さない', async () => {
+    seedProfile({ moveOutScheduledDate: '2026-07-25' });
+    vi.mocked(postChecklist).mockResolvedValueOnce(IMPACT_FIXTURE);
+    renderChecklist();
+
+    await screen.findByText('児童手当の認定請求');
+    expect(screen.queryByRole('link', { name: '転出予定日を入力する' })).toBeNull();
+  });
+
+  it('海外からの転入では出さない', async () => {
+    seedProfile({ originType: 'overseas' });
+    vi.mocked(postChecklist).mockResolvedValueOnce(IMPACT_FIXTURE);
+    renderChecklist();
+
+    await screen.findByText('児童手当の認定請求');
+    expect(screen.queryByRole('link', { name: '転出予定日を入力する' })).toBeNull();
+  });
+
+  it('該当する手続きが無い区(応答が空)では出さない', async () => {
+    seedProfile();
+    vi.mocked(postChecklist).mockResolvedValueOnce({
+      ...IMPACT_FIXTURE,
+      moveOutScheduledDateImpact: { enablesDueDateFor: [], advancesDueDateFor: [] },
+    });
+    renderChecklist();
+
+    await screen.findByText('児童手当の認定請求');
+    expect(screen.queryByRole('link', { name: '転出予定日を入力する' })).toBeNull();
+  });
+
+  it('判定材料を持たない応答(古い端末内の控えなど)では出さない', async () => {
+    seedProfile();
+    vi.mocked(postChecklist).mockResolvedValueOnce({
+      ...IMPACT_FIXTURE,
+      moveOutScheduledDateImpact: undefined,
+    });
+    renderChecklist();
+
+    await screen.findByText('児童手当の認定請求');
+    expect(screen.queryByRole('link', { name: '転出予定日を入力する' })).toBeNull();
+  });
+});
+
+/**
  * なぜ: 転入後にこのサービスを知る利用者が主要ターゲットなので、期限を過ぎた状態を
  * 何の表示もなく通常タスクとして並べない(監査P1-5)。ただし届出済みかは分からないため
  * 断定せず「可能性」にとどめ、次の行動を添える(原則3)。

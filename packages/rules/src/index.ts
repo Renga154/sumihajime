@@ -5,6 +5,7 @@ export type { EvaluationResult, TriBool } from './evaluate.js';
 export { addCalendarDays, resolveDueRule } from './dates.js';
 export type { DueOriginDates, ResolvedDue } from './dates.js';
 export { sortOutcomesByDue } from './sort.js';
+export { moveOutScheduledDateImpact } from './move-out-date-impact.js';
 export { MunicipalityScopeMismatchError } from './errors.js';
 export {
   buildWardDifferences,

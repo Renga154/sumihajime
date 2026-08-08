@@ -25,6 +25,7 @@ import { useDocumentTitle } from '../lib/navigation';
 import { buildChecklistIcs, datedTasks } from '../lib/ics';
 import { useAsync } from '../lib/useAsync';
 import { conditionGapNotice, type ConditionGapNotice } from '../lib/condition-gaps';
+import { moveOutDateNotice, type MoveOutDateNotice } from '../lib/move-out-date-gaps';
 import { Card, EmptyState, ErrorMessage, Loading } from '../components/ui';
 import {
   NeedsConfirmationBadge,
@@ -145,6 +146,10 @@ export function ChecklistPage() {
     ? loadReviewedSteps(municipalityCode)
     : { household: false, conditions: false };
   const gapNotice = conditionGapNotice(profile, reviewedSteps);
+  // 転出予定日(ステップ1の任意項目)が空欄のままだと、区が「転出予定日の翌日から15日以内」と
+  // 明記している手続きまで「期限は要確認」にしかならない。入れれば日付が出せることを、
+  // その人のチェックリストに実際に効く手続き名を添えて伝える。判定は純関数に委ねる。
+  const moveOutNotice = moveOutDateNotice(profile, state.data?.checklist ?? null);
 
   /**
    * 期限つきタスクを .ics(終日イベント)にしてクライアントで生成・ダウンロードする。
@@ -257,6 +262,9 @@ export function ChecklistPage() {
 
           {/* 進捗のすぐ下に置く。「n/m件」を全量だと受け取る前に、未判定があることを知らせる。 */}
           {gapNotice.show && <ConditionGapCard notice={gapNotice} />}
+
+          {/* 「期限は要確認」を見る前に、日付を出せる方法があることを知らせる。 */}
+          {moveOutNotice.show && <MoveOutDateCard notice={moveOutNotice} />}
 
           {/* 書き出し操作(印刷・カレンダー登録)。印刷時は非表示。 */}
           <div className="print-hide flex flex-wrap gap-2">
@@ -488,6 +496,92 @@ function ConditionGapCard({ notice }: { notice: ConditionGapNotice }) {
               className="inline-flex items-center gap-1.5 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-800 active:bg-amber-900"
             >
               条件を追加する
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 11-1.4-1.4L11.58 10 7.3 5.7a1 1 0 010-1.4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </Link>
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** 案内文で手続き名を並べるときの区切り。手続き名自体が中黒を含みうるため読点にする。 */
+function joinTitles(topics: readonly { title: string }[]): string {
+  return topics.map((t) => t.title).join('、');
+}
+
+/**
+ * 「前住所地の転出予定日を入れると期限を日付で出せます」の案内。
+ *
+ * なぜ出すか: 転出予定日は任意入力なので大半の利用者が空欄のまま進む。その結果、区が
+ * 「前住所地の転出予定日の翌日から15日以内」と明記している児童手当のような手続きでも、
+ * 画面には「期限は要確認」としか出ない。入れれば日付が出ることを知らせないのは、
+ * 期限順のToDoを掲げるサービスとしての取りこぼしになる(ADR-013)。
+ *
+ * どの手続きの名前を出すかは API 応答(区のルール由来)から受け取る。画面側で区コードを
+ * 分岐させない(CLAUDE.md §4)。該当ルールが1件も無い区、海外からの転入、既に入力済みの
+ * 利用者には出さない(判定は move-out-date-gaps.ts)。
+ *
+ * role="status" を付けないのは、進捗表示が既に使っているため(1画面に複数のステータスを
+ * 置くと読み上げが競合する)。見出しつきの region にして辿れるようにする。
+ */
+function MoveOutDateCard({ notice }: { notice: MoveOutDateNotice }) {
+  /*
+    見出しを2通り持つ理由: 新宿のように「期日は既に出ているが、より早くなりうる」だけの区がある。
+    そこで「期限を日付で出せます」と書くと、入力しても新しい日付が出ないので約束を破ることになる。
+    その人に起きることをそのまま見出しにする(原則3: 事実でないことを断定しない)。
+  */
+  const heading =
+    notice.enables.length > 0
+      ? '前住所地の転出予定日を入れると、期限を日付で出せます'
+      : '前住所地の転出予定日を入れると、期限がより早い日になることがあります';
+  return (
+    <section
+      aria-labelledby="move-out-date-heading"
+      className="print-hide rounded-lg border border-brand-300 bg-brand-50 p-4"
+    >
+      <div className="flex gap-3">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          className="mt-0.5 h-5 w-5 shrink-0 text-brand-700"
+          fill="currentColor"
+        >
+          <path d="M9 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2V2a1 1 0 112 0v1h2V2zM5 7v7h10V7H5z" />
+        </svg>
+        <div className="min-w-0">
+          <h2 id="move-out-date-heading" className="font-bold text-brand-900">
+            {heading}
+          </h2>
+          {notice.enables.length > 0 && (
+            <p className="mt-1 text-sm text-slate-800">
+              いま「期限は要確認」と表示している
+              <span className="font-semibold">{joinTitles(notice.enables)}</span>
+              は、前住所地の転出予定日を起算日として期限が決まります。この日を入力すると、期限を日付で表示し、カレンダー（.ics）にも書き出せるようになります。
+            </p>
+          )}
+          {notice.advances.length > 0 && (
+            <p className="mt-1 text-sm text-slate-800">
+              {notice.enables.length > 0 ? 'また、' : ''}
+              <span className="font-semibold">{joinTitles(notice.advances)}</span>
+              は既に日付を表示していますが、転入先の区は転出予定日からの日数も期限の条件にしているため、入力するとより早い期限に変わることがあります。
+            </p>
+          )}
+          <p className="mt-1 text-sm text-slate-800">
+            転出予定日は、前の住所の市区町村へ転出届を出すときに「いつ引っ越すか」として届け出た日です（転出証明書にも記載されています）。分からない場合や、まだ転出届を出していない場合は、空欄のままで構いません（その場合は「期限は要確認」のまま表示します）。
+          </p>
+          <p className="mt-3">
+            <Link
+              to="/wizard?step=1"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800 active:bg-brand-900"
+            >
+              転出予定日を入力する
               <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
                 <path
                   fillRule="evenodd"
