@@ -151,9 +151,11 @@ describe('POST /api/chat — 正常系(引用付き)', () => {
         SOURCE_ID,
     );
     const vz = mockVectorize([{ id: CHUNK_ID, score: 0.72 }]);
+    // なぜ書類を尋ねない質問にしたか: 必要書類・持ち物の質問は検証済み構造化データ経路
+    // (ADR-010 案A)が先に応答するため、ここではRAG(検索+生成)経路そのものを検証する質問を使う。
     const res = await chat(baseEnv({ VECTORIZE: vz }), {
       municipalityCode: '13112',
-      question: '転入届の持ち物と期限は?',
+      question: '転入届はいつまでに出せばよいですか?',
     });
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -171,6 +173,92 @@ describe('POST /api/chat — 正常系(引用付き)', () => {
     expect(body.citations[0]?.ownerOrganization).toBe('世田谷区');
     expect(body.confidence).toBe('high');
     // サーバー側強制フィルタ(§11.3)。
+    expect(vz.lastFilter).toEqual({ municipalityCode: '13112' });
+  });
+});
+
+describe('POST /api/chat — 必要書類は検証済み構造化データで答える(ADR-010 案A)', () => {
+  /** 検証済みデータ経路はLLMもVectorizeも使わないので、呼ばれたら即失敗するスタブを置く。 */
+  function forbidOpenAI(): void {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        throw new Error(`LLM must not be called for document questions: ${url}`);
+      }),
+    );
+  }
+  const explodingVectorize: VectorizeQueryable = {
+    query() {
+      throw new Error('Vectorize must not be queried for document questions');
+    },
+  };
+
+  it('required と conditional を分けて提示し、conditional を必須と断定しない', async () => {
+    forbidOpenAI();
+    const res = await chat(baseEnv({ VECTORIZE: explodingVectorize }), {
+      municipalityCode: '13112',
+      question: '転入届に必要な持ち物を教えてください。',
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      answer: string;
+      citations: { sourceId: string; lastVerifiedAt: string }[];
+      abstained: boolean;
+    };
+    expect(body.abstained).toBe(false);
+    // 世田谷の requiredDocuments: 本人確認書類=required / 転出証明書・マイナンバーカード=conditional。
+    const reqIdx = body.answer.indexOf('■ 必ず必要なもの');
+    const conIdx = body.answer.indexOf('■ 場合により必要なもの');
+    expect(reqIdx).toBeGreaterThan(-1);
+    expect(conIdx).toBeGreaterThan(reqIdx);
+    const identity = body.answer.indexOf('本人確認書類');
+    expect(identity).toBeGreaterThan(reqIdx);
+    expect(identity).toBeLessThan(conIdx);
+    // 「お持ちの方」限定のカードが必須欄に混ざらない(=誤答の再発防止)。
+    expect(body.answer.indexOf('マイナンバーカード')).toBeGreaterThan(conIdx);
+    // 出典は手続きレコードの sourceIds。最終確認日付き(原則2)。
+    expect(body.citations.length).toBeGreaterThan(0);
+    expect(body.citations.map((c) => c.sourceId)).toContain(SOURCE_ID);
+    for (const cite of body.citations) {
+      expect(cite.sourceId.startsWith('src-13112-')).toBe(true);
+      expect(cite.lastVerifiedAt.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('OpenAI未設定でも必要書類は答えられる(RAG障害時のフォールバック・原則8)', async () => {
+    forbidOpenAI();
+    const res = await chat(baseEnv({ VECTORIZE: explodingVectorize, OPENAI_API_KEY: undefined }), {
+      municipalityCode: '13112',
+      question: '転入届の必要書類は？',
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { abstained: boolean; answer: string };
+    expect(body.abstained).toBe(false);
+    expect(body.answer).toContain('■ 必ず必要なもの');
+  });
+
+  it('他区の名前を含む越境質問では構造化データを断定せず、従来のRAG経路へ委ねる(原則4)', async () => {
+    stubOpenAI('(抜粋に無いため確認できません)\nSOURCES:');
+    const vz = mockVectorize([{ id: CHUNK_ID, score: 0.7 }]);
+    const res = await chat(baseEnv({ VECTORIZE: vz }), {
+      municipalityCode: '13112',
+      question: '江東区の転入届に必要な持ち物を教えてください。',
+    });
+    expect(res.status).toBe(200);
+    // RAG経路に落ちたことを、Vectorizeが引かれたことで確認する。
+    expect(vz.lastFilter).toEqual({ municipalityCode: '13112' });
+    const body = (await res.json()) as { abstained: boolean };
+    expect(body.abstained).toBe(true);
+  });
+
+  it('手続きが特定できない書類質問はRAG経路へ委ねる(断定しない)', async () => {
+    stubOpenAI('回答。\nSOURCES: ' + SOURCE_ID);
+    const vz = mockVectorize([{ id: CHUNK_ID, score: 0.7 }]);
+    const res = await chat(baseEnv({ VECTORIZE: vz }), {
+      municipalityCode: '13112',
+      question: '窓口へ持参するものはありますか？',
+    });
+    expect(res.status).toBe(200);
     expect(vz.lastFilter).toEqual({ municipalityCode: '13112' });
   });
 });

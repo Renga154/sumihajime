@@ -66,7 +66,14 @@ export function validateCitations(citedSourceIds: string[], allowed: Set<string>
   return out;
 }
 
-/** cosine スコア(高いほど近い)→ 確度ラベル。閾値未満はそもそも保留になる想定。 */
+/**
+ * cosine スコア(高いほど近い)→ 確度ラベル。閾値未満はそもそも保留になる想定。
+ *
+ * 注意(ADR-010): この値は **UIに表示しない**。検索スコアは「質問に近い抜粋が見つかったか」を
+ * 表すだけで、**回答の正しさを表さない**(実測: 持ち物を統合し損ねた誤答にも 'high' が付いた)。
+ * 評価・計測のための内部値として残している。利用者向けの品質シグナルは
+ * 「保留かどうか」と「公式根拠(出典・最終確認日)」に一本化した。
+ */
 export function confidenceFromScore(topScore: number | undefined): Confidence {
   if (topScore === undefined) return 'unknown';
   if (topScore >= 0.5) return 'high';

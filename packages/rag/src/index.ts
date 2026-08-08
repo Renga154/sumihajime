@@ -10,4 +10,6 @@ export * from './openai.js';
 export * from './prompt.js';
 export * from './answer.js';
 export * from './intent.js';
+export * from './order.js';
+export * from './documents.js';
 export * from './ratelimit.js';

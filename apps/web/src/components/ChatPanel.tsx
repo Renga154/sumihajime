@@ -13,12 +13,14 @@ import { Card, ErrorMessage, ExternalLink, Loading } from './ui';
 
 const MAX_LEN = 500;
 
-const confidenceLabel: Record<ChatResponse['confidence'], string> = {
-  high: '確度: 高',
-  medium: '確度: 中',
-  low: '確度: 低',
-  unknown: '要確認',
-};
+/**
+ * なぜ「確度: 高/中/低」を表示しないか(ADR-010):
+ * API の confidence は検索スコア(cosine類似度)だけから算出される値で、**回答の正しさを表していない**。
+ * 実際、複数ブロックの持ち物を統合し損ねた誤答(江戸川・葛飾)にも「確度: 高」が付いていた。
+ * 正しさを保証しない指標を確度として見せることは、公式根拠つきという本プロダクトの約束に反する。
+ * 利用者に示すのは「保留かどうか(要確認)」と「公式根拠(出典・最終確認日)」だけにする。
+ * confidence はAPIの内部値として残し、評価・計測にのみ用いる。
+ */
 
 function CitationCard({ citation }: { citation: ChatCitation }) {
   const verified = formatDateFromDateTime(citation.lastVerifiedAt);
@@ -202,17 +204,13 @@ export function ChatPanel({
 
       {result && !loading && (
         <Card className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${
-                result.abstained
-                  ? 'bg-amber-100 text-amber-900 ring-amber-300'
-                  : 'bg-brand-50 text-brand-800 ring-brand-200'
-              }`}
-            >
-              {result.abstained ? '要確認' : confidenceLabel[result.confidence]}
-            </span>
-          </div>
+          {result.abstained && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900 ring-1 ring-inset ring-amber-300">
+                要確認
+              </span>
+            </div>
+          )}
           <p className="whitespace-pre-wrap text-sm text-slate-800">{result.answer}</p>
 
           {result.citations.length > 0 && (

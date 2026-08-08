@@ -7,8 +7,13 @@ import {
   chatComplete,
   confidenceFromScore,
   embedText,
+  hasDocumentIntent,
   isHoldAnswer,
+  mentionsOtherMunicipality,
+  orderByDocumentPosition,
   parseAnswer,
+  questionCategories,
+  renderVerifiedDocumentAnswer,
   rerankByProcedureIntent,
   selectMatches,
   shouldAbstain,
@@ -17,7 +22,15 @@ import {
   type PromptChunk,
 } from '@tmn/rag';
 import { logEvent } from './log.js';
-import { getMunicipality, getRagChunks, getSourcesByIds, type Bindings } from './db.js';
+import {
+  getMunicipality,
+  getOtherMunicipalityNames,
+  getProcedureVersions,
+  getRagChunks,
+  getSourcesByIds,
+  type Bindings,
+  type MunicipalityRow,
+} from './db.js';
 
 /**
  * POST /api/chat — 自治体スコープ付きRAGチャット(T-013 / FR-016〜019 / §11)。
@@ -71,6 +84,89 @@ const limiter = new RateLimiter(10, 10 / 60);
 
 function abstainBody(confidence: Confidence = 'unknown', answer: string = ABSTAIN_ANSWER) {
   return chatResponseSchema.parse({ answer, citations: [], confidence, abstained: true });
+}
+
+/**
+ * なぜ: 引用は必ず承認済み台帳(sources)の権威情報へ解決する。lastVerifiedAt を持たない行は
+ * 「最終確認日を示せない出典」なので採用しない(原則2)。RAG経路・構造化データ経路で共通。
+ */
+async function resolveCitations(
+  db: Bindings['DB'],
+  sourceIds: readonly string[],
+): Promise<ChatCitation[]> {
+  const sourceMap = await getSourcesByIds(db, [...sourceIds]);
+  const citations: ChatCitation[] = [];
+  for (const sid of sourceIds) {
+    const s = sourceMap.get(sid);
+    if (!s || !s.lastVerifiedAt) continue;
+    citations.push({
+      sourceId: s.sourceId,
+      title: s.sourceTitle,
+      ownerOrganization: s.ownerOrganization,
+      url: s.sourceUrl,
+      lastVerifiedAt: s.lastVerifiedAt,
+    });
+  }
+  return citations;
+}
+
+/**
+ * 必要書類・持ち物の質問を **人手レビュー済みの構造化データ** で答える経路(ADR-010 案A)。
+ *
+ * なぜLLMに再導出させないか: 自治体ページは持ち物を複数の並列ブロック(場合分けの表・上位の共通節)で
+ * 書き、生成モデルは1ブロックだけを読んで他ブロックの無条件必須項目を落とす(本番実測: 江戸川で
+ * 「お持ちの方」限定のカードを唯一の必須物と断定、千代田で転出証明書欠落、葛飾で本人確認書類欠落)。
+ * requiredDocuments[] は required/conditional の区別と sourceIds・lastVerifiedAt を持つ人手承認済み
+ * データで、既にチェックリストAPIが同じ値を返している。チャットだけが生HTMLからLLMに再導出させて
+ * いたのが誤答の原因であり、CLAUDE.md 原則1「該当判定をLLMへ任せない」の趣旨にも反していた。
+ *
+ * 適用条件(すべて満たすときのみ。ひとつでも欠ければ null を返し従来のRAG経路へ委ねる):
+ * - 質問が書類・持ち物を主題にしている(決定論的キーワード判定)
+ * - 質問が主題とする手続きが **ちょうど1つ** に決まる(複数手続きにまたがる質問は統合が要るためRAGへ)
+ * - その手続きの検証済みレコードが存在し、dataStatus=verified で requiredDocuments が空でない
+ * - 質問が選択自治体**以外**の自治体名を含まない(越境は規則3を持つRAG経路へ委ねる)
+ * - 出典が承認済み台帳へ解決でき、最終確認日を示せる
+ */
+async function tryVerifiedDocumentAnswer(
+  db: Bindings['DB'],
+  municipality: MunicipalityRow,
+  question: string,
+): Promise<{ answer: string; citations: ChatCitation[] } | null> {
+  // 1) 純粋な判定を先に済ませ、該当しない質問ではD1を一切引かない。
+  if (!hasDocumentIntent(question)) return null;
+  const categories = questionCategories(question);
+  if (categories.size !== 1) return null;
+  const category = [...categories][0]!;
+
+  const [procedures, otherNames] = await Promise.all([
+    getProcedureVersions(db, municipality.code),
+    getOtherMunicipalityNames(db, municipality.code),
+  ]);
+
+  if (mentionsOtherMunicipality(question, municipality.name, otherNames)) return null;
+
+  const candidates = [...procedures.values()].filter(
+    (p) =>
+      p.canonicalType === category && p.dataStatus === 'verified' && p.requiredDocuments.length > 0,
+  );
+  // なぜ1件に限るか: 同一カテゴリに複数の手続き版が並ぶ区が将来現れた場合、どれを断定してよいか
+  // 決められない。曖昧なまま断定するより、抜粋を根拠に答えるRAG経路へ委ねる(原則3)。
+  if (candidates.length !== 1) return null;
+  const procedure = candidates[0]!;
+
+  const citations = await resolveCitations(db, procedure.sourceIds);
+  if (citations.length === 0) return null;
+
+  return {
+    answer: renderVerifiedDocumentAnswer(municipality.name, {
+      title: procedure.title,
+      requiredDocuments: procedure.requiredDocuments,
+      ...(procedure.dueDescription ? { dueDescription: procedure.dueDescription } : {}),
+      ...(procedure.contact ? { contact: procedure.contact } : {}),
+      lastVerifiedAt: procedure.lastVerifiedAt,
+    }),
+    citations,
+  };
 }
 
 /**
@@ -166,7 +262,33 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
     return c.json(abstainBody('unknown', guide));
   }
 
-  // 5) OpenAI設定(キーはsecret。値は一切ログ・レスポンスに出さない)。
+  // 5) 検証済み構造化データ経路(ADR-010 案A)。必要書類・持ち物の質問は、人手承認済みの
+  //    requiredDocuments[](required/conditional の区別付き)を根拠に決定論的へ答える。
+  //    LLM・ベクトル検索より**前**に置くのは、(a)生HTMLからの再導出を行わせないため、
+  //    (b)RAG基盤(OpenAI/Vectorize)が落ちていてもこの回答は返せるため(原則8)。
+  const verified = await tryVerifiedDocumentAnswer(env.DB, municipality, question);
+  if (verified) {
+    logEvent({
+      requestId,
+      event: 'chat.answered.verified_documents',
+      municipalityCode: code,
+      latencyMs: Date.now() - start,
+      count: verified.citations.length,
+      abstained: false,
+    });
+    return c.json(
+      chatResponseSchema.parse({
+        answer: verified.answer,
+        citations: verified.citations,
+        // なぜ 'high' 固定か: 人手レビュー承認済みデータをそのまま提示しているため。この値はUIには
+        // 表示せず(ADR-010「確度表示の削除」)、評価・計測のための内部値として残す。
+        confidence: 'high',
+        abstained: false,
+      }),
+    );
+  }
+
+  // 6) OpenAI設定(キーはsecret。値は一切ログ・レスポンスに出さない)。
   const apiKey = env.OPENAI_API_KEY;
   if (!apiKey) {
     logEvent({ requestId, event: 'chat.unavailable', municipalityCode: code, status: 503 });
@@ -261,10 +383,14 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
     // MAX_PROMOTED で「意図一致カテゴリの昇格」を窓の一部に留め、残り(TOP_K-MAX_PROMOTED)は
     // 検索スコア最上位を必ず通す。カテゴリ判定が実際の所在とずれた区(例: 継続利用の期限を
     // 転入届ページに書く区)でも答えのチャンクが窓から落ちない(intent.ts の maxPromoted 参照)。
-    const promptSource = rerankByProcedureIntent(question, orderedChunks, MAX_PROMOTED).slice(
-      0,
-      TOP_K,
-    );
+    const window = rerankByProcedureIntent(question, orderedChunks, MAX_PROMOTED).slice(0, TOP_K);
+
+    // なぜ: **どのチャンクを見せるか**は上の検索+リランクで決め、**どの順で見せるか**は原文順へ戻す。
+    // 自治体ページは同じ手続きの持ち物・条件を複数の並列ブロック(場合分けの表、上位の共通節)で書く。
+    // スコア順のまま提示すると節が原文と逆順・飛び飛びで並び、モデルは共通節と場合分けの関係を
+    // 読み取れず1ブロックだけを根拠に答える。文書順へ戻すと統合が効く(実測 2026-08-08: 書類系の
+    // 失敗3件→1件、他ケースの退行なし)。純関数・再索引不要(ADR-010 案C)。
+    const promptSource = orderByDocumentPosition(window);
 
     const allowedSourceIds = new Set(promptSource.map((r) => r.sourceId));
     const promptChunks: PromptChunk[] = promptSource.map((r) => ({
@@ -310,19 +436,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
     }
 
     // 11) 引用を台帳(sources)の権威情報に解決して citations[] を組む。
-    const sourceMap = await getSourcesByIds(env.DB, validSourceIds);
-    const citations: ChatCitation[] = [];
-    for (const sid of validSourceIds) {
-      const s = sourceMap.get(sid);
-      if (!s || !s.lastVerifiedAt) continue;
-      citations.push({
-        sourceId: s.sourceId,
-        title: s.sourceTitle,
-        ownerOrganization: s.ownerOrganization,
-        url: s.sourceUrl,
-        lastVerifiedAt: s.lastVerifiedAt,
-      });
-    }
+    const citations = await resolveCitations(env.DB, validSourceIds);
     if (citations.length === 0) {
       logEvent({
         requestId,

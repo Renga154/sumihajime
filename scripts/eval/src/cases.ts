@@ -42,17 +42,26 @@ export function parseDataset(raw: unknown): EvalDataset {
   return parsed as EvalDataset;
 }
 
-/** 正答系119/保留系17/越境系15・自治体整合を軽く健全性チェック(23区対応 v2.0)。 */
+/** 正答系142/保留系17/越境系16・自治体整合を軽く健全性チェック(23区対応 v2.1)。 */
 export function assertDatasetShape(dataset: EvalDataset): void {
   const cases: EvalCase[] = dataset.cases;
-  if (cases.length !== 151) throw new Error(`expected 151 cases, got ${cases.length}`);
+  if (cases.length !== 175) throw new Error(`expected 175 cases, got ${cases.length}`);
   const ids = new Set(cases.map((c) => c.id));
   if (ids.size !== cases.length) throw new Error('duplicate case ids');
   const byKind = (k: string) => cases.filter((c) => c.kind === k).length;
-  if (byKind('positive') !== 119)
-    throw new Error(`expected 119 positive, got ${byKind('positive')}`);
+  if (byKind('positive') !== 142)
+    throw new Error(`expected 142 positive, got ${byKind('positive')}`);
   if (byKind('abstain') !== 17) throw new Error(`expected 17 abstain, got ${byKind('abstain')}`);
-  if (byKind('cross') !== 15) throw new Error(`expected 15 cross, got ${byKind('cross')}`);
+  if (byKind('cross') !== 16) throw new Error(`expected 16 cross, got ${byKind('cross')}`);
+  // なぜ: v1.2.0にあった書類系のケースが23区化(v2.0.0)で全て失われ、UIのプレースホルダそのものの
+  // 質問(必要な持ち物)が未計測になっていた。同じ回帰を二度起こさないよう、
+  // **全対応区に必要書類のケースがあること**をデータセット段階で強制する(ADR-010)。
+  for (const code of dataset.corpus.municipalities) {
+    const hasDocumentCase = cases.some(
+      (c) => c.municipalityCode === code && c.id.endsWith('-resident-documents'),
+    );
+    if (!hasDocumentCase) throw new Error(`municipality ${code} has no required-documents case`);
+  }
   // なぜ: 23区展開の目的は「どの区でも品質を測れること」。1区でも実質未検証(3問未満)なら、
   // その区は評価されていないのと同じなので、データセット段階で落とす(CLAUDE.md原則9)。
   for (const code of dataset.corpus.municipalities) {

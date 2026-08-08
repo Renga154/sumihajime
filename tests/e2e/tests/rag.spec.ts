@@ -32,7 +32,8 @@ test('RAG(a): 正常応答モックで回答本文と引用カード(公式URL�
   await expect(
     page.getByText('転入届には本人確認書類などが必要です', { exact: false }),
   ).toBeVisible();
-  await expect(page.getByText('確度: 高')).toBeVisible();
+  // 確度バッジは表示しない(ADR-010: confidence は検索スコア由来で回答の正しさを表さない)。
+  await expect(page.getByText('確度', { exact: false })).toHaveCount(0);
 
   // 引用カード: 公式URLと最終確認日(チェックリスト画面で「公式ページを開く」はチャット引用のみ)。
   await expect(page.getByRole('heading', { name: '公式の根拠' })).toBeVisible();

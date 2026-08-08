@@ -70,7 +70,10 @@ describe('ChatPanel — RAG有効時', () => {
 
     expect(await screen.findByText(/14日以内に窓口へ提出/)).toBeInTheDocument();
     expect(screen.getByText('世田谷区 転入届')).toBeInTheDocument();
-    expect(screen.getByText('確度: 高')).toBeInTheDocument();
+    // なぜ確度を出さないか(ADR-010): confidence は検索スコアだけから算出され回答の正しさを
+    // 表さないため、UIから削除した。非保留の回答にはバッジ自体を出さない。
+    expect(screen.queryByText(/確度/)).toBeNull();
+    expect(screen.queryByText('要確認')).toBeNull();
     // サーバーへは選択自治体コードが送られる。
     expect(postChat).toHaveBeenCalledWith(
       expect.objectContaining({ municipalityCode: '13112', question: '転入届の持ち物は？' }),

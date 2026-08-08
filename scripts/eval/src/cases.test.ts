@@ -21,9 +21,31 @@ describe('rag-eval-cases.json', () => {
     expect(() => parseDataset(raw)).not.toThrow();
   });
 
-  it('151問・正答119/保留17/越境15・自治体整合を満たす', () => {
+  it('175問・正答142/保留17/越境16・自治体整合を満たす', () => {
     const dataset = parseDataset(raw);
     expect(() => assertDatasetShape(dataset)).not.toThrow();
+  });
+
+  // なぜ: v1.2.0にあった書類系4問が23区化(v2.0.0)で全て失われ、UIのプレースホルダそのものの質問
+  // (「転入届に必要な持ち物は？」)が151問中1問も無い状態になっていた。回帰を二度起こさないよう固定する。
+  it('全23区に必要書類(持ち物)のケースがあり、conditional の分離を検査している(ADR-010)', () => {
+    const dataset = parseDataset(raw);
+    for (const code of dataset.corpus.municipalities) {
+      const docCases = dataset.cases.filter(
+        (c) => c.municipalityCode === code && c.id.endsWith('-resident-documents'),
+      );
+      expect(docCases, `municipality ${code}`).toHaveLength(1);
+      const c = docCases[0]!;
+      expect(c.kind).toBe('positive');
+      expect(c.expect.abstain).toBe(false);
+      // 条件付き書類が必須欄に混ざっていないことを見る見出しを必ず期待値に含める。
+      expect(c.expect.answerMustInclude).toContain('■ 場合により必要なもの（あてはまる方のみ）');
+      // required の公式文言(見出し・期限トークン以外)が1件以上ある。
+      const documentPhrases = c.expect.answerMustInclude.filter(
+        (p) => !p.startsWith('■') && !/^\d/.test(p),
+      );
+      expect(documentPhrases.length).toBeGreaterThanOrEqual(1);
+    }
   });
 
   it('23区すべてを各区3問以上でカバーする', () => {

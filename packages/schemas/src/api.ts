@@ -164,9 +164,13 @@ export const chatRequestSchema = z.strictObject({
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 
 /**
- * なぜ: §11.4 回答フォーマット(端的な回答/条件・注意事項/公式根拠カード/確度or要確認/
- * 問い合わせ先)。citationsは公式根拠カードに対応し、confidenceは確度表示、
- * abstainedは§11.5「根拠が見つからない場合は確認できませんと明示」する保留フラグ。
+ * なぜ: §11.4 回答フォーマット(端的な回答/条件・注意事項/公式根拠カード/問い合わせ先)。
+ * citationsは公式根拠カードに対応し、abstainedは§11.5「根拠が見つからない場合は確認できませんと
+ * 明示」する保留フラグ。
+ *
+ * confidence は **内部値**であり、UIには表示しない(ADR-010)。RAG経路の値は検索スコア
+ * (cosine類似度)だけから算出され、回答の正しさを表さない — 実際に持ち物の誤答へ 'high' が
+ * 付いていた。誤解を招く指標を確度として見せないため表示を廃止し、評価・計測用にのみ残す。
  */
 export const chatCitationSchema = z.strictObject({
   sourceId: z.string().min(1),

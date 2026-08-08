@@ -57,6 +57,8 @@ export interface RagChunkRow {
   title: string;
   url: string;
   lastVerifiedAt: string;
+  /** 同一 source_id 内でのチャンク連番。生成窓を文書順へ戻すために使う(orderByDocumentPosition)。 */
+  seq: number;
   text: string;
 }
 
@@ -76,7 +78,7 @@ export async function getRagChunks(
   const res = await db
     .prepare(
       `SELECT chunk_id, municipality_code, source_id, procedure_id, category, title, url, ` +
-        `last_verified_at, text FROM rag_chunks ` +
+        `last_verified_at, seq, text FROM rag_chunks ` +
         `WHERE municipality_code = ? AND chunk_id IN (${placeholders})`,
     )
     .bind(code, ...unique)
@@ -91,6 +93,7 @@ export async function getRagChunks(
       title: asString(row.title),
       url: asString(row.url),
       lastVerifiedAt: asString(row.last_verified_at),
+      seq: Number(row.seq ?? 0),
       text: asString(row.text),
     });
   }
@@ -175,6 +178,20 @@ export async function getMunicipality(
     supported: Number(row.supported) === 1,
     officialUrl: optString(row.official_url),
   };
+}
+
+/**
+ * なぜ: 選択自治体**以外**の自治体名だけを列挙する(名前のみ・全件)。
+ * 用途は /api/chat の構造化データ経路の越境ガード限定で、他自治体のデータは一切読まない
+ * (返すのは台帳の名称だけ)。原則4「選択自治体と異なる自治体の情報を混ぜない」を守るための
+ * 判定材料であり、回答内容には現れない。
+ */
+export async function getOtherMunicipalityNames(db: D1Database, code: string): Promise<string[]> {
+  const res = await db
+    .prepare('SELECT name FROM municipalities WHERE code != ?')
+    .bind(code)
+    .all<Row>();
+  return res.results.map((row) => asString(row.name)).filter((n) => n.length > 0);
 }
 
 /** ---- rule_sets ---- */

@@ -1,7 +1,7 @@
 {
-  "datasetVersion": "2.0.0",
+  "datasetVersion": "2.1.0",
   "generatedFor": "T-014",
-  "description": "RAG評価データセット151問。特別区23区(13101〜13123)全対応。全期待値はコーパス(承認済みHTMLスナップショット)に実在する文言のみを根拠にする。正答系119・保留系17・越境系15。全23区を各区3問以上でカバーする。v2.0: 7区→23区へ拡張。(a)区ごとに異なる期限を突く問題を必ず含める(子ども医療費助成の遡及申請期限は14日/15日/2か月/3か月/3ヶ月/3カ月/6か月/6カ月と区で異なり、犬の登録事項変更30日は墨田・目黒・板橋・江戸川で明記)。(b)原文に期限の記載が無い区(港・台東・世田谷・北・練馬のマイナンバー継続利用、中野・足立の子ども医療費遡及)は保留系に置き、他区の90日や3か月を答えたら重大な失敗として検出する。answerMustIncludeは各区原文の表記(か月/ヶ月/カ月)をそのまま用いる。",
+  "description": "RAG評価データセット175問。特別区23区(13101〜13123)全対応。全期待値はコーパス(承認済みHTMLスナップショット)または人手承認済みの正規化データに実在する文言のみを根拠にする。正答系142・保留系17・越境系16。全23区を各区3問以上でカバーする。v2.1: 必要書類(持ち物)のケースを23区ぶん追加した。v1.2.0にあった書類系4問が23区化のv2.0.0で失われ、UIのプレースホルダそのもの(「転入届に必要な持ち物は？」)が未計測になっていた回帰の是正である。書類系の期待値は data/normalized/<区>/procedures.json の requiredDocuments[] に一致させ、(a) status=required の公式文言がすべて回答に現れること、(b) status=conditional が「■ 場合により必要なもの（あてはまる方のみ）」の下に分離され、唯一の必須物として断定されていないことを検査する。越境系にも書類質問を1問追加し、他区名を含む書類質問で構造化データを断定しないことを見る。v2.0: 7区→23区へ拡張。(a)区ごとに異なる期限を突く問題を必ず含める(子ども医療費助成の遡及申請期限は14日/15日/2か月/3か月/3ヶ月/3カ月/6か月/6カ月と区で異なり、犬の登録事項変更30日は墨田・目黒・板橋・江戸川で明記)。(b)原文に期限の記載が無い区(港・台東・世田谷・北・練馬のマイナンバー継続利用、中野・足立の子ども医療費遡及)は保留系に置き、他区の90日や3か月を答えたら重大な失敗として検出する。answerMustIncludeは各区原文の表記(か月/ヶ月/カ月)をそのまま用いる。",
   "corpus": {
     "municipalities": [
       "13101",
@@ -34,7 +34,8 @@
   "scoring": {
     "contaminationRule": "非保留応答の各citation.sourceIdは 'src-{municipalityCode}-' で始まらなければ自治体混入(重大)。",
     "needsHumanReviewRule": "非保留応答の本文に日数・期限表現(\\d+日以内 等)が現れ、その表現が当該ケースのanswerMustIncludeに無い場合、人手レビュー対象としてフラグ(自動failにはしない)。",
-    "autoFailRule": "非保留(abstained=false)なのにcitations=0は根拠なし断定として自動fail。"
+    "autoFailRule": "非保留(abstained=false)なのにcitations=0は根拠なし断定として自動fail。",
+    "documentGroundingRule": "必要書類の質問は人手承認済みの requiredDocuments[] を根拠に答える(ADR-010 案A)。required の公式文言はすべて answerMustInclude に列挙し、1つでも欠ければ fail とする。conditional は「■ 場合により必要なもの（あてはまる方のみ）」見出しの下にあることをanswerMustInclude で確認する(条件付き書類を必須と断定していないことの検査)。"
   },
   "cases": [
     {
@@ -2047,6 +2048,436 @@
         "forbiddenSourcePrefixes": ["src-13101-"]
       },
       "rationale": "江戸川区を選択中に千代田区について尋ねる。千代田区の出典を引用したら自治体混入(重大)。保留、または江戸川区の範囲に限定した回答が正解。"
+    },
+    {
+      "id": "P-13101-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13101",
+      "question": "千代田区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13101-resident_registration-001"],
+        "answerMustInclude": [
+          "転出証明書(前住所地の市区町村が発行。マイナンバーカードで転出手続きをした特例転入の場合はお持ちの方のみ)",
+          "届出人の本人確認書類(マイナンバーカード・パスポート・運転免許証・在留カード・資格確認書など)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日",
+          "30日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "千代田区の人手承認済み requiredDocuments[](required 2件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13102-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13102",
+      "question": "中央区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13102-resident_registration-001"],
+        "answerMustInclude": [
+          "前住所地の区市町村が発行した転出証明書または転出証明書に準ずる証明書",
+          "窓口にお越しになる方の本人確認書類(マイナンバーカード・運転免許証・パスポート・在留カード等)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "中央区の人手承認済み requiredDocuments[](required 2件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13103-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13103",
+      "question": "港区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13103-resident_registration-001"],
+        "answerMustInclude": [
+          "転出証明書(マイナンバーカードによる転出届をした方は不要)",
+          "窓口で手続きする人の本人確認書類",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日",
+          "30日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "港区の人手承認済み requiredDocuments[](required 2件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13104-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13104",
+      "question": "新宿区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13104-resident_registration-001"],
+        "answerMustInclude": [
+          "前住所地の市区町村の役所が発行した転出証明書",
+          "届出人の本人確認ができる書類(有効期限内の運転免許証・旅券(パスポート)等。外国人住民の方は在留カードまたは特別永住者証明書)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "新宿区の人手承認済み requiredDocuments[](required 2件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13105-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13105",
+      "question": "文京区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13105-resident_registration-001"],
+        "answerMustInclude": [
+          "窓口に来られた方の本人確認書類(マイナンバーカード・運転免許証・パスポート・在留カード等)",
+          "転出証明書(マイナンバーカードで特例転出した方は不要)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日",
+          "1年"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "文京区の人手承認済み requiredDocuments[](required 2件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13106-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13106",
+      "question": "台東区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13106-resident_registration-001"],
+        "answerMustInclude": [
+          "転出証明書(マイナンバーカードを利用した転出届をした方は不要)",
+          "本人確認書類",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "台東区の人手承認済み requiredDocuments[](required 2件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13107-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13107",
+      "question": "墨田区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13107-resident_registration-001"],
+        "answerMustInclude": [
+          "転出証明書(前の住所地でマイナンバーカードを使った手続をされた方はカードを持参)",
+          "本人であることを確認できるもの(運転免許証・パスポート・マイナンバーカード・資格確認書・在留カード等)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日",
+          "1年"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "墨田区の人手承認済み requiredDocuments[](required 2件 / conditional 2件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13108-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13108",
+      "question": "江東区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13108-resident_registration-001"],
+        "answerMustInclude": [
+          "窓口に来られる方の本人確認書類(運転免許証・パスポート・マイナンバーカード・在留カード等)",
+          "住民異動届(窓口で記入または関連ドキュメントからダウンロード)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "江東区の人手承認済み requiredDocuments[](required 2件 / conditional 4件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13109-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13109",
+      "question": "品川区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13109-resident_registration-001"],
+        "answerMustInclude": [
+          "窓口に来る方の本人確認書類(マイナンバーカード・運転免許証・在留カード等)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "品川区の人手承認済み requiredDocuments[](required 1件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13110-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13110",
+      "question": "目黒区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13110-resident_registration-001"],
+        "answerMustInclude": [
+          "転出証明書(または転出証明書に準ずる証明書)。添付がないと転入の手続きは行えません",
+          "窓口で手続きを行う方の本人確認書類(運転免許証など)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日",
+          "1年",
+          "3か月"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "目黒区の人手承認済み requiredDocuments[](required 2件 / conditional 5件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13111-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13111",
+      "question": "大田区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13111-resident_registration-001"],
+        "answerMustInclude": [
+          "窓口に来られる方の本人確認書類(マイナンバーカード、運転免許証、在留カードなど)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "大田区の人手承認済み requiredDocuments[](required 1件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13112-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13112",
+      "question": "世田谷区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13112-resident_registration-001"],
+        "answerMustInclude": [
+          "届出する方の本人確認書類(官公署発行の顔写真入り証明書など。有効期限内・コピー不可)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "世田谷区の人手承認済み requiredDocuments[](required 1件 / conditional 4件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13113-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13113",
+      "question": "渋谷区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13113-resident_registration-001"],
+        "answerMustInclude": [
+          "窓口で手続きする人の本人確認ができるもの(マイナンバーカード・運転免許証・パスポートなど)",
+          "転出証明書(前住所地の区市町村が発行したもの)。マイナンバーカードを利用した特例転入の場合は発行されないため不要です",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日",
+          "6か月"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "渋谷区の人手承認済み requiredDocuments[](required 2件 / conditional 4件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13114-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13114",
+      "question": "中野区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13114-resident_registration-001"],
+        "answerMustInclude": [
+          "前住所地(または最終住民登録地)が発行した転出証明書等",
+          "本人確認書類等(マイナンバーカード・運転免許証・日本国発行のパスポート・在留カードなど官公署発行の写真付き証明書等)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "中野区の人手承認済み requiredDocuments[](required 2件 / conditional 2件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13115-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13115",
+      "question": "杉並区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13115-resident_registration-001"],
+        "answerMustInclude": [
+          "窓口に来る方の本人確認書類(官公署発行の顔写真付き証明書1点、または健康保険資格確認書・年金手帳等2点以上)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "杉並区の人手承認済み requiredDocuments[](required 1件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13116-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13116",
+      "question": "豊島区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13116-resident_registration-001"],
+        "answerMustInclude": [
+          "転出証明書(または転出証明書に準ずる証明書)。マイナンバーカードで特例転出をした場合は発行されません",
+          "窓口で手続きを行う方の本人確認書類",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "豊島区の人手承認済み requiredDocuments[](required 2件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13117-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13117",
+      "question": "北区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13117-resident_registration-001"],
+        "answerMustInclude": [
+          "転出証明書(転入届の特例の場合はマイナンバーカード、特定在留カードまたは特定特別永住者証明書)",
+          "窓口にお越しいただく方の本人確認書類",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "北区の人手承認済み requiredDocuments[](required 2件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13118-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13118",
+      "question": "荒川区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13118-resident_registration-001"],
+        "answerMustInclude": [
+          "前住所地の区市町村長が発行した転出証明書",
+          "本人確認書類",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "荒川区の人手承認済み requiredDocuments[](required 2件 / conditional 3件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13119-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13119",
+      "question": "板橋区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13119-resident_registration-001"],
+        "answerMustInclude": [
+          "マイナンバーカードや運転免許証、パスポートなど届出に来た方の本人確認資料",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日",
+          "1年"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "板橋区の人手承認済み requiredDocuments[](required 1件 / conditional 6件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13120-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13120",
+      "question": "練馬区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13120-resident_registration-001"],
+        "answerMustInclude": [
+          "窓口に来所する方の本人確認書類(マイナンバーカード・運転免許証・パスポート・在留カード等の顔写真付き証明書なら1点、健康保険の資格確認書や年金手帳等は2点)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "練馬区の人手承認済み requiredDocuments[](required 1件 / conditional 5件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13121-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13121",
+      "question": "足立区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13121-resident_registration-001"],
+        "answerMustInclude": [
+          "転出証明書(旧住所地市区町村が発行したもの)。引っ越しワンストップサービス・特例転入を利用した方は不要です",
+          "本人確認書類(官公署発行の写真付きで改ざん防止加工のある有効期限内のもの1点、または健康保険資格確認書・キャッシュカード等2点)",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "足立区の人手承認済み requiredDocuments[](required 2件 / conditional 4件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13122-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13122",
+      "question": "葛飾区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13122-resident_registration-001"],
+        "answerMustInclude": [
+          "転出証明書(これまで住んでいた区市町村で転出届をして交付を受けたもの)。マイナンバーカード等による「転入届の特例」が適用された場合は交付されません",
+          "届出される方の本人確認書類。官公署発行の顔写真付証明(マイナンバーカード・運転免許証・パスポート・在留カードなど)は1点、お持ちでない場合は資格確認書・介護保険証・年金手帳・生活保護受給者証などを2点以上",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日",
+          "30日"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "葛飾区の人手承認済み requiredDocuments[](required 2件 / conditional 4件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "P-13123-resident-documents",
+      "kind": "positive",
+      "municipalityCode": "13123",
+      "question": "江戸川区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": false,
+        "expectedSourceIds": ["src-13123-resident_registration-001"],
+        "answerMustInclude": [
+          "窓口にお越しになる方の本人確認できるもの",
+          "■ 場合により必要なもの（あてはまる方のみ）",
+          "14日",
+          "3か月"
+        ],
+        "forbiddenSourcePrefixes": []
+      },
+      "rationale": "江戸川区の人手承認済み requiredDocuments[](required 1件 / conditional 5件)をそのまま提示できているかを見る。required の公式文言がすべて回答に現れ、conditional は「■ 場合により必要なもの（あてはまる方のみ）」の下に分離されていること(=「お持ちの方」限定の書類を唯一の必須物として断定していないこと)を検証する。期限トークンは回答に含まれる公式文言(dueDescription・書類文言)由来で、根拠なし断定の検出(needsHumanReviewRule)を誤発火させないために列挙する。"
+    },
+    {
+      "id": "X-shinjuku-asks-setagaya-documents",
+      "kind": "cross",
+      "municipalityCode": "13104",
+      "question": "世田谷区の転入届に必要な持ち物を教えてください。",
+      "expect": {
+        "abstain": "either",
+        "expectedSourceIds": [],
+        "answerMustInclude": [],
+        "forbiddenSourcePrefixes": ["src-13112-"]
+      },
+      "rationale": "検証済み構造化データ経路(ADR-010 案A)は選択自治体のレコードを断定的に提示するため、越境質問でそのまま返すと利用者が尋ねた区とは別の区の内容を断定することになる。質問が選択自治体以外の自治体名を含むときは構造化経路を使わず、越境を保留するプロンプト規則3を持つRAG経路へ委ねる。保留・自区限定回答のどちらでも可、他区出典は0であること。"
     }
   ]
 }
