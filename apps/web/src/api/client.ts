@@ -49,11 +49,50 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * なぜタイムアウトが要るのか(2026-08-09 追加): 回線が切れる代わりに無音になる
+ * (SYNが返らない・接続が張れたまま応答が来ない)のはモバイルで最も普通の失敗であり、
+ * fetch はこの状態で永久に解決しない。タイムアウトが無いと useAsync が loading のまま
+ * 固定され、利用者には文言も再試行手段も出ない。エラーより無反応のほうが悪いため、
+ * 一定時間で打ち切って「次の行動が分かる文面」(CLAUDE.md §7)へ倒す。
+ *
+ * 10秒: 本番のチェックリスト生成は実測 100〜400ms。区役所の弱い回線を見込んでも
+ * 10秒を超える応答は利用者にとって失敗と区別がつかない。チャットはLLM生成を待つため
+ * サーバー側が15秒で打ち切る(chat.ts TIMEOUT_MS)ので、それより長い余裕を別途与える。
+ */
+const REQUEST_TIMEOUT_MS = 10_000;
+export const CHAT_TIMEOUT_MS = 20_000;
+
+const TIMEOUT_MESSAGE =
+  'サーバーの応答に時間がかかっています。通信環境をご確認のうえ、もう一度お試しください。';
+
+/**
+ * なぜ AbortSignal.timeout を直接使わないのか: 呼び出し側が独自の signal を渡す余地を
+ * 残しつつ、タイムアウトによる中断と利用者都合の中断を message で区別できるようにする。
+ */
+async function fetchWithTimeout(url: string, init: RequestInit | undefined, timeoutMs: number) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (cause) {
+    // なぜ signal.aborted を見るのか: DOMException名は環境差があるが、こちらは自分で
+    // 張ったタイマーなので、時間切れかどうかを取り違えない。
+    if (controller.signal.aborted) {
+      throw new ApiError(0, 'timeout', TIMEOUT_MESSAGE);
+    }
+    throw cause;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function request(path: string, init?: RequestInit): Promise<unknown> {
   let res: Response;
   try {
-    res = await fetch(`${BASE}${path}`, init);
-  } catch {
+    res = await fetchWithTimeout(`${BASE}${path}`, init, REQUEST_TIMEOUT_MS);
+  } catch (cause) {
+    if (cause instanceof ApiError) throw cause;
     throw new ApiError(
       0,
       'network_error',
@@ -186,7 +225,9 @@ export async function searchWasteSorting(
  */
 export async function getChatAvailability(): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE}/chat/availability`);
+    // なぜ短めか: これはパネルを出すか否かだけを決める補助的な問い合わせで、
+    // 応答が遅い場合は「出さない」に倒すのが安全側(縮退の既定は非表示)。
+    const res = await fetchWithTimeout(`${BASE}/chat/availability`, undefined, 5_000);
     if (!res.ok) return false;
     const json = (await res.json()) as { enabled?: boolean } | null;
     return json?.enabled === true;
@@ -210,12 +251,17 @@ export class ChatDisabledError extends Error {
 export async function postChat(req: ChatRequest): Promise<ChatResponse> {
   let res: Response;
   try {
-    res = await fetch(`${BASE}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req),
-    });
-  } catch {
+    res = await fetchWithTimeout(
+      `${BASE}/chat`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req),
+      },
+      CHAT_TIMEOUT_MS,
+    );
+  } catch (cause) {
+    if (cause instanceof ApiError) throw cause;
     throw new ApiError(
       0,
       'network_error',

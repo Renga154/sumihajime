@@ -59,8 +59,41 @@ describe('assignSection', () => {
     );
   });
 
-  it('期限日が無いものは生活開始へ', () => {
+  it('期限日が無く優先度が通常のものは生活開始へ', () => {
     expect(assignSection(task({ dueDescription: '生活開始まで' }), MOVE)).toBe('life_start');
+  });
+
+  /**
+   * なぜ: 期限日が算定できない理由は「急がなくてよい」ではなく「起算日が前住所地の
+   * 転出予定日で本サービスが持たないから」である場合が多い(児童手当の15日特例など)。
+   * それを「生活開始(落ち着いて確認する項目)」へ送ると助言として誤りになるため、
+   * 優先度が urgent/high のものは「転入後すぐ」へ置く。
+   */
+  it('期限日が無くても優先度が重要なら転入後すぐへ(児童手当の15日特例など)', () => {
+    expect(
+      assignSection(
+        task({ priority: 'high', dueDescription: '転入日の翌日から15日以内に申請してください。' }),
+        MOVE,
+      ),
+    ).toBe('right_after');
+  });
+
+  it('期限日が無く優先度が至急なら転入後すぐへ', () => {
+    expect(
+      assignSection(task({ priority: 'urgent', dueDescription: 'できるだけ早く' }), MOVE),
+    ).toBe('right_after');
+  });
+
+  it('期限日が無い任意項目は生活開始のまま', () => {
+    expect(assignSection(task({ priority: 'optional', dueDescription: '任意' }), MOVE)).toBe(
+      'life_start',
+    );
+  });
+
+  it('要確認は優先度が重要でも該当者のみ・要確認が優先される', () => {
+    expect(assignSection(task({ applicable: 'needs_confirmation', priority: 'high' }), MOVE)).toBe(
+      'conditional',
+    );
   });
 
   it('期限が引越し日より前は引越し前へ', () => {

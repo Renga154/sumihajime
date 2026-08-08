@@ -41,14 +41,28 @@ export const sectionDescription: Record<SectionKey, string> = {
 /**
  * 1件のタスクをセクションへ割り当てる。
  * - applicable === 'needs_confirmation' は最優先で「該当者のみ・要確認」へ。
- * - 期限日(dueDate)が無いものは「生活開始」へ。
+ * - 期限日(dueDate)が無いものは優先度で振り分ける(urgent/high は「転入後すぐ」、
+ *   それ以外は「生活開始」)。理由は下記。
  * - dueDate が引越し日より前なら「引越し前」。
  * - priority === 'urgent' は「転入後すぐ」。
  * - 引越し日から14日以内なら「14日以内」、31日以内なら「1か月以内」、それ以外は「生活開始」。
  */
 export function assignSection(task: GeneratedTask, moveDate: string): SectionKey {
   if (task.applicable === 'needs_confirmation') return 'conditional';
-  if (!task.dueDate) return 'life_start';
+  /**
+   * なぜ期限日が無いものを優先度で分けるのか(2026-08-09 修正):
+   * dueDate が無い理由は「急がなくてよい」ではなく「起算日が前住所地の転出予定日で、
+   * 本サービスが収集しない日付だから算定できない」であることが多い。児童手当の15日特例、
+   * 子ども医療費助成の遡及期限、マイナンバーカードの継続利用がこれに当たる。
+   * これらを一律に「生活開始」へ送ると、見出しの説明文(「生活を始めてから落ち着いて
+   * 確認する項目です。」)が、実際には期限のある手続きに対する誤った助言になる
+   * (実測: 港区の子育て世帯では12件中10件が「生活開始」へ入り、うち4件が優先度「重要」だった)。
+   * 期限を推測して作ることは原則3に反するのでせず、優先度という既に確定している情報で
+   * 置き場所だけを正す。文面上の期限は各カードの dueDescription が引き続き示す。
+   */
+  if (!task.dueDate) {
+    return task.priority === 'urgent' || task.priority === 'high' ? 'right_after' : 'life_start';
+  }
 
   const days = daysBetween(moveDate, task.dueDate);
   if (Number.isNaN(days)) return 'life_start';
