@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   profileSchema,
@@ -10,11 +10,16 @@ import {
 import { getMunicipalities } from '../api/client';
 import { useAppState } from '../state/AppState';
 import {
+  clearWizardDraft,
+  isSameWizardAnswers,
   loadProfile,
   loadReviewedSteps,
+  loadWizardDraft,
   saveProfile,
   saveReviewedSteps,
+  saveWizardDraft,
   type ReviewedSteps,
+  type WizardAnswers,
 } from '../lib/storage';
 import { ageBandLabel, originTypeLabel } from '../lib/format';
 import {
@@ -118,12 +123,67 @@ export function parseStepParam(raw: string | null): number {
   return Number.isInteger(n) && n >= 1 && n <= STEPS.length ? n : 1;
 }
 
+/**
+ * 確定プロフィール(あれば)から、画面の初期回答を作る。下書きが無いときの基準値でもある。
+ * 純関数にしておき、「下書きに中身があるか(=復元したと言ってよいか)」の判定に使う。
+ */
+export function answersFromProfile(profile: Profile | null): WizardAnswers {
+  return {
+    moveDate: profile?.moveDate ?? '',
+    originType: profile?.originType ?? '',
+    householdKind: profile && profile.household.memberCount > 1 ? 'multiple' : 'single',
+    ageBands: profile?.household.ageBands ?? ['adult'],
+    isPregnant: profile?.flags.isPregnantMember ?? false,
+    flags: {
+      hasMyNumberCard: profile?.flags.hasMyNumberCard ?? false,
+      needsNationalHealthInsurance: profile?.flags.needsNationalHealthInsurance ?? false,
+      needsNationalPension: profile?.flags.needsNationalPension ?? false,
+      hasSchoolOrChildcareNeeds: profile?.flags.hasSchoolOrChildcareNeeds ?? false,
+      hasDog: profile?.flags.hasDog ?? false,
+      needsDisabilityOrCareSupport: profile?.flags.needsDisabilityOrCareSupport ?? false,
+      needsForeignResidentGuidance: profile?.flags.needsForeignResidentGuidance ?? false,
+      needsVehicleGuidance: profile?.flags.needsVehicleGuidance ?? false,
+    },
+    dogMicrochip:
+      profile?.flags.dogHasMicrochip === true
+        ? 'yes'
+        : profile?.flags.dogHasMicrochip === false
+          ? 'no'
+          : 'unknown',
+  };
+}
+
 export function WizardPage() {
   useDocumentTitle('条件を入力する');
   const navigate = useNavigate();
   const { municipalityCode } = useAppState();
-  const existing = municipalityCode ? loadProfile(municipalityCode) : null;
   const [searchParams] = useSearchParams();
+
+  /**
+   * 確定プロフィールと、確定前の下書き。どちらも端末内(localStorage)のみ。
+   * useMemo で自治体ごとに1回だけ読む(下書きは保存のたびに読み直さない=起動時の状態を保つ)。
+   */
+  const existing = useMemo(
+    () => (municipalityCode ? loadProfile(municipalityCode) : null),
+    [municipalityCode],
+  );
+  const baselineAnswers = useMemo(() => answersFromProfile(existing), [existing]);
+  const storedDraft = useMemo(
+    () => (municipalityCode ? loadWizardDraft(municipalityCode) : null),
+    [municipalityCode],
+  );
+  /**
+   * 下書きを実際に「復元した」と言えるのは、確定内容(または初期値)と違う回答が残っていたときだけ。
+   * ステップを進めただけの状態を復元と呼ぶと、何も入力していない利用者に嘘を伝えることになる。
+   */
+  const restoredAnswers =
+    storedDraft && !isSameWizardAnswers(storedDraft.answers, baselineAnswers)
+      ? storedDraft.answers
+      : null;
+  const [restoreNotice, setRestoreNotice] = useState<'restored' | 'discarded' | null>(
+    restoredAnswers ? 'restored' : null,
+  );
+  const initialAnswers = restoredAnswers ?? baselineAnswers;
 
   // 入力中の自治体を画面に出すため名称を引く。取得できない間はコードを表示し、
   // 「どの区の入力をしているか」が一度も見えない状態を作らない(CLAUDE.md原則4)。
@@ -138,7 +198,15 @@ export function WizardPage() {
   const today = useMemo(() => todayInTokyo(), []);
   const dateBounds = useMemo(() => moveDateBounds(today), [today]);
 
-  const initialStep = useMemo(() => parseStepParam(searchParams.get('step')), [searchParams]);
+  /**
+   * 開始ステップ。?step= の明示指定(チェックリストの「条件を追加する」)が最優先で、
+   * 指定が無ければ下書きの中断位置から再開する。
+   */
+  const initialStep = useMemo(() => {
+    const raw = searchParams.get('step');
+    if (raw !== null) return parseStepParam(raw);
+    return storedDraft?.step ?? 1;
+  }, [searchParams, storedDraft]);
   const [step, setRawStep] = useState(initialStep);
 
   /**
@@ -153,9 +221,12 @@ export function WizardPage() {
     const stored = municipalityCode
       ? loadReviewedSteps(municipalityCode)
       : { household: false, conditions: false };
+    // 下書きの閲覧記録も引き継ぐ。リロードで失うと、実際にはステップ3を見た利用者へ
+    // チェックリスト側が「未入力です」と誤った案内を出してしまう。
+    const draft = storedDraft?.reviewedSteps ?? { household: false, conditions: false };
     return {
-      household: stored.household || initialStep >= 2,
-      conditions: stored.conditions || initialStep >= 3,
+      household: stored.household || draft.household || initialStep >= 2,
+      conditions: stored.conditions || draft.conditions || initialStep >= 3,
     };
   });
 
@@ -167,47 +238,42 @@ export function WizardPage() {
       setReviewedSteps((prev) => (prev.conditions ? prev : { ...prev, conditions: true }));
   }
 
+  // 初期値は「下書き(あれば) → 確定プロフィール → 既定値」の順。
   // Step1
-  const [moveDate, setMoveDate] = useState(existing?.moveDate ?? '');
-  const [originType, setOriginType] = useState<OriginType | ''>(existing?.originType ?? '');
+  const [moveDate, setMoveDate] = useState(initialAnswers.moveDate);
+  const [originType, setOriginType] = useState<OriginType | ''>(initialAnswers.originType);
 
   // Step2
-  const [householdKind, setHouseholdKind] = useState<HouseholdKind>(
-    existing && existing.household.memberCount > 1 ? 'multiple' : 'single',
-  );
-  const [ageBands, setAgeBands] = useState<AgeBand[]>(existing?.household.ageBands ?? ['adult']);
-  const [isPregnant, setIsPregnant] = useState(existing?.flags.isPregnantMember ?? false);
+  const [householdKind, setHouseholdKind] = useState<HouseholdKind>(initialAnswers.householdKind);
+  const [ageBands, setAgeBands] = useState<AgeBand[]>(initialAnswers.ageBands);
+  const [isPregnant, setIsPregnant] = useState(initialAnswers.isPregnant);
 
   // Step3
-  const [flags, setFlags] = useState<Record<FlagField['key'], boolean>>(() => {
-    const base = {
-      hasMyNumberCard: false,
-      needsNationalHealthInsurance: false,
-      needsNationalPension: false,
-      hasSchoolOrChildcareNeeds: false,
-      hasDog: false,
-      needsDisabilityOrCareSupport: false,
-      needsForeignResidentGuidance: false,
-      needsVehicleGuidance: false,
-    };
-    if (!existing) return base;
-    return {
-      hasMyNumberCard: existing.flags.hasMyNumberCard,
-      needsNationalHealthInsurance: existing.flags.needsNationalHealthInsurance,
-      needsNationalPension: existing.flags.needsNationalPension,
-      hasSchoolOrChildcareNeeds: existing.flags.hasSchoolOrChildcareNeeds,
-      hasDog: existing.flags.hasDog,
-      needsDisabilityOrCareSupport: existing.flags.needsDisabilityOrCareSupport,
-      needsForeignResidentGuidance: existing.flags.needsForeignResidentGuidance,
-      needsVehicleGuidance: existing.flags.needsVehicleGuidance,
-    };
-  });
-  const [dogMicrochip, setDogMicrochip] = useState<Tri>(() => {
-    const v = existing?.flags.dogHasMicrochip;
-    if (v === true) return 'yes';
-    if (v === false) return 'no';
-    return 'unknown';
-  });
+  const [flags, setFlags] = useState<Record<FlagField['key'], boolean>>(initialAnswers.flags);
+  const [dogMicrochip, setDogMicrochip] = useState<Tri>(initialAnswers.dogMicrochip);
+
+  /** いま画面に入っている回答。下書き保存と「初期値と同じか」の判定に使う。 */
+  const answers = useMemo<WizardAnswers>(
+    () => ({ moveDate, originType, householdKind, ageBands, isPregnant, flags, dogMicrochip }),
+    [moveDate, originType, householdKind, ageBands, isPregnant, flags, dogMicrochip],
+  );
+
+  /**
+   * 入力のたびに下書きを保存する(端末内のみ)。リロード・戻る操作で入力が消えないようにするため。
+   * 初期値と同じ内容になったら下書きは消す(何も入力していない利用者に、次回
+   * 「復元しました」と伝えないため)。moveDate が受付範囲外のときも保存する
+   * — 直しかけの値を消さないほうが利用者の損失が小さく、確定時に別途弾かれる。
+   */
+  useEffect(() => {
+    if (!municipalityCode) return;
+    if (isSameWizardAnswers(answers, baselineAnswers)) {
+      clearWizardDraft(municipalityCode);
+      return;
+    }
+    saveWizardDraft(municipalityCode, { answers, step, reviewedSteps });
+    // 破棄後にまた入力し始めたら「破棄しました」は事実と合わなくなるので下げる。
+    setRestoreNotice((prev) => (prev === 'discarded' ? null : prev));
+  }, [municipalityCode, answers, baselineAnswers, step, reviewedSteps]);
 
   // 1900年のような値が素通りしないよう、受付範囲外は入力時点で止める。
   const moveDateOutOfRange = moveDate !== '' && !isMoveDateWithinRange(moveDate, today);
@@ -215,6 +281,20 @@ export function WizardPage() {
   const step1Valid = step1Filled && !moveDateOutOfRange;
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  /** 下書きを捨てて、確定済みの内容(無ければ空)へ戻す。 */
+  function discardDraft() {
+    if (municipalityCode) clearWizardDraft(municipalityCode);
+    setMoveDate(baselineAnswers.moveDate);
+    setOriginType(baselineAnswers.originType);
+    setHouseholdKind(baselineAnswers.householdKind);
+    setAgeBands(baselineAnswers.ageBands);
+    setIsPregnant(baselineAnswers.isPregnant);
+    setFlags(baselineAnswers.flags);
+    setDogMicrochip(baselineAnswers.dogMicrochip);
+    setErrorMsg(null);
+    setRestoreNotice('discarded');
+  }
 
   function toggleAgeBand(band: AgeBand) {
     setAgeBands((prev) => (prev.includes(band) ? prev.filter((b) => b !== band) : [...prev, band]));
@@ -270,6 +350,9 @@ export function WizardPage() {
     saveProfile(municipalityCode, builtProfile);
     // 「どのステップを見たか」はプロフィールと同じタイミングで確定させる(端末内のみ)。
     saveReviewedSteps(municipalityCode, reviewedSteps);
+    // 確定した内容はプロフィール側が持つ。下書きを残すと、次に開いたとき
+    // 確定済みの内容を「入力途中」として復元してしまう。
+    clearWizardDraft(municipalityCode);
     navigate('/checklist');
   }
 
@@ -309,7 +392,7 @@ export function WizardPage() {
         </span>
         <Link
           to="/"
-          className="inline-flex items-center gap-1 font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
+          className="tap-target inline-flex items-center gap-1 font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
         >
           自治体を変える
         </Link>
@@ -347,6 +430,40 @@ export function WizardPage() {
           );
         })}
       </ol>
+
+      {/*
+        下書きの復元を黙って行わない。値が勝手に入っていると「自分が入力したのか」が
+        分からず、確定してよいかも判断できない。何をしたのか・次に何をすればよいのかを書き、
+        破棄する手段を同じ場所に置く。role="status" で読み上げにも届ける。
+      */}
+      {restoreNotice === 'restored' && (
+        <div
+          role="status"
+          className="rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm text-brand-900"
+        >
+          <p className="font-semibold">前回の入力途中の内容を復元しました</p>
+          <p className="mt-1">
+            この端末に一時保存していた内容です（まだチェックリストには反映していません）。内容を確認し、必要なら直してから「この内容でチェックリストを作成」を押してください。
+          </p>
+          <p className="mt-2">
+            <button
+              type="button"
+              onClick={discardDraft}
+              className="tap-target inline-flex items-center rounded-lg border border-brand-300 bg-white px-3 py-1.5 font-semibold text-brand-800 transition-colors hover:bg-brand-50"
+            >
+              復元した内容を破棄して入力し直す
+            </button>
+          </p>
+        </div>
+      )}
+      {restoreNotice === 'discarded' && (
+        <p
+          role="status"
+          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"
+        >
+          入力途中の内容を破棄しました。最初から入力してください。
+        </p>
+      )}
 
       {errorMsg && (
         <p

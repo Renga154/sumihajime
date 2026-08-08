@@ -48,7 +48,10 @@ export function ProcedureDetailPage() {
   return (
     <div className="space-y-4">
       <p>
-        <Link to="/checklist" className="text-sm font-semibold text-brand-700 underline">
+        <Link
+          to="/checklist"
+          className="tap-target-inline text-sm font-semibold text-brand-700 underline"
+        >
           ← チェックリストに戻る
         </Link>
       </p>
@@ -176,7 +179,10 @@ export function ProcedureDetailPage() {
                 ))}
               </ul>
               <p className="mt-2 text-sm">
-                <Link to="/facilities" className="font-semibold text-brand-700 underline">
+                <Link
+                  to="/facilities"
+                  className="tap-target-inline font-semibold text-brand-700 underline"
+                >
                   窓口一覧（住所・地図リンク）を見る
                 </Link>
               </p>

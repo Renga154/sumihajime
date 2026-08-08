@@ -111,6 +111,29 @@ input[type='radio'] {
   accent-color: var(--color-brand-600);
 }
 
+/*
+ * WCAG 2.2 SC 2.5.8(ターゲットのサイズ・最小)。本文リンクや summary の高さは文字サイズだけで
+ * 決まるため、text-sm なら20px・text-xs なら16px しかなく、指では狙いにくい(要求は24px×24px)。
+ * 文字サイズと行送りは変えず、当たり判定だけを24px以上へ広げる。
+ *
+ * .tap-target
+ *   単独で押す操作(1行に1つだけ置くリンク・inline-flex のリンク・summary)に付ける。
+ *   最小高さを24pxにする。inline-flex 側は items-center 済みなので文字は中央に残る。
+ *
+ * .tap-target-inline
+ *   文中に混ざるインラインリンク(前後に地の文がある)に付ける。インライン要素の上下パディングは
+ *   行ボックスの高さに影響しないため、見た目・行送りは1pxも動かないまま当たり判定だけが広がる。
+ *   ここで display を変えないのは、変えると文の途中で折り返せなくなるため。
+ */
+.tap-target {
+  min-height: 24px;
+}
+
+.tap-target-inline {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
 /* スクリーンリーダー専用テキスト。 */
 .sr-only {
   position: absolute;

@@ -77,7 +77,9 @@ function WardCell({
             <ValueBadge cell={cell} />
           </p>
           <details className="mt-2 text-sm">
-            <summary className="cursor-pointer text-brand-700 underline underline-offset-2">
+            {/* tap-target: 開閉トグルは summary 自体が標的。display は変えない
+                (flex にすると開閉の三角マーカーが消え、見た目が変わる)。 */}
+            <summary className="tap-target cursor-pointer text-brand-700 underline underline-offset-2">
               公式の文言を読む
             </summary>
             <p className="mt-1.5 whitespace-pre-wrap leading-relaxed text-slate-700">
@@ -96,7 +98,7 @@ function AllWards({ topic }: { topic: WardDifferenceTopic }) {
   const cellByCode = new Map(topic.cells.map((c) => [c.municipalityCode, c]));
   return (
     <details className="mt-4 rounded-lg border border-slate-200 bg-white p-3">
-      <summary className="cursor-pointer text-sm font-semibold text-brand-700">
+      <summary className="tap-target cursor-pointer text-sm font-semibold text-brand-700">
         対応している{topic.cells.length}区すべての値を見る
       </summary>
       <div className="mt-3 space-y-4">

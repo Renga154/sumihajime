@@ -128,6 +128,87 @@ export async function seedProfile(page: Page, code: string): Promise<void> {
   }, code);
 }
 
+/**
+ * 24px×24px 未満のインタラクティブ要素(WCAG 2.2 SC 2.5.8 ターゲットのサイズ・最小)。
+ *
+ * なぜ実測か: axe-core は SC 2.5.8 を自動判定しない(サイズはレイアウト結果に依存する)。
+ * ブラウザ上で getBoundingClientRect の実寸を数えるのが唯一の確実な検出方法。
+ *
+ * 判定の約束事:
+ *  - 画面に出ていない要素(display:none / 1px以下のスキップリンク等)は対象外。
+ *  - <label> に包まれた入力(チェックボックス・ラジオ)は、ラベル全体が押せる連続した標的なので
+ *    ラベルの寸法で評価する。
+ *  - SC 2.5.8 の例外(文中リンク・間隔)には頼らず、24pxを実寸で満たす方針にする。
+ *    例外に頼ると「この標的は文中だから小さくてよい」の判断がテストから消え、
+ *    実際には押しにくい標的を見逃すため。
+ */
+export interface SmallTarget {
+  width: number;
+  height: number;
+  tag: string;
+  name: string;
+  className: string;
+}
+
+export async function findSmallTargets(page: Page): Promise<SmallTarget[]> {
+  await page.evaluate(() => (document as Document & { fonts: FontFaceSet }).fonts.ready);
+  return page.evaluate(() => {
+    const SELECTOR = [
+      'a[href]',
+      'button',
+      'input:not([type="hidden"])',
+      'select',
+      'textarea',
+      'summary',
+      '[role="button"]',
+      '[role="link"]',
+      '[role="checkbox"]',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(', ');
+    const out: SmallTarget[] = [];
+    for (const el of Array.from(document.querySelectorAll(SELECTOR))) {
+      const style = getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden') continue;
+      const own = el.getBoundingClientRect();
+      // 1px以下は「フォーカス時だけ実体化する」スキップリンク等。押す標的ではない。
+      if (own.width <= 1 && own.height <= 1) continue;
+
+      let width = own.width;
+      let height = own.height;
+      const label = el.closest('label');
+      if (label && ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) {
+        const rect = label.getBoundingClientRect();
+        width = Math.max(width, rect.width);
+        height = Math.max(height, rect.height);
+      }
+      if (width >= 24 && height >= 24) continue;
+
+      out.push({
+        width: Math.round(width * 100) / 100,
+        height: Math.round(height * 100) / 100,
+        tag: el.tagName.toLowerCase(),
+        name: (el.getAttribute('aria-label') ?? el.textContent ?? el.id ?? '')
+          .trim()
+          .replace(/\s+/g, ' ')
+          .slice(0, 40),
+        className: (el.getAttribute('class') ?? '').slice(0, 60),
+      });
+    }
+    return out;
+  });
+}
+
+/** 失敗メッセージ用の整形(件数と実寸が一目で分かるようにする)。 */
+export function formatSmallTargets(screen: string, targets: SmallTarget[]): string {
+  if (targets.length === 0) return `${screen}: 24px未満の標的なし`;
+  return [
+    `${screen}: 24px未満の標的が ${targets.length} 件`,
+    ...targets
+      .slice(0, 15)
+      .map((t) => `  ${t.width}x${t.height} <${t.tag}> "${t.name}" class="${t.className}"`),
+  ].join('\n');
+}
+
 /** 現在のフォーカス要素の識別情報を返す(キーボード操作スモーク用)。 */
 export async function activeElementInfo(
   page: Page,

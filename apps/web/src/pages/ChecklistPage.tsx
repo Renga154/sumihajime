@@ -140,7 +140,7 @@ export function ChecklistPage() {
             </span>
             <Link
               to="/wizard"
-              className="inline-flex items-center gap-1 font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
+              className="tap-target inline-flex items-center gap-1 font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
             >
               条件を修正する
             </Link>
@@ -261,7 +261,7 @@ export function ChecklistPage() {
           <p className="print-hide text-sm text-slate-600">
             <Link
               to="/differences"
-              className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800"
+              className="tap-target-inline font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800"
             >
               区ごとの期限のちがいを見る
             </Link>
@@ -377,12 +377,15 @@ function TaskCard({
       }`}
     >
       <div className="flex items-start gap-3">
+        {/* h-6 w-6: 完了チェックはこの画面の主操作。要求の24px×24px(SC 2.5.8)を実寸で満たす
+            (label[htmlFor] は見出し側にあり、チェックボックス自体と連続した面にならないため
+            ラベル側の面積では代替できない)。 */}
         <input
           id={checkboxId}
           type="checkbox"
           checked={done}
           onChange={(e) => onToggle(e.target.checked)}
-          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer"
+          className="h-6 w-6 shrink-0 cursor-pointer"
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -485,7 +488,7 @@ function TaskCard({
             <Link
               to={`/procedures/${encodeURIComponent(task.procedureId)}`}
               state={{ task }}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
+              className="tap-target inline-flex items-center gap-1 text-sm font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
             >
               詳細・必要書類・公式根拠を見る
               <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
