@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
+  CATEGORY_KEYWORDS,
+  CATEGORY_LABELS,
+  categoryLabel,
   orderedQuestionCategories,
   questionCategories,
   rerankByProcedureIntent,
@@ -154,5 +157,43 @@ describe('orderedQuestionCategories', () => {
   it('questionCategories と同じ集合を返す(順序の有無だけが違う)', () => {
     const q = '転入届と国民健康保険の持ち物は？';
     expect(new Set(orderedQuestionCategories(q))).toEqual(questionCategories(q));
+  });
+});
+
+/**
+ * なぜ: 落選した話題を利用者へ名指しで伝えるには、category ごとに利用者向けの日本語名が
+ * **必ず**要る。ラベル漏れは実行時に総称へ退避してしまい「どちらの質問が落ちたか分からない」
+ * 元の欠陥へ静かに戻るため、1:1 対応をテストで強制する。
+ */
+describe('CATEGORY_LABELS / categoryLabel', () => {
+  it('CATEGORY_KEYWORDS の全 category に利用者向けラベルがある(漏れたら総称へ退避してしまう)', () => {
+    const missing = Object.keys(CATEGORY_KEYWORDS).filter((c) => !(c in CATEGORY_LABELS));
+    expect(missing, `ラベル未定義の category: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('余分なラベルを持たない(実在しない category の文言を残さない)', () => {
+    const extra = Object.keys(CATEGORY_LABELS).filter((c) => !(c in CATEGORY_KEYWORDS));
+    expect(extra, `対応する category が無いラベル: ${extra.join(', ')}`).toEqual([]);
+  });
+
+  it('ラベルは内部enum名・内部識別子を含まない(利用者向け文面としての正当性)', () => {
+    for (const [category, label] of Object.entries(CATEGORY_LABELS)) {
+      // 内部identifierは ASCII の英数と `_`/`-` で書かれている。ラベルは日本語のみ。
+      expect(label, `${category} のラベルに英数字が混入`).not.toMatch(/[A-Za-z0-9_]/u);
+      expect(label).not.toContain(category);
+      expect(label.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('未知の category でも内部enum名を返さない(最後の安全網)', () => {
+    expect(categoryLabel('some_unmapped_internal_type')).not.toContain(
+      'some_unmapped_internal_type',
+    );
+    expect(categoryLabel('some_unmapped_internal_type')).not.toMatch(/[A-Za-z0-9_]/u);
+  });
+
+  it('既知の category は定義どおりのラベルを返す', () => {
+    expect(categoryLabel('waste_schedule')).toBe('ごみ・資源の出し方と収集日');
+    expect(categoryLabel('dog_registration')).toBe('犬の登録');
   });
 });

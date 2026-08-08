@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import type { ChatCitation, ChatResponse } from '@tmn/schemas';
 import {
+  renderVerifiedDocumentAnswers,
+  type UnresolvedTopic,
+  type VerifiedProcedureFacts,
+} from '@tmn/rag';
+import {
   scoreCase,
   summarize,
   decideRelease,
@@ -90,6 +95,76 @@ describe('contaminatingSourceIds', () => {
     expect(contaminatingSourceIds(['src-13112-a', 'src-13108-b'], '13112')).toEqual([
       'src-13108-b',
     ]);
+  });
+});
+
+/**
+ * なぜここで @tmn/rag の描画関数を直接呼ぶか:
+ *
+ * 回答本文へ文を足すと、この採点器の期限抽出が新しい表現を「根拠なき期限の断定」候補として
+ * 拾う危険がある。実際 packages/rag/src/documents.ts の isoDatePart は、最終確認日を
+ * 日本語表記(YYYY年M月D日)にすると `\d+年` に一致してしまうため、意図的に 'YYYY-MM-DD' を
+ * 選んでいる(同ファイルのコメント参照)。
+ *
+ * 「回答へ落選の注記を足す」変更も同じ罠を踏み得るので、文面をコピーした固定文字列ではなく
+ * **実際の描画関数の出力**に対して不変条件を張る。こうしておけば、将来だれかが注記へ
+ * 「〇日以内」のような表現を入れた瞬間にこのテストが落ちる(コピーだと静かに乖離する)。
+ */
+describe('落選注記が期限抽出へ影響しないこと(@tmn/rag の実出力に対する不変条件)', () => {
+  const facts: VerifiedProcedureFacts = {
+    title: '転入届(区外から本区へ引越した方)',
+    requiredDocuments: [{ label: '本人確認できるもの', status: 'required' }],
+    dueDescription: '住みはじめた日から14日以内です。',
+    lastVerifiedAt: '2026-07-21T11:44:00Z',
+  };
+
+  // 数字を含むURL・数字を含むcategoryを持つ落選(抽出の誤爆を誘いやすい形)を全理由ぶん並べる。
+  const unresolved: UnresolvedTopic[] = [
+    {
+      category: 'waste_schedule',
+      reason: 'no_verified_record',
+      sourceIds: ['src-13112-waste_guide-001'],
+      officialUrl: 'https://www.city.setagaya.lg.jp/02241/416.html',
+    },
+    { category: 'childcare', reason: 'ambiguous_records', sourceIds: [] },
+    {
+      category: 'national_health_insurance',
+      reason: 'limit_reached',
+      sourceIds: ['src-13112-national_health_insurance-001'],
+      officialUrl: 'https://www.city.setagaya.lg.jp/02180/2026.html',
+    },
+  ];
+
+  const without = renderVerifiedDocumentAnswers('世田谷区', [facts]);
+  const withNotice = renderVerifiedDocumentAnswers('世田谷区', [facts], unresolved);
+
+  it('注記が実際に本文へ現れている(テスト自体の有効性=サニティチェック)', () => {
+    expect(withNotice.length).toBeGreaterThan(without.length);
+    expect(withNotice).toContain('ごみ・資源の出し方と収集日');
+    expect(without).not.toContain('ごみ・資源の出し方と収集日');
+  });
+
+  it('注記を足しても抽出される期限表現が1つも増えない', () => {
+    expect(new Set(extractDeadlineExpressions(withNotice))).toEqual(
+      new Set(extractDeadlineExpressions(without)),
+    );
+  });
+
+  it('注記だけを取り出しても期限表現を含まない(数字入りURLで誤爆しない)', () => {
+    const notice = withNotice.slice(withNotice.indexOf('■ この回答でご案内できなかったこと'));
+    expect(extractDeadlineExpressions(notice)).toEqual([]);
+  });
+
+  it('要人手レビューのフラグが増えない(既存ケースが REVIEW へ退行しない)', () => {
+    expect(reviewFlagsFor(withNotice, ['14日'])).toEqual(reviewFlagsFor(without, ['14日']));
+    expect(reviewFlagsFor(withNotice, ['14日'])).toEqual([]);
+  });
+
+  it('注記を足しても answerMustInclude の判定を壊さない(本文は増えるだけ)', () => {
+    for (const phrase of ['本人確認できるもの', '14日以内']) {
+      expect(without.includes(phrase)).toBe(true);
+      expect(withNotice.includes(phrase)).toBe(true);
+    }
   });
 });
 
