@@ -8,6 +8,7 @@ import { formatDateFromDateTime } from '../lib/format';
 import { cellFor, pickContrastMunicipality } from '../lib/ward-differences';
 import { Badge } from '../components/Badge';
 import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
+import { useDocumentTitle } from '../lib/navigation';
 
 /**
  * 「区ごとの期限のちがい」(/differences)。
@@ -133,6 +134,7 @@ function AllWards({ topic }: { topic: WardDifferenceTopic }) {
 }
 
 export function DifferencesPage() {
+  useDocumentTitle('区ごとの期限のちがい');
   const { municipalityCode } = useAppState();
   const state = useAsync(() => getWardDifferences(), []);
   const report = state.data;

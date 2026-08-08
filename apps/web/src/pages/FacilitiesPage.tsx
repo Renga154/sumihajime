@@ -5,6 +5,7 @@ import { useAppState } from '../state/AppState';
 import { useAsync } from '../lib/useAsync';
 import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
 import { FacilityMap } from '../components/FacilityMap';
+import { useDocumentTitle } from '../lib/navigation';
 
 /**
  * 窓口一覧(§7.4 / FR-012・FR-013 / ADR-005)。カテゴリ別に一覧表示し、座標を持つ施設は
@@ -19,6 +20,7 @@ function hasNoCoordinates(f: Facility): boolean {
   return typeof f.lat !== 'number' || typeof f.lng !== 'number';
 }
 export function FacilitiesPage() {
+  useDocumentTitle('窓口一覧');
   const { municipalityCode } = useAppState();
   const state = useAsync(async () => {
     if (!municipalityCode) return null;

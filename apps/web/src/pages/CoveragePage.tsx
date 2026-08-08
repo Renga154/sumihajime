@@ -12,6 +12,7 @@ import {
   coverageStatusLabel,
   formatDate,
   formatDateFromDateTime,
+  updateFrequencyText,
 } from '../lib/format';
 import {
   jstDateString,
@@ -25,6 +26,7 @@ import { OPENDATA_GAPS_SOURCE_DOC, OPENDATA_GAP_CASES } from '../content/opendat
 import { Badge } from '../components/Badge';
 import { MunicipalityFilter } from '../components/MunicipalityFilter';
 import { Card, EmptyState, ErrorMessage, ExternalLink, Loading } from '../components/ui';
+import { useDocumentTitle } from '../lib/navigation';
 
 /**
  * 「このサービスのデータについて」(透明性ページ / §7 / FR-020・FR-024)。
@@ -104,6 +106,7 @@ function providerGroupName(code: string): string {
 }
 
 export function CoveragePage() {
+  useDocumentTitle('このサービスのデータについて');
   const state = useAsync(async () => {
     const [munis, sources] = await Promise.all([getMunicipalities(), getSources()]);
     const today = jstDateString();
@@ -504,7 +507,9 @@ function SourceLedgerGroup({ group, open }: { group: MunicipalityGroup; open: bo
                 <td className="px-2 py-2 tabular-nums text-slate-700">
                   {formatDateFromDateTime(s.lastVerifiedAt) || '—'}
                 </td>
-                <td className="px-2 py-2 text-slate-700">{s.updateFrequency}</td>
+                <td className="px-2 py-2 text-slate-700">
+                  {updateFrequencyText(s.updateFrequency)}
+                </td>
               </tr>
             ))}
           </tbody>

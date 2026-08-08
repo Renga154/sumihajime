@@ -1,4 +1,6 @@
-import { NavLink, Outlet, Link } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { NavLink, Outlet, Link, ScrollRestoration } from 'react-router-dom';
+import { useRouteChangeAnnouncement } from '../lib/navigation';
 
 /**
  * なぜ: 全ページ共通のランドマーク(header/nav/main/footer)とスキップリンクを提供し、
@@ -7,6 +9,12 @@ import { NavLink, Outlet, Link } from 'react-router-dom';
  *
  * ロゴマークは東京の抽象(重なる街並み+チェック)をインラインSVGで表現し、外部リソースに
  * 依存しない(CDN/画像URL禁止)。ブランドカラー(brand)で信頼感を、アクセントで親しみを添える。
+ *
+ * 遷移まわりの基本もここで一括して担保する:
+ *  - <ScrollRestoration />: 遷移時はページ先頭へ、戻る操作では元の位置へ復元する。
+ *  - useRouteChangeAnnouncement(): 遷移後に h1 へフォーカスを移し、ページ名を読み上げ通知する。
+ * children を渡した場合は <Outlet /> の代わりにそれを描画する(errorElement から
+ * ヘッダー・フッターごと再利用するため)。
  */
 
 // なぜ: メインナビは利用者の主要動線のみに絞る(Step2)。来歴・鮮度・出典の透明性情報は
@@ -32,9 +40,15 @@ function LogoMark() {
   );
 }
 
-export function Layout() {
+export function Layout({ children }: { children?: ReactNode }) {
+  const announcement = useRouteChangeAnnouncement();
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* 遷移の通知。視覚表示はせず、スクリーンリーダーにだけページ名を伝える。 */}
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
+      <ScrollRestoration />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-brand-700 focus:px-3 focus:py-2 focus:text-white"
@@ -78,7 +92,7 @@ export function Layout() {
       </header>
 
       <main id="main" className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-        <Outlet />
+        {children ?? <Outlet />}
       </main>
 
       <footer className="mt-10 border-t border-slate-200 bg-white">

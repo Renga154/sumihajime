@@ -1,9 +1,16 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { fireEvent, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { Route } from 'react-router-dom';
 import { profileSchema } from '@tmn/schemas';
 import { WizardPage, parseStepParam } from './WizardPage';
 import { renderWithProviders } from '../test/utils';
+import { moveDateBounds, todayInTokyo } from '../lib/move-date';
+
+vi.mock('../api/client', () => ({
+  getMunicipalities: vi.fn(async () => [
+    { code: '13112', name: '世田谷区', supported: true, officialUrl: 'https://example.invalid' },
+  ]),
+}));
 
 /**
  * なぜ: VS1受入2 / FR-003。Step1(引越し日・転入元)のみで生成ボタンが有効になり、
@@ -98,5 +105,64 @@ describe('WizardPage', () => {
     fireEvent.click(screen.getByLabelText('東京都外'));
 
     expect(screen.getByText(/ステップ2・3も入力すると/)).toBeInTheDocument();
+  });
+});
+
+/**
+ * なぜ: 入力画面に選択中の自治体が一度も出ないと、区を取り違えたまま全項目を入力しきって
+ * しまう(CLAUDE.md原則4がUIから見えない)。区名と選び直す導線が常に見えることを固定する。
+ */
+describe('WizardPage 選択中の自治体', () => {
+  it('区名を表示し、自治体を変える導線を出す', async () => {
+    renderWizard();
+    await waitFor(() => {
+      expect(screen.getByText('世田谷区')).toBeVisible();
+    });
+    expect(screen.getByRole('link', { name: '自治体を変える' })).toHaveAttribute('href', '/');
+  });
+
+  it('名称を取得できない間もコードを出し、無表示にはしない', () => {
+    renderWizard();
+    // 取得完了前でも「どの自治体か」の手掛かりが画面に残る。
+    expect(screen.getByText(/世田谷区|13112/)).toBeVisible();
+  });
+});
+
+/**
+ * なぜ: 転入後にこのサービスを知る利用者が主要ターゲットで、過去日入力は現実的に起きる。
+ * 一方 1900年のような値は誤入力なので受け付けない(監査P1-5)。
+ */
+describe('WizardPage 引越し日の受付範囲', () => {
+  const today = todayInTokyo();
+  const bounds = moveDateBounds(today);
+
+  function dateInput() {
+    return screen.getByLabelText('引越し日または転入予定日', { exact: false });
+  }
+
+  it('date入力に min/max を設定する', () => {
+    renderWizard();
+    expect(dateInput()).toHaveAttribute('min', bounds.min);
+    expect(dateInput()).toHaveAttribute('max', bounds.max);
+  });
+
+  it('範囲外(1900年)は説明を出し、生成ボタンを無効にする', () => {
+    renderWizard();
+    fireEvent.change(dateInput(), { target: { value: '1900-01-01' } });
+    fireEvent.click(screen.getByLabelText('東京都外'));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(bounds.min);
+    expect(dateInput()).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('button', { name: 'この内容でチェックリストを作成' })).toBeDisabled();
+    expect(localStorage.getItem('tmn:profile:13112')).toBeNull();
+  });
+
+  it('範囲内の過去日は受け付ける(転入後に使い始める利用者を切り捨てない)', () => {
+    renderWizard();
+    fireEvent.change(dateInput(), { target: { value: bounds.min } });
+    fireEvent.click(screen.getByLabelText('東京都外'));
+
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByRole('button', { name: 'この内容でチェックリストを作成' })).toBeEnabled();
   });
 });

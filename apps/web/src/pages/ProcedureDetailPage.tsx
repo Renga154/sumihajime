@@ -8,6 +8,7 @@ import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
 import { DataStatusBadge, PriorityBadge } from '../components/Badge';
 import { SourceCard } from '../components/SourceCard';
 import { ChatPanel } from '../components/ChatPanel';
+import { useDocumentTitle } from '../lib/navigation';
 
 /**
  * タスク詳細(§7.4/§10)。必要書類(unknownは「公式ページで要確認」)・方法(channels)・
@@ -29,6 +30,9 @@ export function ProcedureDetailPage() {
     if (!municipalityCode || !id) return null;
     return getProcedure(id, municipalityCode);
   }, [municipalityCode, id]);
+
+  // 読み込み後は手続き名をタイトルにする(履歴・タブで手続きを識別できるようにする)。
+  useDocumentTitle(state.data?.procedure.title ?? '手続きの詳細');
 
   if (!municipalityCode) {
     return (
