@@ -144,24 +144,35 @@ test.describe('チェックリストはAPI不達でも消えない', () => {
 
 test.describe('チャットが壊れても本体は無傷', () => {
   /**
-   * ここだけはモックしない。ローカルの wrangler dev には OPENAI_API_KEY を置いていないため、
-   * 「鍵が無い」状態の実サーバーがそのまま検査対象になる。
+   * 実サーバーの availability をそのまま検査する(モックしない)。
+   *
+   * なぜ mode の値そのものを期待しないか: mode は開発機に OPENAI_API_KEY があるかで変わる。
+   * `apps/api/.dev.vars` は gitignore されているため、worktree には無く手元の作業ツリーには
+   * ある、という状態が普通に起きる。当初は「鍵が無いので mode は full ではない」と書いて
+   * いたが、それは鍵を置いていない環境でしか通らない環境依存のテストだった(実際、鍵のある
+   * 作業ツリーで落ちた)。鍵の有無ごとの判定は純関数の単体テスト
+   * (apps/api/src/chat-availability.test.ts)で網羅しているので、ここでは
+   * 「返ってきた mode に応じて画面が正しく振る舞うこと」だけを検査する。
    */
-  test('鍵なし(実サーバー): availability が縮退を返し、送信前に範囲を伝える', async ({ page }) => {
+  test('実サーバーの availability に応じて、送信前に使える範囲を伝える', async ({ page }) => {
     const res = await page.request.get('/api/chat/availability');
     expect(res.status()).toBe(200);
     const body = (await res.json()) as { enabled: boolean; mode: string };
-    // 鍵が無いので全機能ではない。
-    expect(body.mode).not.toBe('full');
+    expect(typeof body.enabled).toBe('boolean');
+    expect(['full', 'documents_only', 'disabled']).toContain(body.mode);
 
     await page.goto('/');
     await seedProfile(page, WARDS.setagaya.code);
     await page.goto('/checklist');
     await expect(page.getByText(/件 完了/)).toBeVisible();
 
-    if (body.enabled) {
+    if (body.enabled && body.mode === 'documents_only') {
       // 縮退表示: 何に答えられるかを送信前に伝える。
       await expect(page.getByText('今おこたえできる範囲がかぎられています')).toBeVisible();
+    } else if (body.enabled) {
+      // 全機能が使えるなら、縮退の断りは出さない(出ていたら過剰な警告になる)。
+      await expect(page.getByRole('heading', { name: 'AIに質問する' })).toBeVisible();
+      await expect(page.getByText('今おこたえできる範囲がかぎられています')).toHaveCount(0);
     } else {
       // 完全に使えないならパネル自体を出さない。
       await expect(page.getByRole('heading', { name: 'AIに質問する' })).toHaveCount(0);
@@ -169,7 +180,7 @@ test.describe('チャットが壊れても本体は無傷', () => {
     // どちらの場合もチェックリスト本体は無傷。
     await expect(residentTask(page)).toBeVisible();
 
-    await shot(page, '07-real-server-missing-openai-key');
+    await shot(page, '07-real-server-availability');
   });
 
   test('チャットが503: エラー文面と再試行ボタンを出し、チェックリストは残る', async ({ page }) => {
