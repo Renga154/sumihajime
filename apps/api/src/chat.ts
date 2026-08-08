@@ -20,6 +20,7 @@ import {
   orderedQuestionCategories,
   renderVerifiedDocumentAnswers,
   rerankByProcedureIntent,
+  selectDocumentProcedures,
   selectMatches,
   shouldAbstain,
   validateCitations,
@@ -158,20 +159,14 @@ async function tryVerifiedDocumentAnswer(
 
   if (mentionsOtherMunicipality(question, municipality.name, otherNames)) return null;
 
-  const all = [...procedures.values()];
-  const selected: ProcedureVersion[] = [];
-  for (const category of categories) {
-    const candidates = all.filter(
-      (p) =>
-        p.canonicalType === category &&
-        p.dataStatus === 'verified' &&
-        p.requiredDocuments.length > 0,
-    );
-    // なぜ1件のときだけ採用するか: 同一カテゴリに複数の手続き版が並ぶ区が将来現れた場合、
-    // どれを断定してよいか決められない。曖昧なまま断定せず、そのカテゴリは採らない(原則3)。
-    if (candidates.length === 1) selected.push(candidates[0]!);
-    if (selected.length >= MAX_DOCUMENT_PROCEDURES) break;
-  }
+  // 選択と落選の判定は純関数に持たせている。以前はここのループが「採用できなかったcategory」を
+  // 変数にも残さず捨てており、利用者が「聞いたことの片方が無視された」と気づけなかった。
+  // 落選が戻り値の一部になったので、無言の欠落は型の上で起こり得ない(原則3)。
+  const { selected, unresolved } = selectDocumentProcedures<ProcedureVersion>(
+    categories,
+    [...procedures.values()],
+    MAX_DOCUMENT_PROCEDURES,
+  );
   if (selected.length === 0) return null;
 
   const citations = await resolveCitations(
@@ -179,6 +174,17 @@ async function tryVerifiedDocumentAnswer(
     selected.flatMap((p) => p.sourceIds),
   );
   if (citations.length === 0) return null;
+
+  // 落選した話題にも公式ページの導線を付ける。D1アクセスは純関数へ持ち込まない方針のため、
+  // 出典IDからのURL解決はここで行う。解決できなければ文面が一般的な誘導へ退避する。
+  const unresolvedSources = await getSourcesByIds(
+    db,
+    unresolved.flatMap((topic) => topic.sourceIds),
+  );
+  const unresolvedWithUrls = unresolved.map((topic) => {
+    const url = topic.sourceIds.map((sid) => unresolvedSources.get(sid)?.sourceUrl).find(Boolean);
+    return url ? { ...topic, officialUrl: url } : topic;
+  });
 
   return {
     answer: renderVerifiedDocumentAnswers(
@@ -190,6 +196,7 @@ async function tryVerifiedDocumentAnswer(
         ...(procedure.contact ? { contact: procedure.contact } : {}),
         lastVerifiedAt: procedure.lastVerifiedAt,
       })),
+      unresolvedWithUrls,
     ),
     citations,
   };
