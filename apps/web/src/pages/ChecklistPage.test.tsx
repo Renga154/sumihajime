@@ -220,6 +220,34 @@ describe('ChecklistPage — ステップ2/3を入力せずに生成した場合'
     const link = await screen.findByRole('link', { name: '条件を追加する' });
     expect(link).toHaveAttribute('href', '/wizard?step=3');
   });
+
+  /**
+   * なぜ(独立点検): 会社の健康保険に入っている単身の成人は、ステップ3の8項目を実際に見たうえで
+   * 1つも当てはまらないことがある。保存されるフラグはステップ3を飛ばした場合と同一になるため、
+   * 以前はこの利用者にも「条件チェック（ステップ3）が未入力です」と表示していた。事実に反する
+   * 断定であり、原則3に反する。閲覧記録がある場合は案内を出さないことを固定する。
+   */
+  it('ステップ3を開いて1つも当てはまらなかった場合は、案内を出さない', async () => {
+    localStorage.setItem(
+      'tmn:reviewed-steps:13112',
+      JSON.stringify({ household: true, conditions: true }),
+    );
+    renderChecklist();
+    // チェックリスト本体が描画されるまで待ってから、案内が無いことを確認する。
+    await screen.findByText(/進捗/);
+    expect(screen.queryByRole('heading', { name: 'まだ判定していない条件があります' })).toBeNull();
+  });
+
+  it('ステップ3を開いていない記録なら、従来どおり案内を出す', async () => {
+    localStorage.setItem(
+      'tmn:reviewed-steps:13112',
+      JSON.stringify({ household: true, conditions: false }),
+    );
+    renderChecklist();
+    await screen.findByRole('heading', { name: 'まだ判定していない条件があります' });
+    // 世帯は開いているので、世帯の一文は出さない。
+    expect(screen.queryByText(/世帯（ステップ2）も未入力/)).toBeNull();
+  });
 });
 
 /**

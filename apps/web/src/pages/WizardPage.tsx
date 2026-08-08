@@ -9,7 +9,13 @@ import {
 } from '@tmn/schemas';
 import { getMunicipalities } from '../api/client';
 import { useAppState } from '../state/AppState';
-import { loadProfile, saveProfile } from '../lib/storage';
+import {
+  loadProfile,
+  loadReviewedSteps,
+  saveProfile,
+  saveReviewedSteps,
+  type ReviewedSteps,
+} from '../lib/storage';
 import { ageBandLabel, originTypeLabel } from '../lib/format';
 import {
   isMoveDateWithinRange,
@@ -132,7 +138,34 @@ export function WizardPage() {
   const today = useMemo(() => todayInTokyo(), []);
   const dateBounds = useMemo(() => moveDateBounds(today), [today]);
 
-  const [step, setStep] = useState(() => parseStepParam(searchParams.get('step')));
+  const initialStep = useMemo(() => parseStepParam(searchParams.get('step')), [searchParams]);
+  const [step, setRawStep] = useState(initialStep);
+
+  /**
+   * 任意ステップを実際に開いたかの記録。過去に開いた記録があれば引き継ぎ、
+   * 今回 ?step=2/3 で直接入った場合もその場で「開いた」とみなす。
+   *
+   * なぜ「開いた」を根拠にするか: ステップ3を開いた利用者は8項目すべてを目にしており、
+   * 1つも選ばなかったことは「未入力」ではなく「当てはまるものが無い」という回答である。
+   * 選択の有無ではなく閲覧の有無を記録することで、両者を取り違えずに済む。
+   */
+  const [reviewedSteps, setReviewedSteps] = useState<ReviewedSteps>(() => {
+    const stored = municipalityCode
+      ? loadReviewedSteps(municipalityCode)
+      : { household: false, conditions: false };
+    return {
+      household: stored.household || initialStep >= 2,
+      conditions: stored.conditions || initialStep >= 3,
+    };
+  });
+
+  function setStep(next: number) {
+    setRawStep(next);
+    if (next === 2)
+      setReviewedSteps((prev) => (prev.household ? prev : { ...prev, household: true }));
+    if (next === 3)
+      setReviewedSteps((prev) => (prev.conditions ? prev : { ...prev, conditions: true }));
+  }
 
   // Step1
   const [moveDate, setMoveDate] = useState(existing?.moveDate ?? '');
@@ -235,6 +268,8 @@ export function WizardPage() {
       return;
     }
     saveProfile(municipalityCode, builtProfile);
+    // 「どのステップを見たか」はプロフィールと同じタイミングで確定させる(端末内のみ)。
+    saveReviewedSteps(municipalityCode, reviewedSteps);
     navigate('/checklist');
   }
 
