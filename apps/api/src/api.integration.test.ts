@@ -412,6 +412,29 @@ describe('GET /api/waste-sorting', () => {
     expect(body.items.every((i) => i.category !== i.name)).toBe(true);
   });
 
+  it('正規化して空になる検索語(長音符のみ)は全件一致にせず0件を返す', async () => {
+    // なぜ: 正規化は長音符を落とすため「ー」は needle が空文字になる。空文字を部分一致へ
+    // 渡すと String#includes が常に true となり、全787品目が「一致」として返っていた。
+    // 一致していない件数を「見つかりました」と提示するのは原則3違反なので、0件と返す。
+    const res = await request('/api/waste-sorting?municipality=13112&q=%E3%83%BC');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { items: unknown[]; total: number };
+    expect(body.total).toBe(0);
+    expect(body.items).toEqual([]);
+  });
+
+  it('部分一致より完全一致・前方一致を先に返す(探している品目が先頭に来る)', async () => {
+    // なぜ: 長音符を落とす正規化により「ノート」は needle「のと」となり
+    // 「ペットのトイレ砂」等にも部分一致する。一致集合は保ったまま並び順で救う。
+    const res = await request(
+      '/api/waste-sorting?municipality=13112&q=%E3%83%8E%E3%83%BC%E3%83%88',
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { items: { name: string }[]; total: number };
+    expect(body.total).toBeGreaterThan(0);
+    expect(body.items[0]?.name).toBe('ノート');
+  });
+
   it('0件ヒットのクエリは items:[] + total:0 を返す(存在しない自治体データ扱いにしない)', async () => {
     const res = await request(
       '/api/waste-sorting?municipality=13112&q=絶対に存在しない品目名XYZ123',

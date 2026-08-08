@@ -597,9 +597,26 @@ export interface WasteSortingSearchResult {
 }
 
 /**
+ * 一致の近さ(小さいほど近い)。完全一致 → 前方一致 → 部分一致 の順に並べるためだけに使う。
+ *
+ * なぜ必要か: 正規化は長音符を落とすため(normalizeForWasteSortingSearch の段階3)、
+ * 「ノート」は needle 「のと」になり「ペットのトイレ砂」にも部分一致する。一致集合を狭めると
+ * 「すぷれ缶」→「スプレー缶」のような意図した表記ゆれ吸収まで壊れるので、集合はそのままに
+ * 並び順だけを正す。探している品目が先頭に来れば、後続の部分一致は「他の候補」として読める。
+ */
+function matchRank(normalizedField: string, needle: string): number {
+  if (normalizedField === needle) return 0;
+  if (normalizedField.startsWith(needle)) return 1;
+  return 2;
+}
+
+/**
  * name/reading への部分一致検索(大小文字・全半角を素朴に正規化)。最大 limit 件を返しつつ、
  * 絞り込み後の総件数(total)も返す。1自治体あたり最大千件強(実データ)のため、
  * D1側では自治体スコープのみ絞り込み、一致判定はアプリ側で行う(原則4はSQLで強制)。
+ *
+ * 並び順は「一致の近さ → item_id」。item_id を最後の鍵に残すのは、同順位の並びを
+ * 決定論的に保つため(同じ検索語なら常に同じ順序で返る)。
  */
 export async function searchWasteSortingItems(
   db: D1Database,
@@ -607,15 +624,35 @@ export async function searchWasteSortingItems(
   query: string,
   limit = 30,
 ): Promise<WasteSortingSearchResult> {
+  const needle = normalizeForWasteSortingSearch(query);
+  // なぜ空判定が要るか: 正規化は長音符・空白を落とすため、長音符だけ・全角スペースだけの
+  // 入力は非空のまま needle が空文字になる。空文字は String#includes が常に true を返すので、
+  // そのまま部分一致に渡すと全品目が「一致」として返り、UIは「1125件見つかりました」と
+  // 一致していない件数を提示してしまう(CLAUDE.md原則3「根拠がない場合は推測しない」に反する)。
+  // 検索語として意味を成さない入力は、0件と正直に返す。
+  if (needle.length === 0) {
+    return { items: [], total: 0 };
+  }
+
   const res = await db
     .prepare('SELECT * FROM waste_sorting_items WHERE municipality_code = ? ORDER BY item_id')
     .bind(code)
     .all<Row>();
-  const needle = normalizeForWasteSortingSearch(query);
-  const matched = res.results.map(rowToWasteSortingItem).filter((item) => {
+  const matched: { item: WasteSortingItem; rank: number }[] = [];
+  for (const row of res.results) {
+    const item = rowToWasteSortingItem(row);
     const name = normalizeForWasteSortingSearch(item.name);
     const reading = item.reading ? normalizeForWasteSortingSearch(item.reading) : '';
-    return name.includes(needle) || (reading.length > 0 && reading.includes(needle));
-  });
-  return { items: matched.slice(0, limit), total: matched.length };
+    const hitsName = name.includes(needle);
+    const hitsReading = reading.length > 0 && reading.includes(needle);
+    if (!hitsName && !hitsReading) continue;
+    const rank = Math.min(
+      hitsName ? matchRank(name, needle) : Number.MAX_SAFE_INTEGER,
+      hitsReading ? matchRank(reading, needle) : Number.MAX_SAFE_INTEGER,
+    );
+    matched.push({ item, rank });
+  }
+  // Array#sort は安定なので、同順位は SQL の ORDER BY item_id の順序がそのまま残る。
+  matched.sort((a, b) => a.rank - b.rank);
+  return { items: matched.slice(0, limit).map((m) => m.item), total: matched.length };
 }
