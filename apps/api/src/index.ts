@@ -17,6 +17,7 @@ import {
 import {
   buildWardDifferences,
   evaluate,
+  moveOutScheduledDateImpact,
   WARD_DIFFERENCE_TOPICS,
   type WardDifferenceInput,
   type WardDifferenceSourceRef,
@@ -212,6 +213,9 @@ app.post('/api/checklists', async (c) => {
     tasks,
     ruleVersion,
     generatedAt: new Date().toISOString(),
+    // 転出予定日(任意入力)を入れると期日表示がどう変わるか。判定材料は区のルールデータにしか
+    // 無いため、UIが区コードで分岐せずに案内を出せるよう応答へ載せる(CLAUDE.md §4)。
+    moveOutScheduledDateImpact: moveOutScheduledDateImpact(profile, ruleSet),
   });
 
   // なぜ: プロフィール内容(moveDate/ageBands/flags等)はログに出さない(§13)。件数のみ。

@@ -157,14 +157,49 @@ export const wasteSortingSummaryResponseSchema = z.strictObject({
 export type WasteSortingSummaryResponse = z.infer<typeof wasteSortingSummaryResponseSchema>;
 
 /**
+ * 「前住所地の転出予定日(Profile.moveOutScheduledDate)を入れたら、この人の期日表示は
+ * 何が変わるか」を、そのチェックリストの中身から導いた結果(ADR-013の後日追記)。
+ *
+ * なぜAPIが返すのか: どの手続きがどの日付を起算日にしているかは**区ごとのルールデータ**にしか
+ * 無い。UI側が「この区なら児童手当の期限が出せる」と判断するには区コードの分岐を画面へ
+ * 書くしかなく、CLAUDE.md §4「自治体固有ロジックをUIへ直接埋め込まない」に反する。
+ * 判定材料そのものをルール由来のデータとして応答へ載せ、UIは受け取った procedureId を
+ * 同じ応答の tasks と突き合わせて手続き名を出すだけにする。
+ *
+ * なぜ procedureId だけで、手続き名を含めないのか: 名前は同じ応答の tasks[].title が唯一の
+ * 出どころで、二重に持たせると画面の見出しと案内文がずれうる。ここに載る procedureId は
+ * 必ず tasks に含まれる(表に出ないタスク=not_applicableは対象にしない)。
+ */
+export const moveOutScheduledDateImpactSchema = z.strictObject({
+  /**
+   * いまは期日を出せておらず(「期限は要確認」)、転出予定日があれば算定できるようになる手続き。
+   * 転出予定日が既に入力済みなら空になる(これ以上得られるものが無いため)。
+   */
+  enablesDueDateFor: z.array(z.string().min(1)),
+  /**
+   * 既に期日は出ているが、区が転出予定日起算の条件も併記しているため、入力すると
+   * **より早い**期日に変わりうる手続き(dueRule = earliestOf)。遅い期日を見せたままにすると
+   * マイナンバーカードの失効のような実害につながるため、変わりうること自体を伝える。
+   */
+  advancesDueDateFor: z.array(z.string().min(1)),
+});
+export type MoveOutScheduledDateImpact = z.infer<typeof moveOutScheduledDateImpactSchema>;
+
+/**
  * なぜ: 計画§8.2の応答形状。tasksは生成された全GeneratedTask、ruleVersionは
  * 適用したルールセットのバージョン(§13.2「生成時のRuleVersionを保持」)、
  * generatedAtは生成時刻(ステートレスAPIのため毎回算出・保存はしない §8.1)。
+ *
+ * moveOutScheduledDateImpact を optional にした理由: 端末内の控え(checklist-cache)は
+ * このスキーマで読み直す。必須にすると、この項目が無い時点で保存された控えが丸ごと
+ * 読めなくなり、電波の弱い場所でチェックリスト本体を失う(原則8)。案内が1つ出ないことより
+ * 本体が消えるほうが害が大きいので、無ければ案内を出さないだけにする。
  */
 export const checklistResponseSchema = z.strictObject({
   tasks: z.array(generatedTaskSchema),
   ruleVersion: z.string().min(1),
   generatedAt: z.iso.datetime(),
+  moveOutScheduledDateImpact: moveOutScheduledDateImpactSchema.optional(),
 });
 export type ChecklistResponse = z.infer<typeof checklistResponseSchema>;
 

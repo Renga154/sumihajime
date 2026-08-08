@@ -30,11 +30,27 @@ export async function startWithWard(page: Page, wardName: string): Promise<void>
 interface Step1 {
   moveDate: string; // YYYY-MM-DD
   origin?: '東京都外' | '東京都内の別自治体' | '海外';
+  /** 前住所地の転出予定日(任意項目)。指定しなければ空欄のまま(既定の使われ方)。 */
+  moveOutScheduledDate?: string; // YYYY-MM-DD
+}
+
+/**
+ * ステップ1の「前住所地の転出予定日（任意）」欄。
+ *
+ * ラベル全文で特定する理由: チェックリスト側の案内カードの見出し
+ * (「前住所地の転出予定日を入れると、期限を日付で出せます」)も部分一致してしまい、
+ * 画面遷移直後に古いDOMを掴む事故が起きた。「（任意）」まで含めれば入力欄だけに当たる。
+ */
+export function moveOutScheduledDateInput(page: Page) {
+  return page.getByLabel('前住所地の転出予定日（任意）', { exact: true });
 }
 
 /** ウィザードStep1(必須)を入力する。 */
 export async function fillWizardStep1(page: Page, s: Step1): Promise<void> {
   await page.getByLabel(/引越し日または転入予定日/).fill(s.moveDate);
+  if (s.moveOutScheduledDate !== undefined) {
+    await moveOutScheduledDateInput(page).fill(s.moveOutScheduledDate);
+  }
   await page.getByRole('radio', { name: s.origin ?? '東京都外' }).check();
 }
 
