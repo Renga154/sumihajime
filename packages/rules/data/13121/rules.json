@@ -1,6 +1,6 @@
 {
   "municipalityCode": "13121",
-  "ruleVersion": "2026-08-07.1",
+  "ruleVersion": "2026-08-09.1",
   "rules": [
     {
       "procedureId": "procedure_resident_registration",
@@ -9,17 +9,39 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "urgent",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "引っ越ししてから14日以内です。届出場所は区内16か所の区民事務所または足立区役所南館1階戸籍住民課で、住所地にかかわらずどの区民事務所でも手続きできます。郵送での届出はできません(引っ越しワンストップサービスを利用した方も来庁が必要です)。正当な理由がなく14日以内に転入届をしなかった場合、簡易裁判所の判断により5万円以下の過料に処せられる場合があります。",
       "sourceIds": ["src-13121-resident_registration-001"],
       "applicabilityReasonTemplate": "他の市区町村または海外から足立区に転入したすべての方に必要な届出です。"
     },
     {
       "procedureId": "procedure_mynumber_continued_use",
-      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "hasMyNumberCard",
+        "equals": true
+      },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
-      "dueDescription": "継続利用には3つの条件があります。(1)足立区に住み始めた日から14日以内に転入手続きをしていること。(2)転出証明書に記載されている転出日から30日以内に転入手続きをしていること(国外転入を除く)。(3)上記を満たしていても転入手続きをした日から90日を経過すると継続利用できません。継続利用を行わないとマイナンバーカードは廃止となり再度交付申請が必要です。起算日が転入手続きをした日のため引越し日からは算定できません。",
+      "dueRule": {
+        "type": "earliestOf",
+        "of": [
+          {
+            "type": "offsetDays",
+            "from": "moveDate",
+            "days": 14
+          },
+          {
+            "type": "offsetDays",
+            "from": "moveOutScheduledDate",
+            "days": 30
+          }
+        ]
+      },
+      "dueDescription": "継続利用には3つの条件があります。(1)足立区に住み始めた日から14日以内に転入手続きをしていること。(2)転出証明書に記載されている転出日から30日以内に転入手続きをしていること(国外転入を除く)。(3)上記を満たしていても転入手続きをした日から90日を経過すると継続利用できません。継続利用を行わないとマイナンバーカードは廃止となり再度交付申請が必要です。(3)の90日は転入手続きをした日が起算のため本サービスでは算定できません。本サービスが表示する期日は、(1)(2)のうち入力済みの日付から算定できるもっとも早い日(=カードを失効させないために転入届を済ませる必要がある日)です。",
       "sourceIds": ["src-13121-my_number-001"],
       "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。"
     },
@@ -31,16 +53,26 @@
         "equals": true
       },
       "priority": "high",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "国民健康保険に入るとき・やめるときなどの場合は、原則14日以内に国民健康保険課(区役所北館2階2番窓口)または区民事務所へ届出をする必要があります。転入による加入の届出先は区民事務所と戸籍住民課窓口サービス係(区役所南館1階)です。郵送での加入手続きもできます。",
       "sourceIds": ["src-13121-national_health_insurance-001"],
       "applicabilityReasonTemplate": "勤務先の健康保険などに加入していない方は、足立区の国民健康保険への加入の届出が必要です。"
     },
     {
       "procedureId": "procedure_national_pension_address",
-      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalPension",
+        "equals": true
+      },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "足立区の国民年金のページには、国内の他区市町村から転入したときの国民年金の届出についての記載がありません。海外から帰国された方(厚生年金加入者またはその被扶養配偶者を除く)は、転入届のほかに国民年金の手続きが必要と明記されています。手続き先は区役所高齢医療・年金課(本庁舎北館2階8番窓口)またはお近くの区民事務所、足立年金事務所です。日数固定の期限はこのページには記載がありません。",
       "sourceIds": ["src-13121-national_pension-001"],
       "applicabilityReasonTemplate": "国民年金の被保険者の方に、転入に伴う手続きの要否をお知らせします。足立区の公式ページは国内の他区市町村からの転入に伴う届出を『届出が必要な場合』の一覧に挙げていません。"
@@ -52,8 +84,12 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
-      "dueDescription": "申請して認定された場合は申請した月の翌月分から支給されます。月の後半に転入した場合は、転入日(前住所地の転出予定日)の翌日から15日以内に申請すれば転入月の翌月分から支給されます(15日特例)。15日目が閉庁日(土日祝日および年末年始)の場合は翌開庁日を15日目と数えます。足立区は起算日を前住所地の転出予定日と同義に定義しているため、引越し日からは算定できません。",
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveOutScheduledDate",
+        "days": 15
+      },
+      "dueDescription": "申請して認定された場合は申請した月の翌月分から支給されます。月の後半に転入した場合は、転入日(前住所地の転出予定日)の翌日から15日以内に申請すれば転入月の翌月分から支給されます(15日特例)。15日目が閉庁日(土日祝日および年末年始)の場合は翌開庁日を15日目と数えます。足立区は起算日を前住所地の転出予定日と同義に定義しているため、引越し日からは算定できません。ウィザードで前住所地の転出予定日を入力すると、その日を起算日として期日を算定します(未入力の場合は日付を表示しません)。",
       "sourceIds": ["src-13121-child_benefits-001"],
       "applicabilityReasonTemplate": "18歳到達後の最初の3月31日までのお子さまを養育している生計中心者の方が対象です。足立区に転入した場合は新たに申請が必要です。"
     },
@@ -64,7 +100,9 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "申請期限および遡及して助成される期間について、足立区の子ども医療費助成の公式ページには記載がありません(要確認)。医療証の交付を受けるには申請が必要なため、転入届の手続きと合わせて早めに申請してください。詳しくは親子支援課子ども医療費給付係へお問い合わせください。",
       "sourceIds": ["src-13121-child_medical-001"],
       "applicabilityReasonTemplate": "足立区内に住民登録があり健康保険に加入している、出生から高校生相当(18歳に達した日以降の最初の3月31日まで)のお子さまを養育している保護者の方が対象です(保護者の所得制限はありません)。",
@@ -74,12 +112,21 @@
       "procedureId": "procedure_school_transfer",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["elementary", "junior_senior"]
+          }
         ]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "区民事務所で転入届をする際に、前の学校で発行される在学証明書と教科書給与証明書を職員に提示してください。その場で学区域の学校への就学通知書を発行します。書類を揃えたら必ず転校先の学校へ電話連絡したうえで届け出てください。転入届の際に書類を提示できなかった場合は足立区教育委員会学務課で手続きします。日数固定の期限はこのページには記載がありません。",
       "sourceIds": ["src-13121-school_transfer-001"],
       "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が足立区へ転入する場合に必要な、区立学校への転入学手続きです。足立区で交付される書類の名称は『就学通知書』です。"
@@ -88,12 +135,21 @@
       "procedureId": "procedure_childcare_application",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["age0_2", "age3_5"]
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "4月入園希望の申込受付は毎年11月中旬から12月上旬頃、5月以降の入園は入園希望月別に受付期間があります(オンライン申請は各入所月の申込受付開始日の0時00分から終了日の23時59分まで)。締切日は入園希望月・年度により異なるため日数固定の期限は設定していません。区外にお住まいの方がオンライン申請できるのは、入所希望月1日までに足立区への転入予定があり、かつ申込締切日時点で住民票がある自治体の保育施設入園担当部署から足立区に直接申込みするよう案内があった方に限られます。該当しない方は保育・入園課の窓口で申込みください。令和8年度から区外にお住まいのお子さまの利用に減点等の制限が入りましたが、足立区に転入予定のお子さまについては従前どおり取り扱われます。",
       "sourceIds": [
         "src-13121-childcare-001",
@@ -106,12 +162,22 @@
       "procedureId": "procedure_dog_registration_transfer",
       "condition": {
         "all": [
-          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
-          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasDog",
+            "equals": true
+          },
+          {
+            "predicate": "flagEquals",
+            "flag": "dogHasMicrochip",
+            "equals": false
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "マイクロチップ未登録の場合は、前自治体での登録時に交付された鑑札を持参して窓口で住所の変更届を提出してください。足立区外で交付された鑑札は足立区の鑑札と無償で交換します(鑑札を持参できない場合は再交付申請1600円)。転入・住所変更の届出は窓口のみで郵送・オンラインでの受付はできません。転入時の変更届について日数固定の期限はこのページには記載がありません(30日以内は生後91日以上の犬を新たに飼い始めたときの登録に対する期限です)。",
       "sourceIds": ["src-13121-dog_registration-002", "src-13121-dog_registration-001"],
       "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していない(環境省の登録サイトに登録していない)ため、足立区の窓口での登録事項の変更届が必要です。",
@@ -124,7 +190,9 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "生活開始まで(引越し後すぐに、お住まいの町名の収集カレンダーを確認してください)。足立区は町名ごとに令和8年度版の資源とごみの収集カレンダーをPDFで公開しています。本サービスは足立区の収集曜日データを保持していません。",
       "sourceIds": ["src-13121-waste_guide-001"],
       "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたって資源とごみの収集日と出し方の確認をおすすめします。"
@@ -136,7 +204,9 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "東京都水道局は「次のお手続きについては、3〜4日前までに必ずお手続きください」と案内しています(使用開始申込み・使用中止届のいずれも)。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。",
       "sourceIds": ["src-13000-water_supply-001", "src-13000-sewerage-001"],
       "applicabilityReasonTemplate": "水道は住まいを移るすべての方に必要なライフラインの手続きです(区の手続きではなく東京都水道局への手続きです)。"
@@ -148,7 +218,9 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "日本郵便は「転居届を提出されてから登録までに3〜7営業日を要しますので、転居される際には、お早めに転居届を提出してください」と案内しています。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。転送期間は届出日から1年間です(転送開始希望日からではありません)。",
       "sourceIds": ["src-00000-postal_forwarding-001"],
       "applicabilityReasonTemplate": "旧住所あての郵便物等を新住所へ転送してもらうための、住所が変わるすべての方向けの手続きです(区の手続きではなく日本郵便への手続きです)。"
@@ -160,16 +232,24 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "出典である国(デジタル庁)の公式ページには、電気・ガスの手続きの期限に関する記載がありません。受付の締切や必要な連絡時期は契約先の事業者ごとに異なるため、契約先へご確認ください(要確認)。",
       "sourceIds": ["src-00000-utilities_contact-001"],
       "applicabilityReasonTemplate": "電気・ガスは引越しに伴い契約先の民間事業者への手続きが必要になるライフラインです(区の手続きではありません)。"
     },
     {
       "procedureId": "procedure_driver_license_change",
-      "condition": { "predicate": "flagEquals", "flag": "needsVehicleGuidance", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsVehicleGuidance",
+        "equals": true
+      },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "警視庁の当該ページには「◯日以内」という日数の期限の記載がありません(要確認)。転入届で住民票の住所が変わったあとに手続きしてください。",
       "sourceIds": ["src-13000-driver_license-001"],
       "applicabilityReasonTemplate": "車・バイク等の追加案内が必要と回答された方向けの、運転免許証の住所変更(記載事項変更)の手続きです(区の手続きではなく警視庁への手続きです)。"

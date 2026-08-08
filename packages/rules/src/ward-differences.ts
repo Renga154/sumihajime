@@ -354,7 +354,11 @@ export const WARD_DIFFERENCE_TOPICS: readonly WardDifferenceTopicSpec[] = [
       '(2)90日ではない期限（引越し日から14日以内など）を明記している区、' +
       '(3)期限の記載を公式ページで確認できないと区自身が明記している区、の3通りに分けています。' +
       '(2)では区が実際に書いている日数をそのまま表示します（90日に読み替えません）。' +
-      '(3)の区に90日を当てはめることもしません。',
+      '(3)の区に90日を当てはめることもしません。' +
+      'なお、ここに出る90日の起算日は「転入届を出した日」で、本サービスはその日を知りません。' +
+      'そのためチェックリストの期日には、同じ区が併せて明記している転入届側の条件' +
+      '（住み始めた日から◯日以内／前住所地の転出予定日から◯日以内）のうち、' +
+      '算定できるものの最も早い日を表示します（この表の分類はその区が書いた継続利用の期限のままです）。',
     derive: ({ officialText }) => {
       const stated = extractStatedDeadlines(officialText);
       // 区自身が「確認できない」と明記している場合のみ、要確認として扱う(原則3)。
@@ -414,8 +418,9 @@ export const WARD_DIFFERENCE_TOPICS: readonly WardDifferenceTopicSpec[] = [
     procedureId: 'procedure_child_allowance',
     derivationNote:
       '各区の公式文言に「転出予定日」が起算日として書かれているかで分けています。' +
-      '転出予定日が起算日の区では、本サービスが知らない前住所地の届出内容に依存するため、' +
-      '引越し日から期日を算定できません（チェックリストでも日付を出さず公式文言を表示します）。' +
+      '転出予定日が起算日の区では、引越し日からは期日を算定できません。' +
+      'チェックリストでは、ウィザードで前住所地の転出予定日（任意入力）を入れた場合にだけ' +
+      'その日を起点に期日を算定し、未入力のときは日付を出さず公式文言を表示します。' +
       'なお「起算日の定義が公式ページにない」と明記している区は、文中に「転出予定日」の語が' +
       '出てきても“転出予定日が起算日”とはみなさず、「起算日を特定できず（要確認）」とします。',
     derive: ({ officialText, rule }) => {
@@ -425,11 +430,13 @@ export const WARD_DIFFERENCE_TOPICS: readonly WardDifferenceTopicSpec[] = [
       if (!statesNoOrigin(officialText) && officialText.includes(MOVE_OUT_SCHEDULED_DATE)) {
         return cautionValue(
           'move_out_scheduled_date',
-          '前住所地の「転出予定日」が起算日（引越し日からは期日を算定できない）',
+          '前住所地の「転出予定日」が起算日（入力があればその日から算定／引越し日からは算定できない）',
           0,
         );
       }
-      if (rule.dueRule.type === 'offsetDays') {
+      // なぜ from を見るか: 起算日が転出予定日のルールをここで拾うと「引越し日から○日以内」と
+      // 事実と違うラベルを出してしまう。引越し日起算だと区が明記している場合だけこの値にする。
+      if (rule.dueRule.type === 'offsetDays' && rule.dueRule.from === 'moveDate') {
         return {
           valueId: 'move_date',
           label: `引越し日から${rule.dueRule.days}日以内として期日を算定`,

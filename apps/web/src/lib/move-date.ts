@@ -59,6 +59,15 @@ export function moveDateRangeMessage(today: string): string {
   return `引越し日は ${min} 〜 ${max} の範囲で入力してください。`;
 }
 
+/**
+ * 前住所地の転出予定日が範囲外のときの説明文。
+ * 受付範囲は引越し日と同じ幅にする(転出予定日は引越し日の前後どちらにもなり得るため)。
+ */
+export function moveOutScheduledDateRangeMessage(today: string): string {
+  const { min, max } = moveDateBounds(today);
+  return `前住所地の転出予定日は ${min} 〜 ${max} の範囲で入力してください。`;
+}
+
 /** 期限が基準日より前か(= 過ぎている可能性がある)。期限なし・不正値は false。 */
 export function isOverdue(dueDate: string | undefined, today: string): boolean {
   if (!dueDate) return false;

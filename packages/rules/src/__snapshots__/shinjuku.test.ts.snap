@@ -160,6 +160,6 @@ exports[`Shinjuku (13104) — provenance integrity & scope safety > 決定論: �
       "warnings": [],
     },
   ],
-  "ruleVersion": "2026-08-06.1",
+  "ruleVersion": "2026-08-09.1",
 }
 `;

@@ -113,13 +113,21 @@ export function saveReviewedSteps(code: string, steps: ReviewedSteps): void {
  *     未入力(moveDate='' など)や画面状態(現在のステップ)は境界スキーマを通らない。
  *  3. 同じ理由で、閲覧記録は既に `tmn:reviewed-steps:<code>` へ分けてある。下書きもそれに倣う。
  *
- * 保存する範囲は確定プロフィールと同一(引越し日・転入元区分・世帯人数区分・年齢帯・条件フラグ)。
+ * 保存する範囲は確定プロフィールと同一(引越し日・前住所地の転出予定日・転入元区分・世帯人数区分・
+ * 年齢帯・条件フラグ)。転出予定日は暦日のみで、前住所地の自治体名や住所は受け取らない。
  * 氏名・電話・メール・番地・生年月日・マイナンバーは入力欄自体が無く、当然保存もしない
  * (CLAUDE.md 原則6・7 / §13 データ最小化)。保存先は端末内の localStorage のみ。
  */
 export const wizardAnswersSchema = z.object({
   /** 未入力を許すため空文字も受ける(確定時に profileSchema 側で日付として検証される)。 */
   moveDate: z.union([z.iso.date(), z.literal('')]),
+  /**
+   * 前住所地の転出予定日(任意)。未入力は空文字。
+   *
+   * なぜ default('') か: この項目を持たない古い下書きが safeParse に失敗すると「下書き無し」に
+   * 倒れ、利用者が入力途中だった他の回答まで失われる。既定値を与えて後方互換に読めるようにする。
+   */
+  moveOutScheduledDate: z.union([z.iso.date(), z.literal('')]).default(''),
   originType: z.union([originTypeSchema, z.literal('')]),
   householdKind: z.enum(['single', 'multiple']),
   ageBands: z.array(ageBandSchema),

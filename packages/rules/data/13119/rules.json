@@ -1,6 +1,6 @@
 {
   "municipalityCode": "13119",
-  "ruleVersion": "2026-08-07.1",
+  "ruleVersion": "2026-08-09.1",
   "rules": [
     {
       "procedureId": "procedure_resident_registration",
@@ -27,7 +27,19 @@
       },
       "priority": "high",
       "dueRule": {
-        "type": "unknown"
+        "type": "earliestOf",
+        "of": [
+          {
+            "type": "offsetDays",
+            "from": "moveDate",
+            "days": 14
+          },
+          {
+            "type": "offsetDays",
+            "from": "moveOutScheduledDate",
+            "days": 30
+          }
+        ]
       },
       "dueDescription": "転入届は板橋区に住み始めた日から14日以内または転出予定日から30日以内のどちらか早い期日までに手続きし、その転入届日から90日以内に継続利用の申請を行ってください。それまでに手続きできない場合はマイナンバーカードが失効し、再発行時に手数料(1,000円)が発生します。",
       "sourceIds": ["src-13119-my_number-001", "src-13119-resident_registration-001"],
@@ -73,9 +85,11 @@
       },
       "priority": "high",
       "dueRule": {
-        "type": "unknown"
+        "type": "offsetDays",
+        "from": "moveOutScheduledDate",
+        "days": 15
       },
-      "dueDescription": "出生日・転入日(前住所地の転出予定日)等の事由発生日の翌日から起算して15日以内に申請してください。起算日は前住所地での転出予定日等のため引越し日からは算定できません。申請が遅れると手当を受給できない月が発生します(申請書の受付日が申請日となります)。",
+      "dueDescription": "出生日・転入日(前住所地の転出予定日)等の事由発生日の翌日から起算して15日以内に申請してください。起算日は前住所地での転出予定日等のため引越し日からは算定できません。ウィザードで前住所地の転出予定日を入力すると、その日を起算日として期日を算定します(未入力の場合は日付を表示しません)。申請が遅れると手当を受給できない月が発生します(申請書の受付日が申請日となります)。",
       "sourceIds": ["src-13119-child_benefits-001"],
       "applicabilityReasonTemplate": "18歳までのお子さんを養育している方が対象です。他区市町村で児童手当を受給していた方が板橋区に転入した場合は新規申請が必要です。"
     },
@@ -87,7 +101,9 @@
       },
       "priority": "high",
       "dueRule": {
-        "type": "unknown"
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
       },
       "dueDescription": "子ども医療費助成の資格開始日は申請書を受付した日からです。ただし転入の場合は原則として14日以内の申請であれば転入日にさかのぼって資格が得られます。14日を過ぎての申請で転入日からの資格を希望する場合は、交付申請の際に『申立書』も提出してください。",
       "sourceIds": ["src-13119-child_medical-001"],

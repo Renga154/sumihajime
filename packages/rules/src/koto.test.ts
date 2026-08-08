@@ -129,7 +129,9 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
 describe('Koto (13108) — schema validation (来歴・型検証; CI gate)', () => {
   it('rules.json parses as a RuleSet, scoped to 13108, 10 rules', () => {
     expect(kotoRuleSet.municipalityCode).toBe(KOTO);
-    expect(kotoRuleSet.ruleVersion).toBe('2026-08-06.1');
+    // 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で更新。
+    // 手続き(procedures.json)の内容は変えていないため ProcedureVersion.version は据え置き。
+    expect(kotoRuleSet.ruleVersion).toBe('2026-08-09.1');
     // 2026-08-07 人手レビュー承認(ADR-009)。publishedRuleVersion は除去済みで、
     // ruleVersion がそのまま公開版になる(ADR-007)。
     expect(kotoRuleSet.publishedRuleVersion).toBeUndefined();
@@ -263,12 +265,14 @@ describe('Koto (13108) — persona evaluations (子育てペルソナで該当�
     );
   });
 
-  it('自治体差分(マイナンバー期限): 江東は継続利用の期限が「90日」文言で dueDate を出さない(世田谷=14日算定との差)', () => {
+  it('自治体差分(マイナンバー期限): 江東は「90日」も明記し、世田谷は明記しない。期日はどちらも住み始めた日+14日', () => {
+    // なぜ変わったか(2026-08-09): 江東の公式ページは「住み始めた日から14日以内かつ
+    // 転出証明書の転出予定日から30日以内に転入届をしていること」をカード自動失効の条件として
+    // 明記している。90日(転入届出日起算)は算定できないが、この14日は引越し日から算定できる。
+    // 以前は90日だけを見て期日なしにしていたため、実際には先に来る期限を出せていなかった。
     const withCard = profile({ flags: { hasMyNumberCard: true } });
     const koto = outcomeFor(withCard, kotoRuleSet, 'procedure_mynumber_continued_use');
-    expect(koto.dueDate).toBeUndefined();
-    expect(koto.dueDescription).toContain('90日');
-    // 世田谷側は同一手続きが moveDate+14日 の dueDate を算出する(差分の裏取り)。
+    expect(koto.dueDate).toBe('2026-08-15');
     const setagayaProfile = profile({
       municipalityCode: '13112',
       town: '世田谷4丁目',
@@ -276,6 +280,28 @@ describe('Koto (13108) — persona evaluations (子育てペルソナで該当�
     });
     const seta = outcomeFor(setagayaProfile, setagayaRuleSet, 'procedure_mynumber_continued_use');
     expect(seta.dueDate).toBe('2026-08-15');
+
+    // 残る自治体差分: 江東は継続利用そのものの期限(90日)も書いているが、世田谷は書いていない。
+    const dueTextOf = (rs: RuleSet) =>
+      rs.rules.find((r) => r.procedureId === 'procedure_mynumber_continued_use')?.dueDescription ??
+      '';
+    expect(dueTextOf(kotoRuleSet)).toContain('90日');
+    expect(dueTextOf(setagayaRuleSet)).not.toContain('90日');
+  });
+
+  it('自治体差分(マイナンバー期限): 転出予定日を入力すると、江東はより早い「転出予定日+30日」を期日にする', () => {
+    // なぜ: 江東は14日と30日の両方を失効条件に挙げている。転出予定日が引越し日よりかなり前だと
+    // 30日側が先に来る。遅いほうを出すと、期限を過ぎてからカードの失効を知ることになる。
+    const withCard = profile({ flags: { hasMyNumberCard: true } });
+    const early = { ...withCard, moveOutScheduledDate: '2026-07-01' };
+    expect(outcomeFor(early, kotoRuleSet, 'procedure_mynumber_continued_use').dueDate).toBe(
+      '2026-07-31',
+    );
+    // 転出予定日が引越し日の直前なら、14日側のほうが早いのでそちらが残る。
+    const late = { ...withCard, moveOutScheduledDate: '2026-07-30' };
+    expect(outcomeFor(late, kotoRuleSet, 'procedure_mynumber_continued_use').dueDate).toBe(
+      '2026-08-15',
+    );
   });
 
   it('他区の値を混入させない: 子ども医療費の dueDescription に「3か月」を持ち込まない(世田谷の値の非混入)', () => {
@@ -356,22 +382,28 @@ describe('Koto (13108) — 自治体差分の実証(デモの根拠)', () => {
     expect(setagayaIds).toEqual(kotoIds);
   });
 
-  it('残る自治体差分: マイナンバー継続利用の期限は江東=90日文言(dueDate無し)/世田谷=14日算定(維持)', () => {
-    // なぜ: 学校・保育の差分は解消したが、自治体差分デモの核(マイナンバー期限14日/90日)は維持する。
-    const withCard = { flags: { hasMyNumberCard: true } };
-    const koto = outcomeFor(
-      profile({ municipalityCode: KOTO, town: '青海', ...withCard }),
-      kotoRuleSet,
-      'procedure_mynumber_continued_use',
-    );
-    const setagaya = outcomeFor(
-      profile({ municipalityCode: '13112', town: '世田谷4丁目', ...withCard }),
-      setagayaRuleSet,
-      'procedure_mynumber_continued_use',
-    );
+  it('残る自治体差分: 子ども医療費の遡及期限は江東=記載なし(要確認)/世田谷=3か月', () => {
+    // なぜ: 学校・保育の差分は解消し、マイナンバーの期日も両区とも14日算定になったため、
+    // 「同じ手続きでも区で違う」を示す差分としてはこちらを固定する(推測で差分を作らない)。
+    const family = (code: string, town: string, rs: RuleSet) =>
+      outcomeFor(
+        profile({
+          municipalityCode: code,
+          town,
+          memberCount: 4,
+          ageBands: ['age0_2', 'elementary', 'adult'],
+          flags: { hasMyNumberCard: true, needsNationalPension: false },
+        }),
+        rs,
+        'procedure_child_medical',
+      );
+    const koto = family(KOTO, '青海', kotoRuleSet);
+    const setagaya = family('13112', '世田谷4丁目', setagayaRuleSet);
     expect(koto.dueDate).toBeUndefined();
-    expect(koto.dueDescription).toContain('90日');
-    expect(setagaya.dueDate).toBe('2026-08-15');
+    expect(koto.dueDescription).toContain('記載がない');
+    expect(setagaya.dueDate).toBeUndefined();
+    expect(setagaya.dueDescription).toContain('3か月');
+    expect(koto.dueDescription).not.toContain('3か月');
   });
 });
 

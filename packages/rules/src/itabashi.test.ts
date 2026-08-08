@@ -141,7 +141,9 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
 describe('Itabashi (13119) — schema validation & approved status (CI gate)', () => {
   it('rules.json parses as a RuleSet, scoped to 13119, 14 rules, ruleVersion 2026-08-07.1', () => {
     expect(itabashiRuleSet.municipalityCode).toBe(ITABASHI);
-    expect(itabashiRuleSet.ruleVersion).toBe('2026-08-07.1');
+    // 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で更新。
+    // 手続き(procedures.json)の内容は変えていないため ProcedureVersion.version は据え置き。
+    expect(itabashiRuleSet.ruleVersion).toBe('2026-08-09.1');
     // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
     expect(itabashiRuleSet.publishedRuleVersion).toBeUndefined();
     expect(itabashiRuleSet.rules.length).toBe(14);
@@ -329,17 +331,30 @@ describe('Itabashi (13119) — 自治体差分の実証(他区の値を混入さ
     flags: { hasMyNumberCard: true },
   });
 
-  it('マイナンバー継続利用: 板橋=90日文言(dueDate無し) / 世田谷=14日算定', () => {
+  it('マイナンバー継続利用: 板橋・世田谷とも住み始めた日+14日を算定(板橋の90日文言は据え置き)', () => {
+    // 板橋の公式ページは「転入届は住み始めた日から14日以内または転出予定日から30日以内の
+    // どちらか早い期日まで。それまでに手続きできない場合…カードが失効」と明記している。
+    // 90日(転入届出日起算)は算定できないが、この14日は引越し日から算定できる。
     const itabashi = outcomeFor(withCard, itabashiRuleSet, 'procedure_mynumber_continued_use');
     const setagaya = outcomeFor(
       setagayaWithCard,
       setagayaRuleSet,
       'procedure_mynumber_continued_use',
     );
-    expect(itabashi.dueDate).toBeUndefined();
-    expect(itabashi.dueDescription).toContain('90日以内');
-    expect(itabashi.dueDescription).toContain('どちらか早い期日');
+    expect(itabashi.dueDate).toBe('2026-08-15');
     expect(setagaya.dueDate).toBe('2026-08-15');
+    const itabashiDue = itabashiRuleSet.rules.find(
+      (r) => r.procedureId === 'procedure_mynumber_continued_use',
+    )?.dueDescription;
+    expect(itabashiDue).toContain('90日以内');
+    expect(itabashiDue).toContain('どちらか早い期日');
+  });
+
+  it('マイナンバー継続利用: 板橋は転出予定日が早いと「転出予定日+30日」を期日にする(区の"早い方"に従う)', () => {
+    const early = { ...withCard, moveOutScheduledDate: '2026-07-05' };
+    expect(outcomeFor(early, itabashiRuleSet, 'procedure_mynumber_continued_use').dueDate).toBe(
+      '2026-08-04',
+    );
   });
 
   const family = (code: string, town: string, rs: RuleSet, procedureId: string) =>
@@ -356,16 +371,24 @@ describe('Itabashi (13119) — 自治体差分の実証(他区の値を混入さ
     );
 
   it('子ども医療費助成: 板橋=14日遡及(既存7区に無い値。3か月/15日/6か月を混入させない)', () => {
+    // 2026-08-09: 板橋は「転入の場合は原則として14日以内の申請」と日数で明記しているため
+    // moveDate+14日 を算定するようになった。算定できた区は outcome から dueDescription が
+    // 落ちるため、公式文言は rules.json 側で検証する。
     const itabashi = family('13119', '板橋', itabashiRuleSet, 'procedure_child_medical');
-    expect(itabashi.dueDescription).toContain('14日以内');
-    expect(itabashi.dueDescription).toContain('申立書');
+    expect(itabashi.dueDate).toBe('2026-08-15');
+    const itabashiDue = itabashiRuleSet.rules.find(
+      (r) => r.procedureId === 'procedure_child_medical',
+    )?.dueDescription;
+    expect(itabashiDue).toContain('14日以内');
+    expect(itabashiDue).toContain('申立書');
     for (const other of ['3か月', '3ヶ月', '6か月', '6カ月', '15日']) {
-      expect(itabashi.dueDescription).not.toContain(other);
+      expect(itabashiDue).not.toContain(other);
     }
     // 対比: 杉並=15日 / 世田谷=3か月 / 練馬=記載なし。同じカテゴリでも区ごとに値が異なる。
-    expect(
-      family('13115', '阿佐谷北', suginamiRuleSet, 'procedure_child_medical').dueDescription,
-    ).toContain('15日');
+    // 杉並も日数明記のため算定済み。日付が板橋(14日)と異なることで値の違いを確かめる。
+    expect(family('13115', '阿佐谷北', suginamiRuleSet, 'procedure_child_medical').dueDate).toBe(
+      '2026-08-16',
+    );
     expect(
       family('13112', '世田谷4丁目', setagayaRuleSet, 'procedure_child_medical').dueDescription,
     ).toContain('3か月');

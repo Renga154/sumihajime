@@ -17,7 +17,7 @@ exports[`Shinagawa (13109) — provenance integrity & scope safety > 決定論: 
     {
       "applicabilityReason": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。",
       "applicable": "applicable",
-      "dueDescription": "住み始めた日から14日以内かつ引っ越し予定日から30日以内に転入届をし、その転入届の届出日から90日以内に継続利用の申し出をしてください。期限を過ぎるとマイナンバーカードは失効します(失効時の再発行手数料1,000円)。",
+      "dueDate": "2026-08-15",
       "priority": "high",
       "procedureId": "procedure_mynumber_continued_use",
       "sourceIds": [
@@ -51,7 +51,7 @@ exports[`Shinagawa (13109) — provenance integrity & scope safety > 決定論: 
     {
       "applicabilityReason": "高校卒業まで(18歳に達する日以後の最初の3月31日まで)の児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。",
       "applicable": "applicable",
-      "dueDescription": "出生日や転入した日(前住所地の転出予定日)の翌日から15日以内に申請すれば、出生日や転入した日の翌月分から支給されます。起算日は前住所地での転出予定日等のため引越し日からは算定できません。早めの申請を推奨します。",
+      "dueDescription": "出生日や転入した日(前住所地の転出予定日)の翌日から15日以内に申請すれば、出生日や転入した日の翌月分から支給されます。起算日は前住所地での転出予定日等のため引越し日からは算定できません。ウィザードで前住所地の転出予定日を入力すると、その日を起算日として期日を算定します(未入力の場合は日付を表示しません)。早めの申請を推奨します。",
       "priority": "high",
       "procedureId": "procedure_child_allowance",
       "sourceIds": [
@@ -160,6 +160,6 @@ exports[`Shinagawa (13109) — provenance integrity & scope safety > 決定論: 
       "warnings": [],
     },
   ],
-  "ruleVersion": "2026-08-06.1",
+  "ruleVersion": "2026-08-09.1",
 }
 `;

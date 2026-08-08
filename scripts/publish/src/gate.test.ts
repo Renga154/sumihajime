@@ -106,9 +106,10 @@ describe('publish gate — real repository data (13112)', () => {
   it('公開される rule_set の版は ruleVersion そのもの(publishedRuleVersion除去後)であり、除外は0件', () => {
     // なぜ: ADR-007 §5 / ADR-009。2026-08-06 に足したライフライン4ルールは
     // 2026-08-07 の人手レビュー承認により publishedRuleVersion(据え置き)が除去され、
-    // rules.json の ruleVersion(2026-08-06.1)がそのまま公開版になった。
+    // rules.json の ruleVersion がそのまま公開版になった。
+    // 2026-08-09: 前住所地の転出予定日を起算日にできるようにした改訂で 2026-08-09.1 へ更新。
     const data = loadPublishData(repoRoot);
-    expect(data.ruleSets[0]?.ruleVersion).toBe('2026-08-06.1');
+    expect(data.ruleSets[0]?.ruleVersion).toBe('2026-08-09.1');
     expect(data.ruleSets[0]?.publishedRuleVersion).toBeUndefined();
     expect(data.ruleSets[0]?.rules).toHaveLength(14);
     // 承認によりライフライン4件も公開される rules に含まれる(除外されない)。

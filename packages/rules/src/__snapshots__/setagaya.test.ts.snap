@@ -51,7 +51,7 @@ exports[`Setagaya (13112) — provenance integrity & scope safety > 決定論: �
     {
       "applicabilityReason": "0歳〜高校生相当世代までの児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。",
       "applicable": "applicable",
-      "dueDescription": "転出予定日(前住所地)の翌日から15日以内に申請すると申請月から支給(15日特例)。閉庁日を含めて数えます。起算日は前住所地の転出予定日のため引越し日からは算定できません。早めの申請を推奨します。",
+      "dueDescription": "転出予定日(前住所地)の翌日から15日以内に申請すると申請月から支給(15日特例)。閉庁日を含めて数えます。起算日は前住所地の転出予定日のため引越し日からは算定できません。ウィザードで前住所地の転出予定日を入力すると、その日を起算日として期日を算定します(未入力の場合は日付を表示しません)。早めの申請を推奨します。",
       "priority": "high",
       "procedureId": "procedure_child_allowance",
       "sourceIds": [
@@ -162,6 +162,6 @@ exports[`Setagaya (13112) — provenance integrity & scope safety > 決定論: �
       "warnings": [],
     },
   ],
-  "ruleVersion": "2026-08-06.1",
+  "ruleVersion": "2026-08-09.1",
 }
 `;

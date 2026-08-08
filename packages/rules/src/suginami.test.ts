@@ -129,7 +129,9 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
 describe('Suginami (13115) — schema validation & approved status (CI gate)', () => {
   it('rules.json parses as a RuleSet, scoped to 13115, 10 rules, ruleVersion 2026-07-25.1', () => {
     expect(suginamiRuleSet.municipalityCode).toBe(SUGINAMI);
-    expect(suginamiRuleSet.ruleVersion).toBe('2026-08-06.1');
+    // 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で更新。
+    // 手続き(procedures.json)の内容は変えていないため ProcedureVersion.version は据え置き。
+    expect(suginamiRuleSet.ruleVersion).toBe('2026-08-09.1');
     // 2026-08-07 人手レビュー承認(ADR-009)。publishedRuleVersion は除去済みで、
     // ruleVersion がそのまま公開版になる(ADR-007)。
     expect(suginamiRuleSet.publishedRuleVersion).toBeUndefined();
@@ -307,19 +309,22 @@ describe('Suginami (13115) — 自治体差分の実証(他区の値を混入さ
     flags: { hasMyNumberCard: true },
   });
 
-  it('マイナンバー継続利用: 杉並=90日文言(dueDate無し) / 世田谷=14日算定', () => {
+  it('マイナンバー継続利用: 杉並・世田谷とも住み始めた日+14日を算定(杉並の90日文言は据え置き)', () => {
     const suginami = outcomeFor(withCard, suginamiRuleSet, 'procedure_mynumber_continued_use');
     const setagaya = outcomeFor(
       setagayaWithCard,
       setagayaRuleSet,
       'procedure_mynumber_continued_use',
     );
-    // 杉並は『転入届日から90日以内』の文言のみ(90日は転入届日起算のため moveDate から算定しない)。
-    expect(suginami.dueDate).toBeUndefined();
-    expect(suginami.dueDescription).toContain('90日');
-    // 世田谷は moveDate+14日を算定。3区が一様でないこと(デモで見せられる差)。
+    // 杉並は「転入届を行った日が『転出予定日から30日、または新しい住所に住み始めてから14日を
+    // 経過した日』を過ぎていた場合、マイナンバーカードは失効」と明記しているため14日を算定する。
+    // 90日そのものは転入届日起算のため算定しない。
+    expect(suginami.dueDate).toBe('2026-08-15');
+    expect(
+      suginamiRuleSet.rules.find((r) => r.procedureId === 'procedure_mynumber_continued_use')
+        ?.dueDescription,
+    ).toContain('90日');
     expect(setagaya.dueDate).toBe('2026-08-15');
-    expect(suginami.dueDate).not.toBe(setagaya.dueDate);
   });
 
   it('子ども医療費の遡及: 杉並=15日(3か月/3ヶ月を混入させない) / 世田谷=3か月', () => {
@@ -337,9 +342,17 @@ describe('Suginami (13115) — 自治体差分の実証(他区の値を混入さ
       );
     const suginami = family('13115', '阿佐谷南', suginamiRuleSet);
     const setagaya = family('13112', '世田谷4丁目', setagayaRuleSet);
-    expect(suginami.dueDescription).toContain('15日');
-    expect(suginami.dueDescription).not.toContain('3か月');
-    expect(suginami.dueDescription).not.toContain('3ヶ月');
+    // 2026-08-09: 杉並は「転入日の翌日から数えて15日以内」と日数で明記しているため
+    // moveDate+15日 を算定する(算定できた区は outcome から dueDescription が落ちる)。
+    expect(suginami.dueDate).toBe('2026-08-16');
+    const suginamiDue = suginamiRuleSet.rules.find(
+      (r) => r.procedureId === 'procedure_child_medical',
+    )?.dueDescription;
+    expect(suginamiDue).toContain('15日');
+    expect(suginamiDue).not.toContain('3か月');
+    expect(suginamiDue).not.toContain('3ヶ月');
+    // 世田谷は月単位(3か月)のため日付は算定せず、公式文言のまま出す。
+    expect(setagaya.dueDate).toBeUndefined();
     expect(setagaya.dueDescription).toContain('3か月');
   });
 

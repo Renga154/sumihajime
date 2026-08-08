@@ -44,6 +44,59 @@ describe('dueRuleSchema', () => {
       dueRuleSchema.safeParse({ type: 'offsetDays', from: 'moveDate', days: -1 }).success,
     ).toBe(false);
   });
+
+  it('parses moveOutScheduledDate as an origin (児童手当の15日特例)', () => {
+    expect(
+      dueRuleSchema.safeParse({ type: 'offsetDays', from: 'moveOutScheduledDate', days: 15 })
+        .success,
+    ).toBe(true);
+  });
+
+  it('rejects an origin the profile does not carry (転入届出日は本サービスが知り得ない)', () => {
+    // なぜ: 知らない日付を起算日の語彙に入れると、推測で埋める余地を構造的に残してしまう。
+    expect(
+      dueRuleSchema.safeParse({ type: 'offsetDays', from: 'applicationDate', days: 90 }).success,
+    ).toBe(false);
+  });
+
+  it('parses earliestOf(区が並べた条件のうち最も早い日)', () => {
+    expect(
+      dueRuleSchema.safeParse({
+        type: 'earliestOf',
+        of: [
+          { type: 'offsetDays', from: 'moveDate', days: 14 },
+          { type: 'offsetDays', from: 'moveOutScheduledDate', days: 30 },
+        ],
+      }).success,
+    ).toBe(true);
+  });
+
+  it('rejects earliestOf with fewer than 2 candidates (1件なら offsetDays で書く)', () => {
+    expect(
+      dueRuleSchema.safeParse({
+        type: 'earliestOf',
+        of: [{ type: 'offsetDays', from: 'moveDate', days: 14 }],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects nested earliestOf (入れ子にせず候補を平らに並べる)', () => {
+    expect(
+      dueRuleSchema.safeParse({
+        type: 'earliestOf',
+        of: [
+          { type: 'offsetDays', from: 'moveDate', days: 14 },
+          {
+            type: 'earliestOf',
+            of: [
+              { type: 'offsetDays', from: 'moveDate', days: 7 },
+              { type: 'offsetDays', from: 'moveOutScheduledDate', days: 30 },
+            ],
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe('ruleOutcomeSchema (§9.3)', () => {

@@ -108,6 +108,7 @@ describe('任意ステップの閲覧記録', () => {
 describe('ウィザードの下書き', () => {
   const ANSWERS: WizardAnswers = {
     moveDate: '2026-08-15',
+    moveOutScheduledDate: '2026-08-10',
     originType: 'outside_tokyo',
     householdKind: 'multiple',
     ageBands: ['adult', 'age0_2'],
@@ -203,9 +204,35 @@ describe('ウィザードの下書き', () => {
     expect(JSON.stringify(loaded)).not.toContain('1-2-3');
   });
 
+  /**
+   * なぜ: 前住所地の転出予定日は 2026-08-09 に足した任意項目。項目を持たない古い下書きが
+   * 「下書き無し」に倒れると、利用者が入力途中だった他の回答まで消えてしまう。
+   */
+  it('転出予定日を持たない古い下書きも読める(未入力として復元される)', () => {
+    const { moveOutScheduledDate: _omit, ...legacyAnswers } = ANSWERS;
+    localStorage.setItem(
+      `tmn:wizard-draft:${CODE}`,
+      JSON.stringify({ ...DRAFT, answers: legacyAnswers }),
+    );
+    const loaded = loadWizardDraft(CODE);
+    expect(loaded).not.toBeNull();
+    expect(loaded?.answers.moveOutScheduledDate).toBe('');
+    expect(loaded?.answers.moveDate).toBe(ANSWERS.moveDate);
+  });
+
+  it('転出予定日の未入力(空文字)も下書きとして保持できる', () => {
+    const partial: WizardDraft = {
+      ...DRAFT,
+      answers: { ...ANSWERS, moveOutScheduledDate: '' },
+    };
+    saveWizardDraft(CODE, partial);
+    expect(loadWizardDraft(CODE)).toEqual(partial);
+  });
+
   it('isSameWizardAnswers は年齢帯の並び順の違いを同じ内容とみなす', () => {
     expect(isSameWizardAnswers(ANSWERS, { ...ANSWERS, ageBands: ['age0_2', 'adult'] })).toBe(true);
     expect(isSameWizardAnswers(ANSWERS, { ...ANSWERS, ageBands: ['adult'] })).toBe(false);
     expect(isSameWizardAnswers(ANSWERS, { ...ANSWERS, moveDate: '2026-08-16' })).toBe(false);
+    expect(isSameWizardAnswers(ANSWERS, { ...ANSWERS, moveOutScheduledDate: '' })).toBe(false);
   });
 });

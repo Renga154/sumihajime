@@ -137,7 +137,9 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
 describe('Shinjuku (13104) — schema validation (来歴・型検証; CI gate)', () => {
   it('rules.json parses as a RuleSet, scoped to 13104, 10 rules, ruleVersion 2026-07-22.1', () => {
     expect(shinjukuRuleSet.municipalityCode).toBe(SHINJUKU);
-    expect(shinjukuRuleSet.ruleVersion).toBe('2026-08-06.1');
+    // 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で更新。
+    // 手続き(procedures.json)の内容は変えていないため ProcedureVersion.version は据え置き。
+    expect(shinjukuRuleSet.ruleVersion).toBe('2026-08-09.1');
     // 2026-08-07 人手レビュー承認(ADR-009)。publishedRuleVersion は除去済みで、
     // ruleVersion がそのまま公開版になる(ADR-007)。
     expect(shinjukuRuleSet.publishedRuleVersion).toBeUndefined();
@@ -310,7 +312,7 @@ describe('Shinjuku (13104) — 3自治体差分の実証(デモの根拠)', () =
     flags: { hasMyNumberCard: true },
   });
 
-  it('マイナンバー継続利用の期限(3区比較): 世田谷=14日算定 / 新宿=14日算定 / 江東=90日文言(dueDate無し)', () => {
+  it('マイナンバー継続利用の期限(3区比較): 3区とも14日算定。90日を明記するのは江東だけ', () => {
     const shinjuku = outcomeFor(withCard, shinjukuRuleSet, 'procedure_mynumber_continued_use');
     const setagaya = outcomeFor(
       setagayaWithCard,
@@ -319,14 +321,18 @@ describe('Shinjuku (13104) — 3自治体差分の実証(デモの根拠)', () =
     );
     const koto = outcomeFor(kotoWithCard, kotoRuleSet, 'procedure_mynumber_continued_use');
 
-    // 新宿と世田谷は moveDate+14日を算定(公式文言=14日以内)。
+    // 3区とも「住み始めた日から14日以内に転入届をしないとカードが失効する」と明記しているため
+    // moveDate+14日を算定する。
     expect(shinjuku.dueDate).toBe('2026-08-15');
     expect(setagaya.dueDate).toBe('2026-08-15');
-    // 江東だけは「90日以内」の文言のみで日付を出さない(自治体差分)。
-    expect(koto.dueDate).toBeUndefined();
-    expect(koto.dueDescription).toContain('90日');
-    // 3区が同一手続きでも結果が一様でないこと(デモで見せられる差)。
-    expect(shinjuku.dueDate).not.toBe(koto.dueDate);
+    expect(koto.dueDate).toBe('2026-08-15');
+    // 残る差: 継続利用そのものの期限(転入届出日から90日)を書いているのは江東だけ。
+    const dueTextOf = (rs: RuleSet) =>
+      rs.rules.find((r) => r.procedureId === 'procedure_mynumber_continued_use')?.dueDescription ??
+      '';
+    expect(dueTextOf(kotoRuleSet)).toContain('90日');
+    expect(dueTextOf(shinjukuRuleSet)).not.toContain('90日');
+    expect(dueTextOf(setagayaRuleSet)).not.toContain('90日');
   });
 
   it('子ども医療費助成の期限文言(3区比較): 世田谷=3か月 / 新宿=3ヶ月 / 江東=3か月記載なし', () => {

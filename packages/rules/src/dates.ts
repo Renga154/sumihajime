@@ -1,4 +1,4 @@
-import type { DueRule } from '@tmn/schemas';
+import type { DueRule, OffsetDaysDueRule } from '@tmn/schemas';
 
 /**
  * なぜ: 計画ADR-002「日付計算はAsia/Tokyo固定の純関数ユーティリティに集約しテスト」。
@@ -61,9 +61,37 @@ export interface ResolvedDue {
   dueDate?: string;
 }
 
-export function resolveDueRule(dueRule: DueRule, moveDate: string): ResolvedDue {
+/**
+ * 期限の起算日として使える、利用者から受け取った暦日。
+ *
+ * moveOutScheduledDate(前住所地の転出予定日)は任意入力のため undefined になり得る。
+ * その場合は「算定しない」であって「moveDate で代用する」ではない — 区が転出予定日起算だと
+ * 書いている期限を引越し日から作れば、それは公式が言っていない日付になる(CLAUDE.md原則3)。
+ */
+export interface DueOriginDates {
+  readonly moveDate: string;
+  readonly moveOutScheduledDate?: string;
+}
+
+/** 起算日が未入力なら undefined(=算定不能)を返す。ここが「推測しない」の実装点。 */
+function resolveOffsetDays(rule: OffsetDaysDueRule, dates: DueOriginDates): string | undefined {
+  const origin = rule.from === 'moveDate' ? dates.moveDate : dates.moveOutScheduledDate;
+  if (origin === undefined) return undefined;
+  return addCalendarDays(origin, rule.days);
+}
+
+export function resolveDueRule(dueRule: DueRule, dates: DueOriginDates): ResolvedDue {
   if (dueRule.type === 'offsetDays') {
-    return { dueDate: addCalendarDays(moveDate, dueRule.days) };
+    const dueDate = resolveOffsetDays(dueRule, dates);
+    return dueDate === undefined ? {} : { dueDate };
+  }
+  if (dueRule.type === 'earliestOf') {
+    // 算定できた候補のうち最も早い日。ISO日付(YYYY-MM-DD)は辞書順=時系列順なので文字列比較で足りる。
+    const candidates = dueRule.of
+      .map((r) => resolveOffsetDays(r, dates))
+      .filter((d): d is string => d !== undefined);
+    if (candidates.length === 0) return {};
+    return { dueDate: candidates.reduce((a, b) => (a <= b ? a : b)) };
   }
   // type === 'unknown': 算定不能。呼び出し元(evaluate.ts)がdueDescriptionへフォールバックする。
   return {};

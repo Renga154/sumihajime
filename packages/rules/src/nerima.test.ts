@@ -127,7 +127,9 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
 describe('Nerima (13120) — schema validation & approved status (CI gate)', () => {
   it('rules.json parses as a RuleSet, scoped to 13120, 14 rules, ruleVersion 2026-08-07.1', () => {
     expect(nerimaRuleSet.municipalityCode).toBe(NERIMA);
-    expect(nerimaRuleSet.ruleVersion).toBe('2026-08-07.1');
+    // 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で更新。
+    // 手続き(procedures.json)の内容は変えていないため ProcedureVersion.version は据え置き。
+    expect(nerimaRuleSet.ruleVersion).toBe('2026-08-09.1');
     // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
     expect(nerimaRuleSet.publishedRuleVersion).toBeUndefined();
     expect(nerimaRuleSet.rules.length).toBe(14);
