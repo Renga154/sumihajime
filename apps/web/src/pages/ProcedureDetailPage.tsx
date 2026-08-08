@@ -210,11 +210,14 @@ export function ProcedureDetailPage() {
             </div>
           </Section>
 
-          <ChatPanel
-            municipalityCode={municipalityCode}
-            procedureId={state.data.procedure.id}
-            category={state.data.procedure.canonicalType}
-          />
+          {/* チェックリストと同じく、印刷時は入力欄ごと隠す(紙の上では操作できず場所だけ取る)。 */}
+          <div className="print-hide">
+            <ChatPanel
+              municipalityCode={municipalityCode}
+              procedureId={state.data.procedure.id}
+              category={state.data.procedure.canonicalType}
+            />
+          </div>
         </article>
       )}
     </div>
@@ -223,7 +226,7 @@ export function ProcedureDetailPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section>
+    <section className="print-avoid-break">
       <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
         <span className="h-5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
         {title}
