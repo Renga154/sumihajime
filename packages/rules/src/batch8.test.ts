@@ -52,9 +52,19 @@ const RULE_VERSION = '2026-08-07.1';
  * 台東区は公式ページに『転入日』の定義が無く、転出予定日起算のルールを持てないため不変。
  */
 const REVISED_RULE_VERSION = '2026-08-09.1';
+/**
+ * 2026-08-09(2回目): マイナンバー継続利用の期日を1日前へ直した区。
+ * 「◯日経過した転入届があった場合は失効」の◯日目は**すでに失効している日**であり、
+ * 失効しない最終日はその前日。以前は失効日そのものを期限として表示していた。
+ */
+const CORRECTED_RULE_VERSION = '2026-08-09.2';
 const REVISED_WARDS: readonly string[] = [CHUO, MINATO, BUNKYO, SUMIDA];
 const ruleVersionOf = (code: string) =>
-  REVISED_WARDS.includes(code) ? REVISED_RULE_VERSION : RULE_VERSION;
+  code === CHUO
+    ? CORRECTED_RULE_VERSION
+    : REVISED_WARDS.includes(code)
+      ? REVISED_RULE_VERSION
+      : RULE_VERSION;
 const LAST_VERIFIED = '2026-08-07T00:00:00Z';
 
 /** なぜ: (g) 他区名の混入検出に使う23区の名称表。自区名は当然許可する。 */
@@ -411,8 +421,10 @@ describe('Batch8 — 区ごとに異なる期限(共通デフォルト値を作�
       // 90日は「転入届出日」起算のため算定しない(文言としては残る)。
       expect(ruleDueOf(code), code).toContain('90日');
     }
-    // 中央は「転入日から15日経過…した転入届があった場合はカードが失効」と明記 → 引越し日+15日。
-    expect(withCard(CHUO).dueDate).toBe('2026-08-16');
+    // 中央は「転入日から15日経過…した転入届があった場合はカードが失効」と明記。
+    // 15日経過した日は**すでに失効している日**なので、失効しない最終日は引越し日+14日。
+    // (同じ区の転入届の届出期限も「住み始めてから14日以内」で一致する。)
+    expect(withCard(CHUO).dueDate).toBe('2026-08-15');
     // 文京は「引越し日から14日以内に転入届を行わなかった場合、カードは失効」と明記 → 引越し日+14日。
     expect(withCard(BUNKYO).dueDate).toBe('2026-08-15');
     // 墨田はカード失効の条件として90日しか書いていない(表の『引っ越し後14日以内』は転入届自体の

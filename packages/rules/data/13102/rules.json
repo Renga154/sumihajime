@@ -1,6 +1,6 @@
 {
   "municipalityCode": "13102",
-  "ruleVersion": "2026-08-09.1",
+  "ruleVersion": "2026-08-09.2",
   "rules": [
     {
       "procedureId": "procedure_resident_registration",
@@ -32,7 +32,7 @@
           {
             "type": "offsetDays",
             "from": "moveDate",
-            "days": 15
+            "days": 14
           },
           {
             "type": "offsetDays",

@@ -17,7 +17,7 @@ exports[`Batch8 — provenance integrity & scope safety > 13102: 決定論 — �
     {
       "applicabilityReason": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。",
       "applicable": "applicable",
-      "dueDate": "2026-08-16",
+      "dueDate": "2026-08-15",
       "priority": "high",
       "procedureId": "procedure_mynumber_continued_use",
       "sourceIds": [
@@ -161,7 +161,7 @@ exports[`Batch8 — provenance integrity & scope safety > 13102: 決定論 — �
       "warnings": [],
     },
   ],
-  "ruleVersion": "2026-08-09.1",
+  "ruleVersion": "2026-08-09.2",
 }
 `;
 

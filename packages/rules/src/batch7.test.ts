@@ -53,9 +53,19 @@ const RULE_VERSION = '2026-08-07.1';
  * 北区は該当ルールが1件も無く(転出予定日起算の明記なし)、rules.json は不変。
  */
 const REVISED_RULE_VERSION = '2026-08-09.1';
+/**
+ * 2026-08-09(2回目): マイナンバー継続利用の期日を1日前へ直した区。
+ * 「◯日経過した転入届があった場合は失効」の◯日目は**すでに失効している日**であり、
+ * 失効しない最終日はその前日。以前は失効日そのものを期限として表示していた。
+ */
+const CORRECTED_RULE_VERSION = '2026-08-09.2';
 const REVISED_WARDS: readonly string[] = [NAKANO, ARAKAWA, TOSHIMA];
 const ruleVersionOf = (code: string) =>
-  REVISED_WARDS.includes(code) ? REVISED_RULE_VERSION : RULE_VERSION;
+  code === TOSHIMA
+    ? CORRECTED_RULE_VERSION
+    : REVISED_WARDS.includes(code)
+      ? REVISED_RULE_VERSION
+      : RULE_VERSION;
 const LAST_VERIFIED = '2026-08-07T00:00:00Z';
 
 /**
@@ -476,10 +486,12 @@ describe('Batch7 — 区ごとに異なる期限(共通デフォルト値を作�
         'procedure_mynumber_continued_use',
       ).dueDate,
     ).toBe('2026-08-19');
-    // 荒川・豊島は「転入から14日(豊島は転入日から15日)」もカード失効の条件として明記しており、
-    // 引越し日から算定できる。
+    // 荒川・豊島は転入届側の条件もカード失効の条件として明記しており、引越し日から算定できる。
+    // 豊島は「転入した翌日から14日以上経過して転入届をしたとき」失効(=最終有効日は引越し日+14)。
+    // 同じページの別の箇所にある「転入日から15日経過した転入届があった場合」も同じ日を指す。
+    // 以前は後者だけを読んで+15日としていたが、15日経過した日は**すでに失効している日**だった。
     expect(withCard(ARAKAWA).dueDate).toBe('2026-08-15');
-    expect(withCard(TOSHIMA).dueDate).toBe('2026-08-16');
+    expect(withCard(TOSHIMA).dueDate).toBe('2026-08-15');
 
     // 北区: 公式ページに90日の記載が無いため、確認できなかったことを明示する(推測で断定しない)。
     const kita = withCard(KITA);
