@@ -21,6 +21,8 @@ import {
   type WardDifferenceInput,
   type WardDifferenceSourceRef,
 } from '@tmn/rules';
+import { isKnownSpaPath, sitemapPaths } from '@tmn/domain';
+import { API_SECURITY_HEADERS, withDocumentSecurityHeaders } from './headers.js';
 import { logEvent } from './log.js';
 import { buildTasks } from './checklist.js';
 import { handleChat, handleChatAvailability } from './chat.js';
@@ -49,6 +51,10 @@ import {
  * 単一Cloudflare Worker: /api/* を提供し(run_worker_first)、それ以外は静的SPAアセット。
  * 全エンドポイント: Zod入力検証 + 構造化ログ(allowlist, PIIなし) + 「次の行動が分かる」エラー文面。
  * データはD1からのみ読み出す(LLM・外部ネットワーク呼び出しはチェックリスト経路に一切入れない)。
+ *
+ * 静的アセットで解決しなかったリクエストもここへ落ちてくる(wrangler.jsonc の
+ * not_found_handling: "none")。ファイル末尾のフォールバックが既知ルートかどうかで
+ * 200 / 404 を出し分ける。
  */
 
 type Variables = { requestId: string };
@@ -60,6 +66,17 @@ const app = new Hono<Env>();
 app.use('/api/*', async (c, next) => {
   c.set('requestId', crypto.randomUUID());
   await next();
+});
+
+/**
+ * /api/* のJSON応答へセキュリティヘッダを付ける(REQUIREMENTS §16.3)。
+ * 静的アセット側は apps/web/public/_headers が同等の値を付ける(理由は headers.ts のコメント)。
+ */
+app.use('/api/*', async (c, next) => {
+  await next();
+  for (const [name, value] of Object.entries(API_SECURITY_HEADERS)) {
+    c.res.headers.set(name, value);
+  }
 });
 
 function fail(
@@ -567,6 +584,84 @@ app.get('/api/waste-sorting', async (c) => {
     count: total,
   });
   return c.json(body);
+});
+
+/**
+ * GET /robots.txt : クローラ向け指示。
+ *
+ * なぜ静的ファイルではなく Worker が返すのか: Sitemap 行に絶対URLが要る。静的ファイルだと
+ * 本番(app.sumihajime.workers.dev)とミラー環境(ADR-008)でオリジンが違うぶん、
+ * どちらかが必ず嘘になる。リクエストのオリジンから組み立てれば常に正しい。
+ * /api/ を除外するのは、APIがクロール対象の「ページ」ではないため(クロール予算の無駄と、
+ * 自治体コード付きURLの無意味な収集を避ける)。
+ */
+app.get('/robots.txt', (c) => {
+  const { origin } = new URL(c.req.url);
+  const body = ['User-agent: *', 'Disallow: /api/', '', `Sitemap: ${origin}/sitemap.xml`, ''].join(
+    '\n',
+  );
+  return withDocumentSecurityHeaders(
+    new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } }),
+  );
+});
+
+/**
+ * GET /sitemap.xml : 公開ページのみのサイトマップ。
+ *
+ * 収録対象は @tmn/domain の SPA_ROUTES(sitemap: true)から導出する。ページを増減しても
+ * ルート表を直せば追随し、手書きの一覧が古びて「存在しないURL」を載せることがない。
+ * lastmod は信頼できる更新日を持たないため出さない(根拠のない値を書かない=原則3)。
+ */
+app.get('/sitemap.xml', (c) => {
+  const { origin } = new URL(c.req.url);
+  const urls = sitemapPaths()
+    .map((path) => `  <url>\n    <loc>${origin}${path}</loc>\n  </url>`)
+    .join('\n');
+  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+  return withDocumentSecurityHeaders(
+    new Response(body, { headers: { 'Content-Type': 'application/xml; charset=utf-8' } }),
+  );
+});
+
+/**
+ * 静的アセットで解決しなかった全リクエストの受け皿(SPAフォールバック)。
+ *
+ * 目的(独立点検): 未定義URLが 200 を返す「ソフト404」をなくす。画面はどちらも同じ index.html
+ * (=クライアントルーティングは無傷)だが、既知ルートは 200、それ以外は 404 ステータスで返す。
+ * これでクローラと外形監視にも「そのURLは無い」と正しく伝わる。
+ * 既知ルートの一覧はルータと同じ @tmn/domain の SPA_ROUTES から判定するため、
+ * ページを増やしたときに片方だけ古くなることがない。
+ */
+app.all('*', async (c) => {
+  const url = new URL(c.req.url);
+
+  // /api/* の未定義パスへHTMLを返さない(APIは常にAPIとして振る舞う)。
+  if (url.pathname.startsWith('/api/')) return c.notFound();
+
+  const assets = c.env.ASSETS;
+  // ASSETSバインディング未設定(単体テスト等)では本文を作れないため、状態だけ正しく返す。
+  if (!assets) {
+    return withDocumentSecurityHeaders(
+      new Response('', {
+        status: isKnownSpaPath(url.pathname) ? 200 : 404,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      }),
+    );
+  }
+
+  const method = c.req.method === 'HEAD' ? 'HEAD' : 'GET';
+  const index = await assets.fetch(new Request(new URL('/index.html', url.origin), { method }));
+  if (!index.ok) return withDocumentSecurityHeaders(index);
+
+  if (isKnownSpaPath(url.pathname)) return withDocumentSecurityHeaders(index);
+
+  const headers = new Headers(index.headers);
+  // 404応答に実体の検証子を残さない/中間キャッシュに残さない。あとで有効になったURLの
+  // 404が居座ると、直したはずのページが見えないという厄介な壊れ方をする。
+  headers.delete('ETag');
+  headers.delete('Last-Modified');
+  headers.set('Cache-Control', 'no-store');
+  return withDocumentSecurityHeaders(new Response(index.body, { status: 404, headers }));
 });
 
 export default app;

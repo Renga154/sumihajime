@@ -6,6 +6,9 @@ import type { Map as MlMap } from 'maplibre-gl';
 // (=タイルのデコードが無言で死に、マーカーだけが無地の上に浮く)。Vite の ?worker&url で
 // ワーカーを独立チャンクとして出力させ、そのURLを setWorkerUrl で明示注入して回避する。
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+// タイル配信元は @tmn/domain を唯一の定義とする(APIのCSP許可リストと同じ値を見るため。
+// 別々に持つと、配信元を変えたときCSPが古いまま残り地図だけ無言で真っ白になる)。
+import { GSI_STD_TILE_URL } from '@tmn/domain';
 import type { Facility } from '@tmn/schemas';
 
 /**
@@ -24,8 +27,7 @@ import type { Facility } from '@tmn/schemas';
  *    畳み、出典も消して一覧のみにする。
  */
 
-/** 地理院タイル(標準地図)。出典明示のみで申請不要(ADR-005 検証済み)。 */
-const GSI_STD_TILE_URL = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png';
+/** 地理院タイル(標準地図)は出典明示のみで申請不要(ADR-005 検証済み)。URLは @tmn/domain。 */
 const GSI_ICHIRAN_URL = 'https://maps.gsi.go.jp/development/ichiran.html';
 
 interface FacilityMapProps {

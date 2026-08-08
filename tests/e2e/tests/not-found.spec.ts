@@ -15,8 +15,9 @@ const DEVELOPER_FACING = [
 
 test('未定義URL: 日本語の404案内を出し、開発者向けの英語画面を出さない', async ({ page }) => {
   const res = await page.goto('/typo-url');
-  // Workers Assets の SPA フォールバックにより配信自体は200(index.html)。
-  expect(res?.status()).toBe(200);
+  // 本文は既知ルートと同じ index.html(クライアントルーティングは無傷)だが、ステータスは 404。
+  // 200を返すとクローラ・外形監視には「正常なページ」に見えてしまう(ソフト404)。
+  expect(res?.status()).toBe(404);
 
   await expect(
     page.getByRole('heading', { level: 1, name: 'ページが見つかりません' }),

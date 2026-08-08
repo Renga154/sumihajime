@@ -10,6 +10,36 @@
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>スミハジメ 〜東京の新生活ToDo〜</title>
+
+    <!--
+      SNS共有カード(OGP / Twitter Card)。
+      description は必ず「非公式サービス」と分かる文にする: 共有カードは本文を読む前に目に入り、
+      ここで運営主体を誤解されると、行政の公式案内だと思い込んだまま利用されうる
+      (REQUIREMENTS §16.2「正式な行政サービスではないことを表示する」)。
+      og:url は置かない: SPAなので全ルートが同じHTMLを返す。単一の値を書くと /differences 等を
+      共有したときに実際と違うURLを名乗ることになる(未指定ならクローラは取得したURLを使う)。
+      画像は既存のロゴ(512x512の正方形)。1200x630のOG専用画像は用意していないため、
+      正方形をそのまま扱える summary カードを指定する(large_image だと中央が切り取られる)。
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="スミハジメ 〜東京の新生活ToDo〜" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:title" content="スミハジメ 〜東京の新生活ToDo〜" />
+    <meta
+      property="og:description"
+      content="東京23区への転入手続きを、住所と世帯にあわせた期限順のToDoにまとめます。全タスクに区の公式ページと最終確認日つき。行政が運営する公式サービスではない非公式サービスです。"
+    />
+    <meta property="og:image" content="https://app.sumihajime.workers.dev/logo.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="スミハジメのロゴ（家とチェックマーク）" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="スミハジメ 〜東京の新生活ToDo〜" />
+    <meta
+      name="twitter:description"
+      content="東京23区への転入手続きを、住所と世帯にあわせた期限順のToDoにまとめます。全タスクに区の公式ページと最終確認日つき。行政が運営する公式サービスではない非公式サービスです。"
+    />
+    <meta name="twitter:image" content="https://app.sumihajime.workers.dev/logo.png" />
   </head>
   <body>
     <div id="root"></div>

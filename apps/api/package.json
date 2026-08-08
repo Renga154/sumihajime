@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@tmn/domain": "workspace:*",
     "@tmn/rag": "workspace:*",
     "@tmn/rules": "workspace:*",
     "@tmn/schemas": "workspace:*",

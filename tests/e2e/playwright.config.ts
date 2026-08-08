@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 /**
  * なぜ: T-017 のE2E/a11y/性能計測基盤。ブラウザ依存のためCIには組み込まず、ローカル/手動実行。
  *
- * テスト対象サーバー: ポート8788で `wrangler dev`(--local)。8787は別プロセスが使う可能性が
+ * テスト対象サーバー: 既定はポート8788で `wrangler dev`(--local)。8787は別プロセスが使う可能性が
  * あるため使わない。webServer.command が「ローカルD1シード(3自治体)→ web build → wrangler dev」を
  * 一括で行い、Playwrightが起動待ち・自動終了まで面倒を見る(reuseExistingServer で二重起動を回避)。
  *
@@ -15,7 +15,11 @@ import { dirname, resolve } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../..');
 
-export const BASE_URL = 'http://localhost:8788';
+// 既定は8788。E2E_PORT で上書きできるのは、同一マシンで複数のワークツリーを並行して検証するとき、
+// 別ワークツリーのビルドを掴んだまま「直したはずの挙動が直っていない」と誤判定しないため。
+const PORT = process.env.E2E_PORT ?? '8788';
+
+export const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: './tests',
@@ -50,8 +54,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command:
-      'pnpm --filter @tmn/publish exec tsx src/publish.ts && pnpm --filter web build && pnpm --filter api exec wrangler dev --port 8788 --local',
+    command: `pnpm --filter @tmn/publish exec tsx src/publish.ts && pnpm --filter web build && pnpm --filter api exec wrangler dev --port ${PORT} --local`,
     cwd: repoRoot,
     url: `${BASE_URL}/api/health`,
     reuseExistingServer: true,

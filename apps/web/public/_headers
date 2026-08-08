@@ -1,5 +1,22 @@
 # Cloudflare Workers 静的アセットのレスポンスヘッダ定義(このファイル自体は配信されない)。
 #
+# なぜ Hono ミドルウェアではなくここなのか: 静的アセット(index.html / JS / CSS / フォント /
+# 画像)は wrangler.jsonc の run_worker_first が /api/* 等に限定されているぶん Worker のコードを
+# 通らずに返る。ミドルウェアで付けたヘッダはこれらの応答に載らないため、静的側は Cloudflare 標準の
+# この仕組みで付ける。Worker が自分で作る応答(/api/* のJSON・SPAフォールバックHTML・robots.txt・
+# sitemap.xml)には apps/api/src/headers.ts が同じ値を付ける。
+#
+# ★ 下のセキュリティヘッダは apps/api/src/headers.ts の DOCUMENT_SECURITY_HEADERS と同一でなければ
+#   ならない。apps/api/src/headers.test.ts がこのファイルを読んで文字列一致を検査する。
+#   値を変えるときは必ず両方を同時に変えること(各値を選んだ理由は headers.ts のコメントにある)。
+
+/*
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: https://cyberjapandata.gsi.go.jp; font-src 'self'; connect-src 'self' https://cyberjapandata.gsi.go.jp; worker-src 'self'; manifest-src 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), usb=()
+
 # なぜ(独立点検 P2-8): /assets/* は Vite が内容ハッシュ付きのファイル名で出力する不変資産
 # だが、既定では `max-age=0, must-revalidate` が付き、ページ遷移のたびに JS/CSS/フォントへ
 # 条件付きGETが走っていた(304でも往復のRTTがモバイル回線ではそのまま体感遅延になる)。

@@ -8,12 +8,20 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-07-21",
   "assets": {
-    // The SPA build output from apps/web. Non-/api/* requests fall back to
-    // index.html (client-side routing). Build apps/web before deploying.
+    // The SPA build output from apps/web. Build apps/web before deploying.
     "directory": "../web/dist",
-    "not_found_handling": "single-page-application",
-    // API routes hit the Worker first; everything else is served from assets.
-    "run_worker_first": ["/api/*"],
+    // なぜ binding が要るのか: 未定義URLへ 404 ステータスを返すため、SPAフォールバック
+    // (index.html の配信)を Worker 側で行う。そのために index.html を読み出す口が必要。
+    "binding": "ASSETS",
+    // なぜ "none" なのか: "single-page-application" だと未定義URLにも Assets が
+    // index.html を **200** で返してしまう(=ソフト404。利用者には日本語の404画面が出るのに、
+    // クローラと監視には正常ページに見える)。"none" にすると実ファイルの無いパスが Worker へ
+    // 落ちてくるので、既知ルート(@tmn/domain の SPA_ROUTES)なら 200、それ以外は 404 で
+    // 同じ index.html を返せる。SPAのクライアントルーティングは 404 本文でも通常どおり動く。
+    "not_found_handling": "none",
+    // Worker を先に通すパス。/api/* に加え、robots.txt / sitemap.xml は Worker が
+    // ルート表から生成する(静的ファイルを置かずに済ませ、内容のズレを防ぐ)。
+    "run_worker_first": ["/api/*", "/robots.txt", "/sitemap.xml"],
   },
   // D1: チェックリスト/手続き/施設/ごみ/台帳の読み取り元(T-006)。
   // database_id は 2026-07-22 に `wrangler d1 create tokyo-move-navi` で採番した本番ID(T-011)。
@@ -55,8 +63,9 @@
       "account_id": "<ACCOUNT_ID>",
       "assets": {
         "directory": "../web/dist",
-        "not_found_handling": "single-page-application",
-        "run_worker_first": ["/api/*"],
+        "binding": "ASSETS",
+        "not_found_handling": "none",
+        "run_worker_first": ["/api/*", "/robots.txt", "/sitemap.xml"],
       },
       "d1_databases": [
         {

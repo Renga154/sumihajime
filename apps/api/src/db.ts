@@ -33,6 +33,12 @@ import type { VectorizeQueryable } from '@tmn/rag';
 
 export interface Bindings {
   DB: D1Database;
+  /**
+   * 静的アセット(apps/web/dist)。Worker から index.html を読み出してSPAフォールバックを
+   * 自前で返すために使う(未定義URLへ 404 ステータスを付けるため。wrangler.jsonc 参照)。
+   * ローカルの単体テストではバインドされないため optional。
+   */
+  ASSETS?: Fetcher;
   // RAG(T-013)。RAG_ENABLED!=='true' の間は /api/chat が 503 を返すため、以下は未設定でも動く。
   VECTORIZE?: VectorizeQueryable;
   RAG_ENABLED?: string;

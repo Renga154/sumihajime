@@ -32,6 +32,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@tmn/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@tmn/rag':
         specifier: workspace:*
         version: link:../../packages/rag
@@ -69,6 +72,9 @@ importers:
       '@fontsource/noto-sans-jp':
         specifier: ^5.3.0
         version: 5.3.0
+      '@tmn/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@tmn/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
