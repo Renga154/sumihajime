@@ -38,6 +38,19 @@ export async function fillWizardStep1(page: Page, s: Step1): Promise<void> {
   await page.getByRole('radio', { name: s.origin ?? '東京都外' }).check();
 }
 
+/**
+ * ステップ2・3を開いて「見た」ことにする(何も変更しない)。
+ *
+ * なぜ必要か: チェックリストは、ステップ2・3を開いていない人に
+ * 「まだ判定していない条件があります」を出す。当てはまるものが無くて開いただけの人と、
+ * 飛ばした人を区別するための記録が別キーに入る(apps/web/src/lib/storage.ts)。
+ * 提出用キャプチャのように「入力を終えた状態の画面」を撮りたいときに使う。
+ */
+export async function reviewOptionalSteps(page: Page): Promise<void> {
+  await page.getByRole('button', { name: /次へ（世帯の入力）/ }).click();
+  await page.getByRole('button', { name: /次へ（条件チェック）/ }).click();
+}
+
 /** ウィザード下部の生成ボタンを押し、チェックリストへ遷移する。 */
 export async function generateChecklist(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'この内容でチェックリストを作成' }).click();
