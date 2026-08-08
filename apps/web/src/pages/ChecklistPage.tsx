@@ -6,11 +6,18 @@ import { useAppState } from '../state/AppState';
 import { loadDone, loadProfile, saveDone, toggleDone, isDone, type DoneMap } from '../lib/storage';
 import { groupIntoSections, sectionDescription, sectionLabel } from '../lib/sections';
 import { formatDate, formatDateFromDateTime } from '../lib/format';
+import { isOverdue, overdueDays, todayInTokyo } from '../lib/move-date';
+import { useDocumentTitle } from '../lib/navigation';
 import { buildChecklistIcs, datedTasks } from '../lib/ics';
 import { useAsync } from '../lib/useAsync';
 import { conditionGapNotice, type ConditionGapNotice } from '../lib/condition-gaps';
 import { Card, EmptyState, ErrorMessage, Loading } from '../components/ui';
-import { NeedsConfirmationBadge, NonMunicipalBadge, PriorityBadge } from '../components/Badge';
+import {
+  NeedsConfirmationBadge,
+  NonMunicipalBadge,
+  OverdueBadge,
+  PriorityBadge,
+} from '../components/Badge';
 import { isNonMunicipal } from '../lib/provider-scope';
 import { ChatPanel } from '../components/ChatPanel';
 
@@ -20,7 +27,10 @@ import { ChatPanel } from '../components/ChatPanel';
  * 完了状態は procedureId キーで localStorage に保持し(C-4)、リロード後も維持される。
  */
 export function ChecklistPage() {
+  useDocumentTitle('あなたのチェックリスト');
   const { municipalityCode } = useAppState();
+  // 期限超過の判定基準日。日本時間の暦日で固定する(端末のタイムゾーンに左右されない)。
+  const today = useMemo(() => todayInTokyo(), []);
   const profile = municipalityCode ? loadProfile(municipalityCode) : null;
   const profileSig = profile ? JSON.stringify(profile) : '';
 
@@ -216,6 +226,7 @@ export function ChecklistPage() {
                   <li key={task.id}>
                     <TaskCard
                       task={task}
+                      today={today}
                       done={isDone(doneMap, task.procedureId)}
                       onToggle={(d) => onToggle(task, d)}
                     />
@@ -323,14 +334,20 @@ function ConditionGapCard({ notice }: { notice: ConditionGapNotice }) {
 
 function TaskCard({
   task,
+  today,
   done,
   onToggle,
 }: {
   task: GeneratedTask;
+  today: string;
   done: boolean;
   onToggle: (done: boolean) => void;
 }) {
   const needsConfirmation = task.applicable === 'needs_confirmation';
+  // 転入後にこのサービスを知る利用者が主要ターゲットのため、期限を過ぎた状態を黙って
+  // 通常表示しない。ただし届出済みかどうかは分からないので断定はしない(原則3)。
+  const overdue = !done && isOverdue(task.dueDate, today);
+  const overdueBy = overdue ? overdueDays(task.dueDate, today) : 0;
   const checkboxId = `done-${task.id}`;
   const borderByPriority: Record<typeof task.priority, string> = {
     urgent: 'border-l-red-400',
@@ -358,6 +375,7 @@ function TaskCard({
             <PriorityBadge priority={task.priority} />
             {/* ADR-009: 区の窓口では済まない手続き(水道・郵便・電気ガス・免許)を区別する。 */}
             {isNonMunicipal(task.category) && <NonMunicipalBadge />}
+            {overdue && <OverdueBadge days={overdueBy} />}
             {needsConfirmation && <NeedsConfirmationBadge />}
             {done && (
               <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800 ring-1 ring-inset ring-green-200">
@@ -426,6 +444,11 @@ function TaskCard({
           </div>
           {!task.dueDate && task.dueDescription && (
             <p className="mt-1 text-xs text-slate-500">{task.dueDescription}</p>
+          )}
+          {overdue && (
+            <p className="mt-1.5 rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-sm text-red-900">
+              期限の日付を過ぎています。遅れても手続きは必要です。お早めに区の窓口へご相談ください。手続き済みの場合は、このまま完了にしてください。
+            </p>
           )}
 
           <p className="mt-2 text-sm text-slate-700">{task.applicabilityReason}</p>

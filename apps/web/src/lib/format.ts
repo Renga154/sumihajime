@@ -72,6 +72,29 @@ export const weekdayLabel: Record<Weekday, string> = {
   sunday: '日曜日',
 };
 
+/**
+ * 出典台帳の update_frequency(列挙値)→日本語。
+ * 台帳の値は自由記述も許されるスキーマ(z.string())のため、未知の値・既に日本語の値は
+ * そのまま返す(勝手な言い換えをしない)。
+ */
+export const updateFrequencyLabel: Record<string, string> = {
+  as_needed: '随時',
+  'as-needed': '随時',
+  irregular: '不定期',
+  daily: '毎日',
+  weekly: '毎週',
+  monthly: '毎月',
+  quarterly: '四半期ごと',
+  annual: '年1回',
+  annually: '年1回',
+  fiscal_year: '年度ごと',
+  unknown: '不明',
+};
+
+export function updateFrequencyText(value: string): string {
+  return updateFrequencyLabel[value] ?? value;
+}
+
 /** カテゴリキー(coverage/procedure等の canonicalType)→利用者向け見出し。未知キーはそのまま返す。 */
 export const categoryLabel: Record<string, string> = {
   resident_registration: '住民の届出（転入届など）',

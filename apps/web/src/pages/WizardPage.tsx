@@ -7,9 +7,18 @@ import {
   type OriginType,
   type Profile,
 } from '@tmn/schemas';
+import { getMunicipalities } from '../api/client';
 import { useAppState } from '../state/AppState';
 import { loadProfile, saveProfile } from '../lib/storage';
 import { ageBandLabel, originTypeLabel } from '../lib/format';
+import {
+  isMoveDateWithinRange,
+  moveDateBounds,
+  moveDateRangeMessage,
+  todayInTokyo,
+} from '../lib/move-date';
+import { useDocumentTitle } from '../lib/navigation';
+import { useAsync } from '../lib/useAsync';
 import { Card } from '../components/ui';
 
 /**
@@ -104,10 +113,24 @@ export function parseStepParam(raw: string | null): number {
 }
 
 export function WizardPage() {
+  useDocumentTitle('条件を入力する');
   const navigate = useNavigate();
   const { municipalityCode } = useAppState();
   const existing = municipalityCode ? loadProfile(municipalityCode) : null;
   const [searchParams] = useSearchParams();
+
+  // 入力中の自治体を画面に出すため名称を引く。取得できない間はコードを表示し、
+  // 「どの区の入力をしているか」が一度も見えない状態を作らない(CLAUDE.md原則4)。
+  const muniState = useAsync(async () => {
+    if (!municipalityCode) return null;
+    const munis = await getMunicipalities();
+    return munis.find((m) => m.code === municipalityCode)?.name ?? null;
+  }, [municipalityCode]);
+  const muniName = muniState.data ?? municipalityCode ?? '';
+
+  // 引越し日の受付範囲。マウント時の日本時間の暦日で固定する(描画中に日付が変わらない)。
+  const today = useMemo(() => todayInTokyo(), []);
+  const dateBounds = useMemo(() => moveDateBounds(today), [today]);
 
   const [step, setStep] = useState(() => parseStepParam(searchParams.get('step')));
 
@@ -153,7 +176,10 @@ export function WizardPage() {
     return 'unknown';
   });
 
-  const step1Valid = moveDate !== '' && originType !== '';
+  // 1900年のような値が素通りしないよう、受付範囲外は入力時点で止める。
+  const moveDateOutOfRange = moveDate !== '' && !isMoveDateWithinRange(moveDate, today);
+  const step1Filled = moveDate !== '' && originType !== '';
+  const step1Valid = step1Filled && !moveDateOutOfRange;
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -194,6 +220,11 @@ export function WizardPage() {
 
   function generate() {
     if (!municipalityCode) return;
+    if (moveDateOutOfRange) {
+      setErrorMsg(moveDateRangeMessage(today));
+      setStep(1);
+      return;
+    }
     if (!step1Valid) {
       setErrorMsg('引越し日と転入元区分を入力してください。');
       setStep(1);
@@ -223,6 +254,31 @@ export function WizardPage() {
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold text-slate-900">条件を入力する</h1>
+
+      {/*
+        いま何区の入力をしているかを常に見せる(CLAUDE.md原則4)。区名が初めて出るのが
+        チェックリスト到達後だと、区を取り違えたまま全項目を入力しきってしまう。
+        チェックリスト画面と同じ体裁のチップを使い、隣に選び直す導線を置く。
+      */}
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 font-semibold text-brand-800 ring-1 ring-inset ring-brand-100">
+          <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M10 2a5 5 0 00-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 00-5-5zm0 6.5A1.5 1.5 0 1110 5.5a1.5 1.5 0 010 3z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span className="sr-only">自治体：</span>
+          {muniName}
+        </span>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1 font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
+        >
+          自治体を変える
+        </Link>
+      </div>
 
       <ol className="flex flex-wrap gap-2 text-sm" aria-label="入力ステップ">
         {STEPS.map((label, i) => {
@@ -273,17 +329,33 @@ export function WizardPage() {
               引越し日または転入予定日
               <span className="ml-1 text-red-700">*</span>
             </label>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500" id="moveDate-help">
               手続きの期限は引越し日を基準に計算するため、目安の日付を選んでください。
+              {`（${dateBounds.min} 〜 ${dateBounds.max} の範囲で入力できます）`}
             </p>
             <input
               id="moveDate"
               type="date"
               value={moveDate}
               onChange={(e) => setMoveDate(e.target.value)}
+              min={dateBounds.min}
+              max={dateBounds.max}
+              aria-describedby={
+                moveDateOutOfRange ? 'moveDate-help moveDate-error' : 'moveDate-help'
+              }
+              aria-invalid={moveDateOutOfRange || undefined}
               className="mt-2 rounded-lg border border-slate-300 px-3 py-2 transition-colors focus:border-brand-500"
               required
             />
+            {moveDateOutOfRange && (
+              <p
+                id="moveDate-error"
+                role="alert"
+                className="mt-2 rounded border border-red-300 bg-red-50 p-2 text-sm text-red-900"
+              >
+                {moveDateRangeMessage(today)}
+              </p>
+            )}
           </div>
 
           <fieldset>
@@ -496,9 +568,11 @@ export function WizardPage() {
         {/* なぜ: ステップ1だけでも作成できる(FR-003)ことは維持しつつ、条件を選ばないと
             マイナンバーカード等の手続きが判定対象外のままになることを、押す前に伝える。 */}
         <p className="mt-1 text-center text-xs text-slate-500">
-          {!step1Valid
-            ? '引越し日と転入元区分（ステップ1）を入力すると作成できます。'
-            : 'ステップ2・3も入力すると、マイナンバーカード・国民健康保険・国民年金などの該当判定まで含められます。'}
+          {moveDateOutOfRange
+            ? moveDateRangeMessage(today)
+            : !step1Valid
+              ? '引越し日と転入元区分（ステップ1）を入力すると作成できます。'
+              : 'ステップ2・3も入力すると、マイナンバーカード・国民健康保険・国民年金などの該当判定まで含められます。'}
         </p>
       </div>
     </div>

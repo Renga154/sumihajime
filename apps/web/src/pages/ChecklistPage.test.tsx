@@ -86,6 +86,7 @@ vi.mock('../api/client', () => ({
   postChat: vi.fn(),
 }));
 
+import { postChecklist } from '../api/client';
 import { ChecklistPage } from './ChecklistPage';
 
 beforeEach(() => {
@@ -218,5 +219,44 @@ describe('ChecklistPage — ステップ2/3を入力せずに生成した場合'
     renderChecklist();
     const link = await screen.findByRole('link', { name: '条件を追加する' });
     expect(link).toHaveAttribute('href', '/wizard?step=3');
+  });
+});
+
+/**
+ * なぜ: 転入後にこのサービスを知る利用者が主要ターゲットなので、期限を過ぎた状態を
+ * 何の表示もなく通常タスクとして並べない(監査P1-5)。ただし届出済みかは分からないため
+ * 断定せず「可能性」にとどめ、次の行動を添える(原則3)。
+ */
+describe('ChecklistPage — 期限を過ぎたタスク', () => {
+  function withTasks(dueDate: string) {
+    vi.mocked(postChecklist).mockResolvedValueOnce({
+      ...FIXTURE,
+      tasks: [
+        makeTask({
+          id: 't-past',
+          procedureId: 'procedure_resident_registration',
+          title: '転入届',
+          priority: 'urgent',
+          dueDate,
+          applicable: 'applicable',
+        }),
+      ],
+    });
+  }
+
+  it('過去の期限には「期限を過ぎている可能性」と次の行動を出す', async () => {
+    withTasks('2020-01-01');
+    renderChecklist();
+    expect(await screen.findByText(/期限を過ぎている可能性/)).toBeVisible();
+    expect(screen.getByText(/遅れても手続きは必要です/)).toBeVisible();
+    // 断定しない: 「期限切れです」のような言い切りはしない。
+    expect(document.body.textContent).not.toContain('期限切れです');
+  });
+
+  it('未来の期限には超過表示を出さない', async () => {
+    withTasks('2099-12-31');
+    renderChecklist();
+    await screen.findByText('転入届');
+    expect(screen.queryByText(/期限を過ぎている可能性/)).toBeNull();
   });
 });

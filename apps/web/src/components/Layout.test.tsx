@@ -1,23 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { Layout } from './Layout';
 
 /**
  * なぜ: Step2 のナビ再編を固定する。メインナビは利用者の主要動線のみ(ホーム/入力/
  * チェックリスト/窓口一覧/ごみ収集)に絞り、「対応状況・来歴」等の透明性情報はメインナビから
  * 外してフッターの「このサービスのデータについて」(/about-data)へ移設したことを担保する。
+ *
+ * データルーター(createMemoryRouter)で描画する理由: Layout は <ScrollRestoration /> を
+ * 含み、これは本番と同じ createBrowserRouter 系のルーターでのみ動作する。
  */
 function renderLayout() {
-  return render(
-    <MemoryRouter initialEntries={['/']}>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<div>ホーム本文</div>} />
-        </Route>
-      </Routes>
-    </MemoryRouter>,
+  const router = createMemoryRouter(
+    [
+      {
+        element: <Layout />,
+        children: [{ path: '/', element: <div>ホーム本文</div> }],
+      },
+    ],
+    { initialEntries: ['/'] },
   );
+  return render(<RouterProvider router={router} />);
 }
 
 describe('Layout ナビゲーション (Step2)', () => {

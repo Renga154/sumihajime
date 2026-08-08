@@ -9,6 +9,7 @@ import { Disclaimer } from '../components/Disclaimer';
 import { MunicipalityFilter } from '../components/MunicipalityFilter';
 import { Card, EmptyState, ErrorMessage, ExternalLink, SkeletonCard } from '../components/ui';
 import { Badge } from '../components/Badge';
+import { useDocumentTitle } from '../lib/navigation';
 
 /**
  * ランディング/自治体選択(§7.2)。対応自治体のみ選択可能にし、未対応自治体は
@@ -20,6 +21,8 @@ import { Badge } from '../components/Badge';
  * 双方に等しく効かせ、件数表示も追随させる(未対応を対応済みに見せない原則は維持)。
  */
 export function LandingPage() {
+  // トップはサイト名そのものを <title> にする(他ページは「ページ名 | サイト名」)。
+  useDocumentTitle();
   const navigate = useNavigate();
   const { setMunicipalityCode } = useAppState();
   const { data, error, loading } = useAsync(() => getMunicipalities(), []);

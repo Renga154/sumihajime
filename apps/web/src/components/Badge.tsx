@@ -140,6 +140,31 @@ export function NonMunicipalBadge() {
   );
 }
 
+/**
+ * 「期限を過ぎている可能性」バッジ。
+ * なぜ断定しないか: 本サービスは届出済みかどうかを知らない。すでに済ませている人に
+ * 「期限切れです」と断定するのは誤案内になるため、可能性の提示にとどめる(原則3)。
+ */
+export function OverdueBadge({ days }: { days: number }) {
+  return (
+    <Badge
+      tone="red"
+      icon={
+        <svg viewBox="0 0 20 20" className={iconCls} fill="currentColor">
+          <path
+            fillRule="evenodd"
+            d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 4a1 1 0 10-2 0v4a1 1 0 00.4.8l2.5 1.9a1 1 0 101.2-1.6L11 9.5V6z"
+            clipRule="evenodd"
+          />
+        </svg>
+      }
+    >
+      期限を過ぎている可能性
+      {days > 0 && <span className="font-normal">（{days}日超過）</span>}
+    </Badge>
+  );
+}
+
 /** 「要確認」バッジ(needs_confirmation)。 */
 export function NeedsConfirmationBadge() {
   return (
