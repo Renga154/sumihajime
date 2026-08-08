@@ -163,6 +163,9 @@ importers:
 
   scripts/eval:
     dependencies:
+      '@tmn/rag':
+        specifier: workspace:*
+        version: link:../../packages/rag
       '@tmn/rag-index':
         specifier: workspace:*
         version: link:../rag

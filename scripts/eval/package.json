@@ -15,6 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@tmn/rag": "workspace:*",
     "@tmn/rag-index": "workspace:*",
     "@tmn/schemas": "workspace:*",
     "zod": "^4.4.3"

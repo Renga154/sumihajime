@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { orderedQuestionCategories } from '@tmn/rag';
 import { parseDataset, assertDatasetShape } from './cases.js';
 
 /**
@@ -21,9 +22,29 @@ describe('rag-eval-cases.json', () => {
     expect(() => parseDataset(raw)).not.toThrow();
   });
 
-  it('175問・正答142/保留17/越境16・自治体整合を満たす', () => {
+  it('179問・正答146/保留17/越境16・自治体整合を満たす', () => {
     const dataset = parseDataset(raw);
     expect(() => assertDatasetShape(dataset)).not.toThrow();
+  });
+
+  /**
+   * なぜ: v2.1.1 までの175問は**すべて単一トピック**だった。そのため「1文で2つ尋ねられ、片方に
+   * 一言も触れずに200を返す」欠陥(本番実測 2026-08-08 / 世田谷「犬の登録に必要な持ち物と、
+   * 粗大ごみの出し方」)を、評価が一度も踏めなかった=評価が現実より易しい問題を解いていた。
+   * 同じ状態へ戻らないよう、複合質問の存在と「話題ごとに期待値を持つこと」を固定する。
+   */
+  it('複合質問(1文で複数の手続き)のケースを持ち、話題ごとに期待キーフレーズを持つ', () => {
+    const dataset = parseDataset(raw);
+    const compound = dataset.cases.filter((c) => c.id.includes('-compound-'));
+    expect(compound.length).toBeGreaterThanOrEqual(4);
+    for (const c of compound) {
+      // 本番と同じ決定論的判定で、質問が本当に複数手続きを指していること。
+      expect(orderedQuestionCategories(c.question).length, c.id).toBeGreaterThanOrEqual(2);
+      // 片方の話題しか見ない期待値にしない。
+      expect(c.expect.answerMustInclude.length, c.id).toBeGreaterThanOrEqual(2);
+    }
+    // 「片方に書類一覧が無い」形(=無言の欠落が起きていた形)を必ず含む。
+    expect(compound.some((c) => c.expect.answerMustInclude.includes('ごみ'))).toBe(true);
   });
 
   // なぜ: v1.2.0にあった書類系4問が23区化(v2.0.0)で全て失われ、UIのプレースホルダそのものの質問

@@ -42,6 +42,41 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   waste_schedule: ['ごみ', 'ゴミ', '資源', '収集', '粗大', '分別'],
 } as const;
 
+/**
+ * category(canonicalType) → **利用者へ見せてよい**日本語の話題名。
+ *
+ * なぜ必要か: 回答に含められなかった話題を利用者へ明示するとき、内部enum名
+ * (`waste_schedule` 等)をそのまま出すことは許されない(packages/rules/src/internal-identifiers.test.ts
+ * が公開データに対して同じ不変条件を機械検証している)。かつ「もう一つのご質問」のような
+ * 曖昧な指し方では、利用者は**どちらが落ちたのか**を判別できない。よって category ごとに
+ * 公式手続き名ではなく「利用者が自分の質問だと分かる一般名」を持つ。
+ *
+ * CATEGORY_KEYWORDS の全キーに対応する項目が必要(intent.test.ts が1:1を強制する)。
+ */
+export const CATEGORY_LABELS: Readonly<Record<string, string>> = {
+  resident_registration: '転入届・住民票',
+  my_number: 'マイナンバーカード',
+  national_health_insurance: '国民健康保険',
+  national_pension: '国民年金',
+  child_benefits: '児童手当',
+  child_medical: '子ども医療費助成',
+  dog_registration: '犬の登録',
+  school_transfer: '小・中学校の転入学',
+  childcare: '保育園等の入園申込',
+  waste_schedule: 'ごみ・資源の出し方と収集日',
+} as const;
+
+/**
+ * category → 利用者向け話題名。未知のcategoryでも**内部enum名を絶対に返さない**。
+ *
+ * なぜ総称へ退避するか: 内部識別子の露出は「回答が読めない」より重い欠陥(利用者に意味が無く、
+ * 内部構造を漏らす)。ラベル漏れ自体は intent.test の1:1検査で開発時に落ちるため、実行時の
+ * この退避は最後の安全網であって通常経路ではない。
+ */
+export function categoryLabel(category: string): string {
+  return CATEGORY_LABELS[category] ?? 'お尋ねのお手続き';
+}
+
 /** 質問が主題とする手続きの category 集合(辞書キーワードの部分一致で決定)。 */
 export function questionCategories(question: string): Set<string> {
   const hit = new Set<string>();
