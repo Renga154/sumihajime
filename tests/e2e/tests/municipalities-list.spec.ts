@@ -36,3 +36,36 @@ test('62リスト: 対応23件+未対応グループの展開と公式リンク'
     /vill\.ogasawara\.tokyo\.jp/,
   );
 });
+
+/**
+ * 62件を縦に並べるだけでは自分の自治体に辿り着くまでのスクロールが長すぎるため、
+ * 一覧の先頭に絞り込みを置いた。対応・未対応の双方に同じ規則で効き、件数表示も追随する。
+ */
+test('62リスト: 自治体名の絞り込み(漢字・かな・ローマ字)', async ({ page }) => {
+  await page.goto('/');
+  const filter = page.getByLabel('自治体名で絞り込む');
+  await expect(filter).toBeVisible();
+  await expect(page.getByText(/全62件を表示中/)).toBeVisible();
+
+  // 漢字で絞り込む → 練馬区だけが残り、開始ボタンも1つになる。
+  await filter.fill('練馬');
+  await expect(page.getByRole('button', { name: 'この自治体で始める' })).toHaveCount(1);
+  await expect(page.getByRole('listitem').filter({ hasText: '練馬区' })).toBeVisible();
+  await expect(page.getByRole('listitem').filter({ hasText: '世田谷区' })).toHaveCount(0);
+
+  // ひらがな・ローマ字でも同じ結果になる。
+  await filter.fill('ねりま');
+  await expect(page.getByRole('listitem').filter({ hasText: '練馬区' })).toBeVisible();
+  await filter.fill('nerima');
+  await expect(page.getByRole('listitem').filter({ hasText: '練馬区' })).toBeVisible();
+
+  // 未対応の自治体も同じ規則で引ける(絞り込み中はグループが開いて中身が見える)。
+  await filter.fill('八王子');
+  const hachioji = page.getByRole('listitem').filter({ hasText: '八王子市' });
+  await expect(hachioji).toBeVisible();
+  await expect(hachioji.getByRole('button', { name: 'この自治体で始める' })).toHaveCount(0);
+
+  // 絞り込みを消すと全件へ戻る。
+  await filter.fill('');
+  await expect(page.getByRole('button', { name: 'この自治体で始める' })).toHaveCount(23);
+});

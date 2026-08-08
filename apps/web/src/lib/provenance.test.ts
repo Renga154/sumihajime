@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { SourceLedgerEntry } from '@tmn/schemas';
-import { freshnessBucketOf, jstDateString, summarizeFreshness } from './provenance';
+import {
+  freshnessBucketOf,
+  jstDateString,
+  latestVerifiedDate,
+  summarizeFreshness,
+} from './provenance';
 
 /**
  * なぜ: 鮮度サマリーは来歴ダッシュボードの中核表示であり、日付計算(JST基準日・経過日数・
@@ -103,5 +108,36 @@ describe('summarizeFreshness', () => {
     const y = s.yearData[0]!;
     expect(y.expired).toBe(true);
     expect(y.daysRemaining).toBeLessThan(0);
+  });
+});
+
+/**
+ * なぜ: 透明性ページ冒頭の要約に出す「最終更新日」。台帳全体で最も新しい最終確認日を
+ * 代表させるため、欠損・不正値を混ぜても壊れないことを固定する。
+ */
+describe('latestVerifiedDate', () => {
+  it('最も新しい最終確認日(暦日)を返す', () => {
+    expect(
+      latestVerifiedDate([
+        entry({ sourceId: 'a', lastVerifiedAt: '2026-07-21T00:00:00Z' }),
+        entry({ sourceId: 'b', lastVerifiedAt: '2026-08-01T09:00:00Z' }),
+        entry({ sourceId: 'c', lastVerifiedAt: '2026-06-30T00:00:00Z' }),
+      ]),
+    ).toBe('2026-08-01');
+  });
+
+  it('1件も無い/最終確認日が無い/不正な値なら null', () => {
+    expect(latestVerifiedDate([])).toBeNull();
+    expect(latestVerifiedDate([entry({ lastVerifiedAt: '' })])).toBeNull();
+    expect(latestVerifiedDate([entry({ lastVerifiedAt: 'not-a-date' })])).toBeNull();
+  });
+
+  it('解釈できる値だけを対象にする(不正値が混ざっても落とさない)', () => {
+    expect(
+      latestVerifiedDate([
+        entry({ sourceId: 'bad', lastVerifiedAt: 'not-a-date' }),
+        entry({ sourceId: 'ok', lastVerifiedAt: '2026-07-21T00:00:00Z' }),
+      ]),
+    ).toBe('2026-07-21');
   });
 });

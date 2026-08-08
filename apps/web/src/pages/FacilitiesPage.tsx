@@ -75,7 +75,9 @@ export function FacilitiesPage() {
             {list.map((f) => (
               <li key={f.facilityId}>
                 <Card interactive>
-                  <p className="font-semibold text-slate-900">{f.name}</p>
+                  {/* 窓口名は見出し要素にする(カテゴリ見出し h2 の下位=h3)。
+                      スクリーンリーダーの見出しジャンプで窓口を辿れるようにするため。 */}
+                  <h3 className="font-semibold text-slate-900">{f.name}</h3>
                   <p className="text-sm text-slate-700">{f.address}</p>
                   {f.hours && <p className="text-sm text-slate-600">開庁時間：{f.hours}</p>}
                   {hasNoCoordinates(f) && (

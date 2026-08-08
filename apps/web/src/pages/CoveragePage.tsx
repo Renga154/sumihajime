@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type {
   CoverageStatus,
   MunicipalityWithCoverage,
@@ -15,13 +15,16 @@ import {
 } from '../lib/format';
 import {
   jstDateString,
+  latestVerifiedDate,
   summarizeFreshness,
   type FreshnessSummary,
   type YearDataCountdown,
 } from '../lib/provenance';
+import { filterByQuery, normalizeSearchText } from '../lib/municipality-search';
 import { OPENDATA_GAPS_SOURCE_DOC, OPENDATA_GAP_CASES } from '../content/opendata-gaps';
 import { Badge } from '../components/Badge';
-import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
+import { MunicipalityFilter } from '../components/MunicipalityFilter';
+import { Card, EmptyState, ErrorMessage, ExternalLink, Loading } from '../components/ui';
 
 /**
  * 「このサービスのデータについて」(透明性ページ / §7 / FR-020・FR-024)。
@@ -35,6 +38,12 @@ import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
  * データは公開API(/api/sources, /api/municipalities)からのみ取得し、判定ロジックは持たない
  * (鮮度計算は lib/provenance の純関数)。自治体名は台帳に無いため municipalities から引く。
  * 開発トラッキング(タスクID・進捗)はリポジトリのdocsが正であり、この画面には出さない。
+ *
+ * 表示の設計(重要): 62自治体 × 332ソースを一度に展開すると、モバイルで12万px超になり
+ * 「全部載っているが誰も辿れない」ページになる。透明性は到達可能性で決まるため、
+ * 情報は一切削らずに、自治体ごとの詳細を既定で折りたたみ、冒頭に要約と自治体名の絞り込みを
+ * 置いて初期表示を短くする。折りたたみは <details> で、キーボード操作とスクリーンリーダーの
+ * 開閉に標準対応させる。
  */
 
 const sourceTypeLabel: Record<SourceType, string> = {
@@ -101,8 +110,17 @@ export function CoveragePage() {
     const freshness = summarizeFreshness(sources, today);
     const nameByCode = new Map(munis.map((m) => [m.code, m.name]));
     const groups = groupSourcesByMunicipality(sources, nameByCode);
-    return { munis, freshness, groups, today };
+    const lastVerified = latestVerifiedDate(sources);
+    return { munis, freshness, groups, today, lastVerified };
   }, []);
+
+  const [query, setQuery] = useState('');
+  const filtering = normalizeSearchText(query) !== '';
+
+  const munis = state.data?.munis;
+  const groups = state.data?.groups;
+  const filteredMunis = useMemo(() => filterByQuery(munis ?? [], query), [munis, query]);
+  const filteredGroups = useMemo(() => filterByQuery(groups ?? [], query), [groups, query]);
 
   return (
     <div className="space-y-8">
@@ -120,19 +138,71 @@ export function CoveragePage() {
 
       {state.data && (
         <>
+          <section aria-labelledby="summary-heading" className="space-y-3">
+            <SectionHeading id="summary-heading">このページの要約</SectionHeading>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <StatTile
+                label="対応している自治体"
+                value={state.data.munis.filter((m) => m.supported).length}
+                unit="件"
+                tone="brand"
+              />
+              <StatTile
+                label="掲載している自治体"
+                value={state.data.munis.length}
+                unit="件"
+                tone="gray"
+              />
+              <StatTile
+                label="承認済み公式ソース"
+                value={state.data.freshness.total}
+                unit="件"
+                tone="green"
+              />
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-medium text-slate-600">最終更新日</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">
+                  {state.data.lastVerified ? formatDate(state.data.lastVerified) : '—'}
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600">
+              自治体ごとの対応状況と出典の一覧は、下の各セクションで自治体名をタップすると開きます。
+              情報は省略していません。長い一覧を辿りやすくするため、既定では閉じています。
+            </p>
+            <MunicipalityFilter
+              id="about-data-filter"
+              label="自治体名で絞り込む"
+              hint="漢字・ひらがな・カタカナ・ローマ字のいずれでも探せます。対応状況と出典の両方に効きます。"
+              value={query}
+              onChange={setQuery}
+              resultText={
+                filtering
+                  ? `対応状況 ${filteredMunis.length}件 / 出典グループ ${filteredGroups.length}件が一致`
+                  : `対応状況 ${filteredMunis.length}件 / 出典グループ ${filteredGroups.length}件を掲載中`
+              }
+            />
+          </section>
+
           <section aria-labelledby="cov-heading" className="space-y-3">
             <SectionHeading id="cov-heading">対応している自治体と内容</SectionHeading>
             <p className="text-sm text-slate-600">
               対応している自治体と、カテゴリごとの対応状況です。未対応の自治体は、対応済みのように
               見せることはしません。
             </p>
-            <ul className="space-y-3">
-              {state.data.munis.map((m) => (
-                <li key={m.code}>
-                  <MunicipalityCoverage municipality={m} />
-                </li>
-              ))}
-            </ul>
+            {filteredMunis.length === 0 ? (
+              <EmptyState title="一致する自治体は見つかりませんでした">
+                絞り込みの入力を短くしてお試しください。
+              </EmptyState>
+            ) : (
+              <ul className="space-y-2">
+                {filteredMunis.map((m) => (
+                  <li key={m.code}>
+                    <MunicipalityCoverage municipality={m} open={filtering} />
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           <FreshnessSection freshness={state.data.freshness} today={state.data.today} />
@@ -143,15 +213,66 @@ export function CoveragePage() {
               本サービスが利用している公式データの一覧です。クリエイティブ・コモンズ 表示（CC
               BY）等の ライセンスに基づくデータは、提供元・帰属表示・ライセンスを明記しています。
             </p>
-            {state.data.groups.map((g) => (
-              <SourceLedgerGroup key={g.code} group={g} />
-            ))}
+            {filteredGroups.length === 0 ? (
+              <EmptyState title="一致する出典グループは見つかりませんでした">
+                絞り込みの入力を短くしてお試しください。
+              </EmptyState>
+            ) : (
+              <div className="space-y-2">
+                {filteredGroups.map((g) => (
+                  <SourceLedgerGroup key={g.code} group={g} open={filtering} />
+                ))}
+              </div>
+            )}
           </section>
 
           <OpendataQualitySection />
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * 自治体別の折りたたみ枠(対応状況・出典一覧で共用)。
+ * <summary> は見出し(h3)を内包し、見出しジャンプでも自治体を辿れるようにする。
+ */
+function CollapsibleMunicipality({
+  open,
+  heading,
+  badge,
+  children,
+}: {
+  open: boolean;
+  heading: string;
+  badge?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <details
+      open={open}
+      className="print-avoid-break overflow-hidden rounded-lg border border-slate-200 bg-white"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 marker:content-none hover:bg-slate-50 focus-visible:bg-slate-50">
+        <span className="flex flex-wrap items-center gap-2">
+          <h3 className="font-semibold text-slate-900">{heading}</h3>
+          {badge}
+        </span>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          className="h-4 w-4 shrink-0 text-slate-400"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.3 7.3a1 1 0 011.4 0L10 10.58l3.3-3.3a1 1 0 111.4 1.42l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 010-1.42z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </summary>
+      <div className="border-t border-slate-200 p-4">{children}</div>
+    </details>
   );
 }
 
@@ -267,20 +388,33 @@ function YearDataCountdownCard({ countdown }: { countdown: YearDataCountdown }) 
 
 /* ---- 2. 対応状況(既存の維持) ---- */
 
-function MunicipalityCoverage({ municipality }: { municipality: MunicipalityWithCoverage }) {
+function MunicipalityCoverage({
+  municipality,
+  open,
+}: {
+  municipality: MunicipalityWithCoverage;
+  open: boolean;
+}) {
   return (
-    <Card>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-semibold text-slate-900">
-          {municipality.name}{' '}
+    <CollapsibleMunicipality
+      open={open}
+      heading={municipality.name}
+      badge={
+        <>
           <Badge tone={municipality.supported ? 'green' : 'gray'}>
             {municipality.supported ? '対応' : '未対応'}
           </Badge>
-        </p>
-        {municipality.officialUrl && (
+          {municipality.coverage.length > 0 && (
+            <span className="text-xs text-slate-500">カテゴリ{municipality.coverage.length}件</span>
+          )}
+        </>
+      }
+    >
+      {municipality.officialUrl && (
+        <p className="text-sm">
           <ExternalLink href={municipality.officialUrl}>公式サイト</ExternalLink>
-        )}
-      </div>
+        </p>
+      )}
       {municipality.coverage.length > 0 && (
         <div className="mt-2 overflow-x-auto">
           <table className="w-full border-collapse text-sm">
@@ -310,22 +444,24 @@ function MunicipalityCoverage({ municipality }: { municipality: MunicipalityWith
           </table>
         </div>
       )}
-    </Card>
+    </CollapsibleMunicipality>
   );
 }
 
 /* ---- 3. データソース台帳テーブル ---- */
 
-function SourceLedgerGroup({ group }: { group: MunicipalityGroup }) {
+function SourceLedgerGroup({ group, open }: { group: MunicipalityGroup; open: boolean }) {
   return (
-    <Card className="print-avoid-break">
-      <h3 className="font-semibold text-slate-800">
-        {group.name}
-        <span className="ml-2 inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-100">
+    <CollapsibleMunicipality
+      open={open}
+      heading={group.name}
+      badge={
+        <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-100">
           {group.sources.length}件
         </span>
-      </h3>
-      <div className="mt-2 overflow-x-auto">
+      }
+    >
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <caption className="sr-only">{group.name}のデータソース台帳</caption>
           <thead>
@@ -374,7 +510,7 @@ function SourceLedgerGroup({ group }: { group: MunicipalityGroup }) {
           </tbody>
         </table>
       </div>
-    </Card>
+    </CollapsibleMunicipality>
   );
 }
 

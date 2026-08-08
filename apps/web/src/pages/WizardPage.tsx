@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   profileSchema,
   type AgeBand,
@@ -94,12 +94,22 @@ const FLAG_FIELDS: FlagField[] = [
 
 const STEPS = ['引越し日と転入元', '世帯', '条件チェック'] as const;
 
+/**
+ * ?step=n を開始ステップとして解釈する(範囲外・不正値は1に倒す)。チェックリスト画面の
+ * 「条件を追加する」からステップ3へ直接来られるようにするための入口。
+ */
+export function parseStepParam(raw: string | null): number {
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 1 && n <= STEPS.length ? n : 1;
+}
+
 export function WizardPage() {
   const navigate = useNavigate();
   const { municipalityCode } = useAppState();
   const existing = municipalityCode ? loadProfile(municipalityCode) : null;
+  const [searchParams] = useSearchParams();
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(() => parseStepParam(searchParams.get('step')));
 
   // Step1
   const [moveDate, setMoveDate] = useState(existing?.moveDate ?? '');
@@ -483,11 +493,13 @@ export function WizardPage() {
           </svg>
           この内容でチェックリストを作成
         </button>
-        {!step1Valid && (
-          <p className="mt-1 text-center text-xs text-slate-500">
-            引越し日と転入元区分（ステップ1）を入力すると作成できます。
-          </p>
-        )}
+        {/* なぜ: ステップ1だけでも作成できる(FR-003)ことは維持しつつ、条件を選ばないと
+            マイナンバーカード等の手続きが判定対象外のままになることを、押す前に伝える。 */}
+        <p className="mt-1 text-center text-xs text-slate-500">
+          {!step1Valid
+            ? '引越し日と転入元区分（ステップ1）を入力すると作成できます。'
+            : 'ステップ2・3も入力すると、マイナンバーカード・国民健康保険・国民年金などの該当判定まで含められます。'}
+        </p>
       </div>
     </div>
   );

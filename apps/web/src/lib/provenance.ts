@@ -105,3 +105,19 @@ export function summarizeFreshness(
 
   return { total: entries.length, within7, within30, older, unknown, yearData };
 }
+
+/**
+ * 台帳全体で最も新しい最終確認日(YYYY-MM-DD)を返す。1件も無ければ null。
+ * 透明性ページ冒頭の要約に出す「最終更新日」の算出用。文字列のまま比較できる
+ * ISO 8601 の性質を使い、タイムゾーン変換はしない(台帳の値をそのまま代表させる)。
+ */
+export function latestVerifiedDate(entries: readonly SourceLedgerEntry[]): string | null {
+  let latest: string | null = null;
+  for (const e of entries) {
+    if (!e.lastVerifiedAt) continue;
+    const day = e.lastVerifiedAt.slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
+    if (latest === null || day > latest) latest = day;
+  }
+  return latest;
+}

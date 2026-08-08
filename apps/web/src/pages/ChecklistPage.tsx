@@ -8,6 +8,7 @@ import { groupIntoSections, sectionDescription, sectionLabel } from '../lib/sect
 import { formatDate, formatDateFromDateTime } from '../lib/format';
 import { buildChecklistIcs, datedTasks } from '../lib/ics';
 import { useAsync } from '../lib/useAsync';
+import { conditionGapNotice, type ConditionGapNotice } from '../lib/condition-gaps';
 import { Card, EmptyState, ErrorMessage, Loading } from '../components/ui';
 import { NeedsConfirmationBadge, NonMunicipalBadge, PriorityBadge } from '../components/Badge';
 import { isNonMunicipal } from '../lib/provider-scope';
@@ -48,6 +49,9 @@ export function ChecklistPage() {
   );
   const doneCount = tasks.filter((t) => isDone(doneMap, t.procedureId)).length;
   const icsTaskCount = datedTasks(tasks).length;
+  // 条件を1つも選ばずに生成した場合、期限つきの重要手続き(マイナンバーカードの継続利用など)が
+  // 一件も出ない。判定は保存済みプロフィールだけを見る純関数に委ねる(lib/condition-gaps)。
+  const gapNotice = conditionGapNotice(profile);
 
   /**
    * 期限つきタスクを .ics(終日イベント)にしてクライアントで生成・ダウンロードする。
@@ -150,6 +154,9 @@ export function ChecklistPage() {
             </div>
           </div>
 
+          {/* 進捗のすぐ下に置く。「n/m件」を全量だと受け取る前に、未判定があることを知らせる。 */}
+          {gapNotice.show && <ConditionGapCard notice={gapNotice} />}
+
           {/* 書き出し操作(印刷・カレンダー登録)。印刷時は非表示。 */}
           <div className="print-hide flex flex-wrap gap-2">
             <button
@@ -227,6 +234,77 @@ export function ChecklistPage() {
   );
 }
 
+/**
+ * 「まだ判定していない条件がある」案内(欠陥①への対処)。
+ *
+ * なぜ: ステップ2/3は任意のため、ステップ1だけで生成すると条件フラグがすべて false のまま
+ * 評価され、マイナンバーカードの継続利用・国民健康保険・国民年金といった期限つきの手続きが
+ * 一件も出ない。それでも画面は「あなたのチェックリスト」「n/m件完了」と表示されるため、
+ * 利用者はこれが全量だと受け取ってしまう。フラグを勝手に true へ倒す(=状況を推測する)ことは
+ * CLAUDE.md 原則3に反するのでせず、「まだ判定していない」ことを明示して条件入力へ導く。
+ *
+ * role="status" は進捗表示が既に使っているため付けない(1画面に複数のステータスを置かない)。
+ * 見出しつきの region にして、スクリーンリーダーの見出し/ランドマーク移動から辿れるようにする。
+ */
+function ConditionGapCard({ notice }: { notice: ConditionGapNotice }) {
+  // 案内文が長くなりすぎないよう、実害の大きい上位5件だけ名前を出して残りは件数で示す。
+  const shown = notice.unselected.slice(0, 5);
+  const rest = notice.unselected.length - shown.length;
+  return (
+    <section
+      aria-labelledby="condition-gap-heading"
+      className="print-hide rounded-lg border border-amber-300 bg-amber-50 p-4"
+    >
+      <div className="flex gap-3">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          className="mt-0.5 h-5 w-5 shrink-0 text-amber-600"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 4a1 1 0 10-2 0v5a1 1 0 102 0V6zm-1 9.5a1.1 1.1 0 100-2.2 1.1 1.1 0 000 2.2z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <div className="min-w-0">
+          <h2 id="condition-gap-heading" className="font-bold text-amber-900">
+            まだ判定していない条件があります
+          </h2>
+          <p className="mt-1 text-sm text-amber-900">
+            条件チェック（ステップ3）が未入力です。
+            {/* ラベル自体が「お子さまの学校・保育」のように中黒を含むため、区切りは読点にする。 */}
+            {shown.map((t) => t.label).join('、')}
+            {rest > 0 && `ほか${rest}項目`}
+            に該当する手続きは、条件を選ぶと表示されます。
+          </p>
+          {notice.householdUntouched && (
+            <p className="mt-1 text-sm text-amber-900">
+              世帯（ステップ2）も未入力のため、お子さまや高齢のご家族に関する手続きは含まれていません。
+            </p>
+          )}
+          <p className="mt-3">
+            <Link
+              to="/wizard?step=3"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-800 active:bg-amber-900"
+            >
+              条件を追加する
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 11-1.4-1.4L11.58 10 7.3 5.7a1 1 0 010-1.4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </Link>
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function TaskCard({
   task,
   done,
@@ -283,14 +361,19 @@ function TaskCard({
               </span>
             )}
           </div>
-          <label
-            htmlFor={checkboxId}
-            className={`mt-1.5 block cursor-pointer font-bold leading-snug ${
-              done ? 'text-slate-400 line-through' : 'text-slate-900'
-            }`}
-          >
-            {task.title}
-          </label>
+          {/* 見出し要素にする理由: スクリーンリーダーの見出しジャンプでタスクを辿れるようにする
+              (セクション見出し h2 の下位=h3)。クリックでチェックできる label は内側に保つ。
+              視覚デザインは従来どおり(見出しの既定余白はTailwindのpreflightで消えている)。 */}
+          <h3 className="mt-1.5">
+            <label
+              htmlFor={checkboxId}
+              className={`block cursor-pointer font-bold leading-snug ${
+                done ? 'text-slate-400 line-through' : 'text-slate-900'
+              }`}
+            >
+              {task.title}
+            </label>
+          </h3>
 
           <div className="mt-1.5">
             {task.dueDate ? (

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { Route } from 'react-router-dom';
 import { renderWithProviders } from '../test/utils';
 
@@ -54,5 +54,51 @@ describe('LandingPage', () => {
     const link = screen.getByRole('link', { name: /公式サイトを見る/ });
     expect(link).toHaveAttribute('href', 'https://www.city.shinjuku.lg.jp/');
     expect(link).toHaveAttribute('target', '_blank');
+  });
+});
+
+/**
+ * なぜ: 62自治体が同じ形のカードで縦に並ぶだけでは、自分の区に辿り着くまでの
+ * スクロールが長すぎる。絞り込みが対応・未対応の双方に効き、件数表示も追随することを固定する。
+ */
+describe('LandingPage — 自治体の絞り込み', () => {
+  function filterInput(): HTMLElement {
+    return screen.getByLabelText('自治体名で絞り込む');
+  }
+
+  it('ラベル付きの検索欄があり、既定では全件を表示する', async () => {
+    renderLanding();
+    await screen.findByText('世田谷区');
+    expect(filterInput()).toBeInTheDocument();
+    expect(screen.getByText(/全2件を表示中/)).toBeInTheDocument();
+  });
+
+  it('漢字で絞り込むと一致した自治体だけが残る', async () => {
+    renderLanding();
+    await screen.findByText('世田谷区');
+    fireEvent.change(filterInput(), { target: { value: '世田谷' } });
+    expect(screen.getByText('世田谷区')).toBeInTheDocument();
+    expect(screen.queryByText('新宿区', { exact: false })).toBeNull();
+    expect(screen.getByText(/1件が一致/)).toBeInTheDocument();
+  });
+
+  it('ひらがな・ローマ字でも引ける(未対応の自治体も同じ規則で絞り込む)', async () => {
+    renderLanding();
+    await screen.findByText('世田谷区');
+    fireEvent.change(filterInput(), { target: { value: 'しんじゅく' } });
+    expect(screen.getByText('新宿区', { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText('世田谷区')).toBeNull();
+
+    fireEvent.change(filterInput(), { target: { value: 'setagaya' } });
+    expect(screen.getByText('世田谷区')).toBeInTheDocument();
+    expect(screen.queryByText('新宿区', { exact: false })).toBeNull();
+  });
+
+  it('一致0件のときは次の行動が分かる空状態を出す', async () => {
+    renderLanding();
+    await screen.findByText('世田谷区');
+    fireEvent.change(filterInput(), { target: { value: '八王子' } });
+    expect(screen.getByText('一致する自治体は見つかりませんでした')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'この自治体で始める' })).toBeNull();
   });
 });

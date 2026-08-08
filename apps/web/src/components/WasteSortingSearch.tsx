@@ -185,7 +185,9 @@ function ResultList({
           <li key={item.itemId}>
             <Card>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-bold text-slate-900">{item.name}</span>
+                {/* 品目名は見出し要素にする(検索セクション見出し h2 の下位=h3)。
+                    flex の子なので span から h3 に替えてもレイアウトは変わらない。 */}
+                <h3 className="font-bold text-slate-900">{item.name}</h3>
                 <Badge tone="blue">{item.category}</Badge>
                 {item.feeNote && (
                   <span className="text-xs text-slate-500">料金区分：{item.feeNote}</span>

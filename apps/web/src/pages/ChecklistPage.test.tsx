@@ -144,6 +144,21 @@ describe('ChecklistPage', () => {
     expect(residentCard?.textContent).not.toContain('区以外の手続き');
   });
 
+  it('タスク名を h3 見出しにする(スクリーンリーダーの見出しジャンプで辿れる)', async () => {
+    renderChecklist();
+    const heading = await screen.findByRole('heading', { name: '転入届', level: 3 });
+    expect(heading).toBeInTheDocument();
+    // 見出し内のラベルは引き続きチェックボックスに紐づく(クリックで完了にできる)。
+    expect(screen.getByLabelText('転入届')).toHaveAttribute('type', 'checkbox');
+  });
+
+  it('条件を1つでも選んでいれば「まだ判定していない条件」の案内を出さない', async () => {
+    // beforeEach のプロフィールは hasDog=true(=条件を選んでいる)。
+    renderChecklist();
+    await screen.findByText('転入届');
+    expect(screen.queryByRole('heading', { name: 'まだ判定していない条件があります' })).toBeNull();
+  });
+
   it('完了チェックが localStorage に反映される(C-4)', async () => {
     renderChecklist();
     const checkbox = await screen.findByLabelText('転入届');
@@ -156,5 +171,52 @@ describe('ChecklistPage', () => {
       expect(done['procedure_resident_registration']).toBeTruthy();
     });
     expect(checkbox).toBeChecked();
+  });
+});
+
+/**
+ * なぜ: ステップ1だけで生成すると、条件フラグがすべて false のまま評価され、
+ * マイナンバーカードの継続利用・国民健康保険・国民年金といった期限つきの手続きが一件も
+ * 出ない。それでも「n/m件完了」とだけ出るため全量だと誤解される。案内カードと、
+ * ステップ3への導線が出ることを固定する(フラグの既定値は推測で変えない)。
+ */
+describe('ChecklistPage — ステップ2/3を入力せずに生成した場合', () => {
+  beforeEach(() => {
+    const profile = profileSchema.parse({
+      destination: { municipalityCode: '13112' },
+      moveDate: '2026-08-01',
+      originType: 'outside_tokyo',
+      household: { memberCount: 1, ageBands: ['adult'] },
+      flags: {
+        hasMyNumberCard: false,
+        needsNationalHealthInsurance: false,
+        needsNationalPension: false,
+        hasSchoolOrChildcareNeeds: false,
+        hasDog: false,
+        needsDisabilityOrCareSupport: false,
+        needsForeignResidentGuidance: false,
+      },
+    });
+    localStorage.setItem('tmn:profile:13112', JSON.stringify(profile));
+  });
+
+  it('「まだ判定していない条件があります」の案内と、未判定の条件名を表示する', async () => {
+    renderChecklist();
+    expect(
+      await screen.findByRole('heading', { name: 'まだ判定していない条件があります' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/マイナンバーカード、国民健康保険、国民年金/)).toBeInTheDocument();
+  });
+
+  it('世帯(ステップ2)も初期値のままなら、その旨も併せて伝える', async () => {
+    renderChecklist();
+    await screen.findByRole('heading', { name: 'まだ判定していない条件があります' });
+    expect(screen.getByText(/世帯（ステップ2）も未入力/)).toBeInTheDocument();
+  });
+
+  it('「条件を追加する」でウィザードのステップ3へ直接遷移できる', async () => {
+    renderChecklist();
+    const link = await screen.findByRole('link', { name: '条件を追加する' });
+    expect(link).toHaveAttribute('href', '/wizard?step=3');
   });
 });
