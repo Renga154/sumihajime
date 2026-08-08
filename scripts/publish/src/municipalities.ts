@@ -10,10 +10,14 @@ import type { Municipality } from '@tmn/schemas';
  * 出典: 東京都公式サイト「リンク集／都内区市町村」
  *   https://www.metro.tokyo.lg.jp/sitemap/link/link04
  *   (スナップショット data/sources/tokyo/snapshots/ に保存+SHA-256、registry.csv に登録)。
- * 名称・officialUrl は上記出典ページに記載された各自治体公式サイトの href のみを採用する
- *   (推測ドメイン禁止=CLAUDE.md原則3/5。http/https も出典の表記どおり)。
- *   唯一の例外は北区(13117)で、都リンク集の href(http://www.city.kita.tokyo.jp/)が旧ドメインの
- *   ままであり、実測で https://www.city.kita.lg.jp/ への301恒久リダイレクトを確認したため、
+ * 名称・officialUrl のホスト/パスは上記出典ページに記載された各自治体公式サイトの href のみを採用する
+ *   (推測ドメイン禁止=CLAUDE.md原則3/5)。
+ *   スキームだけは例外で、都リンク集が http のまま据え置いている 20件について 2026-08-08 に
+ *   https 版を実測し、「同一ホストで 200・リダイレクト0・本文に自治体名を確認」できた19件を
+ *   https へ引き上げた(利用者を平文HTTPへ誘導しないため。実測記録: docs/data-sources/url-verification-2026-08-08.md)。
+ *   到達性を実測できなかった御蔵島村(13382)だけは http のまま据え置く(下記の個別コメント参照)。
+ *   ホストを差し替えた唯一の例外は北区(13117)で、都リンク集の href(http://www.city.kita.tokyo.jp/)が
+ *   旧ドメインのままであり、実測で https://www.city.kita.lg.jp/ への301恒久リダイレクトを確認したため、
  *   registry.csv に登録した北区の出典URL(すべて www.city.kita.lg.jp)と揃えて新ドメインを採用する
  *   (推測ではなく実測したリダイレクト先。2026-08-07 人手レビュー時に確認)。
  * code は総務省「全国地方公共団体コード」5桁。既存6自治体(世田谷/江東/新宿/杉並/千代田/八王子)の
@@ -141,7 +145,7 @@ export const MUNICIPALITIES: Municipality[] = [
     supported: true,
     // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
     note: '対応済み',
-    officialUrl: 'http://www.city.ota.tokyo.jp/',
+    officialUrl: 'https://www.city.ota.tokyo.jp/',
   },
   {
     // 対応済み。note は利用者向けの「表示専用」文言のみ(内部の進捗・工程用語は出さない=Step2)。
@@ -160,7 +164,7 @@ export const MUNICIPALITIES: Municipality[] = [
     supported: true,
     // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
     note: '対応済み',
-    officialUrl: 'http://www.city.shibuya.tokyo.jp/',
+    officialUrl: 'https://www.city.shibuya.tokyo.jp/',
   },
   {
     // なぜ: Batch7で中野区データ(手続き10件/窓口施設6件=本庁舎1+地域事務所5)を整備。
@@ -202,7 +206,7 @@ export const MUNICIPALITIES: Municipality[] = [
     supported: true,
     // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
     note: '対応済み',
-    officialUrl: 'http://www.city.toshima.lg.jp/',
+    officialUrl: 'https://www.city.toshima.lg.jp/',
   },
   {
     // なぜ: Batch7で北区データ(手続き10件/窓口施設3件=王子・赤羽・滝野川の区民事務所)を整備。
@@ -313,7 +317,7 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13203',
     name: '武蔵野市',
     supported: false,
-    officialUrl: 'http://www.city.musashino.lg.jp/',
+    officialUrl: 'https://www.city.musashino.lg.jp/',
   },
   {
     code: '13204',
@@ -331,7 +335,7 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13206',
     name: '府中市',
     supported: false,
-    officialUrl: 'http://www.city.fuchu.tokyo.jp/index.html',
+    officialUrl: 'https://www.city.fuchu.tokyo.jp/index.html',
   },
   {
     code: '13207',
@@ -355,15 +359,15 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13210',
     name: '小金井市',
     supported: false,
-    officialUrl: 'http://www.city.koganei.lg.jp/',
+    officialUrl: 'https://www.city.koganei.lg.jp/',
   },
   {
     code: '13211',
     name: '小平市',
     supported: false,
-    officialUrl: 'http://www.city.kodaira.tokyo.jp/',
+    officialUrl: 'https://www.city.kodaira.tokyo.jp/',
   },
-  { code: '13212', name: '日野市', supported: false, officialUrl: 'http://www.city.hino.lg.jp/' },
+  { code: '13212', name: '日野市', supported: false, officialUrl: 'https://www.city.hino.lg.jp/' },
   {
     code: '13213',
     name: '東村山市',
@@ -392,7 +396,7 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13219',
     name: '狛江市',
     supported: false,
-    officialUrl: 'http://www.city.komae.tokyo.jp/',
+    officialUrl: 'https://www.city.komae.tokyo.jp/',
   },
   {
     code: '13220',
@@ -418,18 +422,18 @@ export const MUNICIPALITIES: Municipality[] = [
     supported: false,
     officialUrl: 'https://www.city.musashimurayama.lg.jp/',
   },
-  { code: '13224', name: '多摩市', supported: false, officialUrl: 'http://www.city.tama.lg.jp/' },
+  { code: '13224', name: '多摩市', supported: false, officialUrl: 'https://www.city.tama.lg.jp/' },
   {
     code: '13225',
     name: '稲城市',
     supported: false,
-    officialUrl: 'http://www.city.inagi.tokyo.jp/',
+    officialUrl: 'https://www.city.inagi.tokyo.jp/',
   },
   {
     code: '13227',
     name: '羽村市',
     supported: false,
-    officialUrl: 'http://www.city.hamura.tokyo.jp/',
+    officialUrl: 'https://www.city.hamura.tokyo.jp/',
   },
   {
     code: '13228',
@@ -441,7 +445,7 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13229',
     name: '西東京市',
     supported: false,
-    officialUrl: 'http://www.city.nishitokyo.lg.jp/',
+    officialUrl: 'https://www.city.nishitokyo.lg.jp/',
   },
 
   // ── 5町(code=133xx/134xx) ──
@@ -449,7 +453,7 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13303',
     name: '瑞穂町',
     supported: false,
-    officialUrl: 'http://www.town.mizuho.tokyo.jp/',
+    officialUrl: 'https://www.town.mizuho.tokyo.jp/',
   },
   {
     code: '13305',
@@ -461,7 +465,7 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13308',
     name: '奥多摩町',
     supported: false,
-    officialUrl: 'http://www.town.okutama.tokyo.jp/',
+    officialUrl: 'https://www.town.okutama.tokyo.jp/',
   },
   {
     code: '13361',
@@ -481,10 +485,10 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13307',
     name: '檜原村',
     supported: false,
-    officialUrl: 'http://www.vill.hinohara.tokyo.jp/',
+    officialUrl: 'https://www.vill.hinohara.tokyo.jp/',
   },
-  { code: '13362', name: '利島村', supported: false, officialUrl: 'http://www.toshimamura.org/' },
-  { code: '13363', name: '新島村', supported: false, officialUrl: 'http://www.niijima.com/' },
+  { code: '13362', name: '利島村', supported: false, officialUrl: 'https://www.toshimamura.org/' },
+  { code: '13363', name: '新島村', supported: false, officialUrl: 'https://www.niijima.com/' },
   {
     code: '13364',
     name: '神津島村',
@@ -498,6 +502,14 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.vill.miyake.tokyo.jp/',
   },
   {
+    // なぜ http のまま据え置くか: 2026-08-08 の実測で https://www.mikurasima.jp/ は TLS 証明書の
+    // 対象ホスト名が一致せず到達できない(Node fetch=ERR_TLS_CERT_ALTNAME_INVALID / curl=exit 60。
+    // 提示される証明書の CN は *.bizmw.com)。到達しない URL へは差し替えない。
+    // 一方 http://www.mikurasima.jp/ は稼働しており 301 で https://www.vill.mikurasima.tokyo.jp/
+    // (200・本文に「御蔵島村」)へ転送されるため、利用者は公式サイトへ到達できる。
+    // 移転先ドメインへの差し替えは出典(都リンク集)の href と異なるホストへの変更にあたるので、
+    // 北区(13117)と同様に人手レビュー承認を経てから行う。それまでは出典どおりの値を維持する
+    // (CLAUDE.md 原則3/5・§9。実測記録: docs/data-sources/url-verification-2026-08-08.md)。
     code: '13382',
     name: '御蔵島村',
     supported: false,
@@ -507,7 +519,7 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13402',
     name: '青ヶ島村',
     supported: false,
-    officialUrl: 'http://www.vill.aogashima.tokyo.jp/top.html',
+    officialUrl: 'https://www.vill.aogashima.tokyo.jp/top.html',
   },
   {
     code: '13421',
