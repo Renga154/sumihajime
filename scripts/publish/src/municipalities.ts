@@ -347,7 +347,9 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13208',
     name: '調布市',
     supported: false,
-    officialUrl: 'https://www.city.chofu.tokyo.jp/',
+    // 2026-08-08 人手レビュー承認。旧 city.chofu.tokyo.jp は 301 で lg.jp へ移転していたため、
+    // 実測(200・転送0回・本文に「調布市」)のうえ移転先を直接指す。
+    officialUrl: 'https://www.city.chofu.lg.jp/',
   },
   {
     code: '13209',
@@ -493,7 +495,9 @@ export const MUNICIPALITIES: Municipality[] = [
     code: '13364',
     name: '神津島村',
     supported: false,
-    officialUrl: 'https://vill.kouzushima.tokyo.jp/',
+    // 2026-08-08 人手レビュー承認。旧値は転送の途中で一度平文HTTPを経由していたため、
+    // 実測(200・転送0回・本文に「神津島村」)のうえ最終URLを直接指す。
+    officialUrl: 'https://www.vill.kouzushima.tokyo.jp/',
   },
   {
     code: '13381',
@@ -502,18 +506,14 @@ export const MUNICIPALITIES: Municipality[] = [
     officialUrl: 'https://www.vill.miyake.tokyo.jp/',
   },
   {
-    // なぜ http のまま据え置くか: 2026-08-08 の実測で https://www.mikurasima.jp/ は TLS 証明書の
-    // 対象ホスト名が一致せず到達できない(Node fetch=ERR_TLS_CERT_ALTNAME_INVALID / curl=exit 60。
-    // 提示される証明書の CN は *.bizmw.com)。到達しない URL へは差し替えない。
-    // 一方 http://www.mikurasima.jp/ は稼働しており 301 で https://www.vill.mikurasima.tokyo.jp/
-    // (200・本文に「御蔵島村」)へ転送されるため、利用者は公式サイトへ到達できる。
-    // 移転先ドメインへの差し替えは出典(都リンク集)の href と異なるホストへの変更にあたるので、
-    // 北区(13117)と同様に人手レビュー承認を経てから行う。それまでは出典どおりの値を維持する
-    // (CLAUDE.md 原則3/5・§9。実測記録: docs/data-sources/url-verification-2026-08-08.md)。
+    // なぜ移転先ホストなのか: 旧 www.mikurasima.jp は https が TLS 証明書の対象ホスト名不一致で
+    // 到達できず(提示CN=*.bizmw.com)、http でしか開けなかった。2026-08-08 に人手レビュー承認を得て、
+    // 実測で 200・リダイレクト0回・本文に「御蔵島村」を確認した移転先へ差し替えた
+    // (実測記録: docs/data-sources/url-verification-2026-08-08.md)。
     code: '13382',
     name: '御蔵島村',
     supported: false,
-    officialUrl: 'http://www.mikurasima.jp/',
+    officialUrl: 'https://www.vill.mikurasima.tokyo.jp/',
   },
   {
     code: '13402',

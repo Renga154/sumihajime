@@ -65,14 +65,22 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
     const http = MUNICIPALITIES.filter((m) => m.officialUrl?.startsWith('http://')).map(
       (m) => m.code,
     );
-    expect(http).toEqual(['13382']);
+    expect(http).toEqual([]);
   });
 
-  it('御蔵島村(13382)の officialUrl は出典(都リンク集)どおりの値を維持する', () => {
-    // なぜ: 実測した移転先(www.vill.mikurasima.tokyo.jp)へ勝手に差し替えていないことを固定する。
-    // ホスト変更は北区(13117)と同様に人手レビュー承認を要する(CLAUDE.md 原則3/5・§9)。
-    const mikura = MUNICIPALITIES.find((m) => m.code === '13382');
-    expect(mikura?.officialUrl).toBe('http://www.mikurasima.jp/');
+  it('ホスト移転を承認済みの3件が実測どおりの移転先を指す', () => {
+    // なぜ固定するか: この3件は旧ホストからのリダイレクトで到達できるため放置もできたが、
+    // 2026-08-08 に人手レビュー承認を得て移転先へ差し替えた(実測: 200・転送0回・本文に自治体名)。
+    // 出典の値へ戻す変更は再び承認事項なので、意図しない差し戻しをここで落とす
+    // (実測記録: docs/data-sources/url-verification-2026-08-08.md)。
+    const expected: Record<string, string> = {
+      '13382': 'https://www.vill.mikurasima.tokyo.jp/',
+      '13208': 'https://www.city.chofu.lg.jp/',
+      '13364': 'https://www.vill.kouzushima.tokyo.jp/',
+    };
+    for (const [code, url] of Object.entries(expected)) {
+      expect(MUNICIPALITIES.find((m) => m.code === code)?.officialUrl).toBe(url);
+    }
   });
 
   it('全件が Municipality スキーマに適合し、officialUrl を持つ', () => {

@@ -206,3 +206,25 @@ curl: (60) SSL: no alternative certificate subject name matches target host name
 3. 神津島村(13364): `https://vill.kouzushima.tokyo.jp/` → `https://www.vill.kouzushima.tokyo.jp/` への差し替え可否(転送途中の平文HTTP経由を回避できる)。
 
 いずれも現行値のままでも利用者は公式サイトへ到達できるため、緊急性はない。
+
+## 9. 追記: §8 の3件を人手レビュー承認のうえ更新した(2026-08-08)
+
+§8 で諮った3件について**利用者の承認を得た**(「検証して移転先へ更新」)。承認後、
+移転先URLを実測してから差し替えた。推測では更新していない。
+
+| code  | 自治体   | 変更前                              | 変更後                                  | status | 転送回数 | 本文の自治体名 |
+| ----- | -------- | ----------------------------------- | --------------------------------------- | ------ | -------- | -------------- |
+| 13382 | 御蔵島村 | `http://www.mikurasima.jp/`         | `https://www.vill.mikurasima.tokyo.jp/` | 200    | 0        | あり           |
+| 13208 | 調布市   | `https://www.city.chofu.tokyo.jp/`  | `https://www.city.chofu.lg.jp/`         | 200    | 0        | あり           |
+| 13364 | 神津島村 | `https://vill.kouzushima.tokyo.jp/` | `https://www.vill.kouzushima.tokyo.jp/` | 200    | 0        | あり           |
+
+計測条件: ブラウザ相当の User-Agent(当方の既定UAでは WAF が 403 を返す自治体があるため。
+§3 の東村山市と同じ理由)、リダイレクトを追跡して最終URLと回数を記録、本文は
+`Content-Type` / `<meta charset>` から文字コードを判定してデコードのうえ自治体名を照合。
+
+これで **62自治体すべてが https** になった。`http://` は1件も残っていない。
+
+リグレッション防止テストを現状に合わせて更新した。
+
+- `http://` で残るものが**0件**であること(http への巻き戻りを検知する)。
+- 上記3件が実測どおりの移転先を指すこと(出典の旧値への意図しない差し戻しを検知する)。
