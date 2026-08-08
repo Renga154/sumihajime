@@ -46,6 +46,44 @@ test('ステップ1だけで生成すると、未判定の条件を知らせる�
 });
 
 /**
+ * なぜ(独立点検): ステップ2・3を実際に開いて回答した利用者に「未入力です」と出してはならない。
+ *
+ * 会社の健康保険に入っている単身の成人が、8項目を見たうえで1つも当てはまらない、というのは
+ * 転入者としてごく普通の像である。このとき保存されるフラグはステップ3を飛ばした場合と
+ * 完全に同一になるため、フラグだけを見る判定では両者を区別できず、正しく答えた利用者に
+ * 事実に反する断定を出していた。閲覧したという観測事実で切り分ける。
+ */
+test('ステップ2・3を開いて何も当てはまらなかった場合、「未入力」の案内は出ない', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await startWithWard(page, '練馬区');
+  await fillWizardStep1(page, { moveDate: '2026-08-15', origin: '東京都外' });
+
+  // ステップ2・3を実際に開く(何も選ばない = 「当てはまるものが無い」という回答)。
+  await page.getByRole('button', { name: /世帯（任意）/ }).click();
+  await expect(page.getByRole('group', { name: /妊娠中の方がいるか/ })).toBeVisible();
+  await page.getByRole('button', { name: /条件チェック（任意）/ }).click();
+  await expect(
+    page.getByRole('checkbox', { name: 'マイナンバーカードを持っている' }),
+  ).toBeVisible();
+
+  await generateChecklist(page);
+
+  // 案内は出ない。出ていた「ステップ3が未入力です」は、この利用者にとって事実に反する。
+  await expect(page.getByRole('region', { name: 'まだ判定していない条件があります' })).toHaveCount(
+    0,
+  );
+
+  // リロードしても判定は変わらない(閲覧記録が端末内に残る)。
+  await page.reload();
+  await expect(page.getByText(/件 完了/)).toBeVisible();
+  await expect(page.getByRole('region', { name: 'まだ判定していない条件があります' })).toHaveCount(
+    0,
+  );
+});
+
+/**
  * タスク名が見出し要素(h3)であること。axeは「見出しが無いこと」を違反として検出しないため、
  * スクリーンリーダーの見出しジャンプでタスクを辿れることは明示的に固定する。
  */

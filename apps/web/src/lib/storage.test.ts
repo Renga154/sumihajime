@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isDone, loadDone, saveDone, toggleDone } from './storage';
+import {
+  isDone,
+  loadDone,
+  loadReviewedSteps,
+  saveDone,
+  saveReviewedSteps,
+  toggleDone,
+} from './storage';
 
 /**
  * なぜ: VS1受入6 / FR-010・FR-011 / C-4。完了状態が procedureId キーで永続化され、
@@ -50,5 +57,38 @@ describe('完了状態(C-4)', () => {
     map = toggleDone(map, 'procedure_a', 'v1', false);
     saveDone(CODE, map);
     expect(isDone(loadDone(CODE), 'procedure_a')).toBe(false);
+  });
+});
+
+/**
+ * なぜ: 任意ステップの閲覧記録は「未入力です」という断定を出すかどうかの唯一の根拠になる。
+ * 記録が無い/壊れている場合に true 側へ倒れると、実際には見ていない利用者への案内が
+ * 黙って消える。既定は必ず false(=未閲覧)であることを固定する。
+ */
+describe('任意ステップの閲覧記録', () => {
+  it('記録が無い自治体では両方 false を返す', () => {
+    expect(loadReviewedSteps(CODE)).toEqual({ household: false, conditions: false });
+  });
+
+  it('保存した内容がリロード相当でも復元される', () => {
+    saveReviewedSteps(CODE, { household: true, conditions: true });
+    expect(loadReviewedSteps(CODE)).toEqual({ household: true, conditions: true });
+  });
+
+  it('自治体ごとに独立して保持される(別の区の記録を流用しない)', () => {
+    saveReviewedSteps(CODE, { household: true, conditions: true });
+    expect(loadReviewedSteps('13101')).toEqual({ household: false, conditions: false });
+  });
+
+  it('壊れたJSON・想定外の型は未閲覧として扱う', () => {
+    localStorage.setItem(`tmn:reviewed-steps:${CODE}`, '{壊れた');
+    expect(loadReviewedSteps(CODE)).toEqual({ household: false, conditions: false });
+
+    localStorage.setItem(`tmn:reviewed-steps:${CODE}`, '"文字列"');
+    expect(loadReviewedSteps(CODE)).toEqual({ household: false, conditions: false });
+
+    // 真偽値以外(例: 文字列 "true")を true と解釈しない。
+    localStorage.setItem(`tmn:reviewed-steps:${CODE}`, '{"household":"true","conditions":1}');
+    expect(loadReviewedSteps(CODE)).toEqual({ household: false, conditions: false });
   });
 });

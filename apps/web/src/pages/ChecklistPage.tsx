@@ -3,7 +3,15 @@ import { Link } from 'react-router-dom';
 import type { GeneratedTask } from '@tmn/schemas';
 import { getMunicipalities, postChecklist } from '../api/client';
 import { useAppState } from '../state/AppState';
-import { loadDone, loadProfile, saveDone, toggleDone, isDone, type DoneMap } from '../lib/storage';
+import {
+  loadDone,
+  loadProfile,
+  loadReviewedSteps,
+  saveDone,
+  toggleDone,
+  isDone,
+  type DoneMap,
+} from '../lib/storage';
 import { groupIntoSections, sectionDescription, sectionLabel } from '../lib/sections';
 import { formatDate, formatDateFromDateTime } from '../lib/format';
 import { isOverdue, overdueDays, todayInTokyo } from '../lib/move-date';
@@ -59,9 +67,13 @@ export function ChecklistPage() {
   );
   const doneCount = tasks.filter((t) => isDone(doneMap, t.procedureId)).length;
   const icsTaskCount = datedTasks(tasks).length;
-  // 条件を1つも選ばずに生成した場合、期限つきの重要手続き(マイナンバーカードの継続利用など)が
-  // 一件も出ない。判定は保存済みプロフィールだけを見る純関数に委ねる(lib/condition-gaps)。
-  const gapNotice = conditionGapNotice(profile);
+  // ステップ3を「開かずに」生成した場合、期限つきの重要手続き(マイナンバーカードの継続利用など)が
+  // 一件も出ない。開いたうえで1つも当てはまらなかった利用者には出さない(その人にとっては
+  // これが正しい全量であり、「未入力です」は事実に反する)。判定は純関数に委ねる。
+  const reviewedSteps = municipalityCode
+    ? loadReviewedSteps(municipalityCode)
+    : { household: false, conditions: false };
+  const gapNotice = conditionGapNotice(profile, reviewedSteps);
 
   /**
    * 期限つきタスクを .ics(終日イベント)にしてクライアントで生成・ダウンロードする。

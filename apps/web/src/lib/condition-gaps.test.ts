@@ -143,3 +143,51 @@ describe('condition-gaps', () => {
     expect(notice.unselected.map((t) => t.key)).toContain('hasMyNumberCard');
   });
 });
+
+/**
+ * なぜ(独立点検): フラグが全て false という保存データは、「ステップ3を飛ばした」利用者と
+ * 「ステップ3を開いて、正しく1つも当てはまらなかった」利用者の両方から生じる。
+ * 後者は会社の健康保険に入っている単身の成人など、転入者としてごく普通の像であり、
+ * その人に「条件チェック（ステップ3）が未入力です」と出すのは事実に反する断定になる。
+ * ステップを開いたかという観測事実で両者を切り分けることを、ここで固定する。
+ */
+describe('conditionGapNotice: 閲覧済みステップの扱い', () => {
+  const REVIEWED_BOTH = { household: true, conditions: true };
+  const REVIEWED_NEITHER = { household: false, conditions: false };
+
+  it('ステップ3を開いて1つも当てはまらなかった利用者には案内を出さない', () => {
+    const notice = conditionGapNotice(step1OnlyProfile(), REVIEWED_BOTH);
+    expect(notice.show).toBe(false);
+    expect(notice.householdUntouched).toBe(false);
+  });
+
+  it('ステップ3を開いていなければ、フラグが同じでも案内を出す', () => {
+    expect(conditionGapNotice(step1OnlyProfile(), REVIEWED_NEITHER).show).toBe(true);
+  });
+
+  it('ステップ2だけ開いた場合、条件の案内は残り世帯の一文だけ消える', () => {
+    const notice = conditionGapNotice(step1OnlyProfile(), {
+      household: true,
+      conditions: false,
+    });
+    expect(notice.show).toBe(true);
+    expect(notice.householdUntouched).toBe(false);
+  });
+
+  it('ステップ3だけ開いた場合、条件の案内は消え世帯の一文は残る', () => {
+    const notice = conditionGapNotice(step1OnlyProfile(), {
+      household: false,
+      conditions: true,
+    });
+    expect(notice.show).toBe(false);
+    expect(notice.householdUntouched).toBe(true);
+  });
+
+  it('閲覧記録を渡さない呼び出しは従来どおり案内を出す(修正前に保存された利用者を切り捨てない)', () => {
+    expect(conditionGapNotice(step1OnlyProfile()).show).toBe(true);
+  });
+
+  it('ステップ3を開いていても、プロフィールが無ければ案内は出ない', () => {
+    expect(conditionGapNotice(null, REVIEWED_BOTH).show).toBe(false);
+  });
+});

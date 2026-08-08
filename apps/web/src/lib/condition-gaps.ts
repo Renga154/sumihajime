@@ -1,4 +1,5 @@
 import type { Profile } from '@tmn/schemas';
+import type { ReviewedSteps } from './storage';
 
 /**
  * なぜ: ウィザードのステップ2(世帯)・ステップ3(条件チェック)は任意で、ステップ1だけでも
@@ -82,20 +83,38 @@ export interface ConditionGapNotice {
   show: boolean;
   /** 未選択のため判定対象外になっている条件(案内文に列挙する)。 */
   unselected: ConditionTopic[];
-  /** 世帯(ステップ2)も初期値のままか(案内文に一文を足す)。 */
+  /** 世帯(ステップ2)も未閲覧かつ初期値のままか(案内文に一文を足す)。 */
   householdUntouched: boolean;
 }
+
+/** 記録が無いときの既定。両方 false = 「開いたと確認できていない」。 */
+const NOT_REVIEWED: ReviewedSteps = { household: false, conditions: false };
 
 /**
  * チェックリスト画面に「まだ判定していない条件がある」案内を出すかどうかを決める純関数。
  * profile が無い(=チェックリストを出せない)場合は show=false。
+ *
+ * なぜ reviewed を見るか(独立点検の指摘): フラグが全て false という状態は
+ *  (a) ステップ3を飛ばした
+ *  (b) ステップ3を開いて、正しく1つも当てはまらなかった(会社の健康保険に加入している
+ *      単身の成人など、実在するごく普通の利用者)
+ * の両方から生じる。データだけでは区別できないため、以前は (b) の利用者にも
+ * 「条件チェック（ステップ3）が未入力です」と表示していた。これは事実に反する断定であり、
+ * 「根拠がなければ推測しない」(原則3)に反する。ステップを開いたかどうかという
+ * 観測済みの事実を判定に足し、(a) のときだけ案内する。
+ *
+ * 記録が無い(修正前に保存されたプロフィール)場合は未閲覧扱いにし、案内を出す側に倒す。
+ * 誤って案内を隠して見落としを招くより、余分に案内するほうが害が小さい。
  */
-export function conditionGapNotice(profile: Profile | null): ConditionGapNotice {
+export function conditionGapNotice(
+  profile: Profile | null,
+  reviewed: ReviewedSteps = NOT_REVIEWED,
+): ConditionGapNotice {
   if (!profile) return { show: false, unselected: [], householdUntouched: false };
   const unselected = unselectedConditions(profile);
   return {
-    show: hasNoSelectedConditions(profile),
+    show: !reviewed.conditions && hasNoSelectedConditions(profile),
     unselected,
-    householdUntouched: isHouseholdUntouched(profile),
+    householdUntouched: !reviewed.household && isHouseholdUntouched(profile),
   };
 }
