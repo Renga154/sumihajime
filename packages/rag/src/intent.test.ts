@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { questionCategories, rerankByProcedureIntent } from './intent.js';
+import {
+  orderedQuestionCategories,
+  questionCategories,
+  rerankByProcedureIntent,
+} from './intent.js';
 
 /**
  * なぜ: 決定論的リランクの意図判定と昇格が「一般規則」として正しいことを固定する。
@@ -116,5 +120,39 @@ describe('rerankByProcedureIntent', () => {
     expect(
       rerankByProcedureIntent('マイナンバーカードの継続利用', retrieved).map((c) => c.id),
     ).toEqual(['b', 'c', 'a']);
+  });
+});
+
+/**
+ * なぜ: 1文で複数の手続きを尋ねる質問(本番実測「転入届に必要な持ち物は？マイナンバーカードは
+ * 必要ですか？」)で、以前は構造化データ経路を諦めてRAGへ戻り、必須の本人確認書類を落としていた。
+ * 「主題は先に述べられる」という一般規則を、文字位置ベースの決定論的な並べ替えとして固定する。
+ */
+describe('orderedQuestionCategories', () => {
+  it('一致カテゴリを質問文の言及順に返す', () => {
+    expect(
+      orderedQuestionCategories('転入届に必要な持ち物は？マイナンバーカードは必要ですか？'),
+    ).toEqual(['resident_registration', 'my_number']);
+  });
+
+  it('言及順が逆なら結果も逆になる(文字位置だけで決まる)', () => {
+    expect(
+      orderedQuestionCategories('マイナンバーカードの継続利用と転入届の持ち物を教えて'),
+    ).toEqual(['my_number', 'resident_registration']);
+  });
+
+  it('1つだけ一致すればその1件', () => {
+    expect(orderedQuestionCategories('転入届に必要な持ち物は？')).toEqual([
+      'resident_registration',
+    ]);
+  });
+
+  it('一致が無ければ空配列(手続きを推測しない)', () => {
+    expect(orderedQuestionCategories('引っ越しの手続きに必要な持ち物は？')).toEqual([]);
+  });
+
+  it('questionCategories と同じ集合を返す(順序の有無だけが違う)', () => {
+    const q = '転入届と国民健康保険の持ち物は？';
+    expect(new Set(orderedQuestionCategories(q))).toEqual(questionCategories(q));
   });
 });

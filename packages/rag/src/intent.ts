@@ -51,6 +51,30 @@ export function questionCategories(question: string): Set<string> {
   return hit;
 }
 
+/**
+ * 一致した category を「質問文で最初に言及された順」に並べて返す。
+ *
+ * なぜ必要か(本番実測 2026-08-08): 利用者は1文に複数の手続きを書く
+ * (例:「転入届に必要な持ち物は？マイナンバーカードは必要ですか？」)。カテゴリが複数一致したときに
+ * 一律で構造化データ経路を諦めると、まさに誤答していたRAG経路へ戻ってしまう(実測: 葛飾・江戸川とも
+ * 本人確認書類が欠落した)。日本語の質問では**主題が先に述べられる**ため、最初に言及された手続きを
+ * 主題とみなす。純関数・LLM非依存で、順序は質問文の文字位置だけから決まる(決定論原則)。
+ *
+ * 同順(同じ位置)になることは無い(位置は文字インデックスで一意)。一致が無ければ空配列。
+ */
+export function orderedQuestionCategories(question: string): string[] {
+  const positions: { category: string; index: number }[] = [];
+  for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    let earliest = -1;
+    for (const k of keywords) {
+      const i = question.indexOf(k);
+      if (i >= 0 && (earliest === -1 || i < earliest)) earliest = i;
+    }
+    if (earliest >= 0) positions.push({ category, index: earliest });
+  }
+  return positions.sort((a, b) => a.index - b.index).map((p) => p.category);
+}
+
 /** 並べ替え対象が満たすべき最小形状(category を持つ)。 */
 export interface CategorizedChunk {
   category: string;

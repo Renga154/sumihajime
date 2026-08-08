@@ -1,5 +1,10 @@
 import type { Context } from 'hono';
-import { chatRequestSchema, chatResponseSchema, type ChatCitation } from '@tmn/schemas';
+import {
+  chatRequestSchema,
+  chatResponseSchema,
+  type ChatCitation,
+  type ProcedureVersion,
+} from '@tmn/schemas';
 import {
   ABSTAIN_ANSWER,
   RateLimiter,
@@ -12,8 +17,8 @@ import {
   mentionsOtherMunicipality,
   orderByDocumentPosition,
   parseAnswer,
-  questionCategories,
-  renderVerifiedDocumentAnswer,
+  orderedQuestionCategories,
+  renderVerifiedDocumentAnswers,
   rerankByProcedureIntent,
   selectMatches,
   shouldAbstain,
@@ -76,6 +81,10 @@ const FETCH_K = 50;
 // TOP_K をさらに 12 まで広げても解けないケース(品川の「いつまでに」)は検索ではなく生成側の
 // 言い回し依存であることを実測で確認済みのため、窓は必要最小限の8に留める(distractor増を避ける)。
 const MAX_PROMOTED = 6;
+// なぜ上限2件か: 1文で複数の手続きを尋ねられたとき、該当手続きを手続き名つきで並べて答える
+// (どれか1つを推測で選ばない)。ただし際限なく並べると回答が長くなり要点が埋もれるため、
+// 質問文で先に言及された2件までに留める。3件以上を1文で尋ねる質問は実測で観測していない。
+const MAX_DOCUMENT_PROCEDURES = 2;
 const TIMEOUT_MS = 15_000;
 const DEFAULT_MIN_SCORE = 0.3;
 
@@ -122,7 +131,8 @@ async function resolveCitations(
  *
  * 適用条件(すべて満たすときのみ。ひとつでも欠ければ null を返し従来のRAG経路へ委ねる):
  * - 質問が書類・持ち物を主題にしている(決定論的キーワード判定)
- * - 質問が主題とする手続きが **ちょうど1つ** に決まる(複数手続きにまたがる質問は統合が要るためRAGへ)
+ * - 質問が主題とする手続きが1つ以上に決まる(複数一致した場合は**言及順に最大2件**を手続き名つきで
+ *   並べて答える。どれか1つを推測で選ばない)
  * - その手続きの検証済みレコードが存在し、dataStatus=verified で requiredDocuments が空でない
  * - 質問が選択自治体**以外**の自治体名を含まない(越境は規則3を持つRAG経路へ委ねる)
  * - 出典が承認済み台帳へ解決でき、最終確認日を示せる
@@ -134,9 +144,12 @@ async function tryVerifiedDocumentAnswer(
 ): Promise<{ answer: string; citations: ChatCitation[] } | null> {
   // 1) 純粋な判定を先に済ませ、該当しない質問ではD1を一切引かない。
   if (!hasDocumentIntent(question)) return null;
-  const categories = questionCategories(question);
-  if (categories.size !== 1) return null;
-  const category = [...categories][0]!;
+  // なぜ「言及順の配列」か(本番実測 2026-08-08): 利用者は1文で複数の手続きを尋ねる
+  // (「転入届に必要な持ち物は？マイナンバーカードは必要ですか？」)。以前はカテゴリが複数一致すると
+  // 構造化経路を諦めていたが、その戻り先のRAGこそが必須の本人確認書類を落としていた(葛飾・江戸川)。
+  // 日本語では主題が先に述べられるため言及順に並べ、先頭から該当手続きを採用する。
+  const categories = orderedQuestionCategories(question);
+  if (categories.length === 0) return null;
 
   const [procedures, otherNames] = await Promise.all([
     getProcedureVersions(db, municipality.code),
@@ -145,26 +158,39 @@ async function tryVerifiedDocumentAnswer(
 
   if (mentionsOtherMunicipality(question, municipality.name, otherNames)) return null;
 
-  const candidates = [...procedures.values()].filter(
-    (p) =>
-      p.canonicalType === category && p.dataStatus === 'verified' && p.requiredDocuments.length > 0,
-  );
-  // なぜ1件に限るか: 同一カテゴリに複数の手続き版が並ぶ区が将来現れた場合、どれを断定してよいか
-  // 決められない。曖昧なまま断定するより、抜粋を根拠に答えるRAG経路へ委ねる(原則3)。
-  if (candidates.length !== 1) return null;
-  const procedure = candidates[0]!;
+  const all = [...procedures.values()];
+  const selected: ProcedureVersion[] = [];
+  for (const category of categories) {
+    const candidates = all.filter(
+      (p) =>
+        p.canonicalType === category &&
+        p.dataStatus === 'verified' &&
+        p.requiredDocuments.length > 0,
+    );
+    // なぜ1件のときだけ採用するか: 同一カテゴリに複数の手続き版が並ぶ区が将来現れた場合、
+    // どれを断定してよいか決められない。曖昧なまま断定せず、そのカテゴリは採らない(原則3)。
+    if (candidates.length === 1) selected.push(candidates[0]!);
+    if (selected.length >= MAX_DOCUMENT_PROCEDURES) break;
+  }
+  if (selected.length === 0) return null;
 
-  const citations = await resolveCitations(db, procedure.sourceIds);
+  const citations = await resolveCitations(
+    db,
+    selected.flatMap((p) => p.sourceIds),
+  );
   if (citations.length === 0) return null;
 
   return {
-    answer: renderVerifiedDocumentAnswer(municipality.name, {
-      title: procedure.title,
-      requiredDocuments: procedure.requiredDocuments,
-      ...(procedure.dueDescription ? { dueDescription: procedure.dueDescription } : {}),
-      ...(procedure.contact ? { contact: procedure.contact } : {}),
-      lastVerifiedAt: procedure.lastVerifiedAt,
-    }),
+    answer: renderVerifiedDocumentAnswers(
+      municipality.name,
+      selected.map((procedure) => ({
+        title: procedure.title,
+        requiredDocuments: procedure.requiredDocuments,
+        ...(procedure.dueDescription ? { dueDescription: procedure.dueDescription } : {}),
+        ...(procedure.contact ? { contact: procedure.contact } : {}),
+        lastVerifiedAt: procedure.lastVerifiedAt,
+      })),
+    ),
     citations,
   };
 }
