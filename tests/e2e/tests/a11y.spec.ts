@@ -116,7 +116,8 @@ test('a11y: 比較ページ「区ごとの期限のちがい」に重大違反�
   await page.goto('/differences');
   await expect(page.getByRole('heading', { name: '区ごとの期限のちがい' })).toBeVisible();
   // 非同期ロード完了(比較セルの描画)を待ってから検査する。
-  await expect(page.getByLabel('あなたの区')).toBeVisible();
+  // 自治体未選択で到達した場合、左は「基準の区」(既定値を「あなたの区」と断定しない)。
+  await expect(page.getByLabel('基準の区')).toBeVisible();
   await assertNoSerious(page);
 });
 

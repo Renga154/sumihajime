@@ -161,6 +161,18 @@ export function DifferencesPage() {
     return (code: string | null): string => (code ? (map.get(code) ?? code) : '');
   }, [report]);
 
+  /*
+   * 左側を「あなたの区」と呼べるのは、それが実際に利用者の選んだ自治体と一致するときだけ。
+   *
+   * なぜ(2026-08-09): このページをメインメニューへ載せたことで、自治体を一度も選んでいない
+   * 初回訪問者が直接到達するようになった。そのとき左側は一覧の先頭(千代田区)が既定で入るが、
+   * それを「あなたの区」と呼ぶのは利用者について事実に反する断定になる(原則3)。
+   * 選択済みでも、利用者が左側の選択を別の区へ変えれば同じことが起きる。
+   * 一致しないときは役割だけを述べる「基準の区」にする。
+   */
+  const isOwnWard = mine != null && mine === municipalityCode;
+  const mineLabel = isOwnWard ? 'あなたの区' : '基準の区';
+
   if (state.loading) return <Loading label="区ごとの違いを読み込んでいます…" />;
   if (state.error) return <ErrorMessage error={state.error} />;
   if (!report) return null;
@@ -193,7 +205,7 @@ export function DifferencesPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="ward-mine" className="block text-sm font-semibold text-slate-800">
-              あなたの区
+              {mineLabel}
             </label>
             <select
               id="ward-mine"
@@ -226,6 +238,19 @@ export function DifferencesPage() {
             </select>
           </div>
         </div>
+        {municipalityCode == null && (
+          // 未選択のまま到達した人に、左側が既定値であることと次の行動を伝える。
+          <p className="mt-3 text-xs leading-relaxed text-slate-600">
+            まだ自治体を選んでいないため、左は一覧の先頭を仮に表示しています。
+            <Link
+              to="/"
+              className="tap-target-inline font-medium text-brand-700 underline underline-offset-2"
+            >
+              自治体を選ぶ
+            </Link>
+            と、お住まいの区が最初から入ります。
+          </p>
+        )}
       </Card>
 
       {report.topics.map((topic) => {
@@ -244,7 +269,7 @@ export function DifferencesPage() {
               <p className="mt-1 text-sm text-slate-600">{topic.question}</p>
 
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <WardCell label="あなたの区" cell={a} municipalityName={nameOf(mine)} />
+                <WardCell label={mineLabel} cell={a} municipalityName={nameOf(mine)} />
                 <WardCell label="くらべる区" cell={b} municipalityName={nameOf(other)} />
               </div>
 

@@ -106,7 +106,7 @@ describe('区ごとの期限のちがい(比較ページ)', () => {
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
 
-    fireEvent.change(screen.getByLabelText('あなたの区'), { target: { value: '13101' } });
+    fireEvent.change(screen.getByLabelText('基準の区'), { target: { value: '13101' } });
     fireEvent.change(screen.getByLabelText('くらべる区'), { target: { value: '13102' } });
 
     // 値(比較セル + 全区一覧の両方に出るため getAllBy で確認する)
@@ -133,7 +133,7 @@ describe('区ごとの期限のちがい(比較ページ)', () => {
   it('選んだ2区の扱いが違うことを言葉で伝える', async () => {
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
-    fireEvent.change(screen.getByLabelText('あなたの区'), { target: { value: '13101' } });
+    fireEvent.change(screen.getByLabelText('基準の区'), { target: { value: '13101' } });
     fireEvent.change(screen.getByLabelText('くらべる区'), { target: { value: '13102' } });
     expect(screen.getByText(/この2区では扱いが違います/)).toBeInTheDocument();
 
@@ -162,5 +162,31 @@ describe('区ごとの期限のちがい(比較ページ)', () => {
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
     expect(screen.getByLabelText<HTMLSelectElement>('あなたの区').value).toBe('13102');
+  });
+  /**
+   * なぜ左のラベルが可変か(2026-08-09): このページをメインナビへ載せたことで、自治体を
+   * 一度も選んでいない人が直接到達するようになった。そのとき左には一覧の先頭が既定で
+   * 入るが、それを「あなたの区」と呼ぶのは利用者について事実に反する断定になる(原則3)。
+   */
+  it('自治体を選んでいなければ左は「基準の区」で、既定値である旨と次の行動を示す', async () => {
+    renderPage();
+    await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
+    expect(screen.getByLabelText('基準の区')).toBeInTheDocument();
+    expect(screen.queryByLabelText('あなたの区')).toBeNull();
+    expect(screen.getByText(/左は一覧の先頭を仮に表示しています/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '自治体を選ぶ' })).toHaveAttribute('href', '/');
+  });
+
+  it('選択中の区から左を別の区へ変えたら「あなたの区」とは呼ばない', async () => {
+    localStorage.setItem('tmn:municipality', '13102');
+    renderPage();
+    await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
+    expect(screen.getByLabelText('あなたの区')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('あなたの区'), { target: { value: '13101' } });
+    expect(screen.getByLabelText('基準の区')).toBeInTheDocument();
+    expect(screen.queryByLabelText('あなたの区')).toBeNull();
+    // 選択済みなので「まだ選んでいない」旨の案内は出さない。
+    expect(screen.queryByText(/左は一覧の先頭を仮に表示しています/)).toBeNull();
   });
 });

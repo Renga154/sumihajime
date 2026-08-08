@@ -25,13 +25,22 @@ function renderLayout() {
 }
 
 describe('Layout ナビゲーション (Step2)', () => {
-  it('メインナビは利用者動線の5項目のみ(来歴系は含まない)', () => {
+  it('メインナビは利用者動線の6項目のみ(来歴系は含まない)', () => {
     renderLayout();
     const nav = screen.getByRole('navigation', { name: 'メインナビゲーション' });
     const labels = within(nav)
       .getAllByRole('link')
       .map((a) => a.textContent?.trim());
-    expect(labels).toEqual(['ホーム', '入力', 'チェックリスト', '窓口一覧', 'ごみ収集']);
+    // 「区ごとの期限」は末尾。主要動線(入力→チェックリスト→窓口/ごみ)の後ろに置き、
+    // 順番で寄り道であることを表す(2026-08-09)。来歴系(/about-data)はフッターのまま。
+    expect(labels).toEqual([
+      'ホーム',
+      '入力',
+      'チェックリスト',
+      '窓口一覧',
+      'ごみ収集',
+      '区ごとの期限',
+    ]);
     expect(labels).not.toContain('対応状況・来歴');
   });
 

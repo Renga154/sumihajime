@@ -100,7 +100,7 @@ for (const vp of VIEWPORTS) {
     test('比較ページ・透明性ページ', async ({ page }) => {
       test.setTimeout(90_000);
       await page.goto('/differences');
-      await expect(page.getByLabel('あなたの区')).toBeVisible();
+      await expect(page.getByLabel('基準の区')).toBeVisible();
       await expectNoSmallTargets(page, '区ごとの期限のちがい');
 
       await page.goto('/about-data');
