@@ -111,14 +111,96 @@ const NO_STATEMENT_PATTERNS: readonly string[] = [
 ];
 
 /**
- * 「N日以内」「Nか月以内」のように、期間 + 期限であることを示す語がセットで現れる箇所だけを拾う。
+ * 否定が「期限そのもの」に掛かっていることを示す語。
+ *
+ * なぜ必要か: 否定を文書全体で見て一律に勝たせると、期限を明記している区まで「記載なし」に
+ * 落ちる。例)目黒区のマイナンバーカード継続利用は「手続きできる期間は転入届出日から90日以内です。
+ * …なお目黒区のページには、他区にある『転出予定日から30日を経過した転入届』…による**失効条件の
+ * 記載がありません**」。この否定が指しているのは追加の失効条件であって、期限ではない。
+ * 「期限・日数・期間・いつまで」等が同じ文にある否定だけを「期限の記載が無い」と解釈する。
+ */
+const DEADLINE_SUBJECT_TERMS: readonly string[] = [
+  '期限',
+  '日数',
+  '期間',
+  'いつまで',
+  'いつから',
+  '何日',
+];
+
+/** 文単位で否定の掛かり先を見るための素朴な分割(句点・改行)。 */
+function splitSentences(text: string): string[] {
+  return text
+    .split(/[。\n]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+/** 「期限の記載が無い」と区自身が明記しているか(否定と期限語が同じ文に現れるか)。 */
+function statesNoDeadline(text: string): boolean {
+  return splitSentences(text).some(
+    (sentence) =>
+      NO_STATEMENT_PATTERNS.some((p) => sentence.includes(p)) &&
+      DEADLINE_SUBJECT_TERMS.some((t) => sentence.includes(t)),
+  );
+}
+
+/**
+ * 「N日以内」「Nか月を経過」のように、期間 + 期限であることを示す語がセットで現れる箇所だけを拾う。
  * 「毎年9月30日」「手数料1,600円」のような期限ではない数値を構造的に除外するため、
- * 単位(日/か月)と限定語(以内・を経過 等)の両方を必須にする。
+ * 単位(日/か月)と限定語(以内・経過 等)の両方を必須にする。
+ * 助詞は区によって揺れる(「90日が経過」「90日を経過」「15日経過」)ため、単位と限定語の間の
+ * 助詞1文字だけを許容する(助詞なしの連続も許す)。
  */
 const DURATION_PATTERN =
-  /(\d{1,3})\s*(日|か月|ヶ月|カ月|箇月)\s*(以内|を経過|を過ぎ|以上経過|を超え|経過後)/g;
+  /(\d{1,3})\s*(日|か月|ヶ月|カ月|箇月)\s*(?:以内|以上経過|経過後|[をがはも]?\s*(?:経過|過ぎ|超え))/g;
 
 export type DeadlineUnit = 'day' | 'month';
+
+export interface StatedDuration {
+  readonly amount: number;
+  readonly unit: DeadlineUnit;
+}
+
+/**
+ * 公式文言に明記されている期限の**すべて**。
+ *  - absent: 「記載がありません」等、期限の記載が無いと区自身が明記している。
+ *  - durations: 明記されている期間の集合(重複除去済み・実際の長さの昇順)。空配列もあり得る。
+ *
+ * なぜ「1つに絞る前」の形を公開するか: トピックによって必要な粒度が違う。
+ * 「その手続きの期限は1つ」という前提が置けるトピック(子ども医療費・犬)は
+ * extractStatedDeadline で1つに絞るが、マイナンバーカードの継続利用のように
+ * 「90日を明記する区」と「14日以内かつ30日以内のように別の期限を明記する区」を
+ * 区別しなければならないトピックでは、区が実際に書いた日数をすべて見る必要がある。
+ * ここを1つに畳んでしまうと、別の期限を明記している区が「判定できない=期限不明」に
+ * 落ちて、記載の無い区と同じ扱いになる(利用者に猶予があるかのように誤導する)。
+ */
+export type StatedDeadlines =
+  | { readonly kind: 'absent' }
+  | { readonly kind: 'durations'; readonly durations: readonly StatedDuration[] };
+
+/**
+ * 公式文言に明記されている期限をすべて取り出す。
+ *
+ * 判定順:
+ *   1. 「記載がありません」等の否定があれば absent(数字が同じ文にあっても否定が勝つ)。
+ *   2. 期間+限定語の組を全て集め、重複を除いて実際の長さの昇順で返す。
+ */
+export function extractStatedDeadlines(text: string): StatedDeadlines {
+  if (statesNoDeadline(text)) return { kind: 'absent' };
+
+  const found = new Map<string, StatedDuration>();
+  for (const m of text.matchAll(DURATION_PATTERN)) {
+    const amount = Number(m[1]);
+    const unit: DeadlineUnit = m[2] === '日' ? 'day' : 'month';
+    found.set(`${unit}:${amount}`, { amount, unit });
+  }
+
+  const durations = [...found.values()].sort(
+    (a, b) => durationSortKey(a.amount, a.unit) - durationSortKey(b.amount, b.unit),
+  );
+  return { kind: 'durations', durations };
+}
 
 export type StatedDeadline =
   | { readonly kind: 'absent' }
@@ -126,31 +208,33 @@ export type StatedDeadline =
   | { readonly kind: 'undetermined'; readonly reason: 'no_duration_found' | 'ambiguous' };
 
 /**
- * 公式文言から「申請・届出の期限」を1つだけ取り出す。
+ * 公式文言から「申請・届出の期限」を1つだけ取り出す(期限が1つに定まる前提のトピック用)。
  *
  * 判定順:
  *   1. 「記載がありません」等の否定があれば absent(数字が同じ文にあっても否定が勝つ)。
- *   2. 期間+限定語の組を全て集め、単位換算後に**ちょうど1種類**なら duration。
+ *   2. 明記された期間が**ちょうど1種類**なら duration。
  *   3. 0種類、または2種類以上(=どれが当該手続きの期限か機械的に決められない)なら undetermined。
  *
  * 2種類以上を「多い方/最初の方」で選ばないのは、推測で期限を作らないため(原則3)。
  * undetermined が出た場合はUIが「判定できません」と出し、テストが検知して人手レビューへ回す。
  */
 export function extractStatedDeadline(text: string): StatedDeadline {
-  if (NO_STATEMENT_PATTERNS.some((p) => text.includes(p))) return { kind: 'absent' };
+  const all = extractStatedDeadlines(text);
+  if (all.kind === 'absent') return { kind: 'absent' };
 
-  const found = new Map<string, { amount: number; unit: DeadlineUnit }>();
-  for (const m of text.matchAll(DURATION_PATTERN)) {
-    const amount = Number(m[1]);
-    const unit: DeadlineUnit = m[2] === '日' ? 'day' : 'month';
-    found.set(`${unit}:${amount}`, { amount, unit });
-  }
-
-  if (found.size === 1) {
-    const only = [...found.values()][0];
+  if (all.durations.length === 1) {
+    const only = all.durations[0];
     if (only) return { kind: 'duration', amount: only.amount, unit: only.unit };
   }
-  return { kind: 'undetermined', reason: found.size === 0 ? 'no_duration_found' : 'ambiguous' };
+  return {
+    kind: 'undetermined',
+    reason: all.durations.length === 0 ? 'no_duration_found' : 'ambiguous',
+  };
+}
+
+/** 期間の表示文字列(ラベル生成と、テストが公式文言と突き合わせるときの共通形)。 */
+export function formatDuration({ amount, unit }: StatedDuration): string {
+  return unit === 'day' ? `${amount}日以内` : `${amount}か月以内`;
 }
 
 /** 期間値の並び順を「実際の長さ」で決める(日と月を混ぜても順序が壊れないように日数換算)。 */
@@ -201,14 +285,41 @@ export interface WardDifferenceTopicSpec {
 }
 
 /**
- * マイナンバーカードの継続利用で全国共通に用いられる日数。
- * この比較は「区の公式ページがこの日数を明記しているか」だけを見る(区ごとに日数を
- * 読み替えたり、記載のない区に90日を当てはめたりはしない)。
+ * マイナンバーカードの継続利用で全国共通に用いられる日数(転入届出日から90日)。
+ * この日数は「区の公式文言に明記されているか」の判定にだけ使う。
+ * 記載の無い区に当てはめたり、別の期限を明記している区の日数を上書きしたりはしない。
  */
-const MYNUMBER_CONTINUED_USE_WINDOW = '90日';
+const MYNUMBER_COMMON_WINDOW_DAYS = 90;
 
 /** 児童手当15日特例の起算日が「前住所地の転出予定日」であることを示す語。 */
 const MOVE_OUT_SCHEDULED_DATE = '転出予定日';
+
+/**
+ * 起算日(何の日から数えるか)を区が定義していないと明記している言い回し。
+ *
+ * なぜ児童手当トピック限定にするか: 「『転入日』が転出予定日か引越し日かの定義がない」という
+ * 断り書きは、子ども医療費助成の文言にも出てくるが、そちらでは**日数の期限そのものは
+ * 明記されている**(例: 15日以内)。この語を汎用の否定パターン(NO_STATEMENT_PATTERNS)へ
+ * 入れると、期限を明記している区まで「記載なし」に落ちてしまう。
+ * 起算日を問うこのトピックでだけ、否定として扱う。
+ */
+const ORIGIN_UNDEFINED_PATTERNS: readonly string[] = [
+  '定義がない',
+  '定義がありません',
+  '定義はありません',
+];
+
+/** 否定が「起算日」に掛かっていることを示す語(否定の掛かり先を文単位で確かめる)。 */
+const ORIGIN_SUBJECT_TERMS: readonly string[] = ['起算', '定義', '転入日'];
+
+/** 「起算日が公式ページから特定できない」と区自身が明記しているか。 */
+function statesNoOrigin(text: string): boolean {
+  return splitSentences(text).some(
+    (sentence) =>
+      [...NO_STATEMENT_PATTERNS, ...ORIGIN_UNDEFINED_PATTERNS].some((p) => sentence.includes(p)) &&
+      ORIGIN_SUBJECT_TERMS.some((t) => sentence.includes(t)),
+  );
+}
 
 export const WARD_DIFFERENCE_TOPICS: readonly WardDifferenceTopicSpec[] = [
   {
@@ -235,25 +346,66 @@ export const WARD_DIFFERENCE_TOPICS: readonly WardDifferenceTopicSpec[] = [
   {
     topicId: 'mynumber_continued_use_window',
     title: 'マイナンバーカードの継続利用の期限',
-    question: '転入届のあと、カードの継続利用はいつまでに手続きすればよい？',
+    question: 'カードを引き続き使うための手続きは、いつまでに済ませればよい？',
     procedureId: 'procedure_mynumber_continued_use',
     derivationNote:
-      '継続利用は「転入届出日から90日以内」という全国共通の運用ですが、区の公式ページに' +
-      'その90日が明記されているかは区で分かれます。この比較は各区の公式文言に「90日」の記載が' +
-      'あるかどうかだけを機械的に判定しており、記載のない区に90日を当てはめることはしません。',
-    derive: ({ officialText }) =>
-      officialText.includes(MYNUMBER_CONTINUED_USE_WINDOW)
-        ? {
-            valueId: 'stated_90days',
-            label: '転入届出日から90日以内と明記',
-            tone: 'neutral',
-            sortKey: 90,
-          }
-        : cautionValue(
-            'not_stated',
-            '継続利用の期限（90日）を区の公式ページで確認できず（要確認）',
-            0,
-          ),
+      '各区の公式文言から「N日以内」「Nか月以内」の記載を機械的に取り出し、' +
+      '(1)全国共通の運用である「転入届出日から90日以内」を明記している区、' +
+      '(2)90日ではない期限（引越し日から14日以内など）を明記している区、' +
+      '(3)期限の記載を公式ページで確認できないと区自身が明記している区、の3通りに分けています。' +
+      '(2)では区が実際に書いている日数をそのまま表示します（90日に読み替えません）。' +
+      '(3)の区に90日を当てはめることもしません。',
+    derive: ({ officialText }) => {
+      const stated = extractStatedDeadlines(officialText);
+      // 区自身が「確認できない」と明記している場合のみ、要確認として扱う(原則3)。
+      if (stated.kind === 'absent') {
+        return cautionValue(
+          'not_stated',
+          '継続利用の期限の記載を区の公式ページで確認できず（要確認）',
+          0,
+        );
+      }
+      if (stated.durations.length === 0) {
+        return cautionValue(
+          'undetermined',
+          '公式文言から継続利用の期限を判定できません（要確認）',
+          1,
+        );
+      }
+      if (
+        stated.durations.some((d) => d.unit === 'day' && d.amount === MYNUMBER_COMMON_WINDOW_DAYS)
+      ) {
+        return {
+          valueId: 'stated_90days',
+          label: `転入届出日から${MYNUMBER_COMMON_WINDOW_DAYS}日以内と明記`,
+          tone: 'neutral',
+          sortKey: MYNUMBER_COMMON_WINDOW_DAYS,
+        };
+      }
+      // 90日ではない期限を明記している区。**記載が無い区と同じ扱いにしてはならない**:
+      // これらの区の期限は90日より短いことがあり(例: 引越し日から14日以内)、
+      // 「期限を確認できず」と見せると、猶予があるかのように誤導して失効の実害につながる。
+      const shortest = stated.durations[0];
+      if (!shortest) {
+        return cautionValue(
+          'undetermined',
+          '公式文言から継続利用の期限を判定できません（要確認）',
+          1,
+        );
+      }
+      const shortestKey = durationSortKey(shortest.amount, shortest.unit);
+      const listed = stated.durations.map(formatDuration).join('・');
+      return {
+        valueId: `stated_other_${stated.durations.map((d) => `${d.unit}_${d.amount}`).join('_')}`,
+        label:
+          `${MYNUMBER_COMMON_WINDOW_DAYS}日ではなく「${listed}」と明記` +
+          (shortestKey < MYNUMBER_COMMON_WINDOW_DAYS
+            ? `（${MYNUMBER_COMMON_WINDOW_DAYS}日より短い期限）`
+            : ''),
+        tone: 'neutral',
+        sortKey: shortestKey,
+      };
+    },
   },
   {
     topicId: 'child_allowance_15day_origin',
@@ -263,9 +415,14 @@ export const WARD_DIFFERENCE_TOPICS: readonly WardDifferenceTopicSpec[] = [
     derivationNote:
       '各区の公式文言に「転出予定日」が起算日として書かれているかで分けています。' +
       '転出予定日が起算日の区では、本サービスが知らない前住所地の届出内容に依存するため、' +
-      '引越し日から期日を算定できません（チェックリストでも日付を出さず公式文言を表示します）。',
+      '引越し日から期日を算定できません（チェックリストでも日付を出さず公式文言を表示します）。' +
+      'なお「起算日の定義が公式ページにない」と明記している区は、文中に「転出予定日」の語が' +
+      '出てきても“転出予定日が起算日”とはみなさず、「起算日を特定できず（要確認）」とします。',
     derive: ({ officialText, rule }) => {
-      if (officialText.includes(MOVE_OUT_SCHEDULED_DATE)) {
+      // 否定が勝つ。「転入日が転出予定日か引越し日かの定義がない」と書いている区の文にも
+      // 「転出予定日」の語は現れるため、語の有無だけで判定すると、区が言っていない起算日を
+      // その区の見解として表示してしまう(原則3)。
+      if (!statesNoOrigin(officialText) && officialText.includes(MOVE_OUT_SCHEDULED_DATE)) {
         return cautionValue(
           'move_out_scheduled_date',
           '前住所地の「転出予定日」が起算日（引越し日からは期日を算定できない）',

@@ -6,6 +6,7 @@ import type { ProcedureVersion, Rule } from '@tmn/schemas';
 import {
   buildWardDifferences,
   extractStatedDeadline,
+  extractStatedDeadlines,
   WARD_DIFFERENCE_TOPICS,
   type WardDifferenceInput,
   type WardDifferenceSourceRef,
@@ -24,6 +25,9 @@ import {
  *   3. どのトピックも実際に2通り以上に分かれる(=比較ページとして成立している)。
  *   4. 各セルに必ず根拠(ソース+最終確認日)が付く(原則2)。
  *   5. 犬の届出は「公式文言からの抽出結果」と「ルールの dueRule」が矛盾しない(二重帳簿でない)。
+ *   6. 【最重要】「別の期限を明記している区」が「期限の記載を確認できない区」に混ざらない。
+ *      混ざると、90日より短い期限(例: 引越し日から14日以内)を公開している区の利用者に
+ *      「自分の区は期限を出していない=猶予があるかも」と読ませ、安全と逆に倒れる。
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -112,6 +116,62 @@ describe('extractStatedDeadline — 公式文言からの保守的な期限抽�
   it('異なる期間が2つ以上あって決められない場合は undetermined(推測しない)', () => {
     const text = '転入日から14日以内に届出をし、その届出日から90日以内に手続きしてください。';
     expect(extractStatedDeadline(text)).toEqual({ kind: 'undetermined', reason: 'ambiguous' });
+  });
+
+  it('助詞の揺れ(「90日が経過」「15日経過」「90日を過ぎ」)も期限として拾う', () => {
+    // 実データ(中央区のマイナンバーカード継続利用)は「90日が経過すると失効します」と書く。
+    // 助詞を許容しないと、90日を明記している区を「明記していない」と誤判定する。
+    for (const text of ['90日が経過すると失効します。', '90日経過すると失効します。']) {
+      expect(extractStatedDeadline(text), text).toEqual({
+        kind: 'duration',
+        amount: 90,
+        unit: 'day',
+      });
+    }
+  });
+
+  it('否定が期限以外に掛かっている文では absent にしない(期限は別の文で明記されている)', () => {
+    // 実データ(目黒区)の形。「失効条件の記載がありません」は期限そのものの否定ではない。
+    const text =
+      '手続きできる期間は転入届出日から90日以内です。' +
+      'なお目黒区のページには、他区にある失効条件の記載がありません。';
+    expect(extractStatedDeadline(text)).toEqual({ kind: 'duration', amount: 90, unit: 'day' });
+  });
+});
+
+describe('extractStatedDeadlines — 明記された期限を「すべて」取り出す', () => {
+  it('複数の期限を実際の長さの昇順で返す(1つに畳んで捨てない)', () => {
+    const text = '引越してきた日から14日以内かつ転出予定日から30日以内に手続きしてください。';
+    expect(extractStatedDeadlines(text)).toEqual({
+      kind: 'durations',
+      durations: [
+        { amount: 14, unit: 'day' },
+        { amount: 30, unit: 'day' },
+      ],
+    });
+  });
+
+  it('日と月が混ざっても実際の長さの順に並ぶ', () => {
+    const text = '3か月以内に申請してください。14日以内であれば遡れます。';
+    expect(extractStatedDeadlines(text)).toEqual({
+      kind: 'durations',
+      durations: [
+        { amount: 14, unit: 'day' },
+        { amount: 3, unit: 'month' },
+      ],
+    });
+  });
+
+  it('期限の記載が無いと明記している場合は、同じ文の数字を拾わず absent', () => {
+    const text = '日数の期限はこのページには記載がありません(『30日以内』は別手続きの期限です)。';
+    expect(extractStatedDeadlines(text)).toEqual({ kind: 'absent' });
+  });
+
+  it('期限らしい数値が無い場合は空配列(absent とは区別する)', () => {
+    expect(extractStatedDeadlines('手数料は1,600円です。')).toEqual({
+      kind: 'durations',
+      durations: [],
+    });
   });
 });
 
@@ -244,6 +304,131 @@ describe('buildWardDifferences — 実データからの集計(区が増えれ�
         const rule = rules.find((r) => r.procedureId === topic.procedureId);
         expect(cell.officialText, `${topic.topicId} / ${cell.municipalityCode}`).toBe(
           rule?.dueDescription,
+        );
+      }
+    }
+  });
+});
+
+describe('マイナンバーカード継続利用 — 「別の期限を明記」と「記載を確認できない」を混ぜない', () => {
+  const TOPIC_ID = 'mynumber_continued_use_window';
+  const PROCEDURE_ID = 'procedure_mynumber_continued_use';
+
+  /**
+   * テスト側で独立に「期限の記載が無い」と読める文かを判定する(実装の内部定数を使わない)。
+   * データ側が新しい言い回しを持ち込んだら、実装との食い違いとしてここで落ちる。
+   */
+  const NEGATION =
+    /記載が(ありません|ない)|記載は(ありません|ない)|記載なし|確認できません(でした)?/;
+
+  const topic = report.topics.find((t) => t.topicId === TOPIC_ID);
+
+  function buildWithText(dueDescription: string): string {
+    const base = realWardInputs()[0];
+    if (!base) throw new Error('no ward data');
+    const ward: WardDifferenceInput = {
+      ...base,
+      municipalityCode: '13999',
+      municipalityName: '検証区',
+      rules: base.rules.map((r) =>
+        r.procedureId === PROCEDURE_ID ? { ...r, dueDescription } : r,
+      ) as Rule[],
+    };
+    const built = buildWardDifferences([ward]);
+    const cell = built.topics.find((t) => t.topicId === TOPIC_ID)?.cells[0];
+    if (!cell) throw new Error('no cell');
+    return cell.valueId;
+  }
+
+  it('90日 / 別の期限 / 記載を確認できない が、それぞれ別の値になる(3値以上)', () => {
+    const ninety = buildWithText('継続利用の手続きは転入届出日から90日以内です。');
+    const other = buildWithText(
+      '引越してきた日から14日以内かつ転出予定日から30日以内(期限を過ぎるとカードの継続利用ができません)。',
+    );
+    const unknown = buildWithText(
+      '継続利用の手続きそのものの期限は、区の公式ページでは確認できませんでした(未確認)。',
+    );
+    expect(new Set([ninety, other, unknown]).size).toBe(3);
+    expect(ninety).toBe('stated_90days');
+    expect(unknown).toBe('not_stated');
+    // 別の期限を明記している区は、記載の無い区と同じ値に落ちてはならない(このバグの本体)。
+    expect(other).not.toBe('not_stated');
+    expect(other).not.toBe('undetermined');
+  });
+
+  it('実データでも3通り以上に分かれ、分布の合計が対応区数と一致する', () => {
+    expect(topic).toBeDefined();
+    expect(topic?.valueGroups.length ?? 0).toBeGreaterThanOrEqual(3);
+    const total = (topic?.valueGroups ?? []).reduce((n, g) => n + g.municipalityCodes.length, 0);
+    expect(total).toBe(WARD_CODES.length);
+  });
+
+  it('【P0】期限を明記している区が「確認できず」側に入らない', () => {
+    for (const cell of topic?.cells ?? []) {
+      if (NEGATION.test(cell.officialText)) continue;
+      // 区自身が「確認できない」と書いていない以上、要確認へ落としてはならない。
+      expect(cell.valueId, `${cell.municipalityCode}: ${cell.officialText}`).not.toBe('not_stated');
+      expect(cell.tone, cell.municipalityCode).toBe('neutral');
+    }
+  });
+
+  it('「確認できず」に入る区は、区自身がその旨を明記している区だけ', () => {
+    for (const cell of topic?.cells ?? []) {
+      if (cell.valueId !== 'not_stated') continue;
+      expect(
+        NEGATION.test(cell.officialText),
+        `${cell.municipalityCode}: ${cell.officialText}`,
+      ).toBe(true);
+    }
+  });
+
+  it('「90日以内と明記」の区の文言には90日が実在し、それ以外の区には無い', () => {
+    for (const cell of topic?.cells ?? []) {
+      const has90 = /90\s*日/.test(cell.officialText);
+      if (cell.valueId === 'stated_90days') {
+        expect(has90, cell.municipalityCode).toBe(true);
+      } else {
+        // 90日を書いている区を「別の期限」「確認できず」にはしない。
+        expect(has90, `${cell.municipalityCode}: ${cell.officialText}`).toBe(false);
+      }
+    }
+  });
+
+  it('「別の期限を明記」の区は、そのラベルの日数が公式文言に実在する(推測で数字を作らない)', () => {
+    const others = (topic?.cells ?? []).filter((c) => c.valueId.startsWith('stated_other_'));
+    // 実データにこの類型が存在すること自体を固定する(存在しなくなったら分類の見直しが必要)。
+    expect(others.length).toBeGreaterThan(0);
+    for (const cell of others) {
+      const numbers = [...cell.valueLabel.matchAll(/(\d{1,3})(日|か月)以内/g)];
+      expect(numbers.length, `${cell.municipalityCode}: ${cell.valueLabel}`).toBeGreaterThan(0);
+      for (const [, amount, unit] of numbers) {
+        expect(
+          new RegExp(`${amount}\\s*${unit === '日' ? '日' : '[かヶカ箇]月'}`).test(
+            cell.officialText,
+          ),
+          `${cell.municipalityCode} のラベル「${cell.valueLabel}」の${amount}${unit}が公式文言に無い`,
+        ).toBe(true);
+      }
+      // 90日を明記していないことが、この類型の前提。
+      expect(/90\s*日/.test(cell.officialText), cell.municipalityCode).toBe(false);
+    }
+  });
+
+  it('児童手当: 「転出予定日が起算日」とするのは、その区がそう書いている区だけ', () => {
+    // なぜ: 「起算日の定義がこのページに無い」と書いている区の文にも『転出予定日』の語は現れる。
+    // 語の有無だけで判定すると、区が言っていない起算日をその区の見解として表示してしまう。
+    const allowance = report.topics.find((t) => t.topicId === 'child_allowance_15day_origin');
+    for (const cell of allowance?.cells ?? []) {
+      const saysUndefined =
+        /定義が(ない|ありません)|定義はありません/.test(cell.officialText) ||
+        NEGATION.test(cell.officialText);
+      if (cell.valueId === 'move_out_scheduled_date') {
+        expect(cell.officialText, cell.municipalityCode).toContain('転出予定日');
+        expect(saysUndefined, `${cell.municipalityCode}: ${cell.officialText}`).toBe(false);
+      }
+      if (saysUndefined) {
+        expect(cell.valueId, `${cell.municipalityCode}: ${cell.officialText}`).not.toBe(
+          'move_out_scheduled_date',
         );
       }
     }
