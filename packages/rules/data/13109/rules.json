@@ -1,6 +1,6 @@
 {
   "municipalityCode": "13109",
-  "ruleVersion": "2026-08-06.1",
+  "ruleVersion": "2026-08-09.1",
   "rules": [
     {
       "procedureId": "procedure_resident_registration",
@@ -9,16 +9,28 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "urgent",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "新しい住所地に住み始めてから14日以内に転入届を出してください。届出期間を大幅に過ぎている場合、50,000円以下の過料に処せられることがあります。引っ越し前(住み始める前)には届出できません。",
       "sourceIds": ["src-13109-resident_registration-001"],
       "applicabilityReasonTemplate": "他の区市町村や外国から品川区に転入したすべての方に必要な届出です。"
     },
     {
       "procedureId": "procedure_mynumber_continued_use",
-      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "hasMyNumberCard",
+        "equals": true
+      },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "住み始めた日から14日以内かつ引っ越し予定日から30日以内に転入届をし、その転入届の届出日から90日以内に継続利用の申し出をしてください。期限を過ぎるとマイナンバーカードは失効します(失効時の再発行手数料1,000円)。",
       "sourceIds": ["src-13109-my_number-001", "src-13109-resident_registration-001"],
       "applicabilityReasonTemplate": "マイナンバーカードをお持ちの方は、転入に伴う継続利用の手続きが必要です。"
@@ -31,16 +43,26 @@
         "equals": true
       },
       "priority": "high",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "品川区に転入した日から14日以内に届出をしてください。届出が遅れると、その間の医療費が全額自己負担になる場合や保険料をさかのぼって支払うことになる場合があります。",
       "sourceIds": ["src-13109-national_health_insurance-001"],
       "applicabilityReasonTemplate": "職場の健康保険等に加入していない方は、品川区の国民健康保険への加入の届出が必要です。"
     },
     {
       "procedureId": "procedure_national_pension_address",
-      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalPension",
+        "equals": true
+      },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "国民年金の届出は区役所の国民年金の窓口・住民異動を扱う地域センター・品川年金事務所で受け付けています。このページには転入に伴う住所変更の届出の日数の期限の記載はありません。届出の要否・方法は窓口または品川年金事務所へご確認ください。",
       "sourceIds": ["src-13109-national_pension-001"],
       "applicabilityReasonTemplate": "国民年金(第1号被保険者)の加入・種別変更等の届出に関する案内です。詳細(マイナンバーと基礎年金番号の連携状況等)は年金事務所へご確認ください。"
@@ -52,8 +74,12 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
-      "dueDescription": "出生日や転入した日(前住所地の転出予定日)の翌日から15日以内に申請すれば、出生日や転入した日の翌月分から支給されます。起算日は前住所地での転出予定日等のため引越し日からは算定できません。早めの申請を推奨します。",
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveOutScheduledDate",
+        "days": 15
+      },
+      "dueDescription": "出生日や転入した日(前住所地の転出予定日)の翌日から15日以内に申請すれば、出生日や転入した日の翌月分から支給されます。起算日は前住所地での転出予定日等のため引越し日からは算定できません。ウィザードで前住所地の転出予定日を入力すると、その日を起算日として期日を算定します(未入力の場合は日付を表示しません)。早めの申請を推奨します。",
       "sourceIds": ["src-13109-child_benefits-001"],
       "applicabilityReasonTemplate": "高校卒業まで(18歳に達する日以後の最初の3月31日まで)の児童を養育している世帯が対象です。転入した場合は新たに申請が必要です。"
     },
@@ -64,7 +90,9 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "異動日(転入日)から6カ月以内に申請すると異動日から資格が発生します。6カ月を超えて申請した場合は申請日からの資格となります。",
       "sourceIds": ["src-13109-child_medical-001"],
       "applicabilityReasonTemplate": "品川区に住民登録があり健康保険に加入している、18歳に達した日以後最初の3月31日までの子を養育している保護者が対象です。"
@@ -73,12 +101,21 @@
       "procedureId": "procedure_school_transfer",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["elementary", "junior_senior"]
+          }
         ]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "前に通っていた学校から『在学証明書』と『教科書給与証明書』を受け取り、品川区で転入届を提出する際に学務課で入学関係書類を受け取ってください。転入届と同時に手続きできます。日数固定の期限はこのページには記載がありません。",
       "sourceIds": ["src-13109-school_transfer-001"],
       "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さまがいる世帯が品川区へ転入する場合に必要な、区立学校への転入学手続きです。品川区で交付される書類の名称は公式ページに記載がないため設定していません(他区の名称を持ち込みません)。"
@@ -87,12 +124,21 @@
       "procedureId": "procedure_childcare_application",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["age0_2", "age3_5"]
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "品川区外からの申請は電子申請(マイナポータル)ができず、郵送(簡易書留・消印有効)または区役所窓口で申し込みます。申込締切日・必要書類は品川区の入園案内(区外からの申請ページ)でご確認ください(入園希望月・年度により異なるため日数固定の期限は設定していません)。",
       "sourceIds": ["src-13109-childcare-001"],
       "applicabilityReasonTemplate": "保育を必要とする未就学のお子さまがいる世帯で、品川区の保育施設の利用を希望する方(区外から申し込む方)向けの案内です。"
@@ -101,12 +147,22 @@
       "procedureId": "procedure_dog_registration_transfer",
       "condition": {
         "all": [
-          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
-          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasDog",
+            "equals": true
+          },
+          {
+            "predicate": "flagEquals",
+            "flag": "dogHasMicrochip",
+            "equals": false
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "転入前の市区町村で交付された鑑札を持参し、品川区の窓口で品川区の鑑札に交換してください(明確な日数の期限はこのページには記載がありません)。マイクロチップを装着し環境省に登録済みの場合は環境省サイトでの手続きで完結し、品川区への届出は不要です。",
       "sourceIds": ["src-13109-dog_registration-001"],
       "applicabilityReasonTemplate": "犬を飼っており、マイクロチップ(みなし鑑札)を装着・環境省登録していないため、品川区の窓口での飼い犬の登録手続きが必要です。",
@@ -119,7 +175,9 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "生活開始まで(引越し後すぐに、お住まいの地域の収集日を確認してください)。品川区の収集曜日は地区(町丁目)ごとに決められており、品川区公式『ごみ・資源収集日一覧』(地区別)または令和8年版ごみ・リサイクルカレンダーでご確認ください。ごみ・資源は収集日の朝8時までにお出しください。",
       "sourceIds": ["src-13109-waste_guide-001"],
       "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたって資源・ごみの分け方と収集日の確認をおすすめします。"
@@ -131,7 +189,9 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "東京都水道局は「次のお手続きについては、3〜4日前までに必ずお手続きください」と案内しています(使用開始申込み・使用中止届のいずれも)。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。",
       "sourceIds": ["src-13000-water_supply-001", "src-13000-sewerage-001"],
       "applicabilityReasonTemplate": "水道は住まいを移るすべての方に必要なライフラインの手続きです(区の手続きではなく東京都水道局への手続きです)。"
@@ -143,7 +203,9 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "日本郵便は「転居届を提出されてから登録までに3〜7営業日を要しますので、転居される際には、お早めに転居届を提出してください」と案内しています。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。転送期間は届出日から1年間です(転送開始希望日からではありません)。",
       "sourceIds": ["src-00000-postal_forwarding-001"],
       "applicabilityReasonTemplate": "旧住所あての郵便物等を新住所へ転送してもらうための、住所が変わるすべての方向けの手続きです(区の手続きではなく日本郵便への手続きです)。"
@@ -155,16 +217,24 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "出典である国(デジタル庁)の公式ページには、電気・ガスの手続きの期限に関する記載がありません。受付の締切や必要な連絡時期は契約先の事業者ごとに異なるため、契約先へご確認ください(要確認)。",
       "sourceIds": ["src-00000-utilities_contact-001"],
       "applicabilityReasonTemplate": "電気・ガスは引越しに伴い契約先の民間事業者への手続きが必要になるライフラインです(区の手続きではありません)。"
     },
     {
       "procedureId": "procedure_driver_license_change",
-      "condition": { "predicate": "flagEquals", "flag": "needsVehicleGuidance", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsVehicleGuidance",
+        "equals": true
+      },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "警視庁の当該ページには「◯日以内」という日数の期限の記載がありません(要確認)。転入届で住民票の住所が変わったあとに手続きしてください。",
       "sourceIds": ["src-13000-driver_license-001"],
       "applicabilityReasonTemplate": "車・バイク等の追加案内が必要と回答された方向けの、運転免許証の住所変更(記載事項変更)の手続きです(区の手続きではなく警視庁への手続きです)。"

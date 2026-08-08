@@ -46,6 +46,15 @@ const TAITO = '13106';
 const SUMIDA = '13107';
 const BATCH8 = [CHUO, MINATO, BUNKYO, TAITO, SUMIDA] as const;
 const RULE_VERSION = '2026-08-07.1';
+/**
+ * 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で ruleVersion を
+ * 上げた区。手続き(procedures.json)の内容は変わっていないため pv.version は据え置き。
+ * 台東区は公式ページに『転入日』の定義が無く、転出予定日起算のルールを持てないため不変。
+ */
+const REVISED_RULE_VERSION = '2026-08-09.1';
+const REVISED_WARDS: readonly string[] = [CHUO, MINATO, BUNKYO, SUMIDA];
+const ruleVersionOf = (code: string) =>
+  REVISED_WARDS.includes(code) ? REVISED_RULE_VERSION : RULE_VERSION;
 const LAST_VERIFIED = '2026-08-07T00:00:00Z';
 
 /** なぜ: (g) 他区名の混入検出に使う23区の名称表。自区名は当然許可する。 */
@@ -185,7 +194,7 @@ describe('Batch8 — schema validation & approved status (CI gate)', () => {
     (code) => {
       const rs = RULE_SETS[code] as RuleSet;
       expect(rs.municipalityCode).toBe(code);
-      expect(rs.ruleVersion).toBe(RULE_VERSION);
+      expect(rs.ruleVersion).toBe(ruleVersionOf(code));
       // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
       expect(rs.publishedRuleVersion).toBeUndefined();
       expect(rs.rules.length).toBe(14);
@@ -392,13 +401,23 @@ describe('Batch8 — 区ごとに異なる期限(共通デフォルト値を作�
         'procedure_mynumber_continued_use',
       );
 
+    const ruleDueOf = (code: string) =>
+      (RULE_SETS[code] as RuleSet).rules.find(
+        (r) => r.procedureId === 'procedure_mynumber_continued_use',
+      )?.dueDescription ?? '';
+
     for (const code of [CHUO, BUNKYO, SUMIDA]) {
-      const o = withCard(code);
-      expect(o.applicable).toBe('applicable');
-      expect(o.dueDescription, code).toContain('90日');
-      // 90日は「転入届出日」起算のため moveDate からは算定しない。
-      expect(o.dueDate, code).toBeUndefined();
+      expect(withCard(code).applicable).toBe('applicable');
+      // 90日は「転入届出日」起算のため算定しない(文言としては残る)。
+      expect(ruleDueOf(code), code).toContain('90日');
     }
+    // 中央は「転入日から15日経過…した転入届があった場合はカードが失効」と明記 → 引越し日+15日。
+    expect(withCard(CHUO).dueDate).toBe('2026-08-16');
+    // 文京は「引越し日から14日以内に転入届を行わなかった場合、カードは失効」と明記 → 引越し日+14日。
+    expect(withCard(BUNKYO).dueDate).toBe('2026-08-15');
+    // 墨田はカード失効の条件として90日しか書いていない(表の『引っ越し後14日以内』は転入届自体の
+    // 届出期間で、カード失効の条件として結び付けられていない)。推測せず日付を出さない。
+    expect(withCard(SUMIDA).dueDate).toBeUndefined();
 
     // 港・台東: 公式ページに継続利用の失効期限の記載が無いため、確認できなかったことを明示する。
     for (const code of [MINATO, TAITO]) {

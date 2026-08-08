@@ -53,6 +53,11 @@ const BATCH9 = [MEGURO, SHIBUYA, KATSUSHIKA] as const;
 /** マイクロチップ登録済みなら区の窓口が不要になる区(目黒区はここに含まれない)。 */
 const MICROCHIP_EXEMPT = [SHIBUYA, KATSUSHIKA] as const;
 const RULE_VERSION = '2026-08-07.1';
+/**
+ * 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂。3区とも該当し、
+ * ruleVersion を上げた。手続き(procedures.json)の内容は変わっていないため pv.version は据え置き。
+ */
+const REVISED_RULE_VERSION = '2026-08-09.1';
 const LAST_VERIFIED = '2026-08-07T00:00:00Z';
 
 function readJson(relFromRoot: string): unknown {
@@ -174,7 +179,7 @@ describe('Batch9 — schema validation & approved status (CI gate)', () => {
     (code) => {
       const rs = RULE_SETS[code] as RuleSet;
       expect(rs.municipalityCode).toBe(code);
-      expect(rs.ruleVersion).toBe(RULE_VERSION);
+      expect(rs.ruleVersion).toBe(REVISED_RULE_VERSION);
       // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
       expect(rs.publishedRuleVersion).toBeUndefined();
       expect(rs.rules.length).toBe(14);
@@ -414,16 +419,26 @@ describe('Batch9 — 区ごとに異なる期限(共通デフォルト値を作�
     }
 
     // 渋谷は板橋区に次ぐ2例目の14日。3か月・2か月・6カ月を混入させない。
-    const shibuya = due(SHIBUYA);
+    // 2026-08-09: 日数で明記している区は moveDate から算定するようになったため、
+    // 渋谷の公式文言は rules.json 側で検証する(算定できた区は outcome から文言が落ちる)。
+    const shibuya =
+      (RULE_SETS[SHIBUYA] as RuleSet).rules.find((r) => r.procedureId === 'procedure_child_medical')
+        ?.dueDescription ?? '';
     expect(shibuya).toContain('14日以内');
     expect(shibuya).not.toContain('3か月');
     expect(shibuya).not.toContain('3カ月');
     expect(shibuya).not.toContain('2か月');
     expect(shibuya).not.toContain('6カ月');
+    expect(outcomeFor(familyIn(SHIBUYA), SHIBUYA, 'procedure_child_medical').dueDate).toBe(
+      '2026-08-15',
+    );
 
-    // 3区とも dueDate(算定値)は出さない(「申請すれば遡及」であって届出期限ではないため)。
-    for (const code of BATCH9) {
-      expect(outcomeFor(familyIn(code), code, 'procedure_child_medical').dueDate).toBeUndefined();
+    // 月単位でしか書かれていない2区は dueDate を出さない(暦月の数え方を推測しない)。
+    for (const code of [MEGURO, KATSUSHIKA]) {
+      expect(
+        outcomeFor(familyIn(code), code, 'procedure_child_medical').dueDate,
+        code,
+      ).toBeUndefined();
     }
   });
 
@@ -435,30 +450,48 @@ describe('Batch9 — 区ごとに異なる期限(共通デフォルト値を作�
         'procedure_mynumber_continued_use',
       );
 
+    const ruleDueOf = (code: string) =>
+      (RULE_SETS[code] as RuleSet).rules.find(
+        (r) => r.procedureId === 'procedure_mynumber_continued_use',
+      )?.dueDescription ?? '';
+
     for (const code of BATCH9) {
-      const o = withCard(code);
-      expect(o.applicable, code).toBe('applicable');
-      expect(o.dueDescription, code).toContain('90日');
-      // 90日は「転入届出日」起算のため moveDate からは算定しない。
-      expect(o.dueDate, code).toBeUndefined();
+      expect(withCard(code).applicable, code).toBe('applicable');
+      // 90日は「転入届出日」起算のため算定しない(文言としては残る)。
+      expect(ruleDueOf(code), code).toContain('90日');
     }
 
     // 目黒: 公式ページに30日・14日の失効条件が無いことを明示し、断定文としては書かない。
-    const meguro = withCard(MEGURO).dueDescription ?? '';
+    // 算定できる起算日が1つも無いため、日付は出さない(90日を引越し日に当てはめない)。
+    const meguro = ruleDueOf(MEGURO);
     expect(meguro).toContain('記載がありません');
     expect(meguro).not.toMatch(/転出予定日から30日以内であること/);
+    expect(withCard(MEGURO).dueDate).toBeUndefined();
 
     // 渋谷: 30日+90日の両方が条件。14日の条件は書かれていない。
-    const shibuya = withCard(SHIBUYA).dueDescription ?? '';
+    // 起算日が転出予定日だけのため、転出予定日が未入力なら日付は出さない。
+    const shibuya = ruleDueOf(SHIBUYA);
     expect(shibuya).toContain('転出予定日から30日以内');
     expect(shibuya).toContain('90日以内');
     expect(shibuya).not.toContain('14日');
+    expect(withCard(SHIBUYA).dueDate).toBeUndefined();
+    expect(
+      outcomeFor(
+        {
+          ...profile({ municipalityCode: SHIBUYA, flags: { hasMyNumberCard: true } }),
+          moveOutScheduledDate: '2026-07-20',
+        },
+        SHIBUYA,
+        'procedure_mynumber_continued_use',
+      ).dueDate,
+    ).toBe('2026-08-19');
 
-    // 葛飾: 90日+30日+14日の3条件がすべて明記されている。
-    const katsushika = withCard(KATSUSHIKA).dueDescription ?? '';
+    // 葛飾: 90日+30日+14日の3条件がすべて明記されている。14日は引越し日から算定できる。
+    const katsushika = ruleDueOf(KATSUSHIKA);
     expect(katsushika).toContain('90日');
     expect(katsushika).toContain('30日以内');
     expect(katsushika).toContain('14日以内');
+    expect(withCard(KATSUSHIKA).dueDate).toBe('2026-08-15');
   });
 
   it('児童手当の15日特例: 3区とも「前住所地の転出予定日」起算のため算定しない', () => {

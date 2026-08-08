@@ -47,6 +47,15 @@ const TOSHIMA = '13116';
 const KITA = '13117';
 const BATCH7 = [NAKANO, ARAKAWA, TOSHIMA, KITA] as const;
 const RULE_VERSION = '2026-08-07.1';
+/**
+ * 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で ruleVersion を
+ * 上げた区。手続き(procedures.json)の内容は変わっていないため pv.version は据え置き。
+ * 北区は該当ルールが1件も無く(転出予定日起算の明記なし)、rules.json は不変。
+ */
+const REVISED_RULE_VERSION = '2026-08-09.1';
+const REVISED_WARDS: readonly string[] = [NAKANO, ARAKAWA, TOSHIMA];
+const ruleVersionOf = (code: string) =>
+  REVISED_WARDS.includes(code) ? REVISED_RULE_VERSION : RULE_VERSION;
 const LAST_VERIFIED = '2026-08-07T00:00:00Z';
 
 /**
@@ -161,7 +170,7 @@ describe('Batch7 — schema validation & approved status (CI gate)', () => {
     (code) => {
       const rs = RULE_SETS[code] as RuleSet;
       expect(rs.municipalityCode).toBe(code);
-      expect(rs.ruleVersion).toBe(RULE_VERSION);
+      expect(rs.ruleVersion).toBe(ruleVersionOf(code));
       // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
       expect(rs.publishedRuleVersion).toBeUndefined();
       expect(rs.rules.length).toBe(14);
@@ -443,13 +452,34 @@ describe('Batch7 — 区ごとに異なる期限(共通デフォルト値を作�
         'procedure_mynumber_continued_use',
       );
 
+    const ruleDueOf = (code: string) =>
+      (RULE_SETS[code] as RuleSet).rules.find(
+        (r) => r.procedureId === 'procedure_mynumber_continued_use',
+      )?.dueDescription ?? '';
+
     for (const code of [NAKANO, ARAKAWA, TOSHIMA]) {
       const o = withCard(code);
       expect(o.applicable).toBe('applicable');
-      expect(o.dueDescription, code).toContain('90日以内');
-      // 90日は「転入届出日」起算のため moveDate からは算定しない。
-      expect(o.dueDate, code).toBeUndefined();
+      // 90日は「転入届出日」起算のため算定しない(文言としては残る)。
+      expect(ruleDueOf(code), code).toContain('90日以内');
     }
+    // 中野は転入届の条件として「転出予定日から30日以内」だけを挙げる(引越し日起算の条件は無い)。
+    // 転出予定日が未入力なら日付は出さず、入力があればその日から算定する。
+    expect(withCard(NAKANO).dueDate).toBeUndefined();
+    expect(
+      outcomeFor(
+        {
+          ...profile({ municipalityCode: NAKANO, flags: { hasMyNumberCard: true } }),
+          moveOutScheduledDate: '2026-07-20',
+        },
+        NAKANO,
+        'procedure_mynumber_continued_use',
+      ).dueDate,
+    ).toBe('2026-08-19');
+    // 荒川・豊島は「転入から14日(豊島は転入日から15日)」もカード失効の条件として明記しており、
+    // 引越し日から算定できる。
+    expect(withCard(ARAKAWA).dueDate).toBe('2026-08-15');
+    expect(withCard(TOSHIMA).dueDate).toBe('2026-08-16');
 
     // 北区: 公式ページに90日の記載が無いため、確認できなかったことを明示する(推測で断定しない)。
     const kita = withCard(KITA);

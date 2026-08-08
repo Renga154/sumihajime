@@ -1,6 +1,6 @@
 {
   "municipalityCode": "13114",
-  "ruleVersion": "2026-08-07.1",
+  "ruleVersion": "2026-08-09.1",
   "rules": [
     {
       "procedureId": "procedure_resident_registration",
@@ -27,7 +27,9 @@
       },
       "priority": "high",
       "dueRule": {
-        "type": "unknown"
+        "type": "offsetDays",
+        "from": "moveOutScheduledDate",
+        "days": 30
       },
       "dueDescription": "継続利用の届出期間は転入届出日から90日以内です。転入届自体を転出予定日から30日以内に行わなかった場合もカードは失効します。日曜日に転入・転居の手続きをした場合は、当日中に継続利用の手続きはできません。",
       "sourceIds": ["src-13114-my_number-001"],
@@ -73,9 +75,11 @@
       },
       "priority": "high",
       "dueRule": {
-        "type": "unknown"
+        "type": "offsetDays",
+        "from": "moveOutScheduledDate",
+        "days": 15
       },
-      "dueDescription": "前住所地での転出予定日の翌日から15日以内(土・日・祝含む)に認定請求をしてください。15日以内に請求すれば事由発生のあった日の翌月分から支給されます。起算日は前住所地での転出予定日のため、引越し日からは算定できません。",
+      "dueDescription": "前住所地での転出予定日の翌日から15日以内(土・日・祝含む)に認定請求をしてください。15日以内に請求すれば事由発生のあった日の翌月分から支給されます。起算日は前住所地での転出予定日のため、引越し日からは算定できません。ウィザードで前住所地の転出予定日を入力すると、その日を起算日として期日を算定します(未入力の場合は日付を表示しません)。",
       "sourceIds": ["src-13114-child_benefits-002", "src-13114-child_benefits-001"],
       "applicabilityReasonTemplate": "出生から高校生年代(18歳年度末まで)のお子さんを養育している保護者が対象です。中野区に転入した場合は認定請求が必要です。"
     },

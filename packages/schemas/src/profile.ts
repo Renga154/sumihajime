@@ -87,6 +87,22 @@ export type Flags = z.infer<typeof flagsSchema>;
 export const profileSchema = z.strictObject({
   destination: destinationSchema,
   moveDate: z.iso.date(),
+  /**
+   * なぜ任意項目か: 児童手当の15日特例は多くの区が「前住所地の転出予定日の翌日から15日以内」と
+   * 明記しており(例: 板橋区「出生日・転入日(前住所地の転出予定日)等の事由発生日の翌日から起算して
+   * 15日以内」)、マイナンバーカードの継続利用も「転出予定日から30日以内に転入届」を条件に挙げる区が
+   * ある。これらは moveDate では算定できず、この日付が無い限り期日を出せない。
+   *
+   * ただし転出予定日は「前住所地で転出届を出したときに自分で決めた日」であり、まだ転出届を出して
+   * いない利用者や、値を覚えていない利用者が存在する。必須にすると入力を止めてしまうため任意とし、
+   * 未入力なら従来どおり期日を算定せず公式文言(要確認)を表示する — 推測で埋めない(CLAUDE.md原則3)。
+   *
+   * プライバシー: 収集するのは暦日のみで、氏名・電話・完全な生年月日等は増やさない(原則6・7)。
+   * 保存先は端末内(localStorage)のみで、moveDate と同じ扱い(サーバーに保存しない §13.3)。
+   *
+   * 後方互換: optional のため、この項目を持たない既存の保存済みプロフィールもそのまま parse できる。
+   */
+  moveOutScheduledDate: z.iso.date().optional(),
   originType: originTypeSchema,
   household: householdSchema,
   flags: flagsSchema,

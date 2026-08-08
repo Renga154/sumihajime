@@ -59,14 +59,43 @@ export const ruleConditionSchema: z.ZodType<RuleCondition> = z.lazy(() =>
 );
 
 /**
+ * 期限の起算日。Profile が持つ暦日のうち、公式文言が起算日として名指ししているものだけを許す。
+ *
+ * なぜ moveOutScheduledDate を足すか: 児童手当の15日特例は多くの区が「前住所地の転出予定日の
+ * 翌日から15日以内」と明記しており、引越し日(moveDate)からは算定できない。区が書いている
+ * 起算日をそのまま表現できるようにするための語彙であって、moveDate で代用してよいという意味ではない。
+ *
+ * なぜ「転入届出日」を足さないか: マイナンバーカードの継続利用の90日は転入届を出した日が起算で、
+ * その日は本サービスが知り得ない(まだ届出していない利用者が大半)。知らない日付を起算日として
+ * 語彙に持たせると、推測で埋める誘惑を構造的に残してしまう(CLAUDE.md原則3)。
+ */
+export const dueOriginSchema = z.enum(['moveDate', 'moveOutScheduledDate']);
+export type DueOrigin = z.infer<typeof dueOriginSchema>;
+
+/** 1つの起算日からの日数オフセット。earliestOf の要素にもなるため単体で切り出す。 */
+export const offsetDaysDueRuleSchema = z.strictObject({
+  type: z.literal('offsetDays'),
+  from: dueOriginSchema,
+  days: z.int().nonnegative(),
+});
+export type OffsetDaysDueRule = z.infer<typeof offsetDaysDueRuleSchema>;
+
+/**
  * なぜ: ADR-002の期限表現。dueDateが算定可能な場合はoffsetDays、
  * 算定不能・公式文言のみの場合はunknown(needs_confirmationへ倒す)。
+ *
+ * earliestOf を足した理由: マイナンバーカードの継続利用は、区が複数の条件を並べて
+ * 「いずれかを過ぎるとカードが失効する」と書いている(例: 板橋区「住み始めた日から14日以内
+ * または転出予定日から30日以内のどちらか早い期日まで」)。片方だけを期日として出すと、
+ * もう片方のほうが早い利用者に実際より遅い期日を見せてしまい、失効という実害につながる。
+ * 「区が並べた条件のうち、算定できるものの最も早い日」を期日にするための表現。
+ * 算定できない要素(転出予定日が未入力など)は無視し、1つも算定できなければ期日なし。
  */
 export const dueRuleSchema = z.union([
+  offsetDaysDueRuleSchema,
   z.strictObject({
-    type: z.literal('offsetDays'),
-    from: z.literal('moveDate'),
-    days: z.int().nonnegative(),
+    type: z.literal('earliestOf'),
+    of: z.array(offsetDaysDueRuleSchema).min(2),
   }),
   z.strictObject({
     type: z.literal('unknown'),

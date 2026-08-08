@@ -305,3 +305,95 @@ describe('WizardPage 引越し日の受付範囲', () => {
     expect(screen.getByRole('button', { name: 'この内容でチェックリストを作成' })).toBeEnabled();
   });
 });
+
+/**
+ * なぜ: 児童手当の15日特例やマイナンバーカードの継続利用は、多くの区が
+ * 「前住所地の転出予定日」を起算日として期限を定めている。この日付を訊いていなかったため
+ * 期日を出せていなかった。任意項目として足し、未入力なら従来どおり期日を出さないことを固定する。
+ */
+describe('WizardPage — 前住所地の転出予定日(任意)', () => {
+  function moveOutInput() {
+    return screen.getByLabelText('前住所地の転出予定日（任意）', { exact: false });
+  }
+
+  function fillStep1() {
+    fireEvent.change(screen.getByLabelText('引越し日または転入予定日', { exact: false }), {
+      target: { value: '2026-08-01' },
+    });
+    fireEvent.click(screen.getByLabelText('東京都外'));
+  }
+
+  it('「なぜ訊くか」を欄のそばに書く(何の日付か・空欄でよいことが分かる)', () => {
+    renderWizard();
+    const help = document.getElementById('moveOutScheduledDate-help');
+    expect(help).not.toBeNull();
+    expect(help).toHaveTextContent('転出届');
+    expect(help).toHaveTextContent('児童手当の15日特例');
+    expect(help).toHaveTextContent('マイナンバーカードの継続利用');
+    expect(help).toHaveTextContent('空欄で構いません');
+    expect(help).toHaveTextContent('要確認');
+    // 入力欄が説明を参照していること(読み上げでも「なぜ訊くか」が届く)。
+    expect(moveOutInput()).toHaveAttribute('aria-describedby', 'moveOutScheduledDate-help');
+  });
+
+  it('必須にしない: 未入力のままでも作成でき、プロフィールに項目を持たない', () => {
+    renderWizard();
+    fillStep1();
+    expect(screen.getByRole('button', { name: 'この内容でチェックリストを作成' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'この内容でチェックリストを作成' }));
+
+    const parsed = profileSchema.parse(JSON.parse(localStorage.getItem('tmn:profile:13112')!));
+    expect(parsed.moveOutScheduledDate).toBeUndefined();
+  });
+
+  it('入力するとプロフィールへ保存され、境界スキーマを通る', () => {
+    renderWizard();
+    fillStep1();
+    fireEvent.change(moveOutInput(), { target: { value: '2026-07-28' } });
+    fireEvent.click(screen.getByRole('button', { name: 'この内容でチェックリストを作成' }));
+
+    const parsed = profileSchema.parse(JSON.parse(localStorage.getItem('tmn:profile:13112')!));
+    expect(parsed.moveOutScheduledDate).toBe('2026-07-28');
+  });
+
+  it('範囲外の日付は説明を出し、作成を止める(引越し日と同じ受付幅)', () => {
+    renderWizard();
+    fillStep1();
+    fireEvent.change(moveOutInput(), { target: { value: '1900-01-01' } });
+
+    expect(moveOutInput()).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('alert')).toHaveTextContent('前住所地の転出予定日は');
+    expect(screen.getByRole('button', { name: 'この内容でチェックリストを作成' })).toBeDisabled();
+  });
+
+  it('保存済みプロフィールに項目が無くても壊れない(後方互換)', () => {
+    // 転出予定日を持たない既存プロフィール(改修前に保存されたもの)。
+    localStorage.setItem(
+      'tmn:profile:13112',
+      JSON.stringify({
+        destination: { municipalityCode: '13112' },
+        moveDate: '2026-08-01',
+        originType: 'outside_tokyo',
+        household: { memberCount: 1, ageBands: ['adult'] },
+        flags: {
+          hasMyNumberCard: false,
+          needsNationalHealthInsurance: false,
+          needsNationalPension: false,
+          hasSchoolOrChildcareNeeds: false,
+          hasDog: false,
+          dogHasMicrochip: 'unknown',
+          needsDisabilityOrCareSupport: false,
+          needsForeignResidentGuidance: false,
+          needsVehicleGuidance: false,
+          isPregnantMember: false,
+        },
+      }),
+    );
+    renderWizard();
+    // 既存の回答は復元され、転出予定日だけが空欄で表示される。
+    expect(screen.getByLabelText('引越し日または転入予定日', { exact: false })).toHaveValue(
+      '2026-08-01',
+    );
+    expect(moveOutInput()).toHaveValue('');
+  });
+});

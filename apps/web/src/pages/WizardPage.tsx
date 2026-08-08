@@ -26,6 +26,7 @@ import {
   isMoveDateWithinRange,
   moveDateBounds,
   moveDateRangeMessage,
+  moveOutScheduledDateRangeMessage,
   todayInTokyo,
 } from '../lib/move-date';
 import { useDocumentTitle } from '../lib/navigation';
@@ -130,6 +131,7 @@ export function parseStepParam(raw: string | null): number {
 export function answersFromProfile(profile: Profile | null): WizardAnswers {
   return {
     moveDate: profile?.moveDate ?? '',
+    moveOutScheduledDate: profile?.moveOutScheduledDate ?? '',
     originType: profile?.originType ?? '',
     householdKind: profile && profile.household.memberCount > 1 ? 'multiple' : 'single',
     ageBands: profile?.household.ageBands ?? ['adult'],
@@ -241,6 +243,9 @@ export function WizardPage() {
   // 初期値は「下書き(あれば) → 確定プロフィール → 既定値」の順。
   // Step1
   const [moveDate, setMoveDate] = useState(initialAnswers.moveDate);
+  const [moveOutScheduledDate, setMoveOutScheduledDate] = useState(
+    initialAnswers.moveOutScheduledDate,
+  );
   const [originType, setOriginType] = useState<OriginType | ''>(initialAnswers.originType);
 
   // Step2
@@ -254,8 +259,26 @@ export function WizardPage() {
 
   /** いま画面に入っている回答。下書き保存と「初期値と同じか」の判定に使う。 */
   const answers = useMemo<WizardAnswers>(
-    () => ({ moveDate, originType, householdKind, ageBands, isPregnant, flags, dogMicrochip }),
-    [moveDate, originType, householdKind, ageBands, isPregnant, flags, dogMicrochip],
+    () => ({
+      moveDate,
+      moveOutScheduledDate,
+      originType,
+      householdKind,
+      ageBands,
+      isPregnant,
+      flags,
+      dogMicrochip,
+    }),
+    [
+      moveDate,
+      moveOutScheduledDate,
+      originType,
+      householdKind,
+      ageBands,
+      isPregnant,
+      flags,
+      dogMicrochip,
+    ],
   );
 
   /**
@@ -277,8 +300,12 @@ export function WizardPage() {
 
   // 1900年のような値が素通りしないよう、受付範囲外は入力時点で止める。
   const moveDateOutOfRange = moveDate !== '' && !isMoveDateWithinRange(moveDate, today);
+  // 転出予定日は任意項目。未入力(空文字)は「範囲外」ではなく「答えていない」であり、
+  // 生成をブロックしない(未入力なら期日を算定しないだけ)。
+  const moveOutDateOutOfRange =
+    moveOutScheduledDate !== '' && !isMoveDateWithinRange(moveOutScheduledDate, today);
   const step1Filled = moveDate !== '' && originType !== '';
-  const step1Valid = step1Filled && !moveDateOutOfRange;
+  const step1Valid = step1Filled && !moveDateOutOfRange && !moveOutDateOutOfRange;
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -286,6 +313,7 @@ export function WizardPage() {
   function discardDraft() {
     if (municipalityCode) clearWizardDraft(municipalityCode);
     setMoveDate(baselineAnswers.moveDate);
+    setMoveOutScheduledDate(baselineAnswers.moveOutScheduledDate);
     setOriginType(baselineAnswers.originType);
     setHouseholdKind(baselineAnswers.householdKind);
     setAgeBands(baselineAnswers.ageBands);
@@ -309,6 +337,9 @@ export function WizardPage() {
     const profile = {
       destination: { municipalityCode },
       moveDate,
+      // 未入力なら項目ごと落とす。空文字を送ると境界スキーマ(z.iso.date())が弾くうえ、
+      // 「答えていない」を「空という答え」に変えてしまう。
+      ...(moveOutScheduledDate !== '' ? { moveOutScheduledDate } : {}),
       originType,
       household: { memberCount, ageBands: bands },
       flags: {
@@ -326,6 +357,7 @@ export function WizardPage() {
     householdKind,
     dogMicrochip,
     moveDate,
+    moveOutScheduledDate,
     originType,
     flags,
     isPregnant,
@@ -335,6 +367,11 @@ export function WizardPage() {
     if (!municipalityCode) return;
     if (moveDateOutOfRange) {
       setErrorMsg(moveDateRangeMessage(today));
+      setStep(1);
+      return;
+    }
+    if (moveOutDateOutOfRange) {
+      setErrorMsg(moveOutScheduledDateRangeMessage(today));
       setStep(1);
       return;
     }
@@ -506,6 +543,46 @@ export function WizardPage() {
                 className="mt-2 rounded border border-red-300 bg-red-50 p-2 text-sm text-red-900"
               >
                 {moveDateRangeMessage(today)}
+              </p>
+            )}
+          </div>
+
+          {/*
+            なぜこの欄を足したか: 児童手当の15日特例は多くの区が「前住所地の転出予定日の翌日から
+            15日以内」と明記しており、マイナンバーカードの継続利用も「転出予定日から30日以内に
+            転入届」を失効条件に挙げる区がある。引越し日だけでは、これらの期日を算定できない。
+            任意項目のままにするのは、まだ転出届を出していない利用者を止めないため。未入力なら
+            推測で埋めず「要確認」のまま表示する(CLAUDE.md原則3)。
+          */}
+          <div>
+            <label htmlFor="moveOutScheduledDate" className="block font-semibold text-slate-900">
+              前住所地の転出予定日（任意）
+            </label>
+            <p className="text-xs text-slate-500" id="moveOutScheduledDate-help">
+              前の住所の市区町村へ転出届を出すときに「いつ引っ越すか」として届け出た日です（転出証明書にも記載されています）。児童手当の15日特例やマイナンバーカードの継続利用は、この日を起算日として期限を定めている区があるため、うかがいます。分からない・まだ転出届を出していない場合は空欄で構いません（その場合、該当する手続きの期限は「要確認」と表示します）。海外からの転入では入力不要です。
+            </p>
+            <input
+              id="moveOutScheduledDate"
+              type="date"
+              value={moveOutScheduledDate}
+              onChange={(e) => setMoveOutScheduledDate(e.target.value)}
+              min={dateBounds.min}
+              max={dateBounds.max}
+              aria-describedby={
+                moveOutDateOutOfRange
+                  ? 'moveOutScheduledDate-help moveOutScheduledDate-error'
+                  : 'moveOutScheduledDate-help'
+              }
+              aria-invalid={moveOutDateOutOfRange || undefined}
+              className="mt-2 rounded-lg border border-slate-300 px-3 py-2 transition-colors focus:border-brand-500"
+            />
+            {moveOutDateOutOfRange && (
+              <p
+                id="moveOutScheduledDate-error"
+                role="alert"
+                className="mt-2 rounded border border-red-300 bg-red-50 p-2 text-sm text-red-900"
+              >
+                {moveOutScheduledDateRangeMessage(today)}
               </p>
             )}
           </div>
@@ -722,9 +799,11 @@ export function WizardPage() {
         <p className="mt-1 text-center text-xs text-slate-500">
           {moveDateOutOfRange
             ? moveDateRangeMessage(today)
-            : !step1Valid
-              ? '引越し日と転入元区分（ステップ1）を入力すると作成できます。'
-              : 'ステップ2・3も入力すると、マイナンバーカード・国民健康保険・国民年金などの該当判定まで含められます。'}
+            : moveOutDateOutOfRange
+              ? moveOutScheduledDateRangeMessage(today)
+              : !step1Valid
+                ? '引越し日と転入元区分（ステップ1）を入力すると作成できます。'
+                : 'ステップ2・3も入力すると、マイナンバーカード・国民健康保険・国民年金などの該当判定まで含められます。'}
         </p>
       </div>
     </div>

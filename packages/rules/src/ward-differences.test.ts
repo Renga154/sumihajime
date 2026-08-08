@@ -279,18 +279,31 @@ describe('buildWardDifferences — 実データからの集計(区が増えれ�
     }
   });
 
-  it('児童手当: 「転出予定日」起算の区では期日を算定していない(dueRule=unknown)', () => {
-    // なぜ: 前住所地の転出予定日は本サービスが知り得ない情報。起算日が転出予定日の区で
-    // 引越し日から日付を出してしまうと誤った期限を表示する。データ側でそうなっていないことを固定する。
+  it('児童手当: 「転出予定日」起算の区は引越し日からは算定せず、転出予定日を起算日にする', () => {
+    // なぜ: 起算日が転出予定日の区で引越し日から日付を出すと、区が言っていない期限になる。
+    // 2026-08-09 に転出予定日(任意入力)を受け取れるようにしたため、
+    //   - 算定するなら起算日は必ず moveOutScheduledDate(moveDate 起算は禁止)
+    //   - 転出予定日が未入力なら dueDate は出ない(dates.test.ts が固定)
+    // というデータ側の不変条件を固定する。
     const topic = report.topics.find((t) => t.topicId === 'child_allowance_15day_origin');
+    const checked: string[] = [];
     for (const cell of topic?.cells ?? []) {
       if (cell.valueId !== 'move_out_scheduled_date') continue;
       const rules = readJson<{ rules: Rule[] }>(
         `packages/rules/data/${cell.municipalityCode}/rules.json`,
       ).rules;
       const rule = rules.find((r) => r.procedureId === 'procedure_child_allowance');
-      expect(rule?.dueRule.type, cell.municipalityCode).toBe('unknown');
+      const dueRule = rule?.dueRule;
+      expect(dueRule, cell.municipalityCode).toBeDefined();
+      if (dueRule?.type === 'offsetDays') {
+        expect(dueRule.from, cell.municipalityCode).toBe('moveOutScheduledDate');
+      } else {
+        expect(dueRule?.type, cell.municipalityCode).toBe('unknown');
+      }
+      checked.push(cell.municipalityCode);
     }
+    // 空ループで素通りしないことを保証する(区が減れば気づける)。
+    expect(checked.length).toBeGreaterThan(0);
   });
 
   it('比較値は各区の公式文言そのものから導出され、他区の文言を持ち込んでいない', () => {
@@ -432,6 +445,64 @@ describe('マイナンバーカード継続利用 — 「別の期限を明記�
         );
       }
     }
+  });
+
+  /**
+   * なぜこの3件を足したか(2026-08-09): チェックリスト側で期日を算定できる区を増やしたため、
+   * 「比較ページの分類」と「チェックリストが日付を出す/出さない」が食い違わないことを機械検証する。
+   * 分類は区が書いた文言から導出し、期日はルールから導出する。二重帳簿にしない。
+   */
+  it('マイナンバー: 分類は 90日明記18区 / 90日でない期限を明記2区 / 記載なし3区 のまま', () => {
+    const groups = new Map(
+      (topic?.valueGroups ?? []).map((g) => [g.valueId, g.municipalityCodes.length]),
+    );
+    expect(groups.get('stated_90days')).toBe(18);
+    expect(groups.get('not_stated')).toBe(3);
+    // 「90日ではない期限」の類型は valueId に日数が入るため、接頭辞で数える。
+    const others = (topic?.valueGroups ?? [])
+      .filter((g) => g.valueId.startsWith('stated_other_'))
+      .reduce((n, g) => n + g.municipalityCodes.length, 0);
+    expect(others).toBe(2);
+  });
+
+  it('マイナンバー: 「期限の記載を確認できない」区には期日を算定していない(90日を当てはめない)', () => {
+    for (const cell of topic?.cells ?? []) {
+      if (cell.valueId !== 'not_stated') continue;
+      const rules = readJson<{ rules: Rule[] }>(
+        `packages/rules/data/${cell.municipalityCode}/rules.json`,
+      ).rules;
+      const rule = rules.find((r) => r.procedureId === 'procedure_mynumber_continued_use');
+      expect(rule?.dueRule.type, cell.municipalityCode).toBe('unknown');
+    }
+  });
+
+  it('マイナンバー: 期日を算定している区は、その日数が自区の公式文言に実在する', () => {
+    // なぜ: 90日そのものは「転入届出日」起算で算定できない。算定に使ってよいのは、同じ区が
+    // 転入届側の条件として書いた日数(住み始めた日から◯日 / 転出予定日から◯日)だけである。
+    let checked = 0;
+    for (const cell of topic?.cells ?? []) {
+      const rules = readJson<{ rules: Rule[] }>(
+        `packages/rules/data/${cell.municipalityCode}/rules.json`,
+      ).rules;
+      const dueRule = rules.find(
+        (r) => r.procedureId === 'procedure_mynumber_continued_use',
+      )?.dueRule;
+      const days =
+        dueRule?.type === 'offsetDays'
+          ? [dueRule.days]
+          : dueRule?.type === 'earliestOf'
+            ? dueRule.of.map((o) => o.days)
+            : [];
+      for (const d of days) {
+        checked += 1;
+        expect(d, cell.municipalityCode).not.toBe(90);
+        expect(
+          new RegExp(`${d}\\s*日`).test(cell.officialText),
+          `${cell.municipalityCode}: ${d}日 が公式文言に無い — ${cell.officialText}`,
+        ).toBe(true);
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });
 

@@ -1,6 +1,6 @@
 {
   "municipalityCode": "13120",
-  "ruleVersion": "2026-08-07.1",
+  "ruleVersion": "2026-08-09.1",
   "rules": [
     {
       "procedureId": "procedure_resident_registration",
@@ -27,7 +27,9 @@
       },
       "priority": "high",
       "dueRule": {
-        "type": "unknown"
+        "type": "offsetDays",
+        "from": "moveOutScheduledDate",
+        "days": 30
       },
       "dueDescription": "継続利用の手続きができる期間は転入届出日から90日以内です(ただし、転入届を『転出予定日から30日以内』に行っている必要があります)。いずれかを満たさない場合はカードが失効します(失効後の再交付は手数料1,000円、電子証明書が不要のときは800円)。",
       "sourceIds": ["src-13120-my_number-001", "src-13120-resident_registration-001"],
@@ -73,9 +75,11 @@
       },
       "priority": "high",
       "dueRule": {
-        "type": "unknown"
+        "type": "offsetDays",
+        "from": "moveOutScheduledDate",
+        "days": 15
       },
-      "dueDescription": "出生日や転入日(前住所地の転出予定日)の翌日から15日以内に申請すれば、出生日や転入日の翌月分から手当を支給します。起算日は前住所地での転出予定日のため引越し日からは算定できません。申請が遅れると受給できない月が発生し、手当は遡って支給できません。",
+      "dueDescription": "出生日や転入日(前住所地の転出予定日)の翌日から15日以内に申請すれば、出生日や転入日の翌月分から手当を支給します。起算日は前住所地での転出予定日のため引越し日からは算定できません。ウィザードで前住所地の転出予定日を入力すると、その日を起算日として期日を算定します(未入力の場合は日付を表示しません)。申請が遅れると受給できない月が発生し、手当は遡って支給できません。",
       "sourceIds": ["src-13120-child_benefits-001"],
       "applicabilityReasonTemplate": "練馬区に住民登録がある方で、高校生年代まで(18歳に達する日以後の最初の3月31日まで)の児童を養育している主たる生計の維持者が対象です。転入した場合は新たに申請が必要です。"
     },

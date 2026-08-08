@@ -1,6 +1,6 @@
 {
   "municipalityCode": "13116",
-  "ruleVersion": "2026-08-07.1",
+  "ruleVersion": "2026-08-09.1",
   "rules": [
     {
       "procedureId": "procedure_resident_registration",
@@ -27,7 +27,19 @@
       },
       "priority": "high",
       "dueRule": {
-        "type": "unknown"
+        "type": "earliestOf",
+        "of": [
+          {
+            "type": "offsetDays",
+            "from": "moveDate",
+            "days": 15
+          },
+          {
+            "type": "offsetDays",
+            "from": "moveOutScheduledDate",
+            "days": 30
+          }
+        ]
       },
       "dueDescription": "手続きできる期間は転入手続きをした日から90日以内です。90日以内に継続利用手続きがされない場合、転入日から15日経過した転入届があった場合、転出予定日から30日経過した転入届があった場合は、マイナンバーカードが失効します。",
       "sourceIds": ["src-13116-my_number-001", "src-13116-resident_registration-001"],
@@ -73,9 +85,11 @@
       },
       "priority": "high",
       "dueRule": {
-        "type": "unknown"
+        "type": "offsetDays",
+        "from": "moveOutScheduledDate",
+        "days": 15
       },
-      "dueDescription": "原則として申請した月の翌月分から支給されます。月末などに転入した場合は、前住所の転出予定日の翌日から起算して15日以内(閉庁日を含めて数えます)に申請すれば、転出予定日の翌月分から支給されます。15日目が土曜日・日曜日・祝日にあたる場合は直後の開庁日を15日目とします。起算日は前住所地での転出予定日のため、引越し日からは算定できません。",
+      "dueDescription": "原則として申請した月の翌月分から支給されます。月末などに転入した場合は、前住所の転出予定日の翌日から起算して15日以内(閉庁日を含めて数えます)に申請すれば、転出予定日の翌月分から支給されます。15日目が土曜日・日曜日・祝日にあたる場合は直後の開庁日を15日目とします。起算日は前住所地での転出予定日のため、引越し日からは算定できません。ウィザードで前住所地の転出予定日を入力すると、その日を起算日として期日を算定します(未入力の場合は日付を表示しません)。",
       "sourceIds": ["src-13116-child_benefits-001"],
       "applicabilityReasonTemplate": "高校生年代までのお子様を養育している方が対象です。豊島区に転入した場合は申請が必要です。"
     },

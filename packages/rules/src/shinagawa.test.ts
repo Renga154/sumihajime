@@ -130,7 +130,9 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
 describe('Shinagawa (13109) — schema validation & approved status (CI gate)', () => {
   it('rules.json parses as a RuleSet, scoped to 13109, 10 rules, ruleVersion 2026-07-26.1', () => {
     expect(shinagawaRuleSet.municipalityCode).toBe(SHINAGAWA);
-    expect(shinagawaRuleSet.ruleVersion).toBe('2026-08-06.1');
+    // 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で更新。
+    // 手続き(procedures.json)の内容は変えていないため ProcedureVersion.version は据え置き。
+    expect(shinagawaRuleSet.ruleVersion).toBe('2026-08-09.1');
     // 2026-08-07 人手レビュー承認(ADR-009)。publishedRuleVersion は除去済みで、
     // ruleVersion がそのまま公開版になる(ADR-007)。
     expect(shinagawaRuleSet.publishedRuleVersion).toBeUndefined();
@@ -309,19 +311,24 @@ describe('Shinagawa (13109) — 自治体差分の実証(他区の値を混入�
     flags: { hasMyNumberCard: true },
   });
 
-  it('マイナンバー継続利用: 品川=90日文言(dueDate無し) / 世田谷=14日算定', () => {
+  it('マイナンバー継続利用: 品川・世田谷とも住み始めた日+14日を算定(品川の90日文言は据え置き)', () => {
     const shinagawa = outcomeFor(withCard, shinagawaRuleSet, 'procedure_mynumber_continued_use');
     const setagaya = outcomeFor(
       setagayaWithCard,
       setagayaRuleSet,
       'procedure_mynumber_continued_use',
     );
-    // 品川は『届出日から90日以内』の文言のみ(90日は転入届日起算のため moveDate から算定しない)。
-    expect(shinagawa.dueDate).toBeUndefined();
-    expect(shinagawa.dueDescription).toContain('90日');
-    // 世田谷は moveDate+14日を算定。区が一様でないこと(デモで見せられる差)。
+    // 品川は継続利用の条件として「住み始めた日から14日以内に転入届をしていること」を明記して
+    // いるため、この14日は算定できる(90日は転入届日起算のため算定しない)。
+    // 「引っ越し予定日から30日以内」も条件に挙がるが、品川は"転出予定日"という語を使っておらず
+    // 何の予定日か公式ページから確定できないため、この条件は期日の算定に使わない(推測しない)。
+    expect(shinagawa.dueDate).toBe('2026-08-15');
+    expect(
+      shinagawaRuleSet.rules.find((r) => r.procedureId === 'procedure_mynumber_continued_use')
+        ?.dueDescription,
+    ).toContain('90日');
+    // 世田谷も moveDate+14日を算定。
     expect(setagaya.dueDate).toBe('2026-08-15');
-    expect(shinagawa.dueDate).not.toBe(setagaya.dueDate);
   });
 
   it('子ども医療費の遡及: 品川=6カ月(3か月/15日を混入させない) / 世田谷=3か月', () => {

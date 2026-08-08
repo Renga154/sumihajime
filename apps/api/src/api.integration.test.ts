@@ -134,7 +134,8 @@ describe('POST /api/checklists — 単身・都外', () => {
     expect(body.tasks[0]?.procedureId).toBe('procedure_resident_registration');
     // 2026-08-07 人手レビュー承認(ライフライン等4件。ADR-009)により publishedRuleVersion が外れ、
     // ruleVersion(=ファイル全体の版)がそのまま公開版になった(ADR-007)。
-    expect(body.ruleVersion).toBe('2026-08-06.1');
+    // 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で更新。
+    expect(body.ruleVersion).toBe('2026-08-09.1');
   });
 });
 

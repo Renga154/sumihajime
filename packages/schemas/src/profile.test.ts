@@ -147,3 +147,56 @@ describe('profileSchema — invalid inputs', () => {
     expect(result.success).toBe(false);
   });
 });
+
+/**
+ * なぜ: 前住所地の転出予定日(任意)は API 契約(POST /api/checklists の本体)の変更である。
+ * 「項目を持たない既存の保存データがそのまま通ること」と「値が入ったときに暦日として
+ * 検証されること」の両方を境界で固定する。未入力を空文字で表さない(項目ごと省く)ことも固定する。
+ */
+describe('profileSchema — moveOutScheduledDate(前住所地の転出予定日・任意)', () => {
+  it('項目が無い既存プロフィールをそのまま受理する(後方互換)', () => {
+    const parsed = profileSchema.parse(requirements141FixtureRaw);
+    expect(parsed.moveOutScheduledDate).toBeUndefined();
+  });
+
+  it('暦日が入っていれば保持する', () => {
+    const parsed = profileSchema.parse({
+      ...requirements141FixtureRaw,
+      moveOutScheduledDate: '2026-08-10',
+    });
+    expect(parsed.moveOutScheduledDate).toBe('2026-08-10');
+  });
+
+  it('存在しない暦日は拒否する(2月30日)', () => {
+    expect(
+      profileSchema.safeParse({
+        ...requirements141FixtureRaw,
+        moveOutScheduledDate: '2026-02-30',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('空文字は拒否する(未入力は項目を省いて表現する)', () => {
+    expect(
+      profileSchema.safeParse({ ...requirements141FixtureRaw, moveOutScheduledDate: '' }).success,
+    ).toBe(false);
+  });
+
+  it('null は拒否する(「答えなかった」を値として送らない)', () => {
+    expect(
+      profileSchema.safeParse({ ...requirements141FixtureRaw, moveOutScheduledDate: null }).success,
+    ).toBe(false);
+  });
+
+  it('引越し日より後の日付でもスキーマは受理する(前後関係は境界で断定しない)', () => {
+    // なぜ: 転出予定日は前住所地へ届け出た予定であり、実際の引越し日と前後することがある。
+    // どちらが正しいかを境界スキーマが決めつけると、実態どおりの入力を弾いてしまう。
+    expect(
+      profileSchema.safeParse({
+        ...requirements141FixtureRaw,
+        moveDate: '2026-08-15',
+        moveOutScheduledDate: '2026-08-20',
+      }).success,
+    ).toBe(true);
+  });
+});

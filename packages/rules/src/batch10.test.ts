@@ -41,6 +41,11 @@ const ADACHI = '13121';
 const EDOGAWA = '13123';
 const BATCH10 = [ADACHI, EDOGAWA] as const;
 const RULE_VERSION = '2026-08-07.1';
+/**
+ * 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂。2区とも該当し、
+ * ruleVersion を上げた。手続き(procedures.json)の内容は変わっていないため pv.version は据え置き。
+ */
+const REVISED_RULE_VERSION = '2026-08-09.1';
 const LAST_VERIFIED = '2026-08-07T00:00:00Z';
 
 function readJson(relFromRoot: string): unknown {
@@ -152,7 +157,7 @@ describe('Batch10 — schema validation & approved status (CI gate)', () => {
     (code) => {
       const rs = RULE_SETS[code] as RuleSet;
       expect(rs.municipalityCode).toBe(code);
-      expect(rs.ruleVersion).toBe(RULE_VERSION);
+      expect(rs.ruleVersion).toBe(REVISED_RULE_VERSION);
       // ADR-007: 承認後は publishedRuleVersion を持たず、ruleVersion がそのまま公開版になる。
       expect(rs.publishedRuleVersion).toBeUndefined();
       expect(rs.rules.length).toBe(14);
@@ -357,6 +362,11 @@ describe('Batch10 — 区ごとに異なる期限(共通デフォルト値を作
   });
 
   it('マイナンバー継続利用: 2区とも90日ルールだが転入(届出)日起算のため算定しない', () => {
+    const ruleDueOf = (code: string) =>
+      (RULE_SETS[code] as RuleSet).rules.find(
+        (r) => r.procedureId === 'procedure_mynumber_continued_use',
+      )?.dueDescription ?? '';
+
     for (const code of BATCH10) {
       const o = outcomeFor(
         profile({ municipalityCode: code, flags: { hasMyNumberCard: true } }),
@@ -364,9 +374,11 @@ describe('Batch10 — 区ごとに異なる期限(共通デフォルト値を作
         'procedure_mynumber_continued_use',
       );
       expect(o.applicable, code).toBe('applicable');
-      expect(o.dueDescription, code).toContain('90日');
-      expect(o.dueDescription, code).toContain('14日以内');
-      expect(o.dueDate, code).toBeUndefined();
+      expect(ruleDueOf(code), code).toContain('90日');
+      expect(ruleDueOf(code), code).toContain('14日以内');
+      // 90日そのもの(転入届出日起算)は算定しないが、2区とも「住み始めた日から14日以内に
+      // 転入手続き」を継続利用の条件として明記しているため、その日は引越し日から算定できる。
+      expect(o.dueDate, code).toBe('2026-08-15');
     }
     // 足立区だけが「転出日から30日以内の転入手続き」という第3の条件を明記している。
     expect(ruleDueDescription(ADACHI, 'procedure_mynumber_continued_use')).toContain('30日以内');

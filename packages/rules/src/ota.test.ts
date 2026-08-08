@@ -117,7 +117,9 @@ function outcomeFor(p: Profile, rs: RuleSet, procedureId: string) {
 describe('Ota (13111) — schema validation (来歴・型検証; CI gate)', () => {
   it('rules.json parses as a RuleSet, scoped to 13111, 10 rules, ruleVersion 2026-07-26.1', () => {
     expect(otaRuleSet.municipalityCode).toBe(OTA);
-    expect(otaRuleSet.ruleVersion).toBe('2026-08-06.1');
+    // 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で更新。
+    // 手続き(procedures.json)の内容は変えていないため ProcedureVersion.version は据え置き。
+    expect(otaRuleSet.ruleVersion).toBe('2026-08-09.1');
     // 2026-08-07 人手レビュー承認(ADR-009)。publishedRuleVersion は除去済みで、
     // ruleVersion がそのまま公開版になる(ADR-007)。
     expect(otaRuleSet.publishedRuleVersion).toBeUndefined();
@@ -271,15 +273,21 @@ describe('Ota (13111) — 自治体差分の実証(デモの根拠)', () => {
     expect(allowance.dueDescription).toContain('15日');
   });
 
-  it('マイナンバー継続利用の期限は「90日」文言(dueDate無し)/世田谷は14日算定(差分維持)', () => {
+  it('マイナンバー継続利用: 大田・世田谷とも「転入した日から14日以内」を算定(90日文言は据え置き)', () => {
+    // 大田の公式ページは「転出予定日から30日以内に転入届を行わなかった場合」「転入した日から
+    // 14日以内に転入届を行わなかった場合」もカード失効の条件として明記している。
+    // 90日(転入届日起算)は算定できないが、14日は引越し日から算定できる。
     const withCard = { flags: { hasMyNumberCard: true } };
     const ota = outcomeFor(
       profile({ municipalityCode: OTA, town: '蒲田', ...withCard }),
       otaRuleSet,
       'procedure_mynumber_continued_use',
     );
-    expect(ota.dueDate).toBeUndefined();
-    expect(ota.dueDescription).toContain('90日');
+    expect(ota.dueDate).toBe('2026-08-15');
+    expect(
+      otaRuleSet.rules.find((r) => r.procedureId === 'procedure_mynumber_continued_use')
+        ?.dueDescription,
+    ).toContain('90日');
     const seta = outcomeFor(
       profile({ municipalityCode: '13112', town: '世田谷4丁目', ...withCard }),
       setagayaRuleSet,

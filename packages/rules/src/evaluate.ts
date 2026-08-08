@@ -118,7 +118,12 @@ function resolveDueFields(
   dueDescription?: string;
   warning?: string;
 } {
-  const resolved = resolveDueRule(rule.dueRule, profile.moveDate);
+  const resolved = resolveDueRule(rule.dueRule, {
+    moveDate: profile.moveDate,
+    ...(profile.moveOutScheduledDate !== undefined
+      ? { moveOutScheduledDate: profile.moveOutScheduledDate }
+      : {}),
+  });
   if (resolved.dueDate !== undefined) {
     return { dueDate: resolved.dueDate };
   }

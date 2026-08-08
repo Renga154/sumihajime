@@ -124,7 +124,9 @@ describe('Setagaya (13112) — schema validation (来歴・型検証; CI gate)',
 
   it('rules.json parses as a RuleSet, scoped to 13112, 10 rules, ruleVersion 2026-07-25.1', () => {
     expect(setagayaRuleSet.municipalityCode).toBe(MUNICIPALITY);
-    expect(setagayaRuleSet.ruleVersion).toBe('2026-08-06.1');
+    // 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で更新。
+    // 手続き(procedures.json)の内容は変えていないため ProcedureVersion.version は据え置き。
+    expect(setagayaRuleSet.ruleVersion).toBe('2026-08-09.1');
     // 2026-08-07 人手レビュー承認(ADR-009)。publishedRuleVersion は除去済みで、
     // ruleVersion がそのまま公開版になる(ADR-007)。
     expect(setagayaRuleSet.publishedRuleVersion).toBeUndefined();

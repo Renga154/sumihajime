@@ -332,7 +332,7 @@ describe('Chiyoda (13101) — 4自治体差分の実証(デモの根拠)', () =>
     flags: { hasMyNumberCard: true },
   });
 
-  it('マイナンバー継続利用の期限(4区比較): 千代田=90日文言(dueDate無し) / 江東=90日文言 / 新宿=14日算定 / 世田谷=14日算定', () => {
+  it('マイナンバー継続利用の期限(4区比較): 千代田=90日文言(dueDate無し) / 江東・新宿・世田谷=14日算定', () => {
     const chiyoda = outcomeFor(withCard, chiyodaRuleSet, 'procedure_mynumber_continued_use');
     const koto = outcomeFor(kotoWithCard, kotoRuleSet, 'procedure_mynumber_continued_use');
     const shinjuku = outcomeFor(
@@ -346,12 +346,14 @@ describe('Chiyoda (13101) — 4自治体差分の実証(デモの根拠)', () =>
       'procedure_mynumber_continued_use',
     );
 
-    // 千代田は江東と同じ「90日以内」文言で日付を出さない。
+    // 千代田だけは日付を出さない。公式ページがカード失効の条件として挙げているのは
+    // 「転入手続きをした日から90日」だけで、その起算日(=転入届を出した日)を本サービスは知らない。
+    // 引越し日から14日以内という記載はあるが、千代田はそれをカード失効の条件として書いていない。
     expect(chiyoda.dueDate).toBeUndefined();
     expect(chiyoda.dueDescription).toContain('90日');
-    expect(koto.dueDate).toBeUndefined();
-    expect(koto.dueDescription).toContain('90日');
-    // 新宿・世田谷は moveDate+14日を算定(公式文言=14日以内)。
+    // 江東・新宿・世田谷は「住み始めた日から14日以内に転入届をしないとカードが失効する」と
+    // 明記しているため moveDate+14日を算定する。
+    expect(koto.dueDate).toBe('2026-08-15');
     expect(shinjuku.dueDate).toBe('2026-08-15');
     expect(setagaya.dueDate).toBe('2026-08-15');
     // 同一手続きでも4区で結果が一様でないこと(千代田≠新宿の差をデモで見せられる)。
