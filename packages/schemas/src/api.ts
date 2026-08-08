@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { profileSchema } from './profile.js';
-import { generatedTaskSchema } from './task.js';
+import { generatedTaskSchema, taskSourceRefSchema } from './task.js';
 import { municipalityCodeSchema, municipalitySchema, coverageSchema } from './municipality.js';
 import { procedureVersionSchema } from './procedure.js';
 import { sourceSchema } from './source.js';
@@ -190,3 +190,63 @@ export const errorResponseSchema = z.strictObject({
   }),
 });
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
+
+/**
+ * なぜ: GET /api/ward-differences(区をまたぐ期限差分の比較ページ /differences の唯一のデータ源)。
+ *
+ * 原則4「選択自治体と異なる自治体の情報を混ぜない」との関係:
+ *   これは「自治体間の比較」を利用者が明示的に選んで見にいく専用エンドポイントであり、
+ *   チェックリスト(POST /api/checklists)・手続き詳細(GET /api/procedures/:id)・
+ *   RAG(POST /api/chat)の応答には一切含めない。区ごとの公開データ(procedures.json /
+ *   rules.json)へ他区の値を書き戻すことは packages/rules/src/cross-ward-text.test.ts が
+ *   禁止しており、この契約はその不変条件に触れない(読むだけで書かない)。
+ *
+ * 値(valueLabel)は @tmn/rules の純関数が公開済みデータから毎回導出したもので、
+ * サーバー側にハードコードした比較表は持たない。根拠(sources)は最低1件を型で強制し、
+ * 「公開する全タスクに承認済み公式ソースと最終確認日を付ける」(原則2)を比較ページでも守る。
+ */
+export const wardDifferenceToneSchema = z.enum(['neutral', 'caution']);
+export type WardDifferenceTone = z.infer<typeof wardDifferenceToneSchema>;
+
+export const wardDifferenceCellSchema = z.strictObject({
+  municipalityCode: municipalityCodeSchema,
+  municipalityName: z.string().min(1),
+  valueId: z.string().min(1),
+  valueLabel: z.string().min(1),
+  tone: wardDifferenceToneSchema,
+  /** その区の公式文言(同じ区の利用者がチェックリストで見ている文と同一)。 */
+  officialText: z.string().min(1),
+  procedureTitle: z.string().min(1),
+  sources: z.array(taskSourceRefSchema).min(1),
+});
+export type WardDifferenceCell = z.infer<typeof wardDifferenceCellSchema>;
+
+export const wardDifferenceValueGroupSchema = z.strictObject({
+  valueId: z.string().min(1),
+  label: z.string().min(1),
+  tone: wardDifferenceToneSchema,
+  municipalityCodes: z.array(municipalityCodeSchema).min(1),
+});
+export type WardDifferenceValueGroup = z.infer<typeof wardDifferenceValueGroupSchema>;
+
+export const wardDifferenceTopicSchema = z.strictObject({
+  topicId: z.string().min(1),
+  title: z.string().min(1),
+  question: z.string().min(1),
+  procedureId: z.string().min(1),
+  /** 値をどう機械判定したかの説明。推測でないことを利用者へ開示するため必須。 */
+  derivationNote: z.string().min(1),
+  valueGroups: z.array(wardDifferenceValueGroupSchema),
+  cells: z.array(wardDifferenceCellSchema),
+  /** 手続き・ルール・承認済み根拠が揃わず比較対象にできなかった区(未整備を隠さない=原則9)。 */
+  omittedMunicipalityCodes: z.array(municipalityCodeSchema),
+});
+export type WardDifferenceTopic = z.infer<typeof wardDifferenceTopicSchema>;
+
+export const wardDifferencesResponseSchema = z.strictObject({
+  municipalities: z.array(
+    z.strictObject({ code: municipalityCodeSchema, name: z.string().min(1) }),
+  ),
+  topics: z.array(wardDifferenceTopicSchema),
+});
+export type WardDifferencesResponse = z.infer<typeof wardDifferencesResponseSchema>;

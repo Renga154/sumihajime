@@ -228,6 +228,22 @@ export function ChecklistPage() {
           <div className="print-hide">
             <ChatPanel municipalityCode={municipalityCode} municipalityName={state.data.muniName} />
           </div>
+
+          {/*
+            比較ページへの導線。CLAUDE.md原則4を守るため、ここに出すのはリンク1つだけで、
+            他の区の期限・区名・値は一切表示しない(比較は /differences でのみ行う)。
+          */}
+          <p className="print-hide text-sm text-slate-600">
+            <Link
+              to="/differences"
+              className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800"
+            >
+              区ごとの期限のちがいを見る
+            </Link>
+            <span className="ml-1.5">
+              — 同じ手続きでも期限が異なることがあります（自治体間の比較ページです）
+            </span>
+          </p>
         </>
       )}
     </div>

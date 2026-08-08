@@ -90,6 +90,14 @@ test('a11y: 窓口一覧(施設地図込み)に重大違反なし', async ({ pag
   await assertNoSerious(page);
 });
 
+test('a11y: 比較ページ「区ごとの期限のちがい」に重大違反なし', async ({ page }) => {
+  await page.goto('/differences');
+  await expect(page.getByRole('heading', { name: '区ごとの期限のちがい' })).toBeVisible();
+  // 非同期ロード完了(比較セルの描画)を待ってから検査する。
+  await expect(page.getByLabel('あなたの区')).toBeVisible();
+  await assertNoSerious(page);
+});
+
 test('a11y: 透明性ページ「このサービスのデータについて」に重大違反なし', async ({ page }) => {
   await page.goto('/about-data');
   await expect(page.getByRole('heading', { name: 'このサービスのデータについて' })).toBeVisible();

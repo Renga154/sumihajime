@@ -6,6 +6,7 @@ import {
   municipalitiesResponseSchema,
   procedureDetailResponseSchema,
   sourcesResponseSchema,
+  wardDifferencesResponseSchema,
   wasteSchedulesResponseSchema,
   wasteSortingSearchResponseSchema,
   wasteSortingSummaryResponseSchema,
@@ -17,6 +18,7 @@ import {
   type ProcedureDetailResponse,
   type Profile,
   type SourcesResponse,
+  type WardDifferencesResponse,
   type WasteSchedulesResponse,
   type WasteSortingSearchResponse,
   type WasteSortingSummaryResponse,
@@ -117,6 +119,15 @@ export async function getProcedure(
  */
 export async function getSources(): Promise<SourcesResponse> {
   return sourcesResponseSchema.parse(await request('/sources'));
+}
+
+/**
+ * GET /api/ward-differences : 区をまたぐ期限差分(比較ページ /differences 専用)。
+ * このデータを使ってよいのは「自治体間の比較」を明示的に開いたページだけで、
+ * チェックリスト・手続き詳細には持ち込まない(CLAUDE.md原則4)。
+ */
+export async function getWardDifferences(): Promise<WardDifferencesResponse> {
+  return wardDifferencesResponseSchema.parse(await request('/ward-differences'));
 }
 
 export async function getFacilities(

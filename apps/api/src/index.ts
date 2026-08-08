@@ -9,21 +9,30 @@ import {
   procedureDetailResponseSchema,
   sourcesResponseSchema,
   wasteSchedulesResponseSchema,
+  wardDifferencesResponseSchema,
   wasteSortingSearchResponseSchema,
   wasteSortingSummaryResponseSchema,
 } from '@tmn/schemas';
-import { evaluate } from '@tmn/rules';
+import {
+  buildWardDifferences,
+  evaluate,
+  WARD_DIFFERENCE_TOPICS,
+  type WardDifferenceInput,
+  type WardDifferenceSourceRef,
+} from '@tmn/rules';
 import { logEvent } from './log.js';
 import { buildTasks } from './checklist.js';
 import { handleChat, handleChatAvailability } from './chat.js';
 import type { Bindings } from './db.js';
 import {
+  getAllRuleSets,
   getFacilities,
   getMunicipalitiesWithCoverage,
   getMunicipality,
   getApprovedSources,
   getProcedureVersion,
   getProcedureVersions,
+  getProcedureVersionsForIds,
   getRuleSet,
   getSourcesByIds,
   getWasteAreas,
@@ -294,6 +303,92 @@ app.get('/api/sources', async (c) => {
     event: 'sources.list',
     latencyMs: Date.now() - start,
     count: body.length,
+  });
+  return c.json(body);
+});
+
+/**
+ * GET /api/ward-differences : 区をまたぐ期限差分(比較ページ /differences の唯一のデータ源)。
+ *
+ * なぜ自治体スコープを取らないのか: このエンドポイントの目的そのものが「自治体間の比較」であり、
+ * 利用者が /differences を明示的に開いたときだけ呼ばれる。原則4(選択自治体と異なる自治体の
+ * 情報を混ぜない)は、チェックリスト・手続き詳細・RAGといった「1区ぶんの案内」経路を守る制約で、
+ * それらの応答へこの結果を混ぜることはしない(混ぜていないことは cross-ward-text.test.ts が
+ * 各区の公開データ側で、E2Eがチェックリスト画面側で固定している)。
+ *
+ * 値はサーバー側の比較表ではなく、公開済みデータ(rule_sets / procedure_versions / sources)から
+ * @tmn/rules の純関数が毎回導出する。対応区が増えれば自動的に増える(手打ちの表を持たない)。
+ */
+app.get('/api/ward-differences', async (c) => {
+  const start = Date.now();
+  const requestId = c.get('requestId');
+
+  const [munis, ruleSets, procedures, sources] = await Promise.all([
+    getMunicipalitiesWithCoverage(c.env.DB),
+    getAllRuleSets(c.env.DB),
+    getProcedureVersionsForIds(
+      c.env.DB,
+      WARD_DIFFERENCE_TOPICS.map((t) => t.procedureId),
+    ),
+    getApprovedSources(c.env.DB),
+  ]);
+
+  const nameByCode = new Map(munis.filter((m) => m.supported).map((m) => [m.code, m.name]));
+
+  // 承認済みソースのみを根拠候補にする(getApprovedSources が review_status を強制済み)。
+  // lastVerifiedAt を持たないソースは根拠カードの必須項目を満たせないため候補から外す(原則2)。
+  //
+  // 自治体ごとにマップを分ける理由(原則4の多重防御): ある区のルールが誤って他区の source_id を
+  // 参照していても、その区の根拠カードに他区の出典が出ないよう、引ける候補を
+  // 「自区のソース + どの区にも属さない共通ソース(東京都・国など)」へ構造的に限定する。
+  const sharedRefs = new Map<string, WardDifferenceSourceRef>();
+  const refsByMunicipality = new Map<string, Map<string, WardDifferenceSourceRef>>();
+  for (const s of sources) {
+    if (!s.lastVerifiedAt) continue;
+    const ref: WardDifferenceSourceRef = {
+      sourceId: s.sourceId,
+      title: s.sourceTitle,
+      url: s.sourceUrl,
+      lastVerifiedAt: s.lastVerifiedAt,
+    };
+    // 対応自治体に紐づかないソース(東京都の機関・国など)は全区共通の候補として扱う。
+    if (!s.municipalityCode || !nameByCode.has(s.municipalityCode)) {
+      sharedRefs.set(s.sourceId, ref);
+      continue;
+    }
+    const own = refsByMunicipality.get(s.municipalityCode) ?? new Map();
+    own.set(s.sourceId, ref);
+    refsByMunicipality.set(s.municipalityCode, own);
+  }
+
+  const proceduresByCode = new Map<string, typeof procedures>();
+  for (const p of procedures) {
+    proceduresByCode.set(p.municipalityCode, [
+      ...(proceduresByCode.get(p.municipalityCode) ?? []),
+      p,
+    ]);
+  }
+
+  const wards: WardDifferenceInput[] = [];
+  for (const rs of ruleSets) {
+    const name = nameByCode.get(rs.municipalityCode);
+    // 未対応(公開ゲート未通過)の自治体は比較にも出さない(未対応を対応済みに見せない=原則9)。
+    if (!name) continue;
+    wards.push({
+      municipalityCode: rs.municipalityCode,
+      municipalityName: name,
+      rules: rs.rules,
+      procedures: proceduresByCode.get(rs.municipalityCode) ?? [],
+      sources: new Map([...sharedRefs, ...(refsByMunicipality.get(rs.municipalityCode) ?? [])]),
+    });
+  }
+
+  const body = wardDifferencesResponseSchema.parse(buildWardDifferences(wards));
+  logEvent({
+    requestId,
+    event: 'ward-differences.list',
+    latencyMs: Date.now() - start,
+    count: body.municipalities.length,
   });
   return c.json(body);
 });

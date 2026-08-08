@@ -289,16 +289,17 @@ flowchart LR
 
 ### 8.2 API(REQUIREMENTS §14を確定)
 
-| Method/Path                                  | 入出力(Zod契約)                                                                           | 備考                                    |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------- |
-| GET /api/municipalities                      | → {code,name,supported,coverage[]}                                                        | FR-001/021                              |
-| POST /api/checklists                         | Profile(§14.1) → {tasks[](§14.2), ruleVersion, generatedAt}                               | ステートレス。サーバー保存なし。p95 2秒 |
-| GET /api/procedures/:id?municipality=        | → ProcedureVersion全fields+sources                                                        |                                         |
-| GET /api/facilities?municipality=&category=  | → Facility[]                                                                              |                                         |
-| GET /api/waste-schedules?municipality=&area= | → WasteSchedule[]+areas[]                                                                 | area未指定なら地区一覧                  |
-| POST /api/chat                               | {municipalityCode, procedureId?, question} → {answer, citations[], confidence, abstained} | flag制御。レート制限                    |
-| GET /api/sources                             | → 台帳公開ビュー(FR-020)                                                                  |                                         |
-| POST /api/profile/resolve                    | P1(郵便番号解決)。MVPは未実装で予約のみ                                                   |                                         |
+| Method/Path                                  | 入出力(Zod契約)                                                                           | 備考                                                                                   |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| GET /api/municipalities                      | → {code,name,supported,coverage[]}                                                        | FR-001/021                                                                             |
+| POST /api/checklists                         | Profile(§14.1) → {tasks[](§14.2), ruleVersion, generatedAt}                               | ステートレス。サーバー保存なし。p95 2秒                                                |
+| GET /api/procedures/:id?municipality=        | → ProcedureVersion全fields+sources                                                        |                                                                                        |
+| GET /api/facilities?municipality=&category=  | → Facility[]                                                                              |                                                                                        |
+| GET /api/waste-schedules?municipality=&area= | → WasteSchedule[]+areas[]                                                                 | area未指定なら地区一覧                                                                 |
+| POST /api/chat                               | {municipalityCode, procedureId?, question} → {answer, citations[], confidence, abstained} | flag制御。レート制限                                                                   |
+| GET /api/sources                             | → 台帳公開ビュー(FR-020)                                                                  |                                                                                        |
+| GET /api/ward-differences                    | → 区をまたぐ期限差分(topics[].valueGroups/cells)                                          | 比較ページ /differences 専用。原則4の例外経路で、チェックリスト・詳細・RAGには混ぜない |
+| POST /api/profile/resolve                    | P1(郵便番号解決)。MVPは未実装で予約のみ                                                   |                                                                                        |
 
 全エンドポイント: Zod入力検証、構造化ログ(requestId、PIIなし)、レート制限(特に/chat)、エラーは次の行動が分かる文面。
 

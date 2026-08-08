@@ -104,7 +104,22 @@ export function Layout() {
           <p className="mt-2 pl-6">
             入力内容（引越し日・世帯・条件など）はお使いの端末内にのみ保存され、サーバーには保存されません。
           </p>
+          {/*
+            比較ページへの導線。自治体間の比較は利用者が明示的に選んで到達するこの1ページだけで行い、
+            各画面のチェックリスト・詳細には他区の値を出さない(CLAUDE.md原則4)。
+          */}
           <p className="mt-3 pl-6">
+            <Link
+              to="/differences"
+              className="font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+            >
+              区ごとの期限のちがい
+            </Link>
+            <span className="ml-1.5 text-slate-500">
+              — 同じ手続きでも区によって期限が違うことを比較できます
+            </span>
+          </p>
+          <p className="mt-2 pl-6">
             <Link
               to="/about-data"
               className="font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"

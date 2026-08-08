@@ -194,6 +194,27 @@ export async function getRuleSet(db: D1Database, code: string): Promise<RuleSet 
   });
 }
 
+/**
+ * なぜ: 区をまたぐ期限差分(GET /api/ward-differences)は全対応自治体のルールを必要とする。
+ * 自治体スコープ(原則4)は「1区のチェックリストに他区を混ぜない」ための制約であり、
+ * 利用者が明示的に選んで見る比較ページのためにここで全区を読むことは、その専用経路に限る。
+ * この関数はチェックリスト・手続き詳細・RAGの経路からは呼ばない。
+ */
+export async function getAllRuleSets(db: D1Database): Promise<RuleSet[]> {
+  const res = await db
+    .prepare(
+      'SELECT municipality_code, rule_version, rules FROM rule_sets ORDER BY municipality_code',
+    )
+    .all<Row>();
+  return res.results.map((row) =>
+    ruleSetSchema.parse({
+      municipalityCode: asString(row.municipality_code),
+      ruleVersion: asString(row.rule_version),
+      rules: parseJson(row.rules),
+    }),
+  );
+}
+
 /** ---- procedure_versions ---- */
 
 function rowToProcedureVersion(row: Row): ProcedureVersion {
@@ -234,6 +255,31 @@ export async function getProcedureVersions(
     map.set(pv.id, pv);
   }
   return map;
+}
+
+/**
+ * なぜ: 比較ページ用に「特定の手続きIDの現行版を、全自治体ぶん」まとめて読む。
+ * procedures.current_version と結合し、旧版が混ざらないようにする(公開中の版だけを比較する)。
+ * 用途は GET /api/ward-differences 限定(自治体スコープの通常経路では使わない)。
+ */
+export async function getProcedureVersionsForIds(
+  db: D1Database,
+  procedureIds: readonly string[],
+): Promise<ProcedureVersion[]> {
+  const unique = [...new Set(procedureIds)];
+  if (unique.length === 0) return [];
+  const placeholders = unique.map(() => '?').join(',');
+  const res = await db
+    .prepare(
+      'SELECT pv.* FROM procedure_versions pv ' +
+        'JOIN procedures p ON p.procedure_id = pv.procedure_id ' +
+        'AND p.municipality_code = pv.municipality_code AND p.current_version = pv.version ' +
+        `WHERE pv.procedure_id IN (${placeholders}) ` +
+        'ORDER BY pv.municipality_code, pv.procedure_id',
+    )
+    .bind(...unique)
+    .all<Row>();
+  return res.results.map(rowToProcedureVersion);
 }
 
 export async function getProcedureVersion(
