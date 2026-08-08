@@ -56,6 +56,25 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
     expect(kita?.officialUrl).toBe('https://www.city.kita.lg.jp/');
   });
 
+  it('officialUrl は御蔵島村(13382)を除き https。平文HTTPへ利用者を誘導しない', () => {
+    // なぜ: 2026-08-08 に都リンク集由来の http 20件すべてについて https 版を実測し、
+    // 「同一ホストで 200・リダイレクト0・本文に自治体名あり」を確認できた19件を https へ引き上げた
+    // (docs/data-sources/url-verification-2026-08-08.md)。http へ巻き戻ったら落ちるようにしておく。
+    // 御蔵島村だけは https 版が証明書エラー(対象ホスト名不一致)で到達できず、到達しない URL へは
+    // 差し替えないため http のまま。承認を経て移転先へ差し替える際はこのテストも更新する。
+    const http = MUNICIPALITIES.filter((m) => m.officialUrl?.startsWith('http://')).map(
+      (m) => m.code,
+    );
+    expect(http).toEqual(['13382']);
+  });
+
+  it('御蔵島村(13382)の officialUrl は出典(都リンク集)どおりの値を維持する', () => {
+    // なぜ: 実測した移転先(www.vill.mikurasima.tokyo.jp)へ勝手に差し替えていないことを固定する。
+    // ホスト変更は北区(13117)と同様に人手レビュー承認を要する(CLAUDE.md 原則3/5・§9)。
+    const mikura = MUNICIPALITIES.find((m) => m.code === '13382');
+    expect(mikura?.officialUrl).toBe('http://www.mikurasima.jp/');
+  });
+
   it('全件が Municipality スキーマに適合し、officialUrl を持つ', () => {
     for (const m of MUNICIPALITIES) {
       expect(() => municipalitySchema.parse(m)).not.toThrow();
