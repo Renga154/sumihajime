@@ -137,7 +137,7 @@ export function CoveragePage() {
       </header>
 
       {state.loading && <Loading label="データを読み込み中です…" />}
-      {state.error != null && <ErrorMessage error={state.error} />}
+      {state.error != null && <ErrorMessage error={state.error} onRetry={state.reload} />}
 
       {state.data && (
         <>

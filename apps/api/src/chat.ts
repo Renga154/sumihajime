@@ -203,11 +203,47 @@ async function tryVerifiedDocumentAnswer(
 }
 
 /**
- * GET /api/chat/availability — RAGが有効か(RAG_ENABLED)を軽量に返す。
- * レート制限・秘密・入力を伴わない。UIはこれでチャットパネルの表示可否を決める。
+ * チャットが「実際に使える状態か」を、バインディングと設定の有無だけから判定する(純関数)。
+ *
+ * なぜフラグだけでは足りないのか(独立点検 P1): 以前は RAG_ENABLED しか見ていなかったため、
+ * OPENAI_API_KEY が失効・未設定でも、Vectorize バインディングが外れていても、UIには通常どおり
+ * 入力欄が出た。利用者は質問を書いて送信してはじめて 503 に出会う — 壊れていることを
+ * 利用者の手間で発見させる作りだった。ここで依存の有無を見ておけば、送信前に伝えられる。
+ *
+ * なぜ3値なのか: 鍵や索引が無くても **検証済み構造化データ経路**(handleChat 手順5)は動く。
+ * この経路は「RAG基盤が落ちていても答えられる」ことを目的に、意図的にLLM呼び出しより前へ
+ * 置かれている(原則8)。ここで一律 enabled=false にすると、障害時にこそ効くはずの
+ * いちばん確実な回答経路まで一緒に隠してしまう。できることとできないことを分けて伝える
+ * (原則9: 未対応を対応済みに見せない。裏返して、使える機能を落として見せることもしない)。
+ *
+ * なぜ疎通確認をしないのか: 鍵の有効性を確かめるには OpenAI へ実リクエストが要る。
+ * 表示可否を決めるためだけに、画面表示のたび課金と外部依存を増やすのは割に合わない。
+ * ここで検出できるのは「設定が無い」であって「鍵が拒否される」ではない — 後者は
+ * 送信時の 503 と、その文面・再試行導線で受け止める。
+ */
+export type ChatAvailabilityMode = 'full' | 'documents_only' | 'disabled';
+
+export function chatAvailability(env: Bindings): {
+  enabled: boolean;
+  mode: ChatAvailabilityMode;
+} {
+  if (env.RAG_ENABLED !== 'true') return { enabled: false, mode: 'disabled' };
+  // 空文字・空白のみの secret は「未設定」と同じ。wrangler secret の消し忘れで
+  // 空文字が入るとフラグ判定だけでは素通りする。
+  const hasApiKey = (env.OPENAI_API_KEY ?? '').trim().length > 0;
+  const hasIndex = Boolean(env.VECTORIZE);
+  return hasApiKey && hasIndex
+    ? { enabled: true, mode: 'full' }
+    : { enabled: true, mode: 'documents_only' };
+}
+
+/**
+ * GET /api/chat/availability — チャットの利用可否を軽量に返す。
+ * レート制限・秘密・入力を伴わず、外部APIも呼ばない(バインディングと設定の有無のみ)。
+ * UIはこれでパネルの表示可否と、答えられる範囲の案内文を決める。
  */
 export function handleChatAvailability(c: Context<Env>): Response {
-  return c.json({ enabled: c.env.RAG_ENABLED === 'true' } as const);
+  return c.json(chatAvailability(c.env));
 }
 
 export async function handleChat(c: Context<Env>): Promise<Response> {
@@ -341,39 +377,44 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
   const embedModel = env.OPENAI_EMBED_MODEL ?? 'text-embedding-3-small';
   const minScore = Number(env.RAG_MIN_SCORE ?? '') || DEFAULT_MIN_SCORE;
 
+  // 7) 検索索引の有無は埋め込みより**先**に見る。
+  //    なぜ順序が問題なのか: 以前は embedText(=OpenAIへの課金リクエスト)を先に済ませてから
+  //    バインディングの有無を確かめていた。索引が外れている間は、返せないと分かっている応答の
+  //    ために毎回課金し、その時間ぶん利用者を待たせていた。判定できることは呼ぶ前に判定する。
+  const index = env.VECTORIZE;
+  if (!index) {
+    logEvent({ requestId, event: 'chat.unavailable', municipalityCode: code, status: 503 });
+    return c.json(
+      {
+        error: {
+          code: 'chat_unavailable',
+          message: 'ただいまチャットをご利用いただけません。時間をおいて再度お試しください。',
+          requestId,
+        },
+      },
+      503,
+    );
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    // 6) 質問を埋め込み → Vectorize を municipalityCode 強制フィルタで検索。
+    // 8) 質問を埋め込み → Vectorize を municipalityCode 強制フィルタで検索。
     const queryVector = await embedText(question, embedModel, {
       apiKey,
       baseURL,
       signal: controller.signal,
     });
 
-    if (!env.VECTORIZE) {
-      logEvent({ requestId, event: 'chat.unavailable', municipalityCode: code, status: 503 });
-      return c.json(
-        {
-          error: {
-            code: 'chat_unavailable',
-            message: 'ただいまチャットをご利用いただけません。時間をおいて再度お試しください。',
-            requestId,
-          },
-        },
-        503,
-      );
-    }
-
-    const result = await env.VECTORIZE.query(queryVector, {
+    const result = await index.query(queryVector, {
       topK: FETCH_K,
       filter: { municipalityCode: code },
       returnMetadata: 'none',
     });
     const matches = result.matches ?? [];
 
-    // 7) 閾値未満/0件 → 保留(§11.5)。
+    // 9) 閾値未満/0件 → 保留(§11.5)。
     if (shouldAbstain(matches, minScore)) {
       logEvent({
         requestId,
@@ -387,7 +428,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
 
     const selected = selectMatches(matches, minScore);
 
-    // 8) D1 から本文取得(municipality_code で二重スコープ強制)。
+    // 10) D1 から本文取得(municipality_code で二重スコープ強制)。
     const chunkRows = await getRagChunks(
       env.DB,
       code,
@@ -432,7 +473,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       text: r.text,
     }));
 
-    // 9) 生成(抜粋の範囲でのみ回答・抜粋内命令は無視・SOURCES必須)。
+    // 11) 生成(抜粋の範囲でのみ回答・抜粋内命令は無視・SOURCES必須)。
     const messages = buildMessages(municipality.name, question, promptChunks);
     const raw = await chatComplete(messages, chatModel, {
       apiKey,
@@ -440,7 +481,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       signal: controller.signal,
     });
 
-    // 10) 出力検証: SOURCES行を解析し、検索ヒット済みsourceIdに解決できる引用のみ採用。
+    // 12) 出力検証: SOURCES行を解析し、検索ヒット済みsourceIdに解決できる引用のみ採用。
     const { body, citedSourceIds } = parseAnswer(raw);
     // なぜ: 本文の主文(先頭)が「確認できません」等の保留語で、なお SOURCES に抜粋を列挙している
     // 矛盾ケース(保留を主文としつつ引用付き)は、引用付きの実回答として提示しない。標準の保留応答へ差し替える
@@ -468,7 +509,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       return c.json(abstainBody('unknown'));
     }
 
-    // 11) 引用を台帳(sources)の権威情報に解決して citations[] を組む。
+    // 13) 引用を台帳(sources)の権威情報に解決して citations[] を組む。
     const citations = await resolveCitations(env.DB, validSourceIds);
     if (citations.length === 0) {
       logEvent({
@@ -489,7 +530,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       abstained: false,
     });
 
-    // 12) ログ: 質問・回答本文は残さない。件数・保留フラグ・レイテンシのみ。
+    // 14) ログ: 質問・回答本文は残さない。件数・保留フラグ・レイテンシのみ。
     logEvent({
       requestId,
       event: 'chat.answered',

@@ -174,7 +174,7 @@ export function DifferencesPage() {
   const mineLabel = isOwnWard ? 'あなたの区' : '基準の区';
 
   if (state.loading) return <Loading label="区ごとの違いを読み込んでいます…" />;
-  if (state.error) return <ErrorMessage error={state.error} />;
+  if (state.error) return <ErrorMessage error={state.error} onRetry={state.reload} />;
   if (!report) return null;
 
   return (

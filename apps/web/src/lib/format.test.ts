@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { updateFrequencyText } from './format';
+import { formatDateTimeInTokyo, updateFrequencyText } from './format';
 
 /**
  * なぜ: 透明性ページの「更新頻度」列に台帳の列挙値(as_needed / annual など)が
@@ -45,5 +45,26 @@ describe('updateFrequencyText', () => {
     for (const v of values) {
       expect(updateFrequencyText(v), `更新頻度 "${v}" が未翻訳`).not.toMatch(/^[a-z_-]+$/i);
     }
+  });
+});
+
+/**
+ * なぜ: 端末内の控えを出すときに「いつ取得した内容か」を伝える表示。端末のタイムゾーン設定で
+ * 日付がずれると、控えの新しさを取り違える(前日の内容を当日のものと思う)。日本時間で固定する。
+ */
+describe('formatDateTimeInTokyo', () => {
+  it('日本時間の暦日と時刻で表示する', () => {
+    expect(formatDateTimeInTokyo('2026-08-05T09:00:00Z')).toBe('2026年8月5日 18:00');
+  });
+
+  it('UTCでは前日でも、日本時間の日付で表示する(日付の境界)', () => {
+    expect(formatDateTimeInTokyo('2026-08-05T15:30:00Z')).toBe('2026年8月6日 00:30');
+    expect(formatDateTimeInTokyo('2026-08-04T14:59:00Z')).toBe('2026年8月4日 23:59');
+  });
+
+  it('空・不正な値では例外を投げない', () => {
+    expect(formatDateTimeInTokyo(undefined)).toBe('');
+    expect(formatDateTimeInTokyo('')).toBe('');
+    expect(formatDateTimeInTokyo('not-a-date')).toBe('not-a-date');
   });
 });

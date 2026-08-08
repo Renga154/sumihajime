@@ -54,7 +54,7 @@ export function FacilitiesPage() {
       </header>
 
       {state.loading && <Loading label="窓口一覧を読み込み中です…" />}
-      {state.error != null && <ErrorMessage error={state.error} />}
+      {state.error != null && <ErrorMessage error={state.error} onRetry={state.reload} />}
 
       {state.data && state.data.length > 0 && (
         <FacilityMap facilities={state.data} skipTargetId={FACILITY_LIST_ID} />

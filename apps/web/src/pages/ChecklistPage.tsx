@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { GeneratedTask } from '@tmn/schemas';
-import { getMunicipalities, postChecklist } from '../api/client';
+import type { ChecklistResponse, GeneratedTask, Profile } from '@tmn/schemas';
+import { ApiError, getMunicipalities, postChecklist } from '../api/client';
 import { useAppState } from '../state/AppState';
 import {
   loadDone,
@@ -12,8 +12,14 @@ import {
   isDone,
   type DoneMap,
 } from '../lib/storage';
+import {
+  cacheAgeInDays,
+  clearChecklistCache,
+  loadChecklistCache,
+  saveChecklistCache,
+} from '../lib/checklist-cache';
 import { groupIntoSections, sectionDescription, sectionLabel } from '../lib/sections';
-import { formatDate, formatDateFromDateTime } from '../lib/format';
+import { formatDate, formatDateFromDateTime, formatDateTimeInTokyo } from '../lib/format';
 import { isOverdue, overdueDays, todayInTokyo } from '../lib/move-date';
 import { useDocumentTitle } from '../lib/navigation';
 import { buildChecklistIcs, datedTasks } from '../lib/ics';
@@ -27,12 +33,79 @@ import {
   PriorityBadge,
 } from '../components/Badge';
 import { isNonMunicipal } from '../lib/provider-scope';
-import { ChatPanel } from '../components/ChatPanel';
+import { ChatPanel, ChatUnavailable } from '../components/ChatPanel';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+
+/**
+ * サーバーからの取得が通らなかったときに、端末内の控えへ切り替えるかどうか。
+ *
+ * 切り替えてよいのは「今は届かない」失敗だけ:通信断・時間切れ(status 0)、混雑(429)、
+ * サーバー側の不調(5xx)。逆に 404/409/422 は「その自治体は対象外」「入力が不正」といった
+ * サーバーの**確定した答え**で、控えを出すと利用者に取り下げ済みの案内を見せ続けることになる
+ * (原則9: 未対応を対応済みに見せない)。この場合は控えごと捨てる。
+ */
+function isTransientFailure(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  return error.status === 0 || error.status === 429 || error.status >= 500;
+}
+
+interface ChecklistView {
+  muniName: string;
+  checklist: ChecklistResponse;
+  /** 端末内の控えを表示している場合の取得時刻。サーバーから取れたときは null。 */
+  cachedAt: string | null;
+}
+
+/**
+ * 取得の本体。成功したら控えを更新し、届かなければ控えへ退避する。
+ *
+ * なぜ自治体名だけ別扱いなのか: 以前は一覧とチェックリストを Promise.all で束ねていたため、
+ * 表示名を引く GET /api/municipalities が失敗しただけで、生成に成功したチェックリストごと
+ * エラー画面になっていた。名前は見出しの飾りで、手続きの中身には関わらない。
+ * 取れなければ控えの名前、それも無ければ自治体コードで代替し、本体を落とさない。
+ */
+async function fetchChecklist(code: string, profile: Profile): Promise<ChecklistView> {
+  const [munis, checklist] = await Promise.allSettled([
+    getMunicipalities(),
+    postChecklist(profile),
+  ]);
+
+  if (checklist.status === 'rejected') {
+    if (isTransientFailure(checklist.reason)) {
+      const cached = loadChecklistCache(code, profile);
+      if (cached) {
+        return {
+          muniName: cached.municipalityName,
+          checklist: cached.checklist,
+          cachedAt: cached.cachedAt,
+        };
+      }
+    } else {
+      clearChecklistCache(code);
+    }
+    throw checklist.reason;
+  }
+
+  const fromList =
+    munis.status === 'fulfilled' ? munis.value.find((m) => m.code === code)?.name : undefined;
+  const muniName = fromList ?? loadChecklistCache(code, profile)?.municipalityName ?? code;
+
+  saveChecklistCache({
+    municipalityCode: code,
+    municipalityName: muniName,
+    profile,
+    checklist: checklist.value,
+  });
+  return { muniName, checklist: checklist.value, cachedAt: null };
+}
 
 /**
  * チェックリスト画面(§7.4)。ヘッダー(自治体・転入日・条件修正)、進捗(完了n/全m)、
  * 期限順セクション、各カード(優先度・期限or要確認・1行理由・完了チェック・詳細へ)を表示する。
  * 完了状態は procedureId キーで localStorage に保持し(C-4)、リロード後も維持される。
+ *
+ * 生成結果そのものも端末内へ控える(checklist-cache.ts)。APIへ届かないときは控えを出し、
+ * 必ず「いつ時点の内容か」を添える。黙って古い内容を最新として見せない(原則3)。
  */
 export function ChecklistPage() {
   useDocumentTitle('あなたのチェックリスト');
@@ -42,11 +115,9 @@ export function ChecklistPage() {
   const profile = municipalityCode ? loadProfile(municipalityCode) : null;
   const profileSig = profile ? JSON.stringify(profile) : '';
 
-  const state = useAsync(async () => {
+  const state = useAsync<ChecklistView | null>(async () => {
     if (!municipalityCode || !profile) return null;
-    const [munis, checklist] = await Promise.all([getMunicipalities(), postChecklist(profile)]);
-    const muni = munis.find((m) => m.code === municipalityCode) ?? null;
-    return { muniName: muni?.name ?? municipalityCode, checklist };
+    return fetchChecklist(municipalityCode, profile);
   }, [municipalityCode, profileSig]);
 
   const [doneMap, setDoneMap] = useState<DoneMap>(() =>
@@ -149,10 +220,16 @@ export function ChecklistPage() {
       </header>
 
       {state.loading && <Loading label="チェックリストを作成中です…" />}
-      {state.error != null && <ErrorMessage error={state.error} />}
+      {state.error != null && (
+        <ErrorMessage error={state.error} onRetry={state.reload} retryLabel="もう一度作成する" />
+      )}
 
       {state.data && (
         <>
+          {state.data.cachedAt && (
+            <OfflineCopyNotice cachedAt={state.data.cachedAt} onRetry={state.reload} />
+          )}
+
           <div
             className="rounded-lg border border-slate-200 bg-white p-4"
             role="status"
@@ -250,8 +327,21 @@ export function ChecklistPage() {
             </section>
           ))}
 
+          {/*
+            チャットは補助機能。描画中に落ちても、チェックリスト本体と公式リンクは
+            そのまま残さなければならない(原則8)。ルータの errorElement は画面全体の
+            受け皿なので、ここまで届かせない。
+          */}
           <div className="print-hide">
-            <ChatPanel municipalityCode={municipalityCode} municipalityName={state.data.muniName} />
+            <ErrorBoundary
+              label="ChatPanel"
+              fallback={(retry) => <ChatUnavailable retry={retry} />}
+            >
+              <ChatPanel
+                municipalityCode={municipalityCode}
+                municipalityName={state.data.muniName}
+              />
+            </ErrorBoundary>
           </div>
 
           {/*
@@ -272,6 +362,73 @@ export function ChecklistPage() {
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * 端末内の控えを表示していることの告知。
+ *
+ * なぜ目立たせるのか(原則3): 控えは黙って出すと「今の内容」に見える。取得時刻と経過日数を
+ * 添え、その後に変わっている可能性があること、公式ページで確かめられることを必ず言う。
+ * ここを飾りにすると、古い期限を最新として信じさせることになる。
+ *
+ * なぜ print-hide にしないのか: 紙に印刷して窓口へ持って行く使い方がある。画面では
+ * 「◯月◯日時点」と断っておきながら、紙からその断りだけ落ちるのは、いちばん誤解が
+ * 起きやすい形になる。
+ *
+ * role="status" を付けないのは、進捗表示が既に使っているため(1画面に複数のステータスを
+ * 置くと読み上げが競合する)。見出しつきの region にして辿れるようにする。
+ */
+function OfflineCopyNotice({ cachedAt, onRetry }: { cachedAt: string; onRetry: () => void }) {
+  const days = cacheAgeInDays(cachedAt);
+  return (
+    <section
+      aria-labelledby="offline-copy-heading"
+      className="rounded-lg border border-slate-400 bg-slate-100 p-4"
+    >
+      <div className="flex gap-3">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          className="mt-0.5 h-5 w-5 shrink-0 text-slate-600"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 4a1 1 0 10-2 0v4.3l3 1.8a1 1 0 101-1.72L11 9.4V6z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <div className="min-w-0">
+          <h2 id="offline-copy-heading" className="font-bold text-slate-900">
+            保存してあった内容を表示しています
+          </h2>
+          <p className="mt-1 text-sm text-slate-800">
+            サーバーに接続できなかったため、
+            <span className="font-semibold">{formatDateTimeInTokyo(cachedAt)}</span>
+            に取得した内容を表示しています（
+            {days === 0 ? '本日取得' : `${days}日前に取得`}
+            ）。これは最新の取得ではありません。その後に期限や必要書類が変わっている場合があります。
+          </p>
+          <p className="mt-1 text-sm text-slate-800">
+            各手続きの「詳細・必要書類・公式根拠」から、公式ページで最新の内容をご確認ください。
+          </p>
+          <p className="print-hide mt-3">
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-900 active:bg-black"
+            >
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                <path d="M10 3a7 7 0 016.32 4h-2.2a5 5 0 100 6h2.2A7 7 0 1110 3z" />
+                <path d="M17 3v5h-5l1.9-1.9A5 5 0 0010 5V3h7z" />
+              </svg>
+              最新の内容を取得する
+            </button>
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
 

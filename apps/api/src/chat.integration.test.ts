@@ -144,6 +144,37 @@ describe('POST /api/chat — フラグ無効', () => {
   });
 });
 
+/**
+ * なぜ(独立点検 P1): 以前は embeddings(=課金リクエスト)を先に済ませてから Vectorize
+ * バインディングの有無を確かめていた。索引が外れている間は、返せないと分かっている応答のために
+ * 毎回課金し、その待ち時間ぶん利用者を待たせていた。呼ぶ前に判定できることは呼ぶ前に判定する。
+ */
+describe('POST /api/chat — 検索索引が無いとき', () => {
+  it('503 を返し、OpenAI へ1度も問い合わせない', async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        calls.push(url);
+        throw new Error('索引が無い状態で外部APIを呼んではいけない');
+      }),
+    );
+
+    const res = await chat(baseEnv({ VECTORIZE: undefined }), {
+      municipalityCode: '13112',
+      // 構造化データ経路(持ち物・書類)に当たらない質問にして、検索経路へ落とす。
+      question: '粗大ごみの出し方を教えてください',
+    });
+
+    expect(res.status).toBe(503);
+    expect(calls).toEqual([]);
+    const body = (await res.json()) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe('chat_unavailable');
+    // チェックリストは使えると伝わる文面であること(原則8)。
+    expect(body.error.message).toContain('時間をおいて');
+  });
+});
+
 describe('POST /api/chat — 正常系(引用付き)', () => {
   it('抜粋に基づく回答 + 台帳解決済み citations を返し、municipalityCode $eq でフィルタする', async () => {
     stubOpenAI(

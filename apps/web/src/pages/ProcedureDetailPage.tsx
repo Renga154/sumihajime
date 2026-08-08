@@ -7,7 +7,8 @@ import { channelLabel, documentStatusLabel, formatDate } from '../lib/format';
 import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
 import { DataStatusBadge, PriorityBadge } from '../components/Badge';
 import { SourceCard } from '../components/SourceCard';
-import { ChatPanel } from '../components/ChatPanel';
+import { ChatPanel, ChatUnavailable } from '../components/ChatPanel';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { useDocumentTitle } from '../lib/navigation';
 
 /**
@@ -57,7 +58,7 @@ export function ProcedureDetailPage() {
       </p>
 
       {state.loading && <Loading label="手続きの詳細を読み込み中です…" />}
-      {state.error != null && <ErrorMessage error={state.error} />}
+      {state.error != null && <ErrorMessage error={state.error} onRetry={state.reload} />}
 
       {state.data && (
         <article className="space-y-5">
@@ -210,13 +211,20 @@ export function ProcedureDetailPage() {
             </div>
           </Section>
 
-          {/* チェックリストと同じく、印刷時は入力欄ごと隠す(紙の上では操作できず場所だけ取る)。 */}
+          {/* チェックリストと同じく、印刷時は入力欄ごと隠す(紙の上では操作できず場所だけ取る)。
+              描画時例外はこの部品の中で止める — 手続きの必要書類と根拠カードは補助機能の
+              不具合で消してよいものではない(原則8)。 */}
           <div className="print-hide">
-            <ChatPanel
-              municipalityCode={municipalityCode}
-              procedureId={state.data.procedure.id}
-              category={state.data.procedure.canonicalType}
-            />
+            <ErrorBoundary
+              label="ChatPanel"
+              fallback={(retry) => <ChatUnavailable retry={retry} />}
+            >
+              <ChatPanel
+                municipalityCode={municipalityCode}
+                procedureId={state.data.procedure.id}
+                category={state.data.procedure.canonicalType}
+              />
+            </ErrorBoundary>
           </div>
         </article>
       )}

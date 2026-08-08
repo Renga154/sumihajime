@@ -114,7 +114,7 @@ export function WasteSortingSearch({ municipalityCode, municipalityName, officia
           (unavailable ? (
             <UnavailableNote municipalityName={municipalityName} officialUrl={officialUrl} />
           ) : (
-            <ErrorMessage error={result.error} />
+            <ErrorMessage error={result.error} onRetry={result.reload} />
           ))}
 
         {result.data?.kind === 'summary' && (

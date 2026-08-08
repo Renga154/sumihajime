@@ -50,7 +50,23 @@ export function SkeletonCard() {
   );
 }
 
-export function ErrorMessage({ error }: { error: unknown }) {
+/**
+ * エラー表示。`onRetry` を渡すと、その場でやり直すボタンを出す。
+ *
+ * なぜ再試行ボタンを添えるか(独立点検 P1): 文面は「もう一度お試しください」と言うのに、
+ * 押せるものが画面に無かった。利用者に残された手段はブラウザの再読み込みだけで、
+ * 弱い電波では最も高くつく操作になる。失敗した取得だけをやり直せるようにする。
+ * 押せない案内を書かない、という点で「次の行動が分かる文面」(§7)の一部でもある。
+ */
+export function ErrorMessage({
+  error,
+  onRetry,
+  retryLabel = 'もう一度読み込む',
+}: {
+  error: unknown;
+  onRetry?: () => void;
+  retryLabel?: string;
+}) {
   const message =
     error instanceof Error
       ? error.message
@@ -76,6 +92,21 @@ export function ErrorMessage({ error }: { error: unknown }) {
       <div>
         <p className="font-semibold">エラーが発生しました</p>
         <p className="mt-1">{message}</p>
+        {onRetry && (
+          <p className="mt-3">
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-800 active:bg-red-900"
+            >
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                <path d="M10 3a7 7 0 016.32 4h-2.2a5 5 0 100 6h2.2A7 7 0 1110 3z" />
+                <path d="M17 3v5h-5l1.9-1.9A5 5 0 0010 5V3h7z" />
+              </svg>
+              {retryLabel}
+            </button>
+          </p>
+        )}
         {officialUrl && (
           <p className="mt-2">
             <a

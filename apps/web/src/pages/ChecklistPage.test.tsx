@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { Route } from 'react-router-dom';
 import { profileSchema, type ChecklistResponse, type GeneratedTask } from '@tmn/schemas';
 import { renderWithProviders } from '../test/utils';
@@ -75,18 +75,30 @@ const FIXTURE: ChecklistResponse = {
 };
 
 vi.mock('../api/client', () => ({
-  ApiError: class ApiError extends Error {},
+  // 実物と同じく status を持たせる。チェックリストは「今は届かない失敗(0/429/5xx)」だけを
+  // 端末内の控えへ退避させ、404/409/422 のような確定した答えでは退避しない。
+  ApiError: class ApiError extends Error {
+    readonly status: number;
+    readonly code: string;
+    readonly officialUrl?: string;
+    constructor(status: number, code: string, message: string) {
+      super(message);
+      this.name = 'ApiError';
+      this.status = status;
+      this.code = code;
+    }
+  },
   ChatDisabledError: class ChatDisabledError extends Error {},
   getMunicipalities: vi.fn(async () => [
     { code: '13112', name: '世田谷区', supported: true, coverage: [] },
   ]),
   postChecklist: vi.fn(async () => FIXTURE),
-  // RAGはこのテストのスコープ外。無効(false)にしてチャットパネルを非表示にする。
-  getChatAvailability: vi.fn(async () => false),
+  // RAGはこのテストのスコープ外。無効にしてチャットパネルを非表示にする。
+  getChatAvailability: vi.fn(async () => ({ enabled: false, mode: 'disabled' })),
   postChat: vi.fn(),
 }));
 
-import { postChecklist } from '../api/client';
+import { ApiError, getMunicipalities, postChecklist } from '../api/client';
 import { ChecklistPage } from './ChecklistPage';
 
 beforeEach(() => {
@@ -286,5 +298,156 @@ describe('ChecklistPage — 期限を過ぎたタスク', () => {
     renderChecklist();
     await screen.findByText('転入届');
     expect(screen.queryByText(/期限を過ぎている可能性/)).toBeNull();
+  });
+});
+
+/**
+ * なぜ(独立点検 P1 / 原則8): 生成結果はメモリ上にしか無く、APIへ届かないと画面から全部消えた。
+ * 区役所の弱い電波で、手続きも公式リンクも窓口の前で失われるのが最悪の場面。端末内の控えへ
+ * 退避すること、そのとき**最新の取得ではない**と必ず伝えること、条件を変えたら控えを使わない
+ * ことを固定する。
+ */
+describe('ChecklistPage — APIへ届かないとき', () => {
+  const CACHE_KEY = 'tmn:checklist-cache:13112';
+
+  /** 一度成功させて端末内の控えを作り、画面は片付ける。 */
+  async function seedCache() {
+    renderChecklist();
+    await screen.findByText('転入届');
+    await waitFor(() => expect(localStorage.getItem(CACHE_KEY)).not.toBeNull());
+    cleanup();
+  }
+
+  it('取得に成功したら控えを更新する', async () => {
+    renderChecklist();
+    await screen.findByText('転入届');
+    await waitFor(() => expect(localStorage.getItem(CACHE_KEY)).not.toBeNull());
+
+    const entry = JSON.parse(localStorage.getItem(CACHE_KEY) ?? '{}');
+    expect(entry.municipalityName).toBe('世田谷区');
+    expect(entry.checklist.ruleVersion).toBe('v1');
+    // 成功表示のときは控えの告知を出さない。
+    expect(
+      screen.queryByRole('heading', { name: '保存してあった内容を表示しています' }),
+    ).toBeNull();
+  });
+
+  it.each([
+    ['通信断・タイムアウト', 0, 'network_error'],
+    ['サーバー不調(503)', 503, 'unavailable'],
+    ['混雑(429)', 429, 'rate_limited'],
+  ])('%s では控えを表示し、いつ時点かを明示する', async (_label, status, code) => {
+    await seedCache();
+    vi.mocked(postChecklist).mockRejectedValueOnce(
+      new ApiError(status as number, code as string, 'サーバーに接続できませんでした。'),
+    );
+
+    renderChecklist();
+
+    expect(
+      await screen.findByRole('heading', { name: '保存してあった内容を表示しています' }),
+    ).toBeInTheDocument();
+    // 本体(タスクと公式根拠への導線)は残る。
+    expect(screen.getByText('転入届')).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('link', { name: /詳細・必要書類・公式根拠を見る/ }).length,
+    ).toBeGreaterThan(0);
+    // 最新だと言わない。取得時刻と経過を添える(原則3)。
+    expect(screen.getByText(/これは最新の取得ではありません/)).toBeInTheDocument();
+    expect(screen.getByText(/^\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}$/)).toBeInTheDocument();
+  });
+
+  it('控えが無ければ、エラー文面と再試行ボタンを出す(黙って空にしない)', async () => {
+    vi.mocked(postChecklist).mockRejectedValueOnce(
+      new ApiError(0, 'network_error', 'サーバーに接続できませんでした。'),
+    );
+
+    renderChecklist();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('サーバーに接続できませんでした。');
+    expect(screen.getByRole('button', { name: /もう一度作成する/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: '保存してあった内容を表示しています' }),
+    ).toBeNull();
+  });
+
+  it('再試行ボタンで取得し直し、成功したら控えの告知が消える', async () => {
+    await seedCache();
+    vi.mocked(postChecklist).mockRejectedValueOnce(
+      new ApiError(0, 'network_error', 'サーバーに接続できませんでした。'),
+    );
+
+    renderChecklist();
+    await screen.findByRole('heading', { name: '保存してあった内容を表示しています' });
+
+    fireEvent.click(screen.getByRole('button', { name: '最新の内容を取得する' }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('heading', { name: '保存してあった内容を表示しています' }),
+      ).toBeNull(),
+    );
+    expect(screen.getByText('転入届')).toBeInTheDocument();
+  });
+
+  it('条件を変えたあとは控えを使わない(修正前の判定を復活させない)', async () => {
+    await seedCache();
+
+    // 条件を変える(犬を飼っていない)。
+    const changed = profileSchema.parse({
+      destination: { municipalityCode: '13112' },
+      moveDate: '2026-08-01',
+      originType: 'outside_tokyo',
+      household: { memberCount: 1, ageBands: ['adult'] },
+      flags: {
+        hasMyNumberCard: false,
+        needsNationalHealthInsurance: false,
+        needsNationalPension: false,
+        hasSchoolOrChildcareNeeds: false,
+        hasDog: false,
+        needsDisabilityOrCareSupport: false,
+        needsForeignResidentGuidance: false,
+      },
+    });
+    localStorage.setItem('tmn:profile:13112', JSON.stringify(changed));
+    vi.mocked(postChecklist).mockRejectedValueOnce(
+      new ApiError(0, 'network_error', 'サーバーに接続できませんでした。'),
+    );
+
+    renderChecklist();
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByText('飼い犬の登録事項変更届')).toBeNull();
+    expect(localStorage.getItem(CACHE_KEY)).toBeNull();
+  });
+
+  it('対象外(409)のような確定した答えでは控えを出さず、控えごと捨てる(原則9)', async () => {
+    await seedCache();
+    vi.mocked(postChecklist).mockRejectedValueOnce(
+      new ApiError(409, 'municipality_not_supported', '現在このサービスの対応対象外です。'),
+    );
+
+    renderChecklist();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('対応対象外');
+    expect(
+      screen.queryByRole('heading', { name: '保存してあった内容を表示しています' }),
+    ).toBeNull();
+    expect(localStorage.getItem(CACHE_KEY)).toBeNull();
+  });
+
+  /**
+   * なぜ: 以前は自治体一覧とチェックリストを Promise.all で束ねていたため、見出しの表示名を
+   * 引く GET /api/municipalities が失敗しただけで、生成に成功したチェックリストごと消えていた。
+   */
+  it('自治体一覧が取れなくても、生成できたチェックリストは表示する', async () => {
+    vi.mocked(getMunicipalities).mockRejectedValueOnce(
+      new ApiError(0, 'network_error', 'サーバーに接続できませんでした。'),
+    );
+
+    renderChecklist();
+
+    expect(await screen.findByText('転入届')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });

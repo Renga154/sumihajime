@@ -36,7 +36,7 @@ export function LandingPage() {
   useDocumentTitle();
   const navigate = useNavigate();
   const { setMunicipalityCode } = useAppState();
-  const { data, error, loading } = useAsync(() => getMunicipalities(), []);
+  const { data, error, loading, reload } = useAsync(() => getMunicipalities(), []);
   // トップの実測サマリー。失敗しても自治体選択(主要導線)は無傷にしたいので、
   // useAsync のエラーはここでは表示せず、数値を出さないだけに縮退する(推測しない)。
   const statsState = useAsync(() => getServiceStats(), []);
@@ -131,7 +131,7 @@ export function LandingPage() {
         )}
         {error != null && (
           <div className="mt-3">
-            <ErrorMessage error={error} />
+            <ErrorMessage error={error} onRetry={reload} />
           </div>
         )}
 

@@ -220,19 +220,37 @@ export async function searchWasteSorting(
 }
 
 /**
- * なぜ: RAGチャットが有効か(RAG_ENABLED)を軽量に判定する。無効時(または到達不可時)は
- * UIがチャットパネルを一切描画しないための入口(FR-016〜019の縮退。既存機能は無傷)。
+ * チャットの利用可否。`mode` は「何に答えられるか」を表す:
+ *  - `full`: 通常どおり(検索+生成が使える)
+ *  - `documents_only`: 必要書類・持ち物の質問のみ(検証済み構造化データ経路だけが生きている)
+ *  - `disabled`: 利用不可(パネルを出さない)
  */
-export async function getChatAvailability(): Promise<boolean> {
+export interface ChatAvailability {
+  enabled: boolean;
+  mode: 'full' | 'documents_only' | 'disabled';
+}
+
+const CHAT_UNAVAILABLE: ChatAvailability = { enabled: false, mode: 'disabled' };
+
+/**
+ * なぜ: チャットが実際に使える状態かを軽量に判定する。使えない/到達できないときは
+ * UIがパネルを一切描画しないための入口(FR-016〜019の縮退。既存機能は無傷)。
+ *
+ * なぜ mode を省略可能として扱うか: 応答形状はサーバー側の実装詳細で、
+ * 古い版・テスト用スタブは `{enabled}` だけを返す。その場合は従来どおり全機能とみなす
+ * (enabled=true を勝手に格下げして、使える機能を隠さない)。
+ */
+export async function getChatAvailability(): Promise<ChatAvailability> {
   try {
     // なぜ短めか: これはパネルを出すか否かだけを決める補助的な問い合わせで、
     // 応答が遅い場合は「出さない」に倒すのが安全側(縮退の既定は非表示)。
     const res = await fetchWithTimeout(`${BASE}/chat/availability`, undefined, 5_000);
-    if (!res.ok) return false;
-    const json = (await res.json()) as { enabled?: boolean } | null;
-    return json?.enabled === true;
+    if (!res.ok) return CHAT_UNAVAILABLE;
+    const json = (await res.json()) as { enabled?: boolean; mode?: string } | null;
+    if (json?.enabled !== true) return CHAT_UNAVAILABLE;
+    return { enabled: true, mode: json.mode === 'documents_only' ? 'documents_only' : 'full' };
   } catch {
-    return false;
+    return CHAT_UNAVAILABLE;
   }
 }
 

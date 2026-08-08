@@ -136,6 +136,31 @@ export function formatDateFromDateTime(iso: string | undefined): string {
 }
 
 /**
+ * ISO日時 →「YYYY年M月D日 HH:MM」(日本時間)。
+ *
+ * なぜ時刻まで出すのか: 端末内の控えを表示するときに「いつ取得した内容か」を伝えるため。
+ * 同じ日に何度も開く使い方では、日付だけでは新しいのか古いのか分からない。
+ * なぜ日本時間固定か: 対象は東京都内の手続きで、利用者が照らし合わせるのも日本時間。
+ * 端末のタイムゾーン設定で表示が変わると、控えの新しさを取り違える。
+ */
+export function formatDateTimeInTokyo(iso: string | undefined): string {
+  if (!iso) return '';
+  const ms = Date.parse(iso);
+  if (Number.isNaN(ms)) return iso;
+  const parts = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date(ms));
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
+  return `${get('year')}年${get('month')}月${get('day')}日 ${get('hour')}:${get('minute')}`;
+}
+
+/**
  * なぜ: 期限までの残日数などの決定論的な算出に使う。YYYY-MM-DDをUTC正午基準で解釈し
  * タイムゾーン差の丸め誤差を避ける(CLAUDE.md §7 日付計算方針)。
  * 返り値 = (to - from) の日数。

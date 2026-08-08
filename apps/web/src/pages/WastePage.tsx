@@ -66,7 +66,7 @@ export function WastePage() {
       </header>
 
       {base.loading && <Loading label="地区一覧を読み込み中です…" />}
-      {base.error != null && <ErrorMessage error={base.error} />}
+      {base.error != null && <ErrorMessage error={base.error} onRetry={base.reload} />}
 
       {base.data && base.data.waste === null && (
         <WasteScheduleUnavailable
@@ -133,7 +133,7 @@ export function WastePage() {
           </Card>
 
           {detail.loading && <Loading label="収集日を読み込み中です…" />}
-          {detail.error != null && <ErrorMessage error={detail.error} />}
+          {detail.error != null && <ErrorMessage error={detail.error} onRetry={detail.reload} />}
 
           {detail.data && detail.data.schedules && (
             <section aria-labelledby="schedule-heading">

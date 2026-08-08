@@ -86,13 +86,13 @@ describe('応答が返らないときは必ず打ち切る', () => {
     expect(error.code).toBe('timeout');
   });
 
-  it('チャット可否の問い合わせが無反応なら false(パネルを出さない安全側)へ倒す', async () => {
+  it('チャット可否の問い合わせが無反応なら利用不可(パネルを出さない安全側)へ倒す', async () => {
     vi.useFakeTimers();
     stubHangingFetch();
 
     const promise = getChatAvailability();
     await vi.advanceTimersByTimeAsync(5_000);
-    await expect(promise).resolves.toBe(false);
+    await expect(promise).resolves.toEqual({ enabled: false, mode: 'disabled' });
   });
 
   it('中断は AbortSignal で行い、接続を放置しない', async () => {

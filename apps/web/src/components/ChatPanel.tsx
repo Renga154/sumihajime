@@ -1,6 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { ChatCitation, ChatResponse } from '@tmn/schemas';
-import { ChatDisabledError, getChatAvailability, getMunicipalities, postChat } from '../api/client';
+import {
+  ChatDisabledError,
+  getChatAvailability,
+  getMunicipalities,
+  postChat,
+  type ChatAvailability,
+} from '../api/client';
 import { formatDateFromDateTime } from '../lib/format';
 import { AnswerText } from './AnswerText';
 import { Card, ErrorMessage, ExternalLink, Loading } from './ui';
@@ -66,6 +72,49 @@ function CitationCard({ citation }: { citation: ChatCitation }) {
   );
 }
 
+/**
+ * チャットの描画が失敗したときの代替表示(ErrorBoundary の fallback)。
+ *
+ * 文面の方針(§7「次の行動が分かる文面」): 原因は推測しない。代わりに、
+ * (a)いま何が使えないか、(b)何がそのまま使えるか、(c)いま押せる操作、を書く。
+ * ここを「エラーが発生しました」で終わらせると、利用者はチェックリストごと
+ * 壊れたのかどうかを判断できない。
+ */
+export function ChatUnavailable({ retry }: { retry: () => void }) {
+  return (
+    <section
+      aria-labelledby="chat-unavailable-heading"
+      className="rounded-lg border border-slate-300 bg-slate-50 p-4"
+    >
+      <h2 id="chat-unavailable-heading" className="font-bold text-slate-900">
+        AIへの質問は、ただいまご利用いただけません
+      </h2>
+      <p className="mt-1 text-sm text-slate-700">
+        この部分を表示できませんでした。
+        <span className="font-semibold">
+          チェックリストと、各手続きの公式ページへのリンクはこのままご利用いただけます。
+        </span>
+      </p>
+      <p className="mt-1 text-sm text-slate-700">
+        手続きの内容は、各タスクの「詳細・必要書類・公式根拠」から公式ページでご確認ください。
+      </p>
+      <p className="mt-3">
+        <button
+          type="button"
+          onClick={retry}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-100"
+        >
+          <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+            <path d="M10 3a7 7 0 016.32 4h-2.2a5 5 0 100 6h2.2A7 7 0 1110 3z" />
+            <path d="M17 3v5h-5l1.9-1.9A5 5 0 0010 5V3h7z" />
+          </svg>
+          もう一度読み込む
+        </button>
+      </p>
+    </section>
+  );
+}
+
 export function ChatPanel({
   municipalityCode,
   municipalityName,
@@ -77,22 +126,24 @@ export function ChatPanel({
   procedureId?: string;
   category?: string;
 }) {
-  // null=判定中, false=無効(非表示), true=有効
-  const [available, setAvailable] = useState<boolean | null>(null);
+  // null=判定中, enabled=false=無効(非表示)
+  const [availability, setAvailability] = useState<ChatAvailability | null>(null);
   const [name, setName] = useState<string>(municipalityName ?? 'この自治体');
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ChatResponse | null>(null);
   const [error, setError] = useState<unknown>(null);
+  // 直近に送った質問。再試行のとき、入力欄が編集されていても「失敗したその操作」をやり直す。
+  const [lastAsked, setLastAsked] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     (async () => {
       const avail = await getChatAvailability();
       if (!active) return;
-      setAvailable(avail);
+      setAvailability(avail);
       // 自治体名が渡されていなければ台帳から解決(スコープ表示を正確にするため)。
-      if (avail && !municipalityName) {
+      if (avail.enabled && !municipalityName) {
         try {
           const munis = await getMunicipalities();
           const found = munis.find((m) => m.code === municipalityCode);
@@ -107,13 +158,12 @@ export function ChatPanel({
     };
   }, [municipalityCode, municipalityName]);
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    const q = question.trim();
+  async function ask(q: string) {
     if (!q || loading) return;
     setLoading(true);
     setError(null);
     setResult(null);
+    setLastAsked(q);
     try {
       const res = await postChat({
         municipalityCode,
@@ -124,7 +174,7 @@ export function ChatPanel({
       setResult(res);
     } catch (err) {
       if (err instanceof ChatDisabledError) {
-        setAvailable(false);
+        setAvailability({ enabled: false, mode: 'disabled' });
         return;
       }
       setError(err);
@@ -133,8 +183,14 @@ export function ChatPanel({
     }
   }
 
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    void ask(question.trim());
+  }
+
   // 判定中・無効時は何も描画しない(既存UIの劣化なし)。
-  if (available !== true) return null;
+  if (availability?.enabled !== true) return null;
+  const documentsOnly = availability.mode === 'documents_only';
 
   return (
     <section aria-labelledby="chat-heading" className="space-y-3">
@@ -149,6 +205,28 @@ export function ChatPanel({
         </span>
         AIに質問する（ベータ）
       </h2>
+
+      {/*
+        なぜ送信前に伝えるのか(独立点検 P1): 検索・生成の依存(APIキー・検索索引)が欠けている間、
+        答えられるのは人手で確認済みの「必要な持ち物・書類」だけになる。以前は同じ入力欄が出て、
+        利用者は質問を書いて送ってはじめてエラーに出会っていた。できないことは、手を動かす前に言う。
+      */}
+      {/*
+        role="status" は付けない。チェックリスト画面では進捗表示が既に live region を
+        持っており、1画面に2つ置くと読み上げが競合する(ChecklistPage の同じ判断に倣う)。
+        代わりに見出しにして、見出し移動でも辿れるようにする。
+      */}
+      {documentsOnly && (
+        <div className="rounded-lg border border-slate-400 bg-slate-100 p-3 text-sm text-slate-900">
+          <h3 className="font-semibold">今おこたえできる範囲がかぎられています</h3>
+          <p className="mt-1">
+            ただいまは<span className="font-semibold">必要な持ち物・書類についてのご質問</span>
+            にのみおこたえできます（例:
+            転入届に必要な持ち物は？）。それ以外のご質問にはおこたえできませんので、
+            {name}の公式ページでご確認ください。
+          </p>
+        </div>
+      )}
 
       <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
         <p className="font-semibold">ご利用上の注意</p>
@@ -206,9 +284,15 @@ export function ChatPanel({
 
       {error != null && (
         <div className="space-y-2">
-          <ErrorMessage error={error} />
+          {/* 入力欄を編集していても、失敗したその質問をやり直せるようにする
+              (押した時点の文面を lastAsked に控えてある)。 */}
+          <ErrorMessage
+            error={error}
+            retryLabel="この質問をもう一度送る"
+            {...(lastAsked ? { onRetry: () => void ask(lastAsked) } : {})}
+          />
           <p className="text-sm text-slate-600">
-            お手数ですが、少し時間をおいてもう一度「質問する」を押してください。
+            回答が出せない間も、チェックリストと各手続きの公式ページはこれまでどおりご利用いただけます。
           </p>
         </div>
       )}
