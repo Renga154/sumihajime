@@ -234,15 +234,20 @@ export function FacilityMap({
           maplibre 自身がラベル付けし、地図領域全体は section の aria-label で命名する。 */}
         <div ref={containerRef} className="h-72 w-full" />
 
-        {/* 出典表示(地理院タイル利用条件)。タイルが実際に読み込めたときだけ出す。 */}
+        {/*
+          出典表示(地理院タイル利用条件)。タイルが実際に読み込めたときだけ出す。
+          出典リンクの当たり判定は24px(SC 2.5.8)にする。リンク側を tap-target-inline で
+          上下4pxずつ広げ、白い出典ボックス側も py-1.5 にして、広がった当たり判定が
+          地図のドラッグ領域へはみ出さないようにする(はみ出すと地図操作を奪う)。
+        */}
         {status === 'ready' && (
-          <p className="absolute bottom-0 right-0 m-0 bg-white/85 px-2 py-0.5 text-[0.7rem] leading-tight text-slate-700">
+          <p className="absolute bottom-0 right-0 m-0 bg-white/85 px-2 py-1.5 text-[0.7rem] leading-tight text-slate-700">
             出典:{' '}
             <a
               href={GSI_ICHIRAN_URL}
               target="_blank"
               rel="noreferrer noopener"
-              className="text-brand-700 underline"
+              className="tap-target-inline text-brand-700 underline"
             >
               地理院タイル
             </a>

@@ -1,4 +1,5 @@
-import { profileSchema, type Profile } from '@tmn/schemas';
+import { z } from 'zod';
+import { ageBandSchema, originTypeSchema, profileSchema, type Profile } from '@tmn/schemas';
 
 /**
  * なぜ: §13 データ最小化 / FR-010・FR-011 / C-4。利用者データは端末内(localStorage)のみに
@@ -14,6 +15,7 @@ const MUNICIPALITY_KEY = 'tmn:municipality';
 const profileKey = (code: string) => `tmn:profile:${code}`;
 const doneKey = (code: string) => `tmn:done:${code}`;
 const reviewedStepsKey = (code: string) => `tmn:reviewed-steps:${code}`;
+const wizardDraftKey = (code: string) => `tmn:wizard-draft:${code}`;
 
 export interface DoneRecord {
   doneAt: string;
@@ -96,6 +98,84 @@ export function loadReviewedSteps(code: string): ReviewedSteps {
 
 export function saveReviewedSteps(code: string, steps: ReviewedSteps): void {
   safeLocalStorage()?.setItem(reviewedStepsKey(code), JSON.stringify(steps));
+}
+
+/** ---- ウィザードの下書き(確定前・自治体別) ---- */
+
+/**
+ * ウィザードで入力中の回答。確定プロフィール(Profile)へ変換する前の、画面上のままの形。
+ *
+ * なぜ Profile と別のキー(`tmn:wizard-draft:<code>`)に分けるか:
+ *  1. Profile は「この内容でチェックリストを作成」を押して確定した回答であり、チェックリストの
+ *     該当判定はこれだけを見る。入力途中の値をここへ書くと、まだ確定していない条件で
+ *     タスクが増減し、利用者が見ていない前提のチェックリストが出てしまう。
+ *  2. `profileSchema` は strictObject で、そのまま POST /api/checklists のリクエスト本体になる。
+ *     未入力(moveDate='' など)や画面状態(現在のステップ)は境界スキーマを通らない。
+ *  3. 同じ理由で、閲覧記録は既に `tmn:reviewed-steps:<code>` へ分けてある。下書きもそれに倣う。
+ *
+ * 保存する範囲は確定プロフィールと同一(引越し日・転入元区分・世帯人数区分・年齢帯・条件フラグ)。
+ * 氏名・電話・メール・番地・生年月日・マイナンバーは入力欄自体が無く、当然保存もしない
+ * (CLAUDE.md 原則6・7 / §13 データ最小化)。保存先は端末内の localStorage のみ。
+ */
+export const wizardAnswersSchema = z.object({
+  /** 未入力を許すため空文字も受ける(確定時に profileSchema 側で日付として検証される)。 */
+  moveDate: z.union([z.iso.date(), z.literal('')]),
+  originType: z.union([originTypeSchema, z.literal('')]),
+  householdKind: z.enum(['single', 'multiple']),
+  ageBands: z.array(ageBandSchema),
+  isPregnant: z.boolean(),
+  flags: z.object({
+    hasMyNumberCard: z.boolean(),
+    needsNationalHealthInsurance: z.boolean(),
+    needsNationalPension: z.boolean(),
+    hasSchoolOrChildcareNeeds: z.boolean(),
+    hasDog: z.boolean(),
+    needsDisabilityOrCareSupport: z.boolean(),
+    needsForeignResidentGuidance: z.boolean(),
+    needsVehicleGuidance: z.boolean(),
+  }),
+  dogMicrochip: z.enum(['yes', 'no', 'unknown']),
+});
+export type WizardAnswers = z.infer<typeof wizardAnswersSchema>;
+
+export const wizardDraftSchema = z.object({
+  answers: wizardAnswersSchema,
+  /** 中断したステップ。再開時に同じ画面へ戻すためだけに使う。 */
+  step: z.number().int().min(1).max(3),
+  /** 任意ステップの閲覧記録。リロードで失うと「未入力です」と誤った案内を出してしまう。 */
+  reviewedSteps: z.object({ household: z.boolean(), conditions: z.boolean() }),
+});
+export type WizardDraft = z.infer<typeof wizardDraftSchema>;
+
+/** 壊れた/古い形式の下書きは「下書き無し」として扱う(確定値へ混ぜない)。 */
+export function loadWizardDraft(code: string): WizardDraft | null {
+  const raw = safeLocalStorage()?.getItem(wizardDraftKey(code));
+  if (!raw) return null;
+  try {
+    const parsed = wizardDraftSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveWizardDraft(code: string, draft: WizardDraft): void {
+  safeLocalStorage()?.setItem(wizardDraftKey(code), JSON.stringify(draft));
+}
+
+export function clearWizardDraft(code: string): void {
+  safeLocalStorage()?.removeItem(wizardDraftKey(code));
+}
+
+/**
+ * 回答が同じ内容か(純関数)。画面状態(ステップ・閲覧記録)は比較しない。
+ *
+ * なぜ回答だけを見るか: 「復元しました」と伝えてよいのは回答が残っているときだけで、
+ * ステップを進めただけの状態を復元と呼ぶと、何も入力していない利用者に嘘を伝えることになる。
+ */
+export function isSameWizardAnswers(a: WizardAnswers, b: WizardAnswers): boolean {
+  const normalize = (x: WizardAnswers) => ({ ...x, ageBands: [...x.ageBands].sort() });
+  return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
 }
 
 /** ---- 完了状態(自治体別、procedureId キー) ---- */

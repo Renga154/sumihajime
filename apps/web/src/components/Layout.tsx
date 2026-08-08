@@ -128,9 +128,10 @@ export function Layout({ children }: { children?: ReactNode }) {
             各画面のチェックリスト・詳細には他区の値を出さない(CLAUDE.md原則4)。
           */}
           <p className="mt-3 pl-6">
+            {/* tap-target-inline: 地の文と同じ行に混ざるリンク。行送りを変えずに当たり判定だけ広げる。 */}
             <Link
               to="/differences"
-              className="font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+              className="tap-target-inline font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
             >
               区ごとの期限のちがい
             </Link>
@@ -141,7 +142,7 @@ export function Layout({ children }: { children?: ReactNode }) {
           <p className="mt-2 pl-6">
             <Link
               to="/about-data"
-              className="font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+              className="tap-target-inline font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
             >
               このサービスのデータについて
             </Link>

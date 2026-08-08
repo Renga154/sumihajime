@@ -1,11 +1,18 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  clearWizardDraft,
   isDone,
+  isSameWizardAnswers,
   loadDone,
+  loadProfile,
   loadReviewedSteps,
+  loadWizardDraft,
   saveDone,
   saveReviewedSteps,
+  saveWizardDraft,
   toggleDone,
+  type WizardAnswers,
+  type WizardDraft,
 } from './storage';
 
 /**
@@ -90,5 +97,115 @@ describe('任意ステップの閲覧記録', () => {
     // 真偽値以外(例: 文字列 "true")を true と解釈しない。
     localStorage.setItem(`tmn:reviewed-steps:${CODE}`, '{"household":"true","conditions":1}');
     expect(loadReviewedSteps(CODE)).toEqual({ household: false, conditions: false });
+  });
+});
+
+/**
+ * なぜ: ウィザードの入力途中がリロードで消えていた。復元のために保存するが、確定前の値が
+ * 確定プロフィールとして扱われると、利用者が見ていない条件でチェックリストの中身が変わる。
+ * 別キー(tmn:wizard-draft:<code>)であること、確定側を汚さないことを固定する。
+ */
+describe('ウィザードの下書き', () => {
+  const ANSWERS: WizardAnswers = {
+    moveDate: '2026-08-15',
+    originType: 'outside_tokyo',
+    householdKind: 'multiple',
+    ageBands: ['adult', 'age0_2'],
+    isPregnant: false,
+    flags: {
+      hasMyNumberCard: true,
+      needsNationalHealthInsurance: false,
+      needsNationalPension: false,
+      hasSchoolOrChildcareNeeds: false,
+      hasDog: false,
+      needsDisabilityOrCareSupport: false,
+      needsForeignResidentGuidance: false,
+      needsVehicleGuidance: false,
+    },
+    dogMicrochip: 'unknown',
+  };
+  const DRAFT: WizardDraft = {
+    answers: ANSWERS,
+    step: 2,
+    reviewedSteps: { household: true, conditions: false },
+  };
+
+  it('保存した下書きがリロード相当でも復元される', () => {
+    expect(loadWizardDraft(CODE)).toBeNull();
+    saveWizardDraft(CODE, DRAFT);
+    expect(loadWizardDraft(CODE)).toEqual(DRAFT);
+  });
+
+  it('確定プロフィールとは別のキーに入り、確定側を書き換えない', () => {
+    saveWizardDraft(CODE, DRAFT);
+    expect(localStorage.getItem(`tmn:wizard-draft:${CODE}`)).not.toBeNull();
+    expect(localStorage.getItem(`tmn:profile:${CODE}`)).toBeNull();
+    expect(loadProfile(CODE)).toBeNull();
+  });
+
+  it('自治体ごとに独立して保持される(別の区の下書きを流用しない)', () => {
+    saveWizardDraft(CODE, DRAFT);
+    expect(loadWizardDraft('13101')).toBeNull();
+  });
+
+  it('破棄すると消える', () => {
+    saveWizardDraft(CODE, DRAFT);
+    clearWizardDraft(CODE);
+    expect(loadWizardDraft(CODE)).toBeNull();
+  });
+
+  it('壊れたJSON・スキーマ違反は「下書き無し」として扱う(確定値へ混ぜない)', () => {
+    localStorage.setItem(`tmn:wizard-draft:${CODE}`, '{壊れた');
+    expect(loadWizardDraft(CODE)).toBeNull();
+
+    // 未知の転入元区分・不正な日付・範囲外のステップはいずれも受け付けない。
+    localStorage.setItem(
+      `tmn:wizard-draft:${CODE}`,
+      JSON.stringify({ ...DRAFT, answers: { ...ANSWERS, originType: 'mars' } }),
+    );
+    expect(loadWizardDraft(CODE)).toBeNull();
+
+    localStorage.setItem(
+      `tmn:wizard-draft:${CODE}`,
+      JSON.stringify({ ...DRAFT, answers: { ...ANSWERS, moveDate: '2026/08/15' } }),
+    );
+    expect(loadWizardDraft(CODE)).toBeNull();
+
+    localStorage.setItem(`tmn:wizard-draft:${CODE}`, JSON.stringify({ ...DRAFT, step: 9 }));
+    expect(loadWizardDraft(CODE)).toBeNull();
+  });
+
+  it('未入力(空の引越し日・転入元)も下書きとして保持できる', () => {
+    const partial: WizardDraft = {
+      ...DRAFT,
+      answers: { ...ANSWERS, moveDate: '', originType: '' },
+    };
+    saveWizardDraft(CODE, partial);
+    expect(loadWizardDraft(CODE)).toEqual(partial);
+  });
+
+  /**
+   * なぜ: 保存するのは確定プロフィールと同じ範囲(引越し日・転入元区分・世帯・条件)だけで、
+   * 氏名・電話・メール・番地・生年月日・マイナンバーは入力欄自体が無い(原則6・7)。
+   * スキーマが未知のキーを落とすことで、将来うっかり足しても保存先へ漏れない。
+   */
+  it('スキーマに無いキーは保存内容から落ちる', () => {
+    localStorage.setItem(
+      `tmn:wizard-draft:${CODE}`,
+      JSON.stringify({
+        ...DRAFT,
+        answers: { ...ANSWERS, fullName: '山田太郎', address: '東京都世田谷区○○1-2-3' },
+      }),
+    );
+    const loaded = loadWizardDraft(CODE);
+    expect(loaded).not.toBeNull();
+    expect(JSON.stringify(loaded)).not.toContain('山田');
+    expect(JSON.stringify(loaded)).not.toContain('1-2-3');
+  });
+
+  it('isSameWizardAnswers は年齢帯の並び順の違いを同じ内容とみなす', () => {
+    expect(isSameWizardAnswers(ANSWERS, { ...ANSWERS, ageBands: ['age0_2', 'adult'] })).toBe(true);
+    expect(isSameWizardAnswers(ANSWERS, { ...ANSWERS, ageBands: ['adult'] })).toBe(false);
+    expect(isSameWizardAnswers(ANSWERS, { ...ANSWERS, moveDate: '2026-08-16' })).toBe(false);
   });
 });

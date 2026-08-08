@@ -139,6 +139,9 @@ export function Card({
  * 「地図で見る」施設数ぶん)では、読み上げのリンク一覧で区別できるよう ariaLabel に対象名を
  * 含める(視覚表示は変えない。WCAG 2.4.9)。sr-only テキストではなく aria-label を使うのは、
  * 本文中に同じ語(区名・施設名)を二重に出さないため。
+ *
+ * tap-target: このリンクは1行に1つだけ置かれることが多く、高さが文字サイズのまま(20px)だと
+ * 指では狙いにくい。文字サイズは変えず高さだけ24pxを確保する(WCAG 2.2 SC 2.5.8)。
  */
 export function ExternalLink({
   href,
@@ -155,7 +158,7 @@ export function ExternalLink({
       target="_blank"
       rel="noreferrer noopener"
       aria-label={ariaLabel ? `${ariaLabel}（別タブで開きます）` : undefined}
-      className="inline-flex items-center gap-1 font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 transition-colors hover:text-brand-800 hover:decoration-brand-500"
+      className="tap-target inline-flex items-center gap-1 font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 transition-colors hover:text-brand-800 hover:decoration-brand-500"
     >
       {children}
       <svg aria-hidden="true" viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor">

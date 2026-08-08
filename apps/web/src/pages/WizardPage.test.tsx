@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { Route } from 'react-router-dom';
 import { profileSchema } from '@tmn/schemas';
 import { WizardPage, parseStepParam } from './WizardPage';
@@ -125,6 +125,145 @@ describe('WizardPage 選択中の自治体', () => {
     renderWizard();
     // 取得完了前でも「どの自治体か」の手掛かりが画面に残る。
     expect(screen.getByText(/世田谷区|13112/)).toBeVisible();
+  });
+});
+
+/**
+ * なぜ: 自治体を選び、ステップ1に入力してステップ2へ進んだところでリロードすると、
+ * 入力した引越し日・転入元が空に戻っていた(保存は「作成」時だけだった)。
+ * 手続きの判定に使う確定プロフィールとは別のキーへ下書きを持ち、復元したことを利用者へ伝える。
+ */
+describe('WizardPage 入力途中の下書き', () => {
+  const DRAFT_KEY = 'tmn:wizard-draft:13112';
+
+  /** リロード相当: いったん画面を捨てて、同じ localStorage のまま描画し直す。 */
+  function reload(initialEntry = '/wizard') {
+    cleanup();
+    return renderWizard(initialEntry);
+  }
+
+  function fillStep1(moveDate = '2026-08-01') {
+    fireEvent.change(screen.getByLabelText('引越し日または転入予定日', { exact: false }), {
+      target: { value: moveDate },
+    });
+    fireEvent.click(screen.getByLabelText('東京都外'));
+  }
+
+  it('入力しただけでは確定プロフィールを書き換えず、下書きキーにだけ保存する', () => {
+    renderWizard();
+    fillStep1();
+
+    expect(localStorage.getItem('tmn:profile:13112')).toBeNull();
+    const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? 'null');
+    expect(draft?.answers?.moveDate).toBe('2026-08-01');
+    expect(draft?.answers?.originType).toBe('outside_tokyo');
+  });
+
+  it('ステップ2へ進んでリロードしても、引越し日と転入元が残る', () => {
+    renderWizard();
+    fillStep1();
+    fireEvent.click(screen.getByRole('button', { name: '次へ（世帯の入力）' }));
+
+    reload();
+
+    // 中断したステップ(2)から再開する。
+    expect(screen.getByRole('button', { name: '世帯（任意）' })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
+    fireEvent.click(screen.getByRole('button', { name: '引越し日と転入元（必須）' }));
+    expect(screen.getByLabelText('引越し日または転入予定日', { exact: false })).toHaveValue(
+      '2026-08-01',
+    );
+    expect(screen.getByLabelText('東京都外')).toBeChecked();
+    expect(screen.getByRole('button', { name: 'この内容でチェックリストを作成' })).toBeEnabled();
+  });
+
+  it('ステップ2・3の入力も残る', () => {
+    renderWizard();
+    fillStep1();
+    fireEvent.click(screen.getByRole('button', { name: '次へ（世帯の入力）' }));
+    fireEvent.click(screen.getByLabelText('複数人'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /0〜2歳|0-2歳/ }));
+    fireEvent.click(screen.getByRole('button', { name: '次へ（条件チェック）' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /マイナンバーカードを持っている/ }));
+
+    reload();
+
+    expect(screen.getByRole('checkbox', { name: /マイナンバーカードを持っている/ })).toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: '世帯（任意）' }));
+    expect(screen.getByLabelText('複数人')).toBeChecked();
+  });
+
+  it('復元したことを利用者へ伝え、破棄する手段を出す', () => {
+    renderWizard();
+    fillStep1();
+
+    reload();
+
+    const notice = screen.getByRole('status');
+    expect(notice).toHaveTextContent('前回の入力途中の内容を復元しました');
+    // 次に何をすればよいかが読める文面であること。
+    expect(notice).toHaveTextContent('この内容でチェックリストを作成');
+
+    fireEvent.click(screen.getByRole('button', { name: /破棄/ }));
+
+    expect(screen.getByLabelText('引越し日または転入予定日', { exact: false })).toHaveValue('');
+    expect(screen.getByLabelText('東京都外')).not.toBeChecked();
+    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent('破棄しました');
+  });
+
+  it('何も入力していなければ下書きを作らない(次回に「復元しました」と言わない)', () => {
+    renderWizard();
+    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+    // ステップを移動しただけでも下書きは作らない。
+    fireEvent.click(screen.getByRole('button', { name: '次へ（世帯の入力）' }));
+    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+    reload();
+    expect(screen.queryByText('前回の入力途中の内容を復元しました')).toBeNull();
+  });
+
+  it('作成すると下書きを消す(確定内容を「入力途中」として復元しない)', () => {
+    renderWizard();
+    fillStep1();
+    expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'この内容でチェックリストを作成' }));
+    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+
+    // 確定後に入力画面へ戻っても「復元しました」とは言わない(確定内容が初期値として出るだけ)。
+    reload();
+    expect(screen.queryByText('前回の入力途中の内容を復元しました')).toBeNull();
+    expect(screen.getByLabelText('引越し日または転入予定日', { exact: false })).toHaveValue(
+      '2026-08-01',
+    );
+  });
+
+  it('壊れた下書きは無視する(確定値・初期値へ混ぜない)', () => {
+    localStorage.setItem(DRAFT_KEY, '{壊れた');
+    renderWizard();
+    expect(screen.getByLabelText('引越し日または転入予定日', { exact: false })).toHaveValue('');
+    expect(screen.queryByText('前回の入力途中の内容を復元しました')).toBeNull();
+
+    cleanup();
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ answers: { moveDate: '2026-08-01' } }));
+    renderWizard();
+    expect(screen.getByLabelText('引越し日または転入予定日', { exact: false })).toHaveValue('');
+  });
+
+  it('?step= の明示指定は下書きの中断位置より優先する', () => {
+    renderWizard();
+    fillStep1();
+    fireEvent.click(screen.getByRole('button', { name: '次へ（世帯の入力）' }));
+
+    reload('/wizard?step=3');
+    expect(screen.getByRole('button', { name: '条件チェック（任意）' })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
   });
 });
 
