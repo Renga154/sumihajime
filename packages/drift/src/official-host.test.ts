@@ -26,7 +26,7 @@ describe('承認済みソースの全ホストが許可される(巡回が取得
     const csv = readFileSync(
       resolve(here, '../../../docs/data-sources/registry.csv'),
       'utf8',
-    ).replace(/^﻿/, '');
+    ).replace(/^\uFEFF/, '');
     const lines = csv.split(/\r?\n/).filter(Boolean);
     const header = lines[0]!.split(',');
     const iUrl = header.indexOf('source_url');
