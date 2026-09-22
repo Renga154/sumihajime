@@ -24,6 +24,7 @@ import { ProcedureDetailPage } from './pages/ProcedureDetailPage';
 import { FacilitiesPage } from './pages/FacilitiesPage';
 import { WastePage } from './pages/WastePage';
 import { CoveragePage } from './pages/CoveragePage';
+import { PrivacyPage, TermsPage } from './pages/PolicyPages';
 import { DifferencesPage } from './pages/DifferencesPage';
 import { AppErrorPage, NotFoundPage } from './pages/ErrorPages';
 
@@ -52,6 +53,9 @@ const ROUTE_CONFIGS: Record<SpaRoutePath, { element: ReactElement } | { loader: 
     '/about-data': { element: <CoveragePage /> },
     // 旧URL /coverage は直リンク互換のため /about-data へリダイレクトする。
     '/coverage': { loader: () => redirect('/about-data') },
+    // 利用規約・プライバシーポリシー(A-1-3)。フッターから全ページ経由でたどれる。
+    '/terms': { element: <TermsPage /> },
+    '/privacy': { element: <PrivacyPage /> },
   };
 
 const router = createBrowserRouter([

@@ -36,7 +36,7 @@ describe('isKnownSpaPath — 既知ルート(200)と未定義URL(404)の境界',
 
 describe('sitemapPaths — 中身のあるURLだけを載せる', () => {
   it('アプリ状態なしで中身が出るページだけを返す', () => {
-    expect(sitemapPaths()).toEqual(['/', '/differences', '/about-data']);
+    expect(sitemapPaths()).toEqual(['/', '/differences', '/about-data', '/terms', '/privacy']);
   });
 
   it('sitemapに載せるパスはすべて既知ルートである(存在しないURLを載せない)', () => {

@@ -160,6 +160,25 @@ export function Layout({ children }: { children?: ReactNode }) {
               — 対応自治体・データの新しさ・出典を公開しています
             </span>
           </p>
+          {/*
+            常時公開のサービスとして必要な文書(A-1-3)。本文中の免責と重複するが、独立した
+            ページとして全ページからたどれる場所に置く。
+          */}
+          <p className="mt-3 pl-6">
+            <Link
+              to="/terms"
+              className="tap-target-inline font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+            >
+              利用規約
+            </Link>
+            <span className="mx-2 text-slate-300">/</span>
+            <Link
+              to="/privacy"
+              className="tap-target-inline font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+            >
+              プライバシーポリシー
+            </Link>
+          </p>
         </div>
       </footer>
     </div>

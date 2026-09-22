@@ -113,7 +113,16 @@ test('ヘッダ: /api/* は何も読み込ませないCSPになる', async ({ re
 });
 
 test('404: 既知ルートは200、未定義URLは404(画面は日本語の404案内)', async ({ page }) => {
-  for (const path of ['/', '/wizard', '/checklist', '/differences', '/about-data', '/waste']) {
+  for (const path of [
+    '/',
+    '/wizard',
+    '/checklist',
+    '/differences',
+    '/about-data',
+    '/waste',
+    '/terms',
+    '/privacy',
+  ]) {
     const res = await page.goto(path);
     expect(res?.status(), `GET ${path}`).toBe(200);
   }

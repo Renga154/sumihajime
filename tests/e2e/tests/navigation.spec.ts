@@ -80,3 +80,17 @@ test('遷移: ページごとに <title> が異なる', async ({ page }) => {
     expect(t).toContain('スミハジメ');
   }
 });
+
+test('フッターから利用規約・プライバシーポリシーへ到達できる(全ページ共通の導線)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('contentinfo').getByRole('link', { name: '利用規約' }).click();
+  await expect(page).toHaveURL(/\/terms$/);
+  await expect(page.getByRole('heading', { level: 1, name: '利用規約' })).toBeVisible();
+
+  // 文書間の相互リンク(規約 → ポリシー)。
+  await page.getByRole('navigation').getByRole('link', { name: 'プライバシーポリシー' }).click();
+  await expect(page).toHaveURL(/\/privacy$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'プライバシーポリシー' })).toBeVisible();
+});

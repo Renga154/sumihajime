@@ -128,3 +128,14 @@ test('a11y: 透明性ページ「このサービスのデータについて」�
   await expect(page.getByRole('heading', { name: 'データソース台帳' })).toBeVisible();
   await assertNoSerious(page);
 });
+
+test('a11y: 利用規約・プライバシーポリシーに重大違反なし', async ({ page }) => {
+  for (const [path, heading] of [
+    ['/terms', '利用規約'],
+    ['/privacy', 'プライバシーポリシー'],
+  ] as const) {
+    await page.goto(path);
+    await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible();
+    await assertNoSerious(page);
+  }
+});

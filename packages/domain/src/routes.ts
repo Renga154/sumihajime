@@ -43,6 +43,10 @@ export const SPA_ROUTES = [
   { path: '/differences', sitemap: true },
   { path: '/about-data', sitemap: true },
   { path: '/coverage', sitemap: false },
+  // 常時公開サービスとして必要な文書(docs/ROADMAP.md A-1-3)。sitemap に載せるのは、
+  // 検索と審査(将来の広告配信審査を含む)の両方から直接たどれる必要があるため。
+  { path: '/terms', sitemap: true },
+  { path: '/privacy', sitemap: true },
 ] as const satisfies readonly SpaRoute[];
 
 /** SPA_ROUTES に載っているパスパターンの合併型(web側のルータ生成で網羅を強制するために使う)。 */
