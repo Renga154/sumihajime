@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Profile } from '@tmn/schemas';
 import { createTestDb, type TestDb } from '../test/d1-harness.js';
-import app from './index.js';
+import { app } from './index.js';
 
 /**
  * なぜ: T-015 付帯不具合の回帰テスト。世田谷(13112)と江東(13108)は同一の procedure_id 体系を

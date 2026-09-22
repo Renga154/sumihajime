@@ -27,9 +27,12 @@ import { API_SECURITY_HEADERS, withDocumentSecurityHeaders } from './headers.js'
 import { logEvent } from './log.js';
 import { buildTasks } from './checklist.js';
 import { handleChat, handleChatAvailability } from './chat.js';
-import type { Bindings } from './db.js';
+import { scheduled } from './drift.js';
+import type { Bindings, DriftMark } from './db.js';
 import {
+  getActiveDriftMarks,
   getAllRuleSets,
+  getDriftSummary,
   getFacilities,
   getMunicipalitiesWithCoverage,
   getMunicipality,
@@ -61,7 +64,7 @@ import {
 type Variables = { requestId: string };
 type Env = { Bindings: Bindings; Variables: Variables };
 
-const app = new Hono<Env>();
+export const app = new Hono<Env>();
 
 /** リクエストIDを採番(ログ相関用。PIIではない)。 */
 app.use('/api/*', async (c, next) => {
@@ -107,6 +110,11 @@ function fail(
   );
 }
 
+/** ADR-014: 巡回マークを根拠カードの2項目へ写す(未検知なら空オブジェクト=項目を出さない)。 */
+function driftFields(mark: DriftMark | undefined) {
+  return mark ? { driftDetectedOn: mark.detectedOn, driftKind: mark.status } : {};
+}
+
 /** クエリの municipality を検証(全read系で必須)。 */
 function requireMunicipalityQuery(c: Context<Env>): string | null {
   const raw = c.req.query('municipality');
@@ -114,7 +122,20 @@ function requireMunicipalityQuery(c: Context<Env>): string | null {
   return parsed.success ? parsed.data : null;
 }
 
-app.get('/api/health', (c) => c.json({ ok: true, version: '0.0.1' } as const));
+/**
+ * GET /api/health : 死活応答 + 定期巡回の要約(ADR-014 §3)。
+ * 通知を外部サービスに頼らず、外形監視がこの値(flaggedSources / lastCheckedAt)を見張る。
+ * D1 が読めなくても Worker 自体の死活は答えるべきなので、巡回要約は失敗時 null にして 200 を保つ。
+ */
+app.get('/api/health', async (c) => {
+  let drift: Awaited<ReturnType<typeof getDriftSummary>> | null = null;
+  try {
+    drift = c.env?.DB ? await getDriftSummary(c.env.DB) : null;
+  } catch {
+    drift = null;
+  }
+  return c.json({ ok: true, version: '0.0.1', drift });
+});
 
 /**
  * POST /api/chat: 自治体スコープ付きRAGチャット(T-013)。実装は chat.ts。
@@ -205,9 +226,13 @@ app.post('/api/checklists', async (c) => {
   const referencedSourceIds = outcomes
     .filter((o) => o.applicable === 'applicable' || o.applicable === 'needs_confirmation')
     .flatMap((o) => o.sourceIds);
-  const sources = await getSourcesByIds(c.env.DB, referencedSourceIds);
+  // ADR-014: 根拠ソースの巡回マーク(changed/unreachable)を同時に引き、該当手続きを再確認中へ落とす。
+  const [sources, driftMarks] = await Promise.all([
+    getSourcesByIds(c.env.DB, referencedSourceIds),
+    getActiveDriftMarks(c.env.DB, referencedSourceIds),
+  ]);
 
-  const tasks = buildTasks(outcomes, procedureVersions, sources, ruleVersion);
+  const tasks = buildTasks(outcomes, procedureVersions, sources, ruleVersion, driftMarks);
 
   const body = checklistResponseSchema.parse({
     tasks,
@@ -253,7 +278,10 @@ app.get('/api/procedures/:id', async (c) => {
       { municipalityCode: code },
     );
   }
-  const sourcesMap = await getSourcesByIds(c.env.DB, procedure.sourceIds);
+  const [sourcesMap, driftMarks] = await Promise.all([
+    getSourcesByIds(c.env.DB, procedure.sourceIds),
+    getActiveDriftMarks(c.env.DB, procedure.sourceIds),
+  ]);
   // なぜ射影するのか: sourcesMap の値は台帳の全列(Source)を持つ。reviewStatus/reviewer
   // (内部レビュー担当者名)/contentHash/fetchMethod は GET /api/sources と同じく公開しない
   // (2026-08-08: このエンドポイントだけ射影が抜けており、レビュー担当者名が漏れていた)。
@@ -275,9 +303,18 @@ app.get('/api/procedures/:id', async (c) => {
       ...(s.effectiveFrom ? { effectiveFrom: s.effectiveFrom } : {}),
       ...(s.effectiveTo ? { effectiveTo: s.effectiveTo } : {}),
       ...(s.notes ? { notes: s.notes } : {}),
+      ...driftFields(driftMarks.get(s.sourceId)),
     }));
 
-  const body = procedureDetailResponseSchema.parse({ procedure, sources });
+  // ADR-014: 根拠のいずれかが巡回で揺らいでいれば、読み出し時に stale(再確認中)として返す
+  // (公開データは書き換えない。unavailable は据え置き)。
+  const drifted = procedure.sourceIds.some((sid) => driftMarks.has(sid));
+  const overlaid =
+    drifted && procedure.dataStatus !== 'unavailable'
+      ? { ...procedure, dataStatus: 'stale' as const }
+      : procedure;
+
+  const body = procedureDetailResponseSchema.parse({ procedure: overlaid, sources });
   logEvent({
     requestId,
     event: 'procedure.detail',
@@ -443,7 +480,21 @@ app.get('/api/ward-differences', async (c) => {
     });
   }
 
-  const body = wardDifferencesResponseSchema.parse(buildWardDifferences(wards));
+  const report = buildWardDifferences(wards);
+  // ADR-014: 比較セルの根拠にも検知日・種類を添える(値・区分は変えない。根拠カードの表示のみ)。
+  const cellSourceIds = report.topics.flatMap((t) =>
+    t.cells.flatMap((cell) => cell.sources.map((s) => s.sourceId)),
+  );
+  const driftMarks = await getActiveDriftMarks(c.env.DB, cellSourceIds);
+  const topics = report.topics.map((t) => ({
+    ...t,
+    cells: t.cells.map((cell) => ({
+      ...cell,
+      sources: cell.sources.map((s) => ({ ...s, ...driftFields(driftMarks.get(s.sourceId)) })),
+    })),
+  }));
+
+  const body = wardDifferencesResponseSchema.parse({ ...report, topics });
   logEvent({
     requestId,
     event: 'ward-differences.list',
@@ -668,4 +719,13 @@ app.all('*', async (c) => {
   return withDocumentSecurityHeaders(new Response(index.body, { status: 404, headers }));
 });
 
-export default app;
+/**
+ * Worker の入口。fetch は Hono、scheduled は定期巡回(ADR-014。wrangler.jsonc の triggers.crons)。
+ * テストは名前付き export の app(app.request)を使う。
+ */
+const worker: ExportedHandler<Bindings> = {
+  fetch: app.fetch,
+  scheduled,
+};
+
+export default worker;

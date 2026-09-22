@@ -607,3 +607,54 @@ describe('ChecklistPage — APIへ届かないとき', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 });
+
+/**
+ * なぜ: ADR-014 の自動降格。API が根拠ソースに検知日・種類を付けて返したら、タスクカードに
+ * 検知日つきの1行が出る(画面用)。検知が無いタスクには出さない。
+ */
+describe('ChecklistPage — 巡回の検知(ADR-014)', () => {
+  it('検知されたソースを持つタスクだけに、検知日つきの案内を出す', async () => {
+    vi.mocked(postChecklist).mockResolvedValueOnce({
+      ...FIXTURE,
+      tasks: [
+        makeTask({
+          id: 't-res',
+          procedureId: 'procedure_resident_registration',
+          title: '転入届',
+          priority: 'urgent',
+          dueDate: '2026-08-15',
+          applicable: 'applicable',
+          dataStatus: 'stale',
+          sources: [
+            {
+              sourceId: 's',
+              title: 's',
+              url: 'https://e.example/x',
+              lastVerifiedAt: '2026-07-21T00:00:00Z',
+              driftDetectedOn: '2026-09-22',
+              driftKind: 'changed',
+            },
+          ],
+        }),
+        makeTask({
+          id: 't-waste',
+          procedureId: 'procedure_waste_check',
+          title: 'ごみ収集日の確認',
+          applicable: 'applicable',
+        }),
+      ],
+    });
+    renderChecklist();
+    expect(await screen.findByText('転入届')).toBeInTheDocument();
+    // 画面用の1行(print-hide)と印刷用の1行(print-only)の両方に同じ文を持つ。
+    const notices = screen.getAllByText(
+      '公式ページの更新を検知（9月22日）。内容を再確認中です。最新の情報は公式ページでご確認ください。',
+    );
+    expect(notices.length).toBe(2);
+    expect(notices.some((n) => n.getAttribute('role') === 'note')).toBe(true);
+    // 検知の無いタスク(ごみ収集日の確認)のカードには出ない。
+    const wasteHeading = screen.getByText('ごみ収集日の確認');
+    const wasteCard = wasteHeading.closest('h3')!.parentElement!;
+    expect(wasteCard.textContent).not.toContain('検知');
+  });
+});

@@ -3,7 +3,7 @@ import type { D1Database } from '@cloudflare/workers-types';
 import type { VectorizeQueryable } from '@tmn/rag';
 import { MUNICIPALITIES } from '@tmn/publish';
 import { createTestDb, type TestDb } from '../test/d1-harness.js';
-import app from './index.js';
+import { app } from './index.js';
 
 /**
  * なぜ: 「必要書類の質問が**全対応区で**検証済みデータ経路に入る」ことを、ネットワーク非依存で固定する

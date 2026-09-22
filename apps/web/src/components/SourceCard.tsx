@@ -1,5 +1,6 @@
 import type { ProcedureSource } from '@tmn/schemas';
 import { formatDateFromDateTime } from '../lib/format';
+import { DriftNotice } from './DriftNotice';
 import { ExternalLink } from './ui';
 
 /**
@@ -73,6 +74,8 @@ export function SourceCard({ source }: { source: ProcedureSource }) {
         <p className="mt-3">
           <ExternalLink href={source.sourceUrl}>公式ページを開く</ExternalLink>
         </p>
+        {/* ADR-014: 巡回が更新・不達を検知していれば、リンクの直下に検知日つきで1行添える。 */}
+        <DriftNotice kind={source.driftKind} detectedOn={source.driftDetectedOn} className="mt-2" />
       </div>
     </div>
   );

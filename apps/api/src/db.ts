@@ -48,6 +48,8 @@ export interface Bindings {
   OPENAI_CHAT_MODEL?: string;
   OPENAI_EMBED_MODEL?: string;
   RAG_MIN_SCORE?: string;
+  /** ADR-014: 1回の定期巡回で再取得する承認済みソース件数(既定10。Workers Free の枠内)。 */
+  DRIFT_BATCH_SIZE?: string;
 }
 
 type Row = Record<string, unknown>;
@@ -336,6 +338,7 @@ function rowToSource(row: Row): Source {
     lastVerifiedAt: optString(row.last_verified_at),
     sourceLastModifiedAt: optString(row.source_last_modified_at),
     contentHash: optString(row.content_hash),
+    snapshotPageUpdatedOn: optString(row.snapshot_page_updated_on),
     reviewStatus: asString(row.review_status),
     reviewer: optString(row.reviewer),
     effectiveFrom: optString(row.effective_from),
@@ -372,8 +375,10 @@ export async function getServiceStats(db: D1Database): Promise<{
   totalMunicipalities: number;
   approvedSources: number;
   lastVerifiedDate?: string;
+  driftFlaggedSources: number;
+  driftLastCheckedAt?: string;
 }> {
-  const [muni, src] = await Promise.all([
+  const [muni, src, drift] = await Promise.all([
     db
       .prepare(
         'SELECT COUNT(*) AS total, SUM(CASE WHEN supported = 1 THEN 1 ELSE 0 END) AS supported ' +
@@ -386,6 +391,7 @@ export async function getServiceStats(db: D1Database): Promise<{
           "WHERE review_status = 'approved'",
       )
       .first<Row>(),
+    getDriftSummary(db),
   ]);
 
   const latest = optString(src?.latest)?.slice(0, 10);
@@ -394,6 +400,8 @@ export async function getServiceStats(db: D1Database): Promise<{
     totalMunicipalities: Number(muni?.total ?? 0),
     approvedSources: Number(src?.total ?? 0),
     ...(latest && /^\d{4}-\d{2}-\d{2}$/.test(latest) ? { lastVerifiedDate: latest } : {}),
+    driftFlaggedSources: drift.flaggedSources,
+    ...(drift.lastCheckedAt ? { driftLastCheckedAt: drift.lastCheckedAt } : {}),
   };
 }
 
@@ -411,6 +419,105 @@ export async function getSourcesByIds(db: D1Database, ids: string[]): Promise<Ma
     map.set(s.sourceId, s);
   }
   return map;
+}
+
+/** ---- source_drift(ADR-014 定期巡回) ---- */
+
+/**
+ * 検知が**効力を持つ**条件(SQL 断片)。
+ * 検知時に控えた verified_at_seen より sources.last_verified_at が新しくなっていれば、
+ * 人が再監査して再publish した後なので効力を失う(復帰は人手のみ・機械は行を消さない)。
+ * どちらかが NULL のときは比較できないため、安全側(効力あり)に倒す。
+ */
+const ACTIVE_DRIFT_CONDITION =
+  "d.status IN ('changed', 'unreachable') AND " +
+  '(s.last_verified_at IS NULL OR d.verified_at_seen IS NULL OR s.last_verified_at <= d.verified_at_seen)';
+
+export interface DriftMark {
+  status: 'changed' | 'unreachable';
+  /** 検知日(YYYY-MM-DD)。根拠カードに出す。 */
+  detectedOn: string;
+}
+
+/**
+ * なぜ: チェックリスト・手続き詳細・比較ページの読み出し時に、根拠ソースが巡回で
+ * changed/unreachable になっていれば dataStatus を stale(再確認中)へ落とす(ADR-014 §2)。
+ * 公開データ(procedure_versions)は書き換えず、読み出し側で重ねる。
+ * 返すのは効力のあるマークのみ(ACTIVE_DRIFT_CONDITION)。
+ */
+export async function getActiveDriftMarks(
+  db: D1Database,
+  sourceIds: string[],
+): Promise<Map<string, DriftMark>> {
+  const map = new Map<string, DriftMark>();
+  const unique = [...new Set(sourceIds)];
+  if (unique.length === 0) return map;
+  // なぜ分割するか: D1(SQLite)は1文あたりのバインド変数が100件まで。比較ページは全区の根拠を
+  // まとめて引くため上限を超える(実測で 500 になった)。100件未満ずつ IN 句を分けて集める。
+  const CHUNK = 90;
+  const rows: Row[] = [];
+  for (let i = 0; i < unique.length; i += CHUNK) {
+    const chunk = unique.slice(i, i + CHUNK);
+    const placeholders = chunk.map(() => '?').join(',');
+    const res = await db
+      .prepare(
+        'SELECT d.source_id, d.status, d.detected_at FROM source_drift d ' +
+          'JOIN sources s ON s.source_id = d.source_id ' +
+          `WHERE d.source_id IN (${placeholders}) AND ${ACTIVE_DRIFT_CONDITION}`,
+      )
+      .bind(...chunk)
+      .all<Row>();
+    rows.push(...res.results);
+  }
+  for (const row of rows) {
+    const status = asString(row.status);
+    if (status !== 'changed' && status !== 'unreachable') continue;
+    const detectedOn = optString(row.detected_at)?.slice(0, 10);
+    // 検知日が無い(遷移記録の欠落)行はカードに日付を出せないため、検知日を巡回日の代わりに
+    // 推測しない=マークとして扱わない。detected_at は遷移時に必ず入るので通常は起きない。
+    if (!detectedOn || !/^\d{4}-\d{2}-\d{2}$/.test(detectedOn)) continue;
+    map.set(asString(row.source_id), { status, detectedOn });
+  }
+  return map;
+}
+
+export interface DriftSummary {
+  /** 効力のある changed/unreachable の件数(= 再確認中にしているソース数)。 */
+  flaggedSources: number;
+  /** 更新日表記もヘッダも無く到達性しか見られないソース数(隠さず数に出す=原則9)。 */
+  unverifiableSources: number;
+  /** これまでに一度でも巡回したソース数。 */
+  checkedSources: number;
+  /** 最終巡回時刻(ISO datetime)。未巡回なら null。 */
+  lastCheckedAt: string | null;
+}
+
+/**
+ * なぜ: /api/health と /api/stats に巡回の要約を載せ、外形監視と対応状況ページが同じ数を見る
+ * (ADR-014 §3: 通知は外部サービスに頼らず health の値を見張る)。
+ */
+export async function getDriftSummary(db: D1Database): Promise<DriftSummary> {
+  const [flagged, agg] = await Promise.all([
+    db
+      .prepare(
+        'SELECT COUNT(*) AS n FROM source_drift d JOIN sources s ON s.source_id = d.source_id ' +
+          `WHERE ${ACTIVE_DRIFT_CONDITION}`,
+      )
+      .first<Row>(),
+    db
+      .prepare(
+        'SELECT COUNT(*) AS checked, ' +
+          "SUM(CASE WHEN status = 'unverifiable' THEN 1 ELSE 0 END) AS unverifiable, " +
+          'MAX(last_checked_at) AS latest FROM source_drift',
+      )
+      .first<Row>(),
+  ]);
+  return {
+    flaggedSources: Number(flagged?.n ?? 0),
+    unverifiableSources: Number(agg?.unverifiable ?? 0),
+    checkedSources: Number(agg?.checked ?? 0),
+    lastCheckedAt: optString(agg?.latest) ?? null,
+  };
 }
 
 /** ---- facilities ---- */

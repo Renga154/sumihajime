@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import app from './index.js';
+import { app } from './index.js';
 import { chatAvailability } from './chat.js';
 import type { Bindings } from './db.js';
 

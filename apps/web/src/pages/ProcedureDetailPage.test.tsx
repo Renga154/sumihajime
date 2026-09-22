@@ -68,10 +68,12 @@ const DETAIL_RESPONSE: ProcedureDetailResponse = {
   ],
 };
 
+const getProcedureMock = vi.fn(async (): Promise<ProcedureDetailResponse> => DETAIL_RESPONSE);
+
 vi.mock('../api/client', () => ({
   ApiError: class ApiError extends Error {},
   ChatDisabledError: class ChatDisabledError extends Error {},
-  getProcedure: vi.fn(async () => DETAIL_RESPONSE),
+  getProcedure: (...args: unknown[]) => getProcedureMock(...(args as [])),
   // RAGはこのテストのスコープ外。無効(false)にしてチャットパネルを非表示にする。
   getChatAvailability: vi.fn(async () => false),
   getMunicipalities: vi.fn(async () => []),
@@ -115,5 +117,54 @@ describe('ProcedureDetailPage', () => {
     expect(await screen.findByText('転入届')).toBeInTheDocument();
     expect(screen.getByText('期限は要確認')).toBeInTheDocument();
     expect(screen.getByText('引越しをしてきた日から14日以内。')).toBeInTheDocument();
+  });
+});
+
+/**
+ * なぜ: ADR-014 の自動降格。API が stale と検知日を返したら、バッジは「再確認中」になり、
+ * 根拠カードの公式リンク直下に検知日つきの1行が出る。リンク自体は消さない(原則8)。
+ */
+describe('ProcedureDetailPage — 巡回の検知(ADR-014)', () => {
+  it('changed: 更新を検知した旨と検知日を根拠カードに出し、バッジは再確認中', async () => {
+    getProcedureMock.mockResolvedValueOnce({
+      procedure: { ...DETAIL_RESPONSE.procedure, dataStatus: 'stale' },
+      sources: [
+        { ...DETAIL_RESPONSE.sources[0]!, driftDetectedOn: '2026-09-22', driftKind: 'changed' },
+      ],
+    });
+    renderDetail('/procedures/procedure_resident_registration');
+    expect(await screen.findByText('転入届')).toBeInTheDocument();
+    expect(screen.getByText('再確認中（情報が古い可能性）')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '公式ページの更新を検知（9月22日）。内容を再確認中です。最新の情報は公式ページでご確認ください。',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /公式ページを開く/ })).toHaveAttribute(
+      'href',
+      'https://www.city.setagaya.lg.jp/x',
+    );
+  });
+
+  it('unreachable: 接続できない旨を出す', async () => {
+    getProcedureMock.mockResolvedValueOnce({
+      procedure: { ...DETAIL_RESPONSE.procedure, dataStatus: 'stale' },
+      sources: [
+        { ...DETAIL_RESPONSE.sources[0]!, driftDetectedOn: '2026-10-01', driftKind: 'unreachable' },
+      ],
+    });
+    renderDetail('/procedures/procedure_resident_registration');
+    expect(await screen.findByText('転入届')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '公式ページに接続できない状態を検知（10月1日）。リンク先が移動した可能性があります。',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('検知が無ければ何も出さない', async () => {
+    renderDetail('/procedures/procedure_resident_registration');
+    expect(await screen.findByText('転入届')).toBeInTheDocument();
+    expect(screen.queryByText(/検知/)).toBeNull();
   });
 });

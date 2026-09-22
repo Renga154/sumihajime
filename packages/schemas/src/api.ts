@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { profileSchema } from './profile.js';
-import { generatedTaskSchema, taskSourceRefSchema } from './task.js';
+import { driftKindSchema, generatedTaskSchema, taskSourceRefSchema } from './task.js';
 import { municipalityCodeSchema, municipalitySchema, coverageSchema } from './municipality.js';
 import { procedureVersionSchema } from './procedure.js';
 import { sourceSchema } from './source.js';
@@ -84,6 +84,13 @@ export const serviceStatsSchema = z.strictObject({
   approvedSources: z.int().nonnegative(),
   /** 承認済みソースの最終確認日のうち最も新しいもの(YYYY-MM-DD)。台帳が空なら省略。 */
   lastVerifiedDate: z.iso.date().optional(),
+  /**
+   * ADR-014: 定期巡回が「再確認中」にしているソース件数(効力のある changed/unreachable)。
+   * 対応状況ページの「機械巡回の状況」用。巡回テーブルが無い旧クライアント・旧テストのため optional。
+   */
+  driftFlaggedSources: z.int().nonnegative().optional(),
+  /** 最後に巡回した時刻(ISO datetime)。まだ一度も巡回していなければ省略。 */
+  driftLastCheckedAt: z.iso.datetime().optional(),
 });
 export type ServiceStats = z.infer<typeof serviceStatsSchema>;
 
@@ -98,6 +105,9 @@ export type ServiceStats = z.infer<typeof serviceStatsSchema>;
  */
 export const procedureSourceSchema = sourceLedgerEntrySchema.extend({
   notes: sourceSchema.shape.notes,
+  // ADR-014: 巡回の検知結果(根拠カードの「更新を検知」行)。taskSourceRefSchema と同じ2項目。
+  driftDetectedOn: z.iso.date().optional(),
+  driftKind: driftKindSchema.optional(),
 });
 export type ProcedureSource = z.infer<typeof procedureSourceSchema>;
 

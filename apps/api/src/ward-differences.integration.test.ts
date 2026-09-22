@@ -4,7 +4,7 @@ import type { WardDifferencesResponse } from '@tmn/schemas';
 import { wardDifferencesResponseSchema } from '@tmn/schemas';
 import { MUNICIPALITIES } from '@tmn/publish';
 import { createTestDb, type TestDb } from '../test/d1-harness.js';
-import app from './index.js';
+import { app } from './index.js';
 
 /**
  * なぜ: GET /api/ward-differences は「区をまたぐ比較」という、原則4の例外的な経路である。

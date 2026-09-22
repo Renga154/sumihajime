@@ -35,6 +35,9 @@ importers:
       '@tmn/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@tmn/drift':
+        specifier: workspace:*
+        version: link:../../packages/drift
       '@tmn/rag':
         specifier: workspace:*
         version: link:../../packages/rag
@@ -136,6 +139,8 @@ importers:
 
   packages/domain: {}
 
+  packages/drift: {}
+
   packages/rag:
     devDependencies:
       '@types/node':
@@ -191,6 +196,9 @@ importers:
 
   scripts/ingest:
     dependencies:
+      '@tmn/drift':
+        specifier: workspace:*
+        version: link:../../packages/drift
       '@tmn/publish':
         specifier: workspace:*
         version: link:../publish
@@ -210,6 +218,9 @@ importers:
 
   scripts/publish:
     dependencies:
+      '@tmn/drift':
+        specifier: workspace:*
+        version: link:../../packages/drift
       '@tmn/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas

@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Profile } from '@tmn/schemas';
 import { createTestDb, type TestDb } from '../test/d1-harness.js';
-import app from './index.js';
+import { app } from './index.js';
 
 /**
  * なぜ: API+D1 の統合テスト(計画§9受入・§12)。Miniflare の本物のD1(SQLite)へ

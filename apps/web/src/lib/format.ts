@@ -129,6 +129,17 @@ export function formatDate(iso: string | undefined): string {
   return `${Number(m[1])}年${Number(m[2])}月${Number(m[3])}日`;
 }
 
+/**
+ * ISO日付(YYYY-MM-DD)→「M月D日」。年を省くのは、巡回の検知日のように「最近のいつか」を
+ * 短く添える用途(根拠カードの1行)で、年まで出すと文が長くなるため。不正値はそのまま返す。
+ */
+export function formatMonthDay(iso: string | undefined): string {
+  if (!iso) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  return `${Number(m[2])}月${Number(m[3])}日`;
+}
+
 /** ISO日時(datetime)→「YYYY年M月D日」表記(最終確認日などの表示用)。 */
 export function formatDateFromDateTime(iso: string | undefined): string {
   if (!iso) return '';

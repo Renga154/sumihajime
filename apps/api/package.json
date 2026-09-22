@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tmn/domain": "workspace:*",
+    "@tmn/drift": "workspace:*",
     "@tmn/rag": "workspace:*",
     "@tmn/rules": "workspace:*",
     "@tmn/schemas": "workspace:*",

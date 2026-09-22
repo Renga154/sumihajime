@@ -53,6 +53,15 @@
     "OPENAI_CHAT_MODEL": "gpt-4o-mini",
     "OPENAI_EMBED_MODEL": "text-embedding-3-small",
     "RAG_MIN_SCORE": "0.30",
+    // ADR-014: 定期巡回1回あたりに再取得する承認済みソース件数。Workers Free は1回の実行で
+    // 外部サブリクエスト50(リダイレクト込み)・CPU 10ms のため、10件を直列に取る
+    // (332件は毎時10件で約1.4日で一巡)。
+    "DRIFT_BATCH_SIZE": "10",
+  },
+  // ADR-014: 公式ソースの定期巡回(src/drift.ts scheduled)。毎時0分。Free の Cron 上限は5本。
+  // triggers は env に継承される鍵だが、bindings/vars と同じく env.odh にも明示して読みやすくする。
+  "triggers": {
+    "crons": ["0 * * * *"],
   },
   // ハッカソン提供環境(tokyo_odh_145)へのミラー(ADR-008)。正典は個人アカウント側
   // (提供環境のPaid権限は2026-09末失効、Final Stageは10/17のため)。bindings/varsは
@@ -88,6 +97,12 @@
         "OPENAI_CHAT_MODEL": "gpt-4o-mini",
         "OPENAI_EMBED_MODEL": "text-embedding-3-small",
         "RAG_MIN_SCORE": "0.30",
+        // ADR-014: 正典と同じ値(Free の枠: サブリクエスト50・CPU 10ms)。
+        "DRIFT_BATCH_SIZE": "10",
+      },
+      // ADR-014: 正典と同じ毎時巡回(ミラーでも source_drift は環境ごとの D1 に独立して持つ)。
+      "triggers": {
+        "crons": ["0 * * * *"],
       },
     },
   },

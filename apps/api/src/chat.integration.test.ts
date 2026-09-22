@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import type { D1Database } from '@cloudflare/workers-types';
 import type { VectorizeMatch, VectorizeQueryOptions, VectorizeQueryable } from '@tmn/rag';
 import { createTestDb, type TestDb } from '../test/d1-harness.js';
-import app from './index.js';
+import { app } from './index.js';
 
 /**
  * なぜ: /api/chat(RAG)を Miniflare の本物のD1 + モックVectorize + スタブOpenAI で通しで検証する

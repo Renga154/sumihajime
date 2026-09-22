@@ -2,16 +2,18 @@ import { useMemo, useState, type ReactNode } from 'react';
 import type {
   CoverageStatus,
   MunicipalityWithCoverage,
+  ServiceStats,
   SourceLedgerEntry,
   SourceType,
 } from '@tmn/schemas';
-import { getMunicipalities, getSources } from '../api/client';
+import { getMunicipalities, getServiceStats, getSources } from '../api/client';
 import { useAsync } from '../lib/useAsync';
 import {
   categoryText,
   coverageStatusLabel,
   formatDate,
   formatDateFromDateTime,
+  formatDateTimeInTokyo,
   updateFrequencyText,
 } from '../lib/format';
 import {
@@ -117,6 +119,10 @@ export function CoveragePage() {
     return { munis, freshness, groups, today, lastVerified };
   }, []);
 
+  // ADR-014: 機械巡回の要約は /api/stats から別に取る。失敗しても対応状況・出典一覧は
+  // 見せ続ける(原則8)ため、本体の読み込みとは結合しない。
+  const statsState = useAsync(() => getServiceStats(), []);
+
   const [query, setQuery] = useState('');
   const filtering = normalizeSearchText(query) !== '';
 
@@ -209,6 +215,8 @@ export function CoveragePage() {
           </section>
 
           <FreshnessSection freshness={state.data.freshness} today={state.data.today} />
+
+          <DriftPatrolSection stats={statsState.data ?? undefined} loading={statsState.loading} />
 
           <section aria-labelledby="ledger-heading" className="space-y-3">
             <SectionHeading id="ledger-heading">出典一覧（データソース台帳）</SectionHeading>
@@ -324,6 +332,45 @@ function FreshnessSection({ freshness, today }: { freshness: FreshnessSummary; t
             ))}
           </ul>
         </div>
+      )}
+    </section>
+  );
+}
+
+/* ---- 1b. 機械巡回の状況(ADR-014) ---- */
+
+/**
+ * なぜ公開するのか: 「根拠が揺らいだら黙って古くならない」を約束するなら、巡回が動いていること・
+ * いま何件を再確認中にしているかも利用者に見せる(原則9: 検知できないものは検知できないと示す)。
+ * 数値はすべて /api/stats(D1 の source_drift)由来で、画面に定数を持たない。
+ */
+function DriftPatrolSection({
+  stats,
+  loading,
+}: {
+  stats: ServiceStats | undefined;
+  loading: boolean;
+}) {
+  const flagged = stats?.driftFlaggedSources;
+  const lastChecked = stats?.driftLastCheckedAt;
+  return (
+    <section aria-labelledby="drift-heading" className="space-y-3">
+      <SectionHeading id="drift-heading">機械巡回の状況</SectionHeading>
+      <p className="text-sm text-slate-600">
+        承認済みの公式ソースを毎時10件ずつ再取得し、自治体ページの「更新日」が変わったものを自動で「再確認中」にしています。
+        再確認中の手続きもチェックリストから消さず、公式ページへのリンクは残します。解除は人が再確認してからです。
+      </p>
+      {loading ? (
+        <p className="text-sm text-slate-500">巡回の状況を読み込み中です…</p>
+      ) : stats === undefined ? (
+        <p className="text-sm text-slate-500">巡回の状況を読み込めませんでした。</p>
+      ) : lastChecked === undefined ? (
+        <p className="text-sm text-slate-700">まだ巡回していません。</p>
+      ) : (
+        <p className="text-sm text-slate-700">
+          現在 <span className="font-bold tabular-nums text-slate-900">{flagged ?? 0}</span>{' '}
+          件が再確認中です（最終巡回: {formatDateTimeInTokyo(lastChecked)} JST）。
+        </p>
       )}
     </section>
   );

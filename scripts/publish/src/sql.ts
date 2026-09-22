@@ -64,13 +64,14 @@ export function buildSeedStatements(data: PublishData): string[] {
       `INSERT INTO sources (source_id, source_title, owner_organization, municipality_code, ` +
         `category, source_url, source_type, license, attribution_text, fetch_method, ` +
         `update_frequency, last_fetched_at, last_verified_at, source_last_modified_at, ` +
-        `content_hash, review_status, reviewer, effective_from, effective_to, notes) VALUES (` +
+        `content_hash, review_status, reviewer, effective_from, effective_to, notes, ` +
+        `snapshot_page_updated_on) VALUES (` +
         `${str(s.sourceId)}, ${str(s.sourceTitle)}, ${str(s.ownerOrganization)}, ` +
         `${nstr(s.municipalityCode)}, ${str(s.category)}, ${str(s.sourceUrl)}, ${str(s.sourceType)}, ` +
         `${str(s.license)}, ${str(s.attributionText)}, ${str(s.fetchMethod)}, ${str(s.updateFrequency)}, ` +
         `${nstr(s.lastFetchedAt)}, ${nstr(s.lastVerifiedAt)}, ${nstr(s.sourceLastModifiedAt)}, ` +
         `${nstr(s.contentHash)}, ${str(s.reviewStatus)}, ${nstr(s.reviewer)}, ${nstr(s.effectiveFrom)}, ` +
-        `${nstr(s.effectiveTo)}, ${nstr(s.notes)})`,
+        `${nstr(s.effectiveTo)}, ${nstr(s.notes)}, ${nstr(s.snapshotPageUpdatedOn)})`,
     );
   }
 

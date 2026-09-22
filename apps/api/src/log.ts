@@ -16,6 +16,10 @@ export interface LogEvent {
   count?: number;
   /** RAG保留フラグ(§13。質問本文・回答本文は残さず、保留したか否かのみ記録)。 */
   abstained?: boolean;
+  /** ADR-014 定期巡回: 今回巡回したソースID(台帳の公開IDであり PII ではない。URL・本文は出さない)。 */
+  driftSourceIds?: string[];
+  /** ADR-014 定期巡回: 今回 changed/unreachable と判定した件数。 */
+  driftFlagged?: number;
 }
 
 const ALLOWED_KEYS: (keyof LogEvent)[] = [
@@ -26,6 +30,8 @@ const ALLOWED_KEYS: (keyof LogEvent)[] = [
   'status',
   'count',
   'abstained',
+  'driftSourceIds',
+  'driftFlagged',
 ];
 
 /**

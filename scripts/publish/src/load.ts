@@ -21,6 +21,7 @@ import {
   wasteScheduleSchema,
   wasteSortingItemSchema,
 } from '@tmn/schemas';
+import { extractPageUpdatedOn } from '@tmn/drift';
 import { parseCsvRecords } from './csv.js';
 import { MUNICIPALITIES } from './municipalities.js';
 import type { SourceRef } from './gate.js';
@@ -94,6 +95,26 @@ function toDateTime(v: string | undefined): string | undefined {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T00:00:00Z` : s;
 }
 
+/**
+ * ADR-014: 承認時スナップショット(data/sources/<code>/snapshots/<source_id>.html)から
+ * ページ自身の「更新日」を機械的に抽出する。定期巡回はこの値を基準に比較する。
+ * 人手記入の source_last_modified_at を使わないのは、本文表記と食い違う行(千代田・江戸川)が
+ * あり初回から誤検知するため。HTML 以外・スナップショット不在・表記無しは undefined
+ * (推測で埋めない)。
+ */
+function snapshotPageUpdatedOn(
+  repoRoot: string,
+  municipalityCode: string | undefined,
+  sourceId: string,
+  sourceType: string,
+): string | undefined {
+  if (sourceType !== 'html') return undefined;
+  const rel = `data/sources/${municipalityCode ?? ''}/snapshots/${sourceId}.html`;
+  const path = resolve(repoRoot, rel);
+  if (!existsSync(path)) return undefined;
+  return extractPageUpdatedOn(readFileSync(path, 'utf-8')) ?? undefined;
+}
+
 /** registry.csv → Source[](全件。approvedフィルタは呼び出し側)。 */
 export function loadSources(repoRoot: string): Source[] {
   const records = parseCsvRecords(
@@ -117,6 +138,12 @@ export function loadSources(repoRoot: string): Source[] {
       lastVerifiedAt: toDateTime(r.last_verified_at),
       sourceLastModifiedAt: toDateTime(r.source_last_modified_at),
       contentHash: opt(r.content_hash),
+      snapshotPageUpdatedOn: snapshotPageUpdatedOn(
+        repoRoot,
+        opt(r.municipality_code),
+        r.source_id ?? '',
+        r.source_type ?? '',
+      ),
       reviewStatus: r.review_status,
       reviewer: opt(r.reviewer),
       effectiveFrom: opt(r.effective_from),

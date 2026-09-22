@@ -4,7 +4,7 @@ import type { ChecklistResponse, Profile } from '@tmn/schemas';
 import { checklistResponseSchema } from '@tmn/schemas';
 import { MUNICIPALITIES } from '@tmn/publish';
 import { createTestDb, type TestDb } from '../test/d1-harness.js';
-import app from './index.js';
+import { app } from './index.js';
 
 /**
  * なぜ: チェックリスト画面の「転出予定日を入れると期限を日付で出せます」の案内は、

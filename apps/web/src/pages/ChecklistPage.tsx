@@ -35,6 +35,7 @@ import {
 } from '../components/Badge';
 import { isNonMunicipal } from '../lib/provider-scope';
 import { ChatPanel, ChatUnavailable } from '../components/ChatPanel';
+import { DriftNotice, driftNoticeText } from '../components/DriftNotice';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
 /**
@@ -721,6 +722,19 @@ function TaskCard({
 
           <p className="mt-2 text-sm text-slate-700">{task.applicabilityReason}</p>
 
+          {/* ADR-014: 根拠ソースの更新・不達を巡回が検知していれば、画面でも1行で知らせる
+              (詳細画面の根拠カードにも同じ文が出る。リンクは消さない)。 */}
+          {task.sources
+            .filter((s) => s.driftKind && s.driftDetectedOn)
+            .map((s) => (
+              <DriftNotice
+                key={s.sourceId}
+                kind={s.driftKind}
+                detectedOn={s.driftDetectedOn}
+                className="mt-2 print-hide"
+              />
+            ))}
+
           {/* 印刷専用: 紙でも公式根拠を辿れるよう、公式URL文字列と最終確認日を明示する。 */}
           {task.sources.length > 0 && (
             <div className="print-only mt-2 text-sm text-slate-700">
@@ -730,6 +744,11 @@ function TaskCard({
                   <span className="ml-2">
                     （最終確認日: {formatDateFromDateTime(s.lastVerifiedAt)}）
                   </span>
+                  {s.driftKind && s.driftDetectedOn && (
+                    <span className="mt-0.5 block text-xs">
+                      {driftNoticeText(s.driftKind, s.driftDetectedOn)}
+                    </span>
+                  )}
                 </p>
               ))}
             </div>

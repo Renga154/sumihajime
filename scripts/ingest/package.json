@@ -17,6 +17,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@tmn/drift": "workspace:*",
     "@tmn/publish": "workspace:*",
     "@tmn/schemas": "workspace:*"
   },

@@ -45,6 +45,12 @@ export const sourceSchema = z.strictObject({
   lastVerifiedAt: z.iso.datetime().optional(),
   sourceLastModifiedAt: z.iso.datetime().optional(),
   contentHash: z.string().optional(),
+  /**
+   * ADR-014: 承認時スナップショットから抽出器(@tmn/drift)で機械的に得たページ自身の「更新日」。
+   * 定期巡回の比較基準。csv/xlsx や更新日表記の無い HTML は未設定。publish が埋め、
+   * 公開ビュー(sourceLedgerEntrySchema)には出さない(内部の巡回用メタ)。
+   */
+  snapshotPageUpdatedOn: z.iso.date().optional(),
   reviewStatus: reviewStatusSchema,
   reviewer: z.string().optional(),
   effectiveFrom: z.iso.date().optional(),

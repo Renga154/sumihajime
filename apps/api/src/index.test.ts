@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import app from './index';
+import { app } from './index';
 import { API_SECURITY_HEADERS, DOCUMENT_SECURITY_HEADERS } from './headers.js';
 
 describe('GET /api/health', () => {
-  it('returns ok with the version', async () => {
+  it('returns ok with the version(D1 未接続でも巡回要約は null で 200 を保つ)', async () => {
     const res = await app.request('/api/health');
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ ok: true, version: '0.0.1' });
+    await expect(res.json()).resolves.toEqual({ ok: true, version: '0.0.1', drift: null });
   });
 
   it('セキュリティヘッダが付く', async () => {

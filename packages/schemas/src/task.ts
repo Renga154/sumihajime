@@ -10,11 +10,22 @@ import { prioritySchema, applicabilitySchema } from './rule.js';
  */
 
 /** なぜ: §14.2 sources[]の埋め込み形状(sourceId/title/url/lastVerifiedAt)。 */
+/**
+ * ADR-014: 定期巡回が検知した「根拠の揺らぎ」の種類。changed=公式ページの更新日が変わった、
+ * unreachable=2回連続で到達できない。どちらも人が再監査するまで手続きを「再確認中」に落とす。
+ */
+export const driftKindSchema = z.enum(['changed', 'unreachable']);
+export type DriftKind = z.infer<typeof driftKindSchema>;
+
 export const taskSourceRefSchema = z.strictObject({
   sourceId: z.string().min(1),
   title: z.string().min(1),
   url: z.url(),
   lastVerifiedAt: z.iso.datetime(),
+  // ADR-014: 巡回がこのソースの揺らぎを検知していれば、検知日(YYYY-MM-DD)と種類を添える
+  // (根拠カードに検知日を出す)。未検知なら両方とも無い(後方互換な追加的optional)。
+  driftDetectedOn: z.iso.date().optional(),
+  driftKind: driftKindSchema.optional(),
 });
 export type TaskSourceRef = z.infer<typeof taskSourceRefSchema>;
 

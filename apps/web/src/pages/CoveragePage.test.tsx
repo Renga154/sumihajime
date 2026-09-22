@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import type { ServiceStats } from '@tmn/schemas';
 import { renderWithProviders } from '../test/utils';
 
 /**
@@ -11,8 +12,18 @@ import { renderWithProviders } from '../test/utils';
  * という形にしたことを固定する。「すべて到達可能なまま初期表示を短くする」が要件。
  */
 
+const statsMock = vi.fn(async (): Promise<ServiceStats> => ({
+  supportedMunicipalities: 1,
+  totalMunicipalities: 2,
+  approvedSources: 2,
+  lastVerifiedDate: '2026-08-01',
+  driftFlaggedSources: 3,
+  driftLastCheckedAt: '2026-09-22T00:00:00Z',
+}));
+
 vi.mock('../api/client', () => ({
   ApiError: class ApiError extends Error {},
+  getServiceStats: () => statsMock(),
   getMunicipalities: vi.fn(async () => [
     {
       code: '13112',
@@ -130,5 +141,36 @@ describe('CoveragePage(このサービスのデータについて)', () => {
 
     fireEvent.change(input, { target: { value: '' } });
     expect(screen.getByRole('heading', { name: '八王子市', level: 3 })).toBeInTheDocument();
+  });
+});
+
+/**
+ * なぜ: ADR-014 の機械巡回は「動いていること・何件を再確認中にしているか」まで公開する
+ * (原則9)。数値は /api/stats 由来で、未巡回なら「まだ巡回していません。」と正直に出す。
+ */
+describe('CoveragePage — 機械巡回の状況(ADR-014)', () => {
+  it('再確認中の件数と最終巡回時刻(日本時間)を表示する', async () => {
+    renderCoverage();
+    const heading = await screen.findByRole('heading', { name: '機械巡回の状況' });
+    const section = heading.closest('section')!;
+    await waitFor(() => {
+      expect(section.textContent).toContain('3');
+      expect(section.textContent).toContain('件が再確認中です');
+    });
+    // 2026-09-22T00:00:00Z = 日本時間 9:00。
+    expect(section.textContent).toContain('最終巡回: 2026年9月22日 09:00 JST');
+  });
+
+  it('まだ一度も巡回していなければ、その旨を出す', async () => {
+    statsMock.mockResolvedValueOnce({
+      supportedMunicipalities: 1,
+      totalMunicipalities: 2,
+      approvedSources: 2,
+      driftFlaggedSources: 0,
+    });
+    renderCoverage();
+    const heading = await screen.findByRole('heading', { name: '機械巡回の状況' });
+    const section = heading.closest('section')!;
+    await waitFor(() => expect(section.textContent).toContain('まだ巡回していません。'));
   });
 });
