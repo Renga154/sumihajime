@@ -1,6 +1,6 @@
 # ADR-014: 公式ソースの差分を定期巡回で検知し、根拠が揺らいだ手続きを自動で「要確認」へ落とす
 
-- Status: **Proposed — 2026-09-22**（本番反映は main から一括で行う）
+- Status: **Accepted — 2026-09-22**（同日に main から正典・ミラーへ本番反映。初回巡回10件で changed 3・unverifiable 3・ok 4 を確認）
 - Date: 2026-09-22
 - 関連: CLAUDE.md 原則2(公式根拠と最終確認日)・原則3(根拠がなければ要確認)・原則8(RAG障害時も
   チェックリストは使える)、ADR-007(公開単位=人手承認済みのみ)、ADR-008(正典は個人アカウント=Workers Free)、
@@ -85,3 +85,9 @@ SHA-256比較・台帳の pending 降格）という**手動実行の部品**が
   進めば解除される／`unreachable` は2回連続で初めて確定する／自治体スコープを越えて影響しない。
 - 本番: デプロイ後に `scheduled` を手動起動（`wrangler dev --test-scheduled` または初回Cron）し、
   `/api/health` の要約と D1 の `source_drift` を確認する。
+- 実施結果（2026-09-22、`wrangler dev --remote --test-scheduled` で正典D1に対して1バッチ起動）:
+  10件中 changed 3（千代田 childcare: 更新日 2026-02-27→08-03 の本当の更新／utilities_contact と
+  driver_license: **承認時スナップショットが取り違えられていた**ことによる基準値の誤り）、
+  unverifiable 3（更新日表記もヘッダも無い都の水道・下水道、スナップショット未保存の都の市区町村一覧）、
+  ok 4。japanpost は Last-Modified で基準を確立。チェックリスト・詳細・対応状況ページに反映を確認。
+  取り違えの2件とスナップショット未保存の1件は再監査対象（人手承認が要る）。
