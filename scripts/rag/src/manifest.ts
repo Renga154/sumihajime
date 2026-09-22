@@ -1,6 +1,7 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { readRegistryTable, tableToRecords, extractTextLines } from '@tmn/ingest';
+import { pickCurrentSnapshot } from '@tmn/drift';
 import {
   buildSourceChunks,
   type ChunkOptions,
@@ -120,11 +121,11 @@ export function buildChunkManifest(repoRoot: string, opts?: ChunkOptions): Chunk
   const chunks: RagChunk[] = [];
 
   for (const s of sources) {
-    const snapshotPath = resolve(
-      repoRoot,
-      `data/sources/${s.municipalityCode}/snapshots/${s.sourceId}.html`,
-    );
-    const html = readFileSync(snapshotPath, 'utf-8');
+    // 現行スナップショット(再監査で版付きが増えていればその最新)を読む。無ければ従来どおり例外。
+    const snapDir = resolve(repoRoot, `data/sources/${s.municipalityCode}/snapshots`);
+    const snapFile = pickCurrentSnapshot(readdirSync(snapDir), s.sourceId, 'html');
+    if (!snapFile) throw new Error(`no snapshot for ${s.sourceId} in ${snapDir}`);
+    const html = readFileSync(resolve(snapDir, snapFile), 'utf-8');
     const lines = extractTextLines(html);
     const metadata: RagChunkMetadata = {
       municipalityCode: s.municipalityCode,

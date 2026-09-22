@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type {
   Coverage,
@@ -21,7 +21,7 @@ import {
   wasteScheduleSchema,
   wasteSortingItemSchema,
 } from '@tmn/schemas';
-import { extractPageUpdatedOn } from '@tmn/drift';
+import { extractPageUpdatedOn, pickCurrentSnapshot } from '@tmn/drift';
 import { parseCsvRecords } from './csv.js';
 import { MUNICIPALITIES } from './municipalities.js';
 import type { SourceRef } from './gate.js';
@@ -96,8 +96,9 @@ function toDateTime(v: string | undefined): string | undefined {
 }
 
 /**
- * ADR-014: 承認時スナップショット(data/sources/<code>/snapshots/<source_id>.html)から
- * ページ自身の「更新日」を機械的に抽出する。定期巡回はこの値を基準に比較する。
+ * ADR-014: 承認時スナップショット(data/sources/<code>/snapshots/ の現行版。再監査で版付き
+ * `<source_id>.<YYYYMMDD>.html` が増えていればその最新)からページ自身の「更新日」を機械的に
+ * 抽出する。定期巡回はこの値を基準に比較する。
  * 人手記入の source_last_modified_at を使わないのは、本文表記と食い違う行(千代田・江戸川)が
  * あり初回から誤検知するため。HTML 以外・スナップショット不在・表記無しは undefined
  * (推測で埋めない)。
@@ -109,10 +110,11 @@ function snapshotPageUpdatedOn(
   sourceType: string,
 ): string | undefined {
   if (sourceType !== 'html') return undefined;
-  const rel = `data/sources/${municipalityCode ?? ''}/snapshots/${sourceId}.html`;
-  const path = resolve(repoRoot, rel);
-  if (!existsSync(path)) return undefined;
-  return extractPageUpdatedOn(readFileSync(path, 'utf-8')) ?? undefined;
+  const dir = resolve(repoRoot, `data/sources/${municipalityCode ?? ''}/snapshots`);
+  if (!existsSync(dir)) return undefined;
+  const file = pickCurrentSnapshot(readdirSync(dir), sourceId, 'html');
+  if (!file) return undefined;
+  return extractPageUpdatedOn(readFileSync(resolve(dir, file), 'utf-8')) ?? undefined;
 }
 
 /** registry.csv → Source[](全件。approvedフィルタは呼び出し側)。 */

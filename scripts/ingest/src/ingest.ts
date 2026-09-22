@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { pickCurrentSnapshot } from '@tmn/drift';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decodeBuffer } from './encoding.js';
@@ -74,17 +75,19 @@ Default is fully READ-ONLY: it fetches and prints a classification report but wr
 
 const SNAP_EXT: Record<string, string> = { html: 'html', csv: 'csv', json: 'json', pdf: 'pdf' };
 
-/** 既存スナップショットのうち最も新しいものの中身を返す(diff用)。無ければ undefined。 */
-function readLatestSnapshot(snapDir: string, sourceId: string): Uint8Array | undefined {
+/**
+ * 現行スナップショットの中身を返す(diff用)。無ければ undefined。
+ * 版はファイル名の日付で選ぶ(@tmn/drift pickCurrentSnapshot)。以前は mtime で選んでいたが、
+ * mtime は git checkout で変わるため環境によって別の版を「最新」と見なしていた。
+ */
+function readLatestSnapshot(
+  snapDir: string,
+  sourceId: string,
+  ext: string,
+): Uint8Array | undefined {
   if (!existsSync(snapDir)) return undefined;
-  const candidates = readdirSync(snapDir).filter((f) => f.startsWith(`${sourceId}.`));
-  if (candidates.length === 0) return undefined;
-  let latest: { file: string; mtime: number } | undefined;
-  for (const file of candidates) {
-    const mtime = statSync(resolve(snapDir, file)).mtimeMs;
-    if (!latest || mtime > latest.mtime) latest = { file, mtime };
-  }
-  return latest ? new Uint8Array(readFileSync(resolve(snapDir, latest.file))) : undefined;
+  const file = pickCurrentSnapshot(readdirSync(snapDir), sourceId, ext);
+  return file ? new Uint8Array(readFileSync(resolve(snapDir, file))) : undefined;
 }
 
 interface RowReport {
@@ -133,7 +136,7 @@ async function processRow(
 
     if (classification === 'changed' && rec.source_type === 'html') {
       const snapDir = resolve(repoRoot, 'data/sources', rec.municipality_code ?? '', 'snapshots');
-      const prev = readLatestSnapshot(snapDir, sourceId);
+      const prev = readLatestSnapshot(snapDir, sourceId, SNAP_EXT[rec.source_type] ?? 'bin');
       if (prev) {
         const diff = summarizeLineDiff(decodeBuffer(prev).text, decoded.text);
         report.addedLines = diff.addedCount;

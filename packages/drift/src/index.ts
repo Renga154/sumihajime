@@ -8,10 +8,6 @@ export {
   isOfficialUrl,
 } from './official-host.js';
 export { classifyCheck } from './classify.js';
-export type {
-  DriftCheckInput,
-  DriftFetchResult,
-  DriftStatus,
-  DriftVerdict,
-} from './classify.js';
+export type { DriftCheckInput, DriftFetchResult, DriftStatus, DriftVerdict } from './classify.js';
 export { sha256HexWeb } from './hash.js';
+export { pickCurrentSnapshot } from './snapshot.js';

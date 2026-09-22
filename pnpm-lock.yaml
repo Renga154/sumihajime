@@ -234,6 +234,9 @@ importers:
 
   scripts/rag:
     dependencies:
+      '@tmn/drift':
+        specifier: workspace:*
+        version: link:../../packages/drift
       '@tmn/ingest':
         specifier: workspace:*
         version: link:../ingest
