@@ -35,6 +35,11 @@ export const ALLOWED_HOST_EXACT = [
   // officialUrl に一致する)。
   'www.city.meguro.tokyo.jp',
   'www.city.shibuya.tokyo.jp',
+  // 港区13103・荒川区13118。承認済みソースがあるのに一覧から漏れており、定期巡回(ADR-014)の
+  // 初回で host_not_official(=取得せず判定不能)になった。どちらも東京都公式「リンク集／都内
+  // 区市町村」の href と scripts/publish/src/municipalities.ts の officialUrl に一致する公式サイト。
+  'www.city.minato.tokyo.jp',
+  'www.city.arakawa.tokyo.jp',
   // 渋谷区のオープンデータ配信先(Esri ArcGIS Hub 上の区独自ポータル)。区公式サイトの
   // オープンデータ案内および東京都オープンデータカタログの渋谷区データセット
   // (t131130d0000000027「オープンデータ一覧」)からリンクされた、渋谷区自身が管理する
