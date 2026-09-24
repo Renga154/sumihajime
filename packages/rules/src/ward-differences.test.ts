@@ -33,10 +33,23 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 
-/** data/normalized 配下に縦切りデータがある区(区が増えれば自動的に対象へ入る)。 */
+/**
+ * data/normalized 配下に縦切りデータがあり、公開済み(verified)の手続きを持つ自治体
+ * (承認されれば自動的に対象へ入る)。
+ *
+ * なぜ verified で絞るか: 比較ページ(/differences)は公開データ(D1)から作られ、人手レビュー前
+ * (dataStatus=partial)の手続きしかない自治体は載らない(ADR-007)。2026-09-25 に八王子市(13201)を
+ * 未公開のまま置いたため、ここで絞らないと公開ページに無い自治体で分布の件数が変わってしまう。
+ * 八王子市の文言が機械判定できることは hachioji.test.ts が別に確かめる。
+ */
 const WARD_CODES: readonly string[] = readdirSync(resolve(repoRoot, 'data/normalized'))
   .filter((name) => /^\d{5}$/.test(name))
   .filter((code) => existsSync(resolve(repoRoot, `packages/rules/data/${code}/rules.json`)))
+  .filter((code) =>
+    readJson<{ procedures: ProcedureVersion[] }>(
+      `data/normalized/${code}/procedures.json`,
+    ).procedures.some((p) => p.dataStatus === 'verified'),
+  )
   .sort();
 
 function readJson<T>(relativePath: string): T {

@@ -63,6 +63,10 @@ const WARD_NAMES: Readonly<Record<string, string>> = {
   '13121': '足立区',
   '13122': '葛飾区',
   '13123': '江戸川区',
+  // 市部で最初に縦切りデータを置いた八王子市(2026-09-25。人手レビュー前で未公開)。
+  // data/normalized に置いた時点で検査対象に入り、逆方向(23区の文言に「八王子市」が混ざらないか)も
+  // 同じ総当たりで見られるよう名称マスタへ加える。出典は同じく municipalities.ts(都リンク集由来)。
+  '13201': '八王子市',
 };
 
 /**
@@ -256,10 +260,10 @@ function describeFindings(findings: readonly Finding[]): string {
 }
 
 describe('原則4 — 各区の公開データに他区の名称を混ぜない(全区総当たり)', () => {
-  it('検査対象の区が存在し、23特別区の名称マスタが揃っている', () => {
+  it('検査対象の区が存在し、23特別区(+データを置いた市)の名称マスタが揃っている', () => {
     expect(WARDS.length).toBeGreaterThanOrEqual(13);
-    expect(Object.keys(WARD_NAMES)).toHaveLength(23);
-    // 対応済みの区は必ず 131xx(特別区)であり、名称マスタに存在する。
+    expect(Object.keys(WARD_NAMES).filter((c) => /^131\d\d$/.test(c))).toHaveLength(23);
+    // データを置いた自治体は必ず名称マスタに存在する(市を足したらここで気づける)。
     for (const code of WARDS) expect(WARD_NAMES[code], code).toBeDefined();
   });
 
