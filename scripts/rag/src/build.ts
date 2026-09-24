@@ -39,7 +39,8 @@ let ENV_ARGS: string[] = [];
 // なぜ: Vectorize の upsert は非同期に処理される。処理完了前にクエリすると新チャンクがヒットせず
 // 保留・誤答になる(本番でこの取りこぼしが発生)。upsert 前後で info の processedUpToMutation の変化と
 // vectorCount を監視し、索引反映を保証してから終了する(詳細は upsertVectorsAndWait を参照)。
-const MUTATION_WAIT_TIMEOUT_MS = 300_000;
+// 2026-09-25 の再構築では処理完了まで6〜8分かかり、5分で打ち切られた。余裕を持って15分待つ。
+const MUTATION_WAIT_TIMEOUT_MS = 900_000;
 const MUTATION_POLL_INTERVAL_MS = 5_000;
 
 /** ブロッキングsleep(ビルドCLIは同期実行のため子プロセス的な待機で十分)。 */
@@ -121,6 +122,56 @@ function upsertVectorsAndWait(ndjsonPath: string, expectedCount: number): void {
 }
 
 /** OPENAI_API_KEY を env → apps/api/.dev.vars の順で探す(値はechoしない)。 */
+/**
+ * いま D1 にある rag_chunks の chunk_id(= 索引に入っているはずのベクトルID)。
+ * なぜ: upsert は上書きしかしない。再監査で本文が短くなったページは末尾のチャンクIDが消えるが、
+ * そのベクトルは古い本文の埋め込みのまま索引に残り、検索枠を奪う(2026-09-25 に14件発生)。
+ * 差し替え前の一覧と新しい一覧の差を取り、消えたIDを索引から削除するために使う。
+ */
+function currentChunkIds(dbTarget: string): string[] {
+  const out = execFileSync(
+    wranglerBin,
+    [
+      'd1',
+      'execute',
+      DB_NAME,
+      dbTarget,
+      '--json',
+      '--command',
+      'SELECT chunk_id FROM rag_chunks',
+      ...ENV_ARGS,
+    ],
+    { cwd: apiDir, encoding: 'utf-8' },
+  );
+  const start = out.indexOf('[');
+  if (start < 0) return [];
+  const parsed = JSON.parse(out.slice(start)) as { results?: { chunk_id: string }[] }[];
+  return (parsed[0]?.results ?? []).map((r) => r.chunk_id);
+}
+
+/** 新しい一覧に無いIDを索引から消す(削除は非同期。ID は1回100件ずつ渡す)。 */
+function deleteOrphanVectors(orphans: readonly string[]): void {
+  if (orphans.length === 0) {
+    console.log('[rag-index] no orphan vectors.');
+    return;
+  }
+  for (let i = 0; i < orphans.length; i += 100) {
+    execFileSync(
+      wranglerBin,
+      [
+        'vectorize',
+        'delete-vectors',
+        INDEX_NAME,
+        '--ids',
+        ...orphans.slice(i, i + 100),
+        ...ENV_ARGS,
+      ],
+      { cwd: apiDir, stdio: 'inherit' },
+    );
+  }
+  console.log(`[rag-index] enqueued deletion of ${orphans.length} orphan vector(s).`);
+}
+
 function readOpenAIKey(): string | undefined {
   if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.trim().length > 0) {
     return process.env.OPENAI_API_KEY.trim();
@@ -205,6 +256,11 @@ async function main(): Promise<void> {
   writeFileSync(ndjsonPath, lines.join('\n') + '\n', 'utf-8');
   console.log(`[rag-index] wrote ${lines.length} vectors: ${ndjsonPath}`);
 
+  // 差し替え前に、いま索引に入っているはずのIDを控える(消えたチャンクのベクトルを後で削除する)。
+  const previousIds = currentChunkIds(dbTarget);
+  const nextIds = new Set(manifest.chunks.map((c) => c.id));
+  const orphans = previousIds.filter((id) => !nextIds.has(id));
+
   console.log(`[rag-index] seeding D1 rag_chunks (${dbTarget})…`);
   execFileSync(wranglerBin, ['d1', 'execute', DB_NAME, dbTarget, '--file', sqlPath, ...ENV_ARGS], {
     cwd: apiDir,
@@ -214,6 +270,7 @@ async function main(): Promise<void> {
   // Vectorize は常にリモート(ローカル模擬なし)。upsert で冪等に差し替え、反映完了まで待つ。
   console.log('[rag-index] upserting vectors into Vectorize (remote)…');
   upsertVectorsAndWait(ndjsonPath, lines.length);
+  deleteOrphanVectors(orphans);
 
   console.log('[rag-index] done. Index is up to date and queryable.');
 }
