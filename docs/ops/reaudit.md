@@ -53,6 +53,16 @@ CSVの文字コード変更など）。**1件あたりの判断はほぼ「読�
 7. **テスト → publish → デプロイ。** `pnpm run test` の後、`publish:local -- --remote`（正典・ミラー）。
    台帳の最終確認日が検知時より新しくなるので、「再確認中」は自動で外れる。
    `/api/health` の `drift.flaggedSources` が減ったことを確かめる。
+8. **チャットの索引を作り直し、評価を回す（CLAUDE.md §9）。** スナップショットが変わるとチャットの根拠も
+   変わる。作り直さないと、チャットだけ古い原文（例: 杉並の15日）で答え続ける。
+   ```sh
+   pnpm --filter @tmn/rag-index build:index -- --remote
+   pnpm --filter @tmn/rag-index build:index -- --remote --env odh --index sumihajime-rag
+   pnpm --filter @tmn/rag-eval eval
+   ```
+   索引の反映には数分かかる（2026-09-25 は6〜8分）。消えたチャンクのベクトルはビルドが削除する。
+   評価は本番へ直列で約20分。根拠のない断定・自治体混入・越境違反が0であることを確かめる。
+   修正した事実には評価の問いを足す（`data/evaluations/rag-eval-cases.json`）。
 
 ## 誤検知として分かっているもの
 
