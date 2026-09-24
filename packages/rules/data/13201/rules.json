@@ -9,20 +9,36 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "urgent",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "八王子市に住み始めてから14日以内です(予定では届出できません)。届出場所は市役所本庁舎1階市民課・八王子駅南口総合事務所・南大沢事務所・市民部各事務所(斎場事務所を除く)です。届出が遅れると、5万円以下の過料に科せられる場合があります。",
       "sourceIds": ["src-13201-resident_registration-001", "src-13201-resident_registration-003"],
       "applicabilityReasonTemplate": "他の市区町村または国外から八王子市に転入したすべての方に必要な届出です。"
     },
     {
       "procedureId": "procedure_mynumber_continued_use",
-      "condition": { "predicate": "flagEquals", "flag": "hasMyNumberCard", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "hasMyNumberCard",
+        "equals": true
+      },
       "priority": "high",
       "dueRule": {
         "type": "earliestOf",
         "of": [
-          { "type": "offsetDays", "from": "moveDate", "days": 14 },
-          { "type": "offsetDays", "from": "moveOutScheduledDate", "days": 30 }
+          {
+            "type": "offsetDays",
+            "from": "moveDate",
+            "days": 14
+          },
+          {
+            "type": "offsetDays",
+            "from": "moveOutScheduledDate",
+            "days": 30
+          }
         ]
       },
       "dueDescription": "継続利用には、転入届を『異動日の翌日から起算して14日以内』かつ『転出予定日の翌日から起算して30日以内』に行うことが条件です。転入届の際にカードを持参しなかった方は、転入届出日から起算して90日以内(90日目が閉庁日の場合は翌日の開庁日まで)に継続利用の届出をしてください。届出期間を過ぎるとカードは失効し、再発行は有料になります。",
@@ -37,16 +53,26 @@
         "equals": true
       },
       "priority": "high",
-      "dueRule": { "type": "offsetDays", "from": "moveDate", "days": 14 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveDate",
+        "days": 14
+      },
       "dueDescription": "事実発生日から14日以内に届出をしてください。八王子市に転入したときは、転出証明書を持参して市役所本庁舎1階市民課窓口または市民部各事務所(斎場事務所を除く)で届け出ます。",
       "sourceIds": ["src-13201-national_health_insurance-001"],
       "applicabilityReasonTemplate": "勤務先の健康保険などに加入していない方は、八王子市の国民健康保険への加入の届出が必要です。"
     },
     {
       "procedureId": "procedure_national_pension_address",
-      "condition": { "predicate": "flagEquals", "flag": "needsNationalPension", "equals": true },
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsNationalPension",
+        "equals": true
+      },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "第1号被保険者は、住民票の住所変更届(転入届)をすることで国民年金の住所変更手続も同時に行われるため、手続は不要です。すでに年金を受けている方の住所変更届は、日本年金機構にマイナンバーが収録されている場合は原則不要です(マイナンバーが未収録の方や住民票の住所と違う場所にお住まいの方などは、八王子年金事務所で手続きします)。日数固定の期限はこのページには記載がありません。",
       "sourceIds": ["src-13201-national_pension-001"],
       "applicabilityReasonTemplate": "国民年金の被保険者の方に、引っ越しに伴う手続きの要否をお知らせします。八王子市は『第1号被保険者は住民票の住所変更届で国民年金の住所変更も同時に行われるため手続不要』と案内しています。"
@@ -58,7 +84,11 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "offsetDays", "from": "moveOutScheduledDate", "days": 15 },
+      "dueRule": {
+        "type": "offsetDays",
+        "from": "moveOutScheduledDate",
+        "days": 15
+      },
       "dueDescription": "原則、申請日の翌月分から認定されます。ただし、前住所地での転出予定日から15日以内に申請すれば、申請日が転出予定日の翌月になった場合でも申請月から支給されます(15日特例)。15日は翌日から数え、閉庁日を含めますが、15日目が閉庁日の場合は翌開庁日が15日目となります。起算日は前住所地での転出予定日のため引越し日からは算定できません。ウィザードで前住所地の転出予定日を入力すると、その日を起算日として期日を算定します(未入力の場合は日付を表示しません)。",
       "sourceIds": ["src-13201-child_benefits-001"],
       "applicabilityReasonTemplate": "八王子市に住民票があり、18歳になって最初に迎える3月31日までの児童を養育している方が対象です。八王子市に転入した場合は新たに申請が必要です。"
@@ -70,7 +100,9 @@
         "values": ["age0_2", "age3_5", "elementary", "junior_senior"]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "転入日(マル子・マル青は制度に該当した日=転入日など)から3か月以内に申請した場合は、その日から助成されます。3か月を過ぎて申請した場合は、申請した月の初日から助成されます。月単位の期限のため、本サービスでは日付に換算していません。これは児童手当の15日特例とは別の期限体系です。",
       "sourceIds": [
         "src-13201-child_medical-001",
@@ -83,12 +115,21 @@
       "procedureId": "procedure_school_transfer",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["elementary", "junior_senior"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["elementary", "junior_senior"]
+          }
         ]
       },
       "priority": "high",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "必ず『在学証明書』と『教科用図書給与証明書』を持って引っ越しをしてください。転入の手続きの際に、教育指導課または各事務所の窓口で『就学通知書』の発行を受けます(転入先住所地の通学区域の学校が転校先として指定されます)。指定された学校へ転入学の旨を事前に電話で連絡したうえで、3点を学校に提出すれば手続きは完了です。日数固定の期限はこのページには記載がありません。",
       "sourceIds": ["src-13201-school_transfer-001"],
       "applicabilityReasonTemplate": "小・中学生(義務教育の学齢)のお子さんがいる世帯が八王子市へ転入する場合に必要な、市立学校への転入学手続きです。八王子市で交付される書類の名称は『就学通知書』です。"
@@ -97,12 +138,21 @@
       "procedureId": "procedure_childcare_application",
       "condition": {
         "any": [
-          { "predicate": "flagEquals", "flag": "hasSchoolOrChildcareNeeds", "equals": true },
-          { "predicate": "ageBandsIntersects", "values": ["age0_2", "age3_5"] }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasSchoolOrChildcareNeeds",
+            "equals": true
+          },
+          {
+            "predicate": "ageBandsIntersects",
+            "values": ["age0_2", "age3_5"]
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "八王子市に転入予定があるとして申し込む場合は、入園希望月の前月末日までに転入することが条件です。転入前の申込みは、原則として保護者が住民登録をしている市区町村の窓口で八王子市様式の書類により行います。転入後は八王子市民として改めて入園申込み(本申込)が必要で、提出締切は入園希望月の前月末日です。窓口での入園(転園)申込みの期限は入園希望月の前月15日(土日・祝日の場合は直前の本庁開庁日)です。入園希望月ごとの締切のため、日数固定の期限は設定していません。",
       "sourceIds": [
         "src-13201-childcare-001",
@@ -115,12 +165,22 @@
       "procedureId": "procedure_dog_registration_transfer",
       "condition": {
         "all": [
-          { "predicate": "flagEquals", "flag": "hasDog", "equals": true },
-          { "predicate": "flagEquals", "flag": "dogHasMicrochip", "equals": false }
+          {
+            "predicate": "flagEquals",
+            "flag": "hasDog",
+            "equals": true
+          },
+          {
+            "predicate": "flagEquals",
+            "flag": "dogHasMicrochip",
+            "equals": false
+          }
         ]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "前の住所地で受けた犬鑑札を持って、保健所、市役所本庁舎1階健康医療政策課または各事務所(八王子駅南口総合事務所とデジタルフロントスポット長房を除く)に住所変更届を出してください。今までの鑑札と引き換えに新しい鑑札が交付されます。郵送でも手続きでき、前の自治体の鑑札がない場合は手数料1,600円がかかります。転入時の届出について日数固定の期限はこのページには記載がありません(30日以内は、生後91日以上の犬を飼い始めたときの登録の期限です)。",
       "sourceIds": ["src-13201-dog_registration-001", "src-13201-dog_registration-002"],
       "applicabilityReasonTemplate": "犬を飼っており、マイクロチップを装着していない(環境省の指定登録機関に登録していない)ため、八王子市への住所変更届が必要です。",
@@ -133,10 +193,75 @@
         "values": ["outside_tokyo", "inside_tokyo", "overseas"]
       },
       "priority": "normal",
-      "dueRule": { "type": "unknown" },
+      "dueRule": {
+        "type": "unknown"
+      },
       "dueDescription": "生活開始まで(引越し後すぐに、お住まいの町名の収集地区と収集カレンダーを確認してください)。八王子市は町名ごとに収集地区(1から20)を定め、地区ごとの2026年度版ごみ・資源物収集カレンダーをPDFで公開しています。可燃ごみ・不燃ごみは八王子市の指定収集袋で出してください。指定収集袋以外のものは収集しません。本サービスは八王子市の収集曜日データを保持していません。",
       "sourceIds": ["src-13201-waste_guide-001", "src-13201-waste_guide-002"],
       "applicabilityReasonTemplate": "転入したすべての方に、生活開始にあたってごみ・資源物の収集日と出し方の確認をおすすめします。"
+    },
+    {
+      "procedureId": "procedure_water_supply",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "東京都水道局は「次のお手続きについては、3〜4日前までに必ずお手続きください」と案内しています(使用開始申込み・使用中止届のいずれも)。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。",
+      "sourceIds": [
+        "src-13000-water_supply-001",
+        "src-13000-water_supply-002",
+        "src-13201-water_supply-001",
+        "src-13201-sewerage-001",
+        "src-13201-sewerage-002"
+      ],
+      "applicabilityReasonTemplate": "水道は住まいを移るすべての方に必要なライフラインの手続きです(市の手続きではなく東京都水道局への手続きです)。"
+    },
+    {
+      "procedureId": "procedure_postal_forwarding",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "日本郵便は「転居届を提出されてから登録までに3〜7営業日を要しますので、転居される際には、お早めに転居届を提出してください」と案内しています。引越し日から起算した「◯日以内」という日数の期限は出典の公式ページに記載がありません。転送期間は届出日から1年間です(転送開始希望日からではありません)。",
+      "sourceIds": ["src-00000-postal_forwarding-001"],
+      "applicabilityReasonTemplate": "旧住所あての郵便物等を新住所へ転送してもらうための、住所が変わるすべての方向けの手続きです(市の手続きではなく日本郵便への手続きです)。"
+    },
+    {
+      "procedureId": "procedure_utilities_contact",
+      "condition": {
+        "predicate": "originTypeIn",
+        "values": ["outside_tokyo", "inside_tokyo", "overseas"]
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "出典である国(デジタル庁)の公式ページには、電気・ガスの手続きの期限に関する記載がありません。受付の締切や必要な連絡時期は契約先の事業者ごとに異なるため、契約先へご確認ください(要確認)。",
+      "sourceIds": ["src-00000-utilities_contact-001"],
+      "applicabilityReasonTemplate": "電気・ガスは引越しに伴い契約先の民間事業者への手続きが必要になるライフラインです(市の手続きではありません)。"
+    },
+    {
+      "procedureId": "procedure_driver_license_change",
+      "condition": {
+        "predicate": "flagEquals",
+        "flag": "needsVehicleGuidance",
+        "equals": true
+      },
+      "priority": "normal",
+      "dueRule": {
+        "type": "unknown"
+      },
+      "dueDescription": "警視庁の当該ページには「◯日以内」という日数の期限の記載がありません(要確認)。転入届で住民票の住所が変わったあとに手続きしてください。",
+      "sourceIds": ["src-13000-driver_license-001"],
+      "applicabilityReasonTemplate": "車・バイク等の追加案内が必要と回答された方向けの、運転免許証の住所変更(記載事項変更)の手続きです(市の手続きではなく警視庁への手続きです)。"
     }
   ]
 }
