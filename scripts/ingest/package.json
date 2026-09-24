@@ -14,7 +14,8 @@
     "validate": "tsx src/validate.ts",
     "build-waste-sorting": "tsx src/build-waste-sorting.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "reaudit": "tsx src/reaudit.ts"
   },
   "dependencies": {
     "@tmn/drift": "workspace:*",
