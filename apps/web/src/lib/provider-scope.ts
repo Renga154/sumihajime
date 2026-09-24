@@ -30,6 +30,6 @@ export function isNonMunicipal(category: string): boolean {
 }
 
 export const providerScopeLabel: Record<ProviderScope, string> = {
-  municipality: '区の手続き',
-  non_municipality: '区以外の手続き',
+  municipality: '市区町村の手続き',
+  non_municipality: '市区町村以外の手続き',
 };

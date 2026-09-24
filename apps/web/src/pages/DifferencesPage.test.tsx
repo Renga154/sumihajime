@@ -54,7 +54,7 @@ const report = {
         },
         {
           valueId: 'not_stated',
-          label: '区の公式ページに申請期限の記載なし（要確認）',
+          label: '自治体の公式ページに申請期限の記載なし（要確認）',
           tone: 'caution',
           municipalityCodes: ['13103'],
         },
@@ -66,7 +66,7 @@ const report = {
           '13103',
           'テストC区',
           'not_stated',
-          '区の公式ページに申請期限の記載なし（要確認）',
+          '自治体の公式ページに申請期限の記載なし（要確認）',
           true,
         ),
       ],
@@ -93,7 +93,7 @@ function renderPage() {
   });
 }
 
-describe('区ごとの期限のちがい(比較ページ)', () => {
+describe('自治体ごとの期限のちがい(比較ページ)', () => {
   it('冒頭で「比較ページであること」と「チェックリストは選んだ区だけ」を明示する', async () => {
     renderPage();
     expect(await screen.findByText('これは自治体間の比較ページです。')).toBeInTheDocument();
@@ -106,7 +106,7 @@ describe('区ごとの期限のちがい(比較ページ)', () => {
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
 
-    fireEvent.change(screen.getByLabelText('基準の区'), { target: { value: '13101' } });
+    fireEvent.change(screen.getByLabelText('基準の自治体'), { target: { value: '13101' } });
     fireEvent.change(screen.getByLabelText('くらべる区'), { target: { value: '13102' } });
 
     // 値(比較セル + 全区一覧の両方に出るため getAllBy で確認する)
@@ -126,19 +126,19 @@ describe('区ごとの期限のちがい(比較ページ)', () => {
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
     expect(
-      screen.getAllByText('区の公式ページに申請期限の記載なし（要確認）').length,
+      screen.getAllByText('自治体の公式ページに申請期限の記載なし（要確認）').length,
     ).toBeGreaterThan(0);
   });
 
   it('選んだ2区の扱いが違うことを言葉で伝える', async () => {
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
-    fireEvent.change(screen.getByLabelText('基準の区'), { target: { value: '13101' } });
+    fireEvent.change(screen.getByLabelText('基準の自治体'), { target: { value: '13101' } });
     fireEvent.change(screen.getByLabelText('くらべる区'), { target: { value: '13102' } });
-    expect(screen.getByText(/この2区では扱いが違います/)).toBeInTheDocument();
+    expect(screen.getByText(/この2つの自治体では扱いが違います/)).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('くらべる区'), { target: { value: '13101' } });
-    expect(screen.getByText(/この2区は同じ扱いです/)).toBeInTheDocument();
+    expect(screen.getByText(/この2つの自治体は同じ扱いです/)).toBeInTheDocument();
   });
 
   it('全区一覧へ到達できる(情報を隠さない)', async () => {
@@ -161,7 +161,7 @@ describe('区ごとの期限のちがい(比較ページ)', () => {
     localStorage.setItem('tmn:municipality', '13102');
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
-    expect(screen.getByLabelText<HTMLSelectElement>('あなたの区').value).toBe('13102');
+    expect(screen.getByLabelText<HTMLSelectElement>('あなたの自治体').value).toBe('13102');
   });
   /**
    * なぜ左のラベルが可変か(2026-08-09): このページをメインナビへ載せたことで、自治体を
@@ -171,8 +171,8 @@ describe('区ごとの期限のちがい(比較ページ)', () => {
   it('自治体を選んでいなければ左は「基準の区」で、既定値である旨と次の行動を示す', async () => {
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
-    expect(screen.getByLabelText('基準の区')).toBeInTheDocument();
-    expect(screen.queryByLabelText('あなたの区')).toBeNull();
+    expect(screen.getByLabelText('基準の自治体')).toBeInTheDocument();
+    expect(screen.queryByLabelText('あなたの自治体')).toBeNull();
     expect(screen.getByText(/左は一覧の先頭を仮に表示しています/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '自治体を選ぶ' })).toHaveAttribute('href', '/');
   });
@@ -181,11 +181,11 @@ describe('区ごとの期限のちがい(比較ページ)', () => {
     localStorage.setItem('tmn:municipality', '13102');
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
-    expect(screen.getByLabelText('あなたの区')).toBeInTheDocument();
+    expect(screen.getByLabelText('あなたの自治体')).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('あなたの区'), { target: { value: '13101' } });
-    expect(screen.getByLabelText('基準の区')).toBeInTheDocument();
-    expect(screen.queryByLabelText('あなたの区')).toBeNull();
+    fireEvent.change(screen.getByLabelText('あなたの自治体'), { target: { value: '13101' } });
+    expect(screen.getByLabelText('基準の自治体')).toBeInTheDocument();
+    expect(screen.queryByLabelText('あなたの自治体')).toBeNull();
     // 選択済みなので「まだ選んでいない」旨の案内は出さない。
     expect(screen.queryByText(/左は一覧の先頭を仮に表示しています/)).toBeNull();
   });

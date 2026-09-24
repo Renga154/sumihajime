@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { fillWizardStep1, generateChecklist, mockChat, startWithWard } from './helpers';
 
 /**
- * 「区ごとの期限のちがい」(/differences)の受入。
+ * 「自治体ごとの期限のちがい」(/differences)の受入。
  *
  * 固定すること:
  *  1. チェックリストからリンク1つで到達できる(導線)。
@@ -19,7 +19,7 @@ test('チェックリストからリンク1つで比較ページへ到達し、�
   await fillWizardStep1(page, { moveDate: '2026-09-15', origin: '東京都外' });
   await generateChecklist(page);
 
-  await page.getByRole('link', { name: '区ごとの期限のちがいを見る' }).click();
+  await page.getByRole('link', { name: '自治体ごとの期限のちがいを見る' }).click();
   await expect(page).toHaveURL(/\/differences$/);
 
   // 位置づけの明示(原則4)。
@@ -29,19 +29,19 @@ test('チェックリストからリンク1つで比較ページへ到達し、�
   ).toBeVisible();
 
   // 選択中の自治体が「あなたの区」の初期値になる。
-  await expect(page.getByLabel('あなたの区')).toHaveValue('13112');
+  await expect(page.getByLabel('あなたの自治体')).toHaveValue('13112');
 
   // 子ども医療費助成: 世田谷(3か月)と渋谷(14日)で実際に値が違う。
   await page.getByLabel('くらべる区').selectOption('13113');
   const section = page.locator('section', {
     has: page.getByRole('heading', { name: '子ども医療費助成の申請期限' }),
   });
-  await expect(section.getByText('この2区では扱いが違います。')).toBeVisible();
+  await expect(section.getByText('この2つの自治体では扱いが違います。')).toBeVisible();
   await expect(section.getByText('3か月以内に申請').first()).toBeVisible();
   await expect(section.getByText('14日以内に申請').first()).toBeVisible();
 
   // 各セルに公式ソースへのリンクと最終確認日が付く(原則2)。
-  const mine = section.locator('div', { hasText: 'あなたの区' }).first();
+  const mine = section.locator('div', { hasText: 'あなたの自治体' }).first();
   await expect(mine.getByRole('link').first()).toHaveAttribute('href', /^https:\/\//);
   await expect(section.getByText(/最終確認 \d{4}年\d{1,2}月\d{1,2}日/).first()).toBeVisible();
 
@@ -50,13 +50,13 @@ test('チェックリストからリンク1つで比較ページへ到達し、�
   await expect(all).toBeVisible();
   await all.click();
   await expect(
-    section.getByText('区の公式ページに申請期限の記載なし（要確認）').first(),
+    section.getByText('自治体の公式ページに申請期限の記載なし（要確認）').first(),
   ).toBeVisible();
 });
 
 test('モバイル幅で横スクロールが発生しない', async ({ page }) => {
   await page.goto('/differences');
-  await expect(page.getByRole('heading', { name: '区ごとの期限のちがい' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '自治体ごとの期限のちがい' })).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
@@ -83,5 +83,5 @@ test('原則4: チェックリスト画面に他区の名称・値が出ない',
     expect(text.includes(w.name), `チェックリストに「${w.name}」が混入`).toBe(false);
   }
   // 比較ページへの導線はあるが、他区の値そのものは出ていない。
-  expect(text).toContain('区ごとの期限のちがいを見る');
+  expect(text).toContain('自治体ごとの期限のちがいを見る');
 });

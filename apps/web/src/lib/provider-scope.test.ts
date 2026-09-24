@@ -35,7 +35,7 @@ describe('providerScope', () => {
   });
 
   it('ラベルは利用者向けの平易な日本語', () => {
-    expect(providerScopeLabel.municipality).toBe('区の手続き');
-    expect(providerScopeLabel.non_municipality).toBe('区以外の手続き');
+    expect(providerScopeLabel.municipality).toBe('市区町村の手続き');
+    expect(providerScopeLabel.non_municipality).toBe('市区町村以外の手続き');
   });
 });

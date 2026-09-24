@@ -69,7 +69,7 @@ function WardCell({
       <p className="mt-0.5 text-base font-bold text-slate-900">{municipalityName}</p>
       {!cell ? (
         <p className="mt-2 text-sm text-slate-600">
-          この区のデータは未整備のため比較できません。公式ページでご確認ください。
+          この自治体のデータは未整備のため比較できません。公式ページでご確認ください。
         </p>
       ) : (
         <>
@@ -136,7 +136,7 @@ function AllWards({ topic }: { topic: WardDifferenceTopic }) {
 }
 
 export function DifferencesPage() {
-  useDocumentTitle('区ごとの期限のちがい');
+  useDocumentTitle('自治体ごとの期限のちがい');
   const { municipalityCode } = useAppState();
   const state = useAsync(() => getWardDifferences(), []);
   const report = state.data;
@@ -171,9 +171,9 @@ export function DifferencesPage() {
    * 一致しないときは役割だけを述べる「基準の区」にする。
    */
   const isOwnWard = mine != null && mine === municipalityCode;
-  const mineLabel = isOwnWard ? 'あなたの区' : '基準の区';
+  const mineLabel = isOwnWard ? 'あなたの自治体' : '基準の自治体';
 
-  if (state.loading) return <Loading label="区ごとの違いを読み込んでいます…" />;
+  if (state.loading) return <Loading label="自治体ごとの違いを読み込んでいます…" />;
   if (state.error) return <ErrorMessage error={state.error} onRetry={state.reload} />;
   if (!report) return null;
 
@@ -181,11 +181,12 @@ export function DifferencesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-          区ごとの期限のちがい
+          自治体ごとの期限のちがい
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-700">
-          同じ名前の手続きでも、申請の期限や、期限を数えはじめる日は区ごとに違います。
-          23区すべての公式ページをデータ化して分かった違いを、公開済みデータからそのまま集計しています。
+          同じ名前の手続きでも、申請の期限や、期限を数えはじめる日は自治体ごとに違います。
+          対応している{report.municipalities.length}
+          自治体すべての公式ページをデータ化して分かった違いを、公開済みデータからそのまま集計しています。
         </p>
       </div>
 
@@ -196,8 +197,8 @@ export function DifferencesPage() {
       >
         <p className="font-semibold">これは自治体間の比較ページです。</p>
         <p className="mt-1">
-          あなたのチェックリストには、選んだ自治体の情報だけを表示しています。ここで見た他の区の値を、
-          ご自身の手続きに当てはめないでください。実際の手続きの前に、必ずお住まいの区の公式ページでご確認ください。
+          あなたのチェックリストには、選んだ自治体の情報だけを表示しています。ここで見た他の自治体の値を、
+          ご自身の手続きに当てはめないでください。実際の手続きの前に、必ずお住まいの自治体の公式ページでご確認ください。
         </p>
       </div>
 
@@ -248,7 +249,7 @@ export function DifferencesPage() {
             >
               自治体を選ぶ
             </Link>
-            と、お住まいの区が最初から入ります。
+            と、お住まいの自治体が最初から入ります。
           </p>
         )}
       </Card>
@@ -275,12 +276,13 @@ export function DifferencesPage() {
 
               <p className="mt-3 text-sm font-medium text-slate-800">
                 {same
-                  ? 'この2区は同じ扱いです。'
+                  ? 'この2つの自治体は同じ扱いです。'
                   : a && b
-                    ? 'この2区では扱いが違います。'
-                    : '選んだ区のどちらかにデータがありません。'}
+                    ? 'この2つの自治体では扱いが違います。'
+                    : '選んだ自治体のどちらかにデータがありません。'}
                 <span className="ml-1 font-normal text-slate-600">
-                  対応している{topic.cells.length}区は{topic.valueGroups.length}通りに分かれます。
+                  対応している{topic.cells.length}自治体は{topic.valueGroups.length}
+                  通りに分かれます。
                 </span>
               </p>
 
@@ -296,7 +298,7 @@ export function DifferencesPage() {
 
       <Card>
         <p className="text-sm text-slate-700">
-          自分の区の手続きは、チェックリストで確認できます（表示されるのは選んだ区の情報だけです）。
+          自分の自治体の手続きは、チェックリストで確認できます（表示されるのは選んだ区の情報だけです）。
         </p>
         <Link
           to="/checklist"

@@ -135,7 +135,7 @@ export function NonMunicipalBadge() {
       }
     >
       <span className="sr-only">手続き先：</span>
-      区以外の手続き
+      市区町村以外の手続き
     </Badge>
   );
 }

@@ -362,7 +362,7 @@ export function ChecklistPage() {
               to="/differences"
               className="tap-target-inline font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800"
             >
-              区ごとの期限のちがいを見る
+              自治体ごとの期限のちがいを見る
             </Link>
             <span className="ml-1.5">
               — 同じ手続きでも期限が異なることがあります（自治体間の比較ページです）
@@ -571,7 +571,7 @@ function MoveOutDateCard({ notice }: { notice: MoveOutDateNotice }) {
             <p className="mt-1 text-sm text-slate-800">
               {notice.enables.length > 0 ? 'また、' : ''}
               <span className="font-semibold">{joinTitles(notice.advances)}</span>
-              は既に日付を表示していますが、転入先の区は転出予定日からの日数も期限の条件にしているため、入力するとより早い期限に変わることがあります。
+              は既に日付を表示していますが、転入先の自治体は転出予定日からの日数も期限の条件にしているため、入力するとより早い期限に変わることがあります。
             </p>
           )}
           <p className="mt-1 text-sm text-slate-800">
@@ -716,7 +716,7 @@ function TaskCard({
           )}
           {overdue && (
             <p className="mt-1.5 rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-sm text-red-900">
-              期限の日付を過ぎています。遅れても手続きは必要です。お早めに区の窓口へご相談ください。手続き済みの場合は、このまま完了にしてください。
+              期限の日付を過ぎています。遅れても手続きは必要です。お早めに自治体の窓口へご相談ください。手続き済みの場合は、このまま完了にしてください。
             </p>
           )}
 

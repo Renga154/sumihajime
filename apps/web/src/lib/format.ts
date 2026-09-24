@@ -110,7 +110,7 @@ export const categoryLabel: Record<string, string> = {
   rag: 'AIチャット相談',
   // ADR-009: 自治体以外(ライフライン等)の手続き。coverage の1カテゴリ(non_municipal)と、
   // 手続きの canonicalType(water_supply 等)の両方をここで人間可読な見出しにする。
-  non_municipal: '区以外の手続き（水道・郵便・電気ガス・免許）',
+  non_municipal: '市区町村以外の手続き（水道・郵便・電気ガス・免許）',
   water_supply: '水道（下水道を含む）',
   postal_forwarding: '郵便の転居届',
   utilities_contact: '電気・ガス',

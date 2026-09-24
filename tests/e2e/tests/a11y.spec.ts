@@ -112,12 +112,12 @@ test('a11y: 窓口一覧(施設地図込み)に重大違反なし', async ({ pag
   await assertNoSerious(page);
 });
 
-test('a11y: 比較ページ「区ごとの期限のちがい」に重大違反なし', async ({ page }) => {
+test('a11y: 比較ページ「自治体ごとの期限のちがい」に重大違反なし', async ({ page }) => {
   await page.goto('/differences');
-  await expect(page.getByRole('heading', { name: '区ごとの期限のちがい' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '自治体ごとの期限のちがい' })).toBeVisible();
   // 非同期ロード完了(比較セルの描画)を待ってから検査する。
   // 自治体未選択で到達した場合、左は「基準の区」(既定値を「あなたの区」と断定しない)。
-  await expect(page.getByLabel('基準の区')).toBeVisible();
+  await expect(page.getByLabel('基準の自治体')).toBeVisible();
   await assertNoSerious(page);
 });
 

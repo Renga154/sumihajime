@@ -103,7 +103,7 @@ function groupSourcesByMunicipality(
 
 function providerGroupName(code: string): string {
   if (code === '13000') return '東京都（都の機関）';
-  if (code === '00000') return '国・全国共通（区以外）';
+  if (code === '00000') return '国・全国共通（市区町村以外）';
   return '東京都・共通';
 }
 

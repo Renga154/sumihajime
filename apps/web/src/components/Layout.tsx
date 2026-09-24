@@ -36,7 +36,7 @@ const navItems = [
   { to: '/checklist', label: 'チェックリスト', end: false },
   { to: '/facilities', label: '窓口一覧', end: false },
   { to: '/waste', label: 'ごみ収集', end: false },
-  { to: '/differences', label: '区ごとの期限', end: false },
+  { to: '/differences', label: '自治体ごとの期限', end: false },
 ];
 
 function LogoMark() {
@@ -144,7 +144,7 @@ export function Layout({ children }: { children?: ReactNode }) {
               to="/differences"
               className="tap-target-inline font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
             >
-              区ごとの期限のちがい
+              自治体ごとの期限のちがい
             </Link>
             <span className="ml-1.5 text-slate-500">
               — 同じ手続きでも区によって期限が違うことを比較できます

@@ -145,16 +145,16 @@ describe('ChecklistPage', () => {
     expect(screen.getByText('マイクロチップの有無が未確認です。')).toBeInTheDocument();
   });
 
-  it('区以外の手続きだけに「区以外の手続き」バッジを表示する(ADR-009)', async () => {
+  it('区以外の手続きだけに「市区町村以外の手続き」バッジを表示する(ADR-009)', async () => {
     renderChecklist();
-    const badges = await screen.findAllByText('区以外の手続き');
+    const badges = await screen.findAllByText('市区町村以外の手続き');
     // 4タスク中、非自治体カテゴリ(water_supply)の1件だけに付く。
     expect(badges).toHaveLength(1);
     const card = badges[0]?.closest('li');
     expect(card?.textContent).toContain('水道');
     // 区の手続き(転入届・ごみ)のカードには付かない。
     const residentCard = screen.getByText('転入届').closest('li');
-    expect(residentCard?.textContent).not.toContain('区以外の手続き');
+    expect(residentCard?.textContent).not.toContain('市区町村以外の手続き');
   });
 
   it('タスク名を h3 見出しにする(スクリーンリーダーの見出しジャンプで辿れる)', async () => {

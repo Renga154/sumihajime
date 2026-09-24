@@ -70,7 +70,7 @@ export function DataProvenance({ stats, collapsible = false }: DataProvenancePro
 
       <ul className="mt-2.5 space-y-1 text-sm text-slate-700">
         <li>
-          各区が公開する公式ページとオープンデータ（CSV・API）を機械判読で取り込み、人手で承認した
+          各自治体が公開する公式ページとオープンデータ（CSV・API）を機械判読で取り込み、人手で承認した
           ものだけを掲載しています。
         </li>
         <li>

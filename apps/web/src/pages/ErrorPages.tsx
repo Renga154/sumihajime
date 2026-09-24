@@ -15,9 +15,13 @@ import { useDocumentTitle } from '../lib/navigation';
 
 /** 復帰導線。どの状態からでも主要動線へ戻れるようにする。 */
 const RECOVERY_LINKS: { to: string; label: string; description: string }[] = [
-  { to: '/', label: 'ホーム（自治体を選ぶ）', description: 'お住まいの区を選んで最初から始めます' },
+  {
+    to: '/',
+    label: 'ホーム（自治体を選ぶ）',
+    description: 'お住まいの自治体を選んで最初から始めます',
+  },
   { to: '/checklist', label: 'チェックリスト', description: '入力済みの内容があれば再表示します' },
-  { to: '/facilities', label: '窓口一覧', description: '区の窓口の場所・受付時間を見ます' },
+  { to: '/facilities', label: '窓口一覧', description: '自治体の窓口の場所・受付時間を見ます' },
   {
     to: '/about-data',
     label: 'このサービスのデータについて',
@@ -101,7 +105,7 @@ function UnexpectedError() {
         一時的な問題が発生した可能性があります。ページを再読み込みすると解消することがあります。
       </p>
       <p className="mt-1 text-sm text-slate-600">
-        解消しない場合は、下のリンクから他のページへお進みください。手続きの内容は各区の公式ページでもご確認いただけます。
+        解消しない場合は、下のリンクから他のページへお進みください。手続きの内容は各自治体の公式ページでもご確認いただけます。
       </p>
     </NoticeCard>
   );
