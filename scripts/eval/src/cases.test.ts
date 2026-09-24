@@ -22,7 +22,7 @@ describe('rag-eval-cases.json', () => {
     expect(() => parseDataset(raw)).not.toThrow();
   });
 
-  it('179問・正答146/保留17/越境16・自治体整合を満たす', () => {
+  it('180問・正答147/保留17/越境16・自治体整合を満たす', () => {
     const dataset = parseDataset(raw);
     expect(() => assertDatasetShape(dataset)).not.toThrow();
   });
