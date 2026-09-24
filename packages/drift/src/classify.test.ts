@@ -98,7 +98,11 @@ describe('classifyCheck — csv / xlsx(生ハッシュ)', () => {
     const v = classifyCheck(
       input({ sourceType: 'csv', baseline: { contentHash: 'aa' }, current: { contentHash: 'bb' } }),
     );
-    expect(v).toEqual({ status: 'changed', reason: 'content_hash_changed', consecutiveFailures: 0 });
+    expect(v).toEqual({
+      status: 'changed',
+      reason: 'content_hash_changed',
+      consecutiveFailures: 0,
+    });
   });
 
   it('同じなら ok', () => {
@@ -116,6 +120,33 @@ describe('classifyCheck — csv / xlsx(生ハッシュ)', () => {
     const v = classifyCheck(input({ sourceType: 'csv', current: { contentHash: 'aa' } }));
     expect(v).toEqual({ status: 'unverifiable', reason: 'no_signal', consecutiveFailures: 0 });
   });
+
+  it('ダウンロードが別ホストの保存先へリダイレクトしても失敗にしない(中身のハッシュで判定)', () => {
+    // 渋谷区の ArcGIS Hub は毎回、署名付きの保存先URLへリダイレクトして CSV を返す。
+    const v = classifyCheck(
+      input({
+        sourceType: 'csv',
+        fetch: okFetch({
+          requestedUrl: 'https://city-shibuya-data.opendata.arcgis.com/api/download/v1/items/x/csv',
+          finalUrl: 'https://stg-arcgisazurecdataprod3.az.arcgis.com/exportfiles/x.csv?sig=abc',
+        }),
+        baseline: { contentHash: 'aa' },
+        current: { contentHash: 'aa' },
+      }),
+    );
+    expect(v).toEqual({ status: 'ok', reason: 'content_hash_same', consecutiveFailures: 0 });
+  });
+
+  it('ダウンロードでも HTTP エラーは失敗に数える', () => {
+    const v = classifyCheck(
+      input({
+        sourceType: 'csv',
+        fetch: okFetch({ ok: false, status: 404 }),
+        baseline: { contentHash: 'aa' },
+      }),
+    );
+    expect(v.reason).toBe('http_404');
+  });
 });
 
 describe('classifyCheck — html(更新日)', () => {
@@ -127,7 +158,11 @@ describe('classifyCheck — html(更新日)', () => {
         current: { pageUpdatedOn: '2026-01-01' },
       }),
     );
-    expect(v).toEqual({ status: 'unverifiable', reason: 'charset_not_utf8', consecutiveFailures: 0 });
+    expect(v).toEqual({
+      status: 'unverifiable',
+      reason: 'charset_not_utf8',
+      consecutiveFailures: 0,
+    });
   });
 
   it('utf-8 / UTF8 の宣言ゆれは UTF-8 として扱う', () => {
@@ -156,7 +191,10 @@ describe('classifyCheck — html(更新日)', () => {
 
   it('更新日が違えば changed/page_updated_on_changed', () => {
     const v = classifyCheck(
-      input({ baseline: { pageUpdatedOn: '2026-01-01' }, current: { pageUpdatedOn: '2026-02-02' } }),
+      input({
+        baseline: { pageUpdatedOn: '2026-01-01' },
+        current: { pageUpdatedOn: '2026-02-02' },
+      }),
     );
     expect(v.status).toBe('changed');
     expect(v.reason).toBe('page_updated_on_changed');
@@ -164,7 +202,10 @@ describe('classifyCheck — html(更新日)', () => {
 
   it('更新日が同じなら ok', () => {
     const v = classifyCheck(
-      input({ baseline: { pageUpdatedOn: '2026-01-01' }, current: { pageUpdatedOn: '2026-01-01' } }),
+      input({
+        baseline: { pageUpdatedOn: '2026-01-01' },
+        current: { pageUpdatedOn: '2026-01-01' },
+      }),
     );
     expect(v.status).toBe('ok');
   });

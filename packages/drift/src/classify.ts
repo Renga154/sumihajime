@@ -66,9 +66,14 @@ function parseUrl(url: string): URL | null {
  * - 最終 URL のホストが変わった(別サイトへ飛ばされた=ページが消えた典型)
  * - 深いパスを要求したのにトップ(`/`)へ潰された(ソフト404の典型)
  */
-function reachabilityFailure(fetch: DriftFetchResult): string | null {
+function reachabilityFailure(fetch: DriftFetchResult, sourceType: string): string | null {
   if ('networkError' in fetch) return 'network_error';
   if (!fetch.ok || fetch.status < 200 || fetch.status >= 300) return `http_${fetch.status}`;
+  // なぜファイルは到達先を問わないか: オープンデータのダウンロードは、配信基盤が署名付きの
+  // 保存先URL(別ホスト)へリダイレクトして返すのが普通(渋谷区の ArcGIS Hub で実際に
+  // host_changed の誤検知が出た。2026-09-25)。ファイルは中身のハッシュで判定するので、
+  // 行き先のホストやパスは「ページが消えた」の信号にならない。
+  if (sourceType === 'csv' || sourceType === 'xlsx') return null;
   const requested = parseUrl(fetch.requestedUrl);
   const final = parseUrl(fetch.finalUrl);
   if (!requested || !final) return 'url_unparseable';
@@ -80,11 +85,16 @@ function reachabilityFailure(fetch: DriftFetchResult): string | null {
 }
 
 function isUtf8(charset: string): boolean {
-  return charset.trim().toLowerCase().replace(/[^a-z0-9]/g, '') === 'utf8';
+  return (
+    charset
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '') === 'utf8'
+  );
 }
 
 export function classifyCheck(input: DriftCheckInput): DriftVerdict {
-  const failure = reachabilityFailure(input.fetch);
+  const failure = reachabilityFailure(input.fetch, input.sourceType);
   if (failure !== null) {
     const consecutiveFailures = input.previousConsecutiveFailures + 1;
     // ADR-014: unreachable は2回連続で初めて確定する(一過性の障害を降格理由にしない)。
