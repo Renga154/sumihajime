@@ -18,7 +18,7 @@ import { FEEDBACK_FORM_URL, FEEDBACK_TOPICS } from '../content/contact';
  * 括弧で添えてある。
  */
 
-const REVISED_ON = '2026年9月23日';
+const REVISED_ON = '2026年9月24日';
 
 function PolicyLayout({
   title,
@@ -282,20 +282,37 @@ export function PrivacyPage() {
             ）へ地図画像を直接取得しにいきます。その際、通信に伴うIPアドレス等が同院へ伝わります。
           </li>
           <li>
+            お問い合わせフォーム — フォームを開いて送信した内容は Google 社へ送られます（下記8）。
+          </li>
+          <li>
             公式ページへのリンク — リンクを開くと、その先は各自治体・官公庁のサイトであり、
             本ポリシーの適用範囲外です。
           </li>
         </ul>
       </Section>
 
-      <Section id="privacy-ads" title="8. 広告について">
+      <Section id="privacy-form" title="8. 誤りのご報告・お問い合わせフォーム">
+        <p>
+          お問い合わせは Google フォームで受け付けています。フォームに入力された内容は Google 社の
+          サービス上に保存され、運営者だけが閲覧し、データの修正とお問い合わせへの対応にのみ使います。
+          フォームはメールアドレスを収集せず、Google へのログインも求めない設定にしています。
+          入力欄に氏名・住所・連絡先などの個人情報は書かないでください。
+        </p>
+        <p>
+          手続きの詳細画面から「この手続きの誤りを報告する」を開くと、手続き名・自治体コード・
+          その画面のURLが入力済みの状態でフォームが開きます。引越し日や世帯などの入力条件は
+          含めません。
+        </p>
+      </Section>
+
+      <Section id="privacy-ads" title="9. 広告について">
         <p>
           現時点では広告を表示しておらず、広告事業者へ情報を渡していません。将来的に広告を導入する
           場合は、事前に本ポリシーを改定し、どの事業者にどの情報が渡るかを明記します。
         </p>
       </Section>
 
-      <Section id="privacy-changes" title="9. 本ポリシーの改定">
+      <Section id="privacy-changes" title="10. 本ポリシーの改定">
         <p>仕組みを変更したときは、本ポリシーも合わせて改定し、最終改定日を更新します。</p>
       </Section>
     </PolicyLayout>

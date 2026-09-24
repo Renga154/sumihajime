@@ -28,10 +28,12 @@ import { logEvent } from './log.js';
 import { buildTasks } from './checklist.js';
 import { handleChat, handleChatAvailability } from './chat.js';
 import { scheduled } from './drift.js';
+import { assessHealth } from './health.js';
 import type { Bindings, DriftMark } from './db.js';
 import {
   getActiveDriftMarks,
   getAllRuleSets,
+  countPublishedProcedures,
   getDriftSummary,
   getFacilities,
   getMunicipalitiesWithCoverage,
@@ -123,18 +125,35 @@ function requireMunicipalityQuery(c: Context<Env>): string | null {
 }
 
 /**
- * GET /api/health : 死活応答 + 定期巡回の要約(ADR-014 §3)。
- * 通知を外部サービスに頼らず、外形監視がこの値(flaggedSources / lastCheckedAt)を見張る。
- * D1 が読めなくても Worker 自体の死活は答えるべきなので、巡回要約は失敗時 null にして 200 を保つ。
+ * GET /api/health : 死活応答 + 自己判定(A-1-4) + 定期巡回の要約(ADR-014 §3)。
+ * 外形監視(ops/monitoring)は「HTTP 200 かつ status === 'ok'」だけを見る。判定の中身は
+ * health.ts(純関数)にあり、ここは D1 から材料を集めるだけ。
+ * ok は「Worker が応答している」の意味で常に true(既存の利用者向けに形を変えない)。
+ * D1 が読めなくても Worker 自体の死活は答えるべきなので、HTTP は常に 200。
  */
 app.get('/api/health', async (c) => {
   let drift: Awaited<ReturnType<typeof getDriftSummary>> | null = null;
-  try {
-    drift = c.env?.DB ? await getDriftSummary(c.env.DB) : null;
-  } catch {
-    drift = null;
+  let publishedProcedures: number | null = null;
+  let dbReachable = false;
+  if (c.env?.DB) {
+    try {
+      [drift, publishedProcedures] = await Promise.all([
+        getDriftSummary(c.env.DB),
+        countPublishedProcedures(c.env.DB),
+      ]);
+      dbReachable = true;
+    } catch {
+      drift = null;
+      publishedProcedures = null;
+    }
   }
-  return c.json({ ok: true, version: '0.0.1', drift });
+  const { status, issues } = assessHealth({
+    dbReachable,
+    publishedProcedures,
+    drift,
+    now: new Date(),
+  });
+  return c.json({ ok: true, version: '0.0.1', status, issues, drift });
 });
 
 /**

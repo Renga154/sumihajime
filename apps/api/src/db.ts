@@ -481,6 +481,15 @@ export async function getActiveDriftMarks(
   return map;
 }
 
+/**
+ * なぜ: /api/health の自己判定(A-1-4)で「公開データが空になっていないか」を見るための件数。
+ * publish は DELETE→INSERT なので、途中で失敗すると手続きが0件のまま Worker は200を返し続ける。
+ */
+export async function countPublishedProcedures(db: D1Database): Promise<number> {
+  const row = await db.prepare('SELECT COUNT(*) AS n FROM procedures').first<Row>();
+  return Number(row?.n ?? 0);
+}
+
 export interface DriftSummary {
   /** 効力のある changed/unreachable の件数(= 再確認中にしているソース数)。 */
   flaggedSources: number;

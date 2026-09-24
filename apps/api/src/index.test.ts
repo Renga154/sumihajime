@@ -3,10 +3,16 @@ import { app } from './index';
 import { API_SECURITY_HEADERS, DOCUMENT_SECURITY_HEADERS } from './headers.js';
 
 describe('GET /api/health', () => {
-  it('returns ok with the version(D1 未接続でも巡回要約は null で 200 を保つ)', async () => {
+  it('D1 未接続でも 200 を保ち、自己判定は degraded / db_unreachable を返す', async () => {
     const res = await app.request('/api/health');
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ ok: true, version: '0.0.1', drift: null });
+    await expect(res.json()).resolves.toEqual({
+      ok: true,
+      version: '0.0.1',
+      status: 'degraded',
+      issues: ['db_unreachable'],
+      drift: null,
+    });
   });
 
   it('セキュリティヘッダが付く', async () => {

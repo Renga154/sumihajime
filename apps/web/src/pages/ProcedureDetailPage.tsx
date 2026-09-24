@@ -7,6 +7,7 @@ import { channelLabel, documentStatusLabel, formatDate } from '../lib/format';
 import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
 import { DataStatusBadge, PriorityBadge } from '../components/Badge';
 import { SourceCard } from '../components/SourceCard';
+import { buildReportUrl } from '../content/contact';
 import { ChatPanel, ChatUnavailable } from '../components/ChatPanel';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { useDocumentTitle } from '../lib/navigation';
@@ -209,6 +210,10 @@ export function ProcedureDetailPage() {
                 <SourceCard key={s.sourceId} source={s} />
               ))}
             </div>
+            <ReportErrorLink
+              procedureTitle={state.data.procedure.title}
+              municipalityCode={municipalityCode}
+            />
           </Section>
 
           {/* チェックリストと同じく、印刷時は入力欄ごと隠す(紙の上では操作できず場所だけ取る)。
@@ -229,6 +234,34 @@ export function ProcedureDetailPage() {
         </article>
       )}
     </div>
+  );
+}
+
+/**
+ * 誤り報告への導線(A-1-2)。根拠カードの直後に置くのは、利用者が公式ページと見比べて
+ * 食い違いに気づくのがこの位置だから。窓口が未設定なら出さない。印刷には出さない。
+ */
+function ReportErrorLink({
+  procedureTitle,
+  municipalityCode,
+}: {
+  procedureTitle: string;
+  municipalityCode: string;
+}) {
+  // パスはルーターから取る(window.location はルーター外の状態を指しうる)。クエリは載せない。
+  const { pathname } = useLocation();
+  const href = buildReportUrl({
+    procedureTitle,
+    municipalityCode,
+    pageUrl: `${window.location.origin}${pathname}`,
+  });
+  if (!href) return null;
+  return (
+    <p className="print-hide mt-3 text-xs text-slate-600">
+      公式ページと食い違う点に気づいたら、
+      <ExternalLink href={href}>この手続きの誤りを報告する</ExternalLink>
+      （区と手続き名は入力済みで開きます）
+    </p>
   );
 }
 

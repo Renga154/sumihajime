@@ -168,3 +168,20 @@ describe('ProcedureDetailPage — 巡回の検知(ADR-014)', () => {
     expect(screen.queryByText(/検知/)).toBeNull();
   });
 });
+
+/**
+ * なぜ: A-1-2 の誤り報告の導線。根拠カードの直後に、手続き名と自治体コードを事前入力した
+ * フォームへのリンクを出す。利用者の入力条件はURLに載せない(原則6・7)。
+ */
+describe('ProcedureDetailPage — 誤りの報告', () => {
+  it('根拠カードの後に、手続き名・自治体コード入りの報告リンクを出す', async () => {
+    renderDetail('/procedures/procedure_resident_registration');
+    const link = await screen.findByRole('link', { name: /この手続きの誤りを報告する/ });
+    const url = new URL(link.getAttribute('href')!);
+    expect(url.hostname).toBe('docs.google.com');
+    expect(url.searchParams.get('entry.550992746')).toBe('転入届（自治体コード 13112）');
+    expect(url.searchParams.get('entry.242184327')).toMatch(
+      /\/procedures\/procedure_resident_registration$/,
+    );
+  });
+});

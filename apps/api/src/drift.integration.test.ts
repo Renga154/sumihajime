@@ -412,3 +412,24 @@ describe('(d) /api/health の巡回要約', () => {
     expect(stats.driftLastCheckedAt).toBe('2026-09-22T03:00:00Z');
   });
 });
+
+describe('(e) /api/health の自己判定(A-1-4)', () => {
+  it('実D1: 未巡回なら patrol_never_ran、最近の巡回があれば ok(公開データありを確認)', async () => {
+    const before = (await (await request('/api/health')).json()) as {
+      status: string;
+      issues: string[];
+    };
+    expect(before).toMatchObject({ status: 'degraded', issues: ['patrol_never_ran'] });
+
+    // 直近の巡回を1件記録すると ok に戻る(毎時 Cron が動いている状態)。
+    await db
+      .prepare(
+        'INSERT INTO source_drift (source_id, status, reason, last_checked_at, consecutive_failures) ' +
+          "VALUES (?, 'ok', 'page_updated_on_same', ?, 0)",
+      )
+      .bind(SRC_CHIYODA_RESIDENT, new Date().toISOString())
+      .run();
+    const after = (await (await request('/api/health')).json()) as typeof before;
+    expect(after).toMatchObject({ status: 'ok', issues: [] });
+  });
+});

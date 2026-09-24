@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { NavLink, Outlet, Link, ScrollRestoration } from 'react-router-dom';
 import { useRouteChangeAnnouncement } from '../lib/navigation';
+import { FEEDBACK_FORM_URL } from '../content/contact';
 
 /**
  * なぜ: 全ページ共通のランドマーク(header/nav/main/footer)とスキップリンクを提供し、
@@ -178,6 +179,21 @@ export function Layout({ children }: { children?: ReactNode }) {
             >
               プライバシーポリシー
             </Link>
+            {FEEDBACK_FORM_URL && (
+              <>
+                <span className="mx-2 text-slate-300">/</span>
+                {/* 誤り報告の窓口(A-1-2)。外部(Google フォーム)なので新しいタブで開く。 */}
+                <a
+                  href={FEEDBACK_FORM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="tap-target-inline font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+                >
+                  誤りの報告・お問い合わせ
+                  <span className="sr-only">（別タブで開きます）</span>
+                </a>
+              </>
+            )}
           </p>
         </div>
       </footer>

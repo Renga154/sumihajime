@@ -48,21 +48,30 @@ describe('プライバシーポリシー', () => {
 });
 
 describe('問い合わせ窓口', () => {
-  it('窓口URLが未設定のあいだは節ごと出さない(「準備中」の窓口を公開しない)', () => {
-    renderPage(<TermsPage />);
-    expect(screen.queryByText(/お問い合わせフォームを開く/)).not.toBeInTheDocument();
+  it('公開済みの窓口が規約・ポリシーの両方に出る', () => {
+    for (const page of [<TermsPage key="t" />, <PrivacyPage key="p" />]) {
+      const { unmount } = renderPage(page);
+      const link = screen.getByRole('link', { name: /お問い合わせフォームを開く/ });
+      expect(link.getAttribute('href')).toMatch(/^https:\/\/docs\.google\.com\/forms\/d\/e\//);
+      unmount();
+    }
   });
 
-  it('窓口URLを設定すると両方のページに出る', async () => {
+  it('窓口URLが未設定なら節ごと出さない(「準備中」の窓口を公開しない)', async () => {
     vi.resetModules();
     vi.doMock('../content/contact', async (importOriginal) => ({
       ...(await importOriginal<typeof import('../content/contact')>()),
-      FEEDBACK_FORM_URL: 'https://docs.google.com/forms/d/e/TEST/viewform',
+      FEEDBACK_FORM_URL: undefined,
     }));
     const mod = await import('./PolicyPages');
-    renderPage(<mod.PrivacyPage />);
-    const link = screen.getByRole('link', { name: /お問い合わせフォームを開く/ });
-    expect(link).toHaveAttribute('href', 'https://docs.google.com/forms/d/e/TEST/viewform');
+    renderPage(<mod.TermsPage />);
+    expect(screen.queryByText(/お問い合わせフォームを開く/)).not.toBeInTheDocument();
     vi.doUnmock('../content/contact');
+  });
+
+  it('ポリシーはフォームで送られる内容の扱いと、事前入力する項目を明示する', () => {
+    renderPage(<PrivacyPage />);
+    expect(screen.getByText(/メールアドレスを収集せず/)).toBeInTheDocument();
+    expect(screen.getByText(/引越し日や世帯などの入力条件は/)).toBeInTheDocument();
   });
 });
