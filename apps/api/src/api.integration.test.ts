@@ -81,7 +81,7 @@ interface Task {
 }
 
 describe('GET /api/municipalities', () => {
-  it('returns 62 municipalities; 23特別区すべてが supported(最後の8区=中央・港・文京・台東・墨田・目黒・渋谷・葛飾は2026-08-07承認)', async () => {
+  it('returns 62 municipalities; 23特別区すべてと八王子市が supported(八王子市は2026-09-25承認)', async () => {
     const res = await request('/api/municipalities');
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -97,16 +97,13 @@ describe('GET /api/municipalities', () => {
       .filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
-    // 23特別区(13101〜13123)がすべて supported。多摩地域・島しょ(13201〜)は1件も含まない
-    // (未対応を対応済みに見せない=CLAUDE.md原則9)。
-    expect(supported).toHaveLength(23);
+    // 23特別区(13101〜13123)がすべて supported。多摩地域・島しょ(13201〜)は人手レビュー承認済みの
+    // 八王子市(13201。2026-09-25承認)だけを含む(未対応を対応済みに見せない=CLAUDE.md原則9)。
+    expect(supported).toHaveLength(24);
     expect(supported).toEqual(
-      body
-        .filter((m) => m.code.startsWith('131'))
-        .map((m) => m.code)
-        .sort(),
+      [...body.filter((m) => m.code.startsWith('131')).map((m) => m.code), '13201'].sort(),
     );
-    expect(supported.filter((c) => !c.startsWith('131'))).toEqual([]);
+    expect(supported.filter((c) => !c.startsWith('131'))).toEqual(['13201']);
     // 各自治体に公式導線URL(FR-021)。出典ページの表記どおり http/https いずれもあり得る。
     for (const m of body) expect(m.officialUrl).toMatch(/^https?:\/\//);
     // 世田谷にはカバレッジ行がある(FR-024)。
@@ -174,17 +171,18 @@ describe('POST /api/checklists — 犬・マイクロチップ不明', () => {
 });
 
 describe('POST /api/checklists — 未対応自治体', () => {
-  it('八王子(13201)は supported=false エラー + 公式URL(FR-021)', async () => {
-    // なぜ: 杉並(13115)・千代田(13101)・品川(13109)は人手レビュー承認によりsupported=trueへ
-    // 変わったため、未対応自治体のfixtureとして未整備の八王子市(13201、市部)を使う。
-    const res = await postChecklist(profile({ municipalityCode: '13201' }));
+  it('立川(13202)は supported=false エラー + 公式URL(FR-021)', async () => {
+    // なぜ: 杉並(13115)・千代田(13101)・品川(13109)は人手レビュー承認によりsupported=trueへ、
+    // 八王子市(13201)も2026-09-25の承認でsupported=trueへ変わったため、未対応自治体のfixtureとして
+    // 未整備の立川市(13202、市部)を使う。
+    const res = await postChecklist(profile({ municipalityCode: '13202' }));
     expect(res.status).toBe(409);
     const body = (await res.json()) as {
       error: { code: string; message: string; officialUrl?: string };
     };
     expect(body.error.code).toBe('municipality_not_supported');
-    expect(body.error.officialUrl).toBe('https://www.city.hachioji.tokyo.jp/');
-    expect(body.error.message).toContain('八王子市');
+    expect(body.error.officialUrl).toBe('https://www.city.tachikawa.lg.jp/');
+    expect(body.error.message).toContain('立川市');
   });
 
   it('存在しない自治体コードは 404', async () => {
@@ -277,7 +275,8 @@ describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)
     // 「今許可する」で取得許可した渋谷区のArcGIS Hub配信の施設CSV1件を新規登録し331→332。
     // これで台帳の全行が approved=23区が出そろった状態。
     // 2026-09-25: 再監査で花畑区民事務所の施設ページ(仮設事務所への移転)を出典に追加し332→333。
-    expect(body.length).toBe(333);
+    // 同日さらに八王子市(13201)の23ソース+東京都水道局お客さまセンター1ソースが人手レビュー承認(333→357)。
+    expect(body.length).toBe(357);
 
     for (const s of body) {
       // 公開に必要な列は揃う。

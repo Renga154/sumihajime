@@ -330,16 +330,17 @@ describe('POST /api/chat — 保留系', () => {
 
   it('未対応自治体(supported=false)は対象外を明示+公式誘導で保留', async () => {
     // なぜ: 杉並(13115)・千代田(13101)・品川(13109)・大田(13111)は人手レビュー承認により
-    // supported=trueへ変わったため、未対応自治体のfixtureとして未整備の八王子市(13201、市部)を使う。
+    // supported=trueへ、八王子市(13201)も2026-09-25の承認で supported=true へ変わったため、
+    // 未対応自治体のfixtureとして未整備の立川市(13202、市部)を使う。
     const vz = mockVectorize([]);
     const res = await chat(baseEnv({ VECTORIZE: vz }), {
-      municipalityCode: '13201', // 八王子(未対応)
+      municipalityCode: '13202', // 立川(未対応)
       question: 'ごみの出し方は?',
     });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { answer: string; abstained: boolean };
     expect(body.abstained).toBe(true);
-    expect(body.answer).toContain('八王子市');
+    expect(body.answer).toContain('立川市');
     expect(body.answer).toContain('公式サイト');
   });
 });

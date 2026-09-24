@@ -2,8 +2,8 @@ import type { Municipality } from '@tmn/schemas';
 
 /**
  * なぜ: 東京都62市区町村(23区+26市+5町+8村)を municipalities テーブルへ投入する静的マスタ。
- * supported=true は縦切り整備済みの23特別区すべて(2026-08-07 の人手レビュー承認で23区が出そろった)。
- * 残る39市町村はチェックリスト未対応だが、
+ * supported=true は縦切り整備済みの23特別区すべて(2026-08-07 の人手レビュー承認で23区が出そろった)と、
+ * 市部で最初の八王子市(2026-09-25 人手レビュー承認)。残る38市町村はチェックリスト未対応だが、
  * FR-021「未対応でも公式サイトへ誘導」のため officialUrl を全件に持たせ、CLAUDE.md原則9
  * 「未対応を対応済みに見せない」を LandingPage 側の折りたたみグループ表示で担保する。
  *
@@ -302,9 +302,14 @@ export const MUNICIPALITIES: Municipality[] = [
 
   // ── 26市(code=132xx) ──
   {
+    // なぜ: 市部で最初に八王子市データ(手続き10件+自治体以外のライフライン等4件/窓口施設14件)を整備し、
+    // 2026-09-25 の人手レビュー承認により全件verified・approved化されたため公開ビュー(seed→D1→API)でも
+    // supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13201',
     name: '八王子市',
-    supported: false,
+    supported: true,
+    // note は LandingPage で利用者に表示される「表示専用」文言。内部の進捗・工程用語は出さない。
+    note: '対応済み',
     officialUrl: 'https://www.city.hachioji.tokyo.jp/',
   },
   {

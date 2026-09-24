@@ -22,7 +22,7 @@ describe('rag-eval-cases.json', () => {
     expect(() => parseDataset(raw)).not.toThrow();
   });
 
-  it('180問・正答147/保留17/越境16・自治体整合を満たす', () => {
+  it('186問・正答152/保留17/越境17・自治体整合を満たす', () => {
     const dataset = parseDataset(raw);
     expect(() => assertDatasetShape(dataset)).not.toThrow();
   });
@@ -49,7 +49,7 @@ describe('rag-eval-cases.json', () => {
 
   // なぜ: v1.2.0にあった書類系4問が23区化(v2.0.0)で全て失われ、UIのプレースホルダそのものの質問
   // (「転入届に必要な持ち物は？」)が151問中1問も無い状態になっていた。回帰を二度起こさないよう固定する。
-  it('全23区に必要書類(持ち物)のケースがあり、conditional の分離を検査している(ADR-010)', () => {
+  it('全対応自治体(23区+八王子市)に必要書類(持ち物)のケースがあり、conditional の分離を検査している(ADR-010)', () => {
     const dataset = parseDataset(raw);
     for (const code of dataset.corpus.municipalities) {
       const docCases = dataset.cases.filter(
@@ -69,9 +69,9 @@ describe('rag-eval-cases.json', () => {
     }
   });
 
-  it('23区すべてを各区3問以上でカバーする', () => {
+  it('対応自治体(23区+八王子市)すべてを各3問以上でカバーする', () => {
     const dataset = parseDataset(raw);
-    expect(dataset.corpus.municipalities).toHaveLength(23);
+    expect(dataset.corpus.municipalities).toHaveLength(24);
     for (const code of dataset.corpus.municipalities) {
       const n = dataset.cases.filter((c) => c.municipalityCode === code).length;
       expect(n, `municipality ${code}`).toBeGreaterThanOrEqual(3);

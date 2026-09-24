@@ -17,7 +17,7 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 
-/** registry.csv の承認済みHTMLソース数(自治体別)。索引対象=23区。 */
+/** registry.csv の承認済みHTMLソース数(自治体別)。索引対象=23区+八王子市。 */
 const APPROVED_HTML_BY_WARD: Record<string, number> = {
   '13101': 10,
   '13102': 12,
@@ -43,14 +43,16 @@ const APPROVED_HTML_BY_WARD: Record<string, number> = {
   '13121': 17,
   '13122': 13,
   '13123': 17,
+  // 2026-09-25: 八王子市を承認(23ソースのうち取扱業務表のPDF1件は索引しないので22)。
+  '13201': 22,
 };
 const APPROVED_HTML_TOTAL = Object.values(APPROVED_HTML_BY_WARD).reduce((a, b) => a + b, 0);
 
 describe('loadApprovedHtmlSources', () => {
-  it('23区すべての承認済みHTMLソースを返す(CSV/xlsx/pending/非自治体コードは除外)', () => {
+  it('承認済み自治体(23区+八王子市)の承認済みHTMLソースを返す(CSV/xlsx/pdf/pending/非自治体コードは除外)', () => {
     const sources = loadApprovedHtmlSources(repoRoot);
     expect(sources).toHaveLength(APPROVED_HTML_TOTAL);
-    expect(RAG_MUNICIPALITIES).toHaveLength(23);
+    expect(RAG_MUNICIPALITIES).toHaveLength(24);
     for (const [code, n] of Object.entries(APPROVED_HTML_BY_WARD)) {
       expect(
         sources.filter((s) => s.municipalityCode === code),
@@ -59,7 +61,7 @@ describe('loadApprovedHtmlSources', () => {
     }
     for (const s of sources) {
       // なぜ: 非自治体コード(13000 東京都水道局等 / 00000 日本郵便等)を索引しない(ADR-009)。
-      expect(s.municipalityCode).toMatch(/^131(0[1-9]|1\d|2[0-3])$/);
+      expect(s.municipalityCode).toMatch(/^(131(0[1-9]|1\d|2[0-3])|13201)$/);
       expect(s.sourceId).toMatch(new RegExp(`^src-${s.municipalityCode}-`));
       expect(s.url).toMatch(/^https:\/\//);
       expect(s.lastVerifiedAt).toMatch(/T\d{2}:\d{2}:\d{2}/); // datetimeに正規化

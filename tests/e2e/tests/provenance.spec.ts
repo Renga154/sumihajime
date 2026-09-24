@@ -24,7 +24,8 @@ test('透明性ページ: 鮮度サマリー・台帳テーブル・CC BYバッ�
   // 同日さらに残る8区(Batch8=中央12/港14/文京14/台東13/墨田14、Batch9=目黒14/渋谷22/葛飾13)が
   // 人手レビュー承認(215→331)、渋谷区のArcGIS Hub配信の施設CSV1件を新規登録して331→332。
   // 2026-09-25 の再監査で花畑区民事務所の施設ページを出典に追加し 332→333。
-  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('333');
+  // 同日さらに八王子市(13201)の23ソース+東京都水道局お客さまセンター1ソースが承認(333→357)。
+  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('357');
   await expect(page.getByRole('heading', { name: 'データの新しさ' })).toBeVisible();
   await expect(page.getByText(/残り\s*\d+日/).first()).toBeVisible();
 
@@ -59,12 +60,12 @@ test('透明性ページ: 要約・既定の折りたたみ・自治体名での
   await page.goto('/about-data');
   await expect(page.getByRole('heading', { name: 'このページの要約' })).toBeVisible();
 
-  // 要約タイル(対応23区 / 掲載62件)。「対応している自治体と内容」の節見出しと紛れないよう
+  // 要約タイル(対応24自治体=23区+八王子市 / 掲載62件)。「対応している自治体と内容」の節見出しと紛れないよう
   // 要約セクションに限定して照合する。
   const summary = page.getByRole('region', { name: 'このページの要約' });
   await expect(
     summary.getByText('対応している自治体', { exact: true }).locator('..'),
-  ).toContainText('23');
+  ).toContainText('24');
   await expect(
     summary.getByText('掲載している自治体', { exact: true }).locator('..'),
   ).toContainText('62');

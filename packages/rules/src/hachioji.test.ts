@@ -12,18 +12,14 @@ import { moveOutScheduledDateImpact } from './move-out-date-impact.js';
 import { buildWardDifferences } from './ward-differences.js';
 
 /**
- * なぜ: 八王子市(13201)の縦切りデータを、市部で最初の自治体として**未公開(人手レビュー前)の
- * まま**置いた。その来歴・型・決定論・期限と、未公開であること自体をCIで機械検証する。
- * 足立区・江戸川区を置いたときの pending 段階と同じ形(手続きは dataStatus=partial、出典は
- * registry.csv で review_status=pending・reviewer 空、coverage.csv は全カテゴリ unavailable)。
- *
- * 当時と違う点: 公開フィールドに「人手レビュー未了」「pending」と書く注意文は、その後に入った
- * 内部用語の検査(internal-identifiers.test.ts / apps/web の no-internal-jargon.test.ts)で
- * 禁止された。未公開であることは dataStatus と台帳の review_status だけで表す。
+ * なぜ: 八王子市(13201)は市部で最初に縦切りデータを置いた自治体。2026-09-25 に未公開(人手レビュー前)の
+ * まま置き、同日の人手レビュー承認で公開対象になった(手続きは dataStatus=verified、出典は registry.csv で
+ * review_status=approved・reviewer に承認記録)。来歴・型・決定論・期限と、承認状態をCIで機械検証する。
  *
  * 固定したい不変条件:
- * (a) 未公開: 14手続き(市の10件+自治体以外の4件)すべて partial、八王子市の出典23件と
- *     東京都水道局の追加1件はすべて pending・reviewer 空、coverage は全て unavailable。
+ * (a) 承認済み: 14手続き(市の10件+自治体以外の4件)すべて verified、八王子市の出典23件と
+ *     東京都水道局の追加1件はすべて approved。coverage は手続き系・施設・自治体以外が verified、
+ *     収集曜日・分別辞書・チャット(索引の作り直し前)は unavailable。
  * (e) 自治体以外の4件: 郵便・電気ガス・運転免許は区の共通テンプレートと「区」の言い回し以外は同一
  *     (都/国の出典が八王子市にもそのまま当てはまるため)。水道は八王子市向けで、区の共通テンプレートが
  *     依拠する「23区内なら下水道局への届出不要」を持ち込まない。
@@ -255,7 +251,7 @@ function userVisibleTexts(): string[] {
   return out.filter((t) => t.length > 0);
 }
 
-describe('八王子市 — スキーマと未公開(人手レビュー前)の状態', () => {
+describe('八王子市 — スキーマと承認状態', () => {
   it('rules.json は RuleSet として parse し、14ルール・自治体スコープ一致・公開版の指定なし', () => {
     expect(ruleSet.municipalityCode).toBe(HACHIOJI);
     expect(ruleSet.ruleVersion).toBe(RULE_VERSION);
@@ -264,13 +260,13 @@ describe('八王子市 — スキーマと未公開(人手レビュー前)の状
     expect(ruleSet.rules.map((r) => r.procedureId).sort()).toEqual([...ALL_IDS].sort());
   });
 
-  it('procedures.json は14件 parse し、全件 partial(未公開)・版と最終確認日が揃う', () => {
+  it('procedures.json は14件 parse し、全件 verified(承認済み)・版と最終確認日が揃う', () => {
     const list = procedures();
     expect(list.map((p) => p.id).sort()).toEqual([...ALL_IDS].sort());
     for (const pv of list) {
       expect(pv.municipalityCode).toBe(HACHIOJI);
-      // ADR-007: verified 以外は publish が seed から外す。承認までは partial のまま置く。
-      expect(pv.dataStatus, pv.id).toBe('partial');
+      // ADR-007: 公開単位は verified のみ。2026-09-25 の人手レビュー承認で partial → verified。
+      expect(pv.dataStatus, pv.id).toBe('verified');
       expect(pv.version, pv.id).toBe(RULE_VERSION);
       expect(pv.lastVerifiedAt, pv.id).toBe(LAST_VERIFIED);
       expect(pv.sourceIds.length, pv.id).toBeGreaterThan(0);
@@ -279,11 +275,11 @@ describe('八王子市 — スキーマと未公開(人手レビュー前)の状
     }
   });
 
-  it('台帳の八王子市の出典23件は全て pending・reviewer 空・sha256 記録済み', () => {
+  it('台帳の八王子市の出典23件は全て approved・承認記録あり・sha256 記録済み', () => {
     expect(hachiojiSources).toHaveLength(23);
     for (const s of hachiojiSources) {
-      expect(s.reviewStatus, s.sourceId).toBe('pending');
-      expect(s.reviewer, s.sourceId).toBe('');
+      expect(s.reviewStatus, s.sourceId).toBe('approved');
+      expect(s.reviewer, s.sourceId).toContain('maintainer');
       expect(s.municipalityCode, s.sourceId).toBe(HACHIOJI);
       expect(s.owner, s.sourceId).toBe('八王子市');
       expect(s.contentHash, s.sourceId).toMatch(/^[0-9a-f]{64}$/);
@@ -295,16 +291,16 @@ describe('八王子市 — スキーマと未公開(人手レビュー前)の状
     }
   });
 
-  it('八王子市の水道のために足した東京都水道局の出典も pending のまま', () => {
+  it('八王子市の水道のために足した東京都水道局の出典も approved', () => {
     const s = registry.byId.get('src-13000-water_supply-002');
-    expect(s?.reviewStatus).toBe('pending');
-    expect(s?.reviewer).toBe('');
+    expect(s?.reviewStatus).toBe('approved');
+    expect(s?.reviewer).toContain('maintainer');
     expect(s?.municipalityCode).toBe('13000');
     expect(s?.owner).toBe('東京都水道局');
     expect(isOfficialUrl(s?.url ?? '')).toBe(true);
   });
 
-  it('coverage.csv — 全カテゴリ unavailable(未公開の市を一部対応に見せない)', () => {
+  it('coverage.csv — 承認済みカテゴリは verified、収集曜日・分別辞書・チャットは unavailable(未対応を対応済みに見せない)', () => {
     const rows = readFileSync(resolve(repoRoot, 'docs/data-sources/coverage.csv'), 'utf-8')
       .split(/\r?\n/)
       .filter((l) => l.trim().length > 0);
@@ -313,8 +309,25 @@ describe('八王子市 — スキーマと未公開(人手レビュー前)の状
     expect(row).toBeDefined();
     const cells = (row as string).split(',');
     expect(cells[1]).toBe('八王子市');
-    for (let i = 2; i <= 14; i++) {
-      expect(cells[i], header[i]).toBe('unavailable');
+    const expected: Record<string, string> = {
+      resident_registration: 'verified',
+      my_number: 'verified',
+      national_health_insurance: 'verified',
+      national_pension: 'verified',
+      child_benefits: 'verified',
+      school_childcare: 'verified',
+      dog_registration: 'verified',
+      facilities: 'verified',
+      // 収集曜日の機械判読データが無い / 分別方法一覧CSVは未取り込み。
+      waste_schedule: 'unavailable',
+      waste_sorting: 'unavailable',
+      // 索引の作り直しと評価を通すまでは未対応(承認とは別の工程)。
+      rag: 'unavailable',
+      non_municipal: 'verified',
+      overall_status: 'partial',
+    };
+    for (const [col, v] of Object.entries(expected)) {
+      expect(cells[header.indexOf(col)], col).toBe(v);
     }
     expect(cells[15]).toBe('2026-09-25');
   });
@@ -336,7 +349,7 @@ describe('八王子市 — スキーマと未公開(人手レビュー前)の状
     const raw = readJson(`data/normalized/${HACHIOJI}/facilities.json`) as {
       reviewStatus?: string;
     };
-    expect(raw.reviewStatus).toBe('pending');
+    expect(raw.reviewStatus).toBe('approved');
   });
 
   it('収集曜日・分別辞書のデータは作らない(機械判読できる収集曜日データが無い)', () => {
@@ -693,7 +706,7 @@ describe('八王子市 — 自治体以外(ライフライン等)の4手続き(A
         return rest;
       };
       expect(strip(actual)).toEqual(strip(expected));
-      expect(actual.dataStatus).toBe('partial');
+      expect(actual.dataStatus).toBe('verified');
       const tr = templateRules.get(id);
       expect(ruleOf(id)).toEqual(tr ? JSON.parse(toCity(JSON.stringify(tr))) : undefined);
     },

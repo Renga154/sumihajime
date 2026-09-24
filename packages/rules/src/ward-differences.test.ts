@@ -465,11 +465,12 @@ describe('マイナンバーカード継続利用 — 「別の期限を明記�
    * 「比較ページの分類」と「チェックリストが日付を出す/出さない」が食い違わないことを機械検証する。
    * 分類は区が書いた文言から導出し、期日はルールから導出する。二重帳簿にしない。
    */
-  it('マイナンバー: 分類は 90日明記18区 / 90日でない期限を明記2区 / 記載なし3区 のまま', () => {
+  it('マイナンバー: 分類は 90日明記19自治体(18区+八王子市) / 90日でない期限を明記2区 / 記載なし3区', () => {
     const groups = new Map(
       (topic?.valueGroups ?? []).map((g) => [g.valueId, g.municipalityCodes.length]),
     );
-    expect(groups.get('stated_90days')).toBe(18);
+    // 2026-09-25 の八王子市の承認で18→19(八王子市は「転入届出日から起算して90日以内」を明記)。
+    expect(groups.get('stated_90days')).toBe(19);
     expect(groups.get('not_stated')).toBe(3);
     // 「90日ではない期限」の類型は valueId に日数が入るため、接頭辞で数える。
     const others = (topic?.valueGroups ?? [])

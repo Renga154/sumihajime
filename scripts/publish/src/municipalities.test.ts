@@ -4,7 +4,7 @@ import { MUNICIPALITIES } from './municipalities.js';
 
 /**
  * なぜ: 東京都62市区町村(23区+26市+5町+8村)の誠実リスト化を固定する。
- * supported は23特別区のみ、多摩地域・島しょの39市町村は未対応(=CLAUDE.md原則9)。
+ * supported は23特別区と八王子市、多摩地域・島しょの残る38市町村は未対応(=CLAUDE.md原則9)。
  * 全件が Municipality スキーマ(5桁コード・URL)に適合し、code は一意であることを担保する。
  */
 describe('MUNICIPALITIES (東京都62市区町村)', () => {
@@ -23,17 +23,12 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
     expect(villages).toHaveLength(8);
   });
 
-  it('supported は23特別区すべて。Batch8で中央・港・文京・台東・墨田、Batch9で目黒・渋谷・葛飾を整備し2026-08-07人手レビュー承認済み', () => {
-    // なぜ: 静的 supported は「MVP整備対象」という product 意図を表す。Step4-Aで杉並(13115)、
-    // Step4-Bで千代田(13101)、Step5-Aで品川(13109)、Step5-Bで大田(13111)、Batch6-Aで
-    // 板橋(13119)・練馬(13120)、Batch7で中野(13114)・豊島(13116)・北(13117)・荒川(13118)、
-    // Batch10で足立(13121)・江戸川(13123)、最後に Batch8で中央(13102)・港(13103)・文京(13105)・
-    // 台東(13106)・墨田(13107)、Batch9で目黒(13110)・渋谷(13113)・葛飾(13122)のデータを整備し
-    // supported=true にした。これで23特別区が出そろい、23区すべてが人手レビュー承認済みである。
-    // 最後の8区は2026-08-07の承認(ユーザー決裁「5区とも承認」「3区とも承認」)により全ソースが
-    // approved・全手続き(自治体以外のライフライン等4件を含む)が verified となったため、公開ビュー
-    // (loadPublishData)でも supported=true になる(gate.test.ts / load.ts の approved 判定で
-    // 担保)。ここで検証するのは静的な整備意図。
+  it('supported は23特別区すべてと八王子市(承認済みの集合と完全一致)', () => {
+    // なぜ: 静的 supported は「MVP整備対象」という product 意図を表す。23特別区は2026-08-07までに
+    // 全区が人手レビュー承認され(Step4〜Batch10、Batch8・Batch9)、市部では八王子市(13201)が
+    // 2026-09-25 に人手レビュー承認された。承認により全ソースが approved・全手続き(自治体以外の
+    // ライフライン等4件を含む)が verified となったため、公開ビュー(loadPublishData)でも
+    // supported=true になる(gate.test.ts / load.ts の approved 判定で担保)。ここで検証するのは静的な整備意図。
     const supported = MUNICIPALITIES.filter((m) => m.supported)
       .map((m) => m.code)
       .sort();
@@ -41,10 +36,11 @@ describe('MUNICIPALITIES (東京都62市区町村)', () => {
     const allWards = MUNICIPALITIES.filter((m) => m.name.endsWith('区'))
       .map((m) => m.code)
       .sort();
-    expect(supported).toEqual(allWards);
-    expect(supported).toHaveLength(23);
-    // 多摩地域・島しょ(13201〜)は1件も supported にしない(未対応を対応済みに見せない=原則9)。
-    expect(supported.filter((c) => !c.startsWith('131'))).toEqual([]);
+    expect(supported).toEqual([...allWards, '13201'].sort());
+    expect(supported).toHaveLength(24);
+    // 多摩地域・島しょ(13201〜)で supported にしてよいのは、人手レビュー承認済みの自治体だけ。
+    // 承認していない市町村を足したらここで落ちる(未対応を対応済みに見せない=原則9)。
+    expect(supported.filter((c) => !c.startsWith('131'))).toEqual(['13201']);
   });
 
   it('北区(13117)の officialUrl は移行後の新ドメイン(city.kita.lg.jp)である', () => {

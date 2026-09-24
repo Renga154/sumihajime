@@ -48,17 +48,17 @@ const COMPOUND_ID_MARKER = '-compound-';
 /** 複合質問の最低数。単一トピックだけの評価へ戻らないための下限。 */
 const MIN_COMPOUND_CASES = 4;
 
-/** 正答系147/保留系17/越境系16・自治体整合を軽く健全性チェック(v2.3: 2026-09-25 杉並の遡及期限の変更で1問追加)。 */
+/** 正答系152/保留系17/越境系17・自治体整合を軽く健全性チェック(v2.3: 2026-09-25 杉並の遡及期限の変更で1問追加。v2.4: 同日の八王子市の承認で正答5問・越境1問を追加)。 */
 export function assertDatasetShape(dataset: EvalDataset): void {
   const cases: EvalCase[] = dataset.cases;
-  if (cases.length !== 180) throw new Error(`expected 180 cases, got ${cases.length}`);
+  if (cases.length !== 186) throw new Error(`expected 186 cases, got ${cases.length}`);
   const ids = new Set(cases.map((c) => c.id));
   if (ids.size !== cases.length) throw new Error('duplicate case ids');
   const byKind = (k: string) => cases.filter((c) => c.kind === k).length;
-  if (byKind('positive') !== 147)
-    throw new Error(`expected 147 positive, got ${byKind('positive')}`);
+  if (byKind('positive') !== 152)
+    throw new Error(`expected 152 positive, got ${byKind('positive')}`);
   if (byKind('abstain') !== 17) throw new Error(`expected 17 abstain, got ${byKind('abstain')}`);
-  if (byKind('cross') !== 16) throw new Error(`expected 16 cross, got ${byKind('cross')}`);
+  if (byKind('cross') !== 17) throw new Error(`expected 17 cross, got ${byKind('cross')}`);
   // なぜ: v2.1.1 までの175問はすべて単一トピックだったため、「1文で2つ聞かれて片方を無言で落とす」
   // 欠陥を評価が一度も踏めなかった(本番実測 2026-08-08 / 世田谷)。評価が現実より易しい問題を解いて
   // いる状態へ戻らないよう、複合質問の存在をデータセット段階で強制する。
