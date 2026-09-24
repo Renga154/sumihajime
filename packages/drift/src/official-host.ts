@@ -40,6 +40,17 @@ export const ALLOWED_HOST_EXACT = [
   // 区市町村」の href と scripts/publish/src/municipalities.ts の officialUrl に一致する公式サイト。
   'www.city.minato.tokyo.jp',
   'www.city.arakawa.tokyo.jp',
+  // 八王子市13201(市部で最初の整備対象。2026-09-25 時点で出典はすべて人手レビュー待ち)。
+  // 東京都公式「リンク集／都内区市町村」の href(data/sources/13000/snapshots/
+  // src-13000-municipalities-001.20260922.html の「八王子市」行)と scripts/publish/src/
+  // municipalities.ts の officialUrl(13201)がともに https://www.city.hachioji.tokyo.jp/ で一致する。
+  'www.city.hachioji.tokyo.jp',
+  // 八王子市子育て応援サイト。市公式サイトのページ「八王子市子育て応援サイトへの移行について」
+  // (/kurashi/kosodate/002/001/p028875.html ほか。2026-09-25 取得)が、児童手当・子ども医療費助成・
+  // 保育所の情報をこのサイトへ移したと案内している。サイトのフッターは「八王子市役所」と市の
+  // 法人番号(1000020132012。市公式サイトのフッターと同一)を掲げる。市が運営する公式サイトとして
+  // このホストだけを完全一致で許可する(city.hachioji.tokyo.jp 配下をワイルドカードで開けない)。
+  'kosodate.city.hachioji.tokyo.jp',
   // 渋谷区のオープンデータ配信先(Esri ArcGIS Hub 上の区独自ポータル)。区公式サイトの
   // オープンデータ案内および東京都オープンデータカタログの渋谷区データセット
   // (t131130d0000000027「オープンデータ一覧」)からリンクされた、渋谷区自身が管理する

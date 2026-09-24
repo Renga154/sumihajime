@@ -15,6 +15,16 @@ describe('isOfficialUrl', () => {
     expect(isOfficialHost('evil-lg.jp.attacker.com')).toBe(false);
     expect(isOfficialHost('notlg.jp')).toBe(false);
   });
+
+  it('八王子市の公式サイトと子育て応援サイトは完全一致でだけ許す', () => {
+    // なぜ: 市部で初めて .tokyo.jp のホストを2つ足した。完全一致の範囲を負例で固定し、
+    // city.hachioji.tokyo.jp 配下の別ホストや接尾辞の偽装へ広がらないことを確かめる。
+    expect(isOfficialUrl('https://www.city.hachioji.tokyo.jp/kurashi/index.html')).toBe(true);
+    expect(isOfficialUrl('https://kosodate.city.hachioji.tokyo.jp/index.html')).toBe(true);
+    expect(isOfficialHost('city.hachioji.tokyo.jp')).toBe(false);
+    expect(isOfficialHost('evil.city.hachioji.tokyo.jp')).toBe(false);
+    expect(isOfficialHost('www.city.hachioji.tokyo.jp.attacker.com')).toBe(false);
+  });
 });
 
 describe('承認済みソースの全ホストが許可される(巡回が取得せずに判定不能へ落ちない)', () => {
