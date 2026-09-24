@@ -304,14 +304,30 @@ describe('非自治体手続き — 電気・ガスの中立性(ADR-009)', () =>
   ];
 
   const utilities = nonMunicipalOf('13112').find((p) => p.id === 'procedure_utilities_contact')!;
-  const allText = WARDS.flatMap((code) =>
-    nonMunicipalOf(code).map(
-      (p) =>
-        `${p.title}\n${p.shortDescription}\n${p.applicabilityReason}\n${p.dueDescription ?? ''}\n` +
-        `${(p.cautions ?? []).join('\n')}\n${p.requiredDocuments.map((d) => d.label).join('\n')}\n` +
-        `${(p.locations ?? []).join('\n')}\n${p.contact ?? ''}\n${p.onlineUrl ?? ''}`,
-    ),
-  ).join('\n');
+  /**
+   * 市部(区以外)で4件を置いた自治体。区と内容が一部異なる(水道は市ごとに書く)ため上の「全区で同一」の
+   * 検査には入れないが、事業者を名指ししない中立性は同じく守る。2026-09-25 に八王子市(13201。未公開)。
+   */
+  const CITY_CODES = readdirSync(resolve(repoRoot, 'data/normalized'))
+    .filter((name) => /^13[2-4]\d\d$/.test(name))
+    .sort();
+  for (const code of CITY_CODES) {
+    procedures.set(code, proceduresOf(code));
+  }
+  it('中立性の検査は市部の4件も対象にする(区の外に広げても名指ししない)', () => {
+    expect(CITY_CODES).toContain('13201');
+    for (const code of CITY_CODES) expect(nonMunicipalOf(code), code).toHaveLength(4);
+  });
+  const allText = [...WARDS, ...CITY_CODES]
+    .flatMap((code) =>
+      nonMunicipalOf(code).map(
+        (p) =>
+          `${p.title}\n${p.shortDescription}\n${p.applicabilityReason}\n${p.dueDescription ?? ''}\n` +
+          `${(p.cautions ?? []).join('\n')}\n${p.requiredDocuments.map((d) => d.label).join('\n')}\n` +
+          `${(p.locations ?? []).join('\n')}\n${p.contact ?? ''}\n${p.onlineUrl ?? ''}`,
+      ),
+    )
+    .join('\n');
 
   it('4件のどの文言にも特定の電力・ガス・引越しポータル事業者名が現れない', () => {
     for (const vendor of FORBIDDEN_VENDORS) {

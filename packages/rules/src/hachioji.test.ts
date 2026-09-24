@@ -22,7 +22,11 @@ import { buildWardDifferences } from './ward-differences.js';
  * 禁止された。未公開であることは dataStatus と台帳の review_status だけで表す。
  *
  * 固定したい不変条件:
- * (a) 未公開: 10手続きすべて partial、出典20件すべて pending・reviewer 空、coverage は全て unavailable。
+ * (a) 未公開: 14手続き(市の10件+自治体以外の4件)すべて partial、八王子市の出典23件と
+ *     東京都水道局の追加1件はすべて pending・reviewer 空、coverage は全て unavailable。
+ * (e) 自治体以外の4件: 郵便・電気ガス・運転免許は区の共通テンプレートと「区」の言い回し以外は同一
+ *     (都/国の出典が八王子市にもそのまま当てはまるため)。水道は八王子市向けで、区の共通テンプレートが
+ *     依拠する「23区内なら下水道局への届出不要」を持ち込まない。
  * (b) 期限は八王子市の公式文言にある日数だけ: 転入届・国保=引越し日+14日、マイナンバー=
  *     引越し日+14日と転出予定日+30日の早い方(90日は転入届出日起算のため算定しない)、
  *     児童手当=転出予定日+15日(引越し日からは算定しない)、子ども医療費=3か月(月単位のため算定しない)、
@@ -51,6 +55,16 @@ const MUNICIPAL_IDS = [
   'procedure_dog_registration_transfer',
   'procedure_waste_check',
 ] as const;
+
+/** 自治体以外(ライフライン等)の4手続き(ADR-009)。 */
+const NON_MUNICIPAL_IDS = [
+  'procedure_water_supply',
+  'procedure_postal_forwarding',
+  'procedure_utilities_contact',
+  'procedure_driver_license_change',
+] as const;
+
+const ALL_IDS = [...MUNICIPAL_IDS, ...NON_MUNICIPAL_IDS];
 
 /** 23特別区の名称(cross-ward-text.test.ts と同じ出典=municipalities.ts)。 */
 const WARD_NAMES = [
@@ -242,17 +256,17 @@ function userVisibleTexts(): string[] {
 }
 
 describe('八王子市 — スキーマと未公開(人手レビュー前)の状態', () => {
-  it('rules.json は RuleSet として parse し、10ルール・自治体スコープ一致・公開版の指定なし', () => {
+  it('rules.json は RuleSet として parse し、14ルール・自治体スコープ一致・公開版の指定なし', () => {
     expect(ruleSet.municipalityCode).toBe(HACHIOJI);
     expect(ruleSet.ruleVersion).toBe(RULE_VERSION);
     // 公開されているルールが1件も無いので「公開済みの版」を別に持つ理由がない(ADR-007 §5)。
     expect(ruleSet.publishedRuleVersion).toBeUndefined();
-    expect(ruleSet.rules.map((r) => r.procedureId).sort()).toEqual([...MUNICIPAL_IDS].sort());
+    expect(ruleSet.rules.map((r) => r.procedureId).sort()).toEqual([...ALL_IDS].sort());
   });
 
-  it('procedures.json は10件 parse し、全件 partial(未公開)・版と最終確認日が揃う', () => {
+  it('procedures.json は14件 parse し、全件 partial(未公開)・版と最終確認日が揃う', () => {
     const list = procedures();
-    expect(list.map((p) => p.id).sort()).toEqual([...MUNICIPAL_IDS].sort());
+    expect(list.map((p) => p.id).sort()).toEqual([...ALL_IDS].sort());
     for (const pv of list) {
       expect(pv.municipalityCode).toBe(HACHIOJI);
       // ADR-007: verified 以外は publish が seed から外す。承認までは partial のまま置く。
@@ -265,20 +279,8 @@ describe('八王子市 — スキーマと未公開(人手レビュー前)の状
     }
   });
 
-  it('自治体以外(ライフライン等)の4手続きはまだ置かない(下水道の案内が23区前提のため承認時に判断)', () => {
-    const ids = procedures().map((p) => p.id);
-    for (const id of [
-      'procedure_water_supply',
-      'procedure_postal_forwarding',
-      'procedure_utilities_contact',
-      'procedure_driver_license_change',
-    ]) {
-      expect(ids).not.toContain(id);
-    }
-  });
-
-  it('台帳の八王子市の出典20件は全て pending・reviewer 空・sha256 記録済み', () => {
-    expect(hachiojiSources).toHaveLength(20);
+  it('台帳の八王子市の出典23件は全て pending・reviewer 空・sha256 記録済み', () => {
+    expect(hachiojiSources).toHaveLength(23);
     for (const s of hachiojiSources) {
       expect(s.reviewStatus, s.sourceId).toBe('pending');
       expect(s.reviewer, s.sourceId).toBe('');
@@ -286,9 +288,20 @@ describe('八王子市 — スキーマと未公開(人手レビュー前)の状
       expect(s.owner, s.sourceId).toBe('八王子市');
       expect(s.contentHash, s.sourceId).toMatch(/^[0-9a-f]{64}$/);
       expect(s.lastVerifiedAt, s.sourceId).toBe('2026-09-25');
-      // 利用条件が不明なソースは公開しない(原則10)。八王子市の著作権ポリシーに従う旨を記録する。
+      // 利用条件が不明なソースは公開しない(原則10)。八王子市の著作権ポリシーに従う旨と、
+      // 2026-09-25 のユーザー決裁(原文は証跡としてのみ保持し公開リポジトリから除外)を記録する。
       expect(s.license, s.sourceId).toContain('市サイト著作権ポリシー');
+      expect(s.license, s.sourceId).toContain('公開リポジトリからは除外');
     }
+  });
+
+  it('八王子市の水道のために足した東京都水道局の出典も pending のまま', () => {
+    const s = registry.byId.get('src-13000-water_supply-002');
+    expect(s?.reviewStatus).toBe('pending');
+    expect(s?.reviewer).toBe('');
+    expect(s?.municipalityCode).toBe('13000');
+    expect(s?.owner).toBe('東京都水道局');
+    expect(isOfficialUrl(s?.url ?? '')).toBe(true);
   });
 
   it('coverage.csv — 全カテゴリ unavailable(未公開の市を一部対応に見せない)', () => {
@@ -547,7 +560,7 @@ describe('八王子市 — 期限は公式文言にある日数だけ(正例・�
     );
   });
 
-  it('単身・都外・マイナンバーあり は5件該当・子育て/犬は非該当', () => {
+  it('単身・都外・マイナンバーあり は8件該当(市5件+ライフライン3件)・子育て/犬/運転免許は非該当', () => {
     const single = profile({ flags: { hasMyNumberCard: true } });
     const applicable = evaluate(single, ruleSet)
       .outcomes.filter((o) => o.applicable === 'applicable')
@@ -560,8 +573,12 @@ describe('八王子市 — 期限は公式文言にある日数だけ(正例・�
         'procedure_national_pension_address',
         'procedure_resident_registration',
         'procedure_waste_check',
+        'procedure_water_supply',
+        'procedure_postal_forwarding',
+        'procedure_utilities_contact',
       ].sort(),
     );
+    expect(outcome(single, 'procedure_driver_license_change').applicable).toBe('not_applicable');
   });
 
   it('転出予定日を起算日にするルールは、公式文言に「転出予定日」がある(ADR-013の回帰ガード)', () => {
@@ -623,17 +640,164 @@ describe('八王子市 — 期限は公式文言にある日数だけ(正例・�
   });
 });
 
+describe('八王子市 — 自治体以外(ライフライン等)の4手続き(ADR-009)', () => {
+  const WARD_TEMPLATE = '13101';
+  const templateProcs = new Map(
+    (
+      readJson(`data/normalized/${WARD_TEMPLATE}/procedures.json`) as { procedures: unknown[] }
+    ).procedures
+      .map((p) => procedureVersionSchema.parse(p))
+      .map((p) => [p.id, p]),
+  );
+  const templateRules = new Map(
+    ruleSetSchema
+      .parse(readJson(`packages/rules/data/${WARD_TEMPLATE}/rules.json`))
+      .rules.map((r) => [r.procedureId, r]),
+  );
+  /** 区の共通テンプレートから市向けに置き換えた言い回し(これ以外は同一であるべき)。 */
+  const toCity = (s: string) =>
+    s
+      .replace(
+        'この手続きは区(自治体)の窓口ではなく、区以外の機関・事業者への手続きです。',
+        'この手続きは市(自治体)の窓口ではなく、市区町村以外の機関・事業者への手続きです。',
+      )
+      .replace('(区の手続きではなく', '(市の手続きではなく')
+      .replace('(区の手続きではありません)', '(市の手続きではありません)')
+      .replace('本サービスの区の窓口一覧', '本サービスの市の窓口一覧');
+  const byId = (id: string) => {
+    const p = procedures().find((x) => x.id === id);
+    if (!p) throw new Error(`missing ${id}`);
+    return p;
+  };
+
+  it.each([
+    'procedure_postal_forwarding',
+    'procedure_utilities_contact',
+    'procedure_driver_license_change',
+  ])(
+    '%s: 都/国の出典がそのまま当てはまるため、区の共通テンプレートと「区」の言い回し以外は同一',
+    (id) => {
+      const t = templateProcs.get(id);
+      expect(t).toBeDefined();
+      if (!t) return;
+      const expected = JSON.parse(toCity(JSON.stringify(t))) as typeof t;
+      const actual = byId(id);
+      const strip = (p: typeof t) => {
+        const {
+          municipalityCode: _m,
+          version: _v,
+          lastVerifiedAt: _l,
+          dataStatus: _d,
+          ...rest
+        } = p;
+        return rest;
+      };
+      expect(strip(actual)).toEqual(strip(expected));
+      expect(actual.dataStatus).toBe('partial');
+      const tr = templateRules.get(id);
+      expect(ruleOf(id)).toEqual(tr ? JSON.parse(toCity(JSON.stringify(tr))) : undefined);
+    },
+  );
+
+  it('水道: 八王子市向けの文言で、23区限定の下水道の案内を持ち込まない', () => {
+    const w = byId('procedure_water_supply');
+    const text = JSON.stringify(w);
+    expect(text).not.toContain('23区');
+    expect(text).not.toContain('下水道局への届出は必要ありません');
+    expect(w.sourceIds).not.toContain('src-13000-sewerage-001');
+    expect(w.sourceIds.sort()).toEqual(
+      [
+        'src-13000-water_supply-001',
+        'src-13000-water_supply-002',
+        'src-13201-water_supply-001',
+        'src-13201-sewerage-001',
+        'src-13201-sewerage-002',
+      ].sort(),
+    );
+    // 市の公式ページが明記している事実。
+    expect(w.cautions?.[0]).toContain('市役所ではなく東京都水道局');
+    expect(text).toContain('水道料金と一緒に2か月ごとに納めます');
+    // 水道水だけの世帯の下水道の届出は市のページに記載が無い → 無いと明示し、要否を断定しない。
+    expect(text).toContain('記載がありません');
+    expect(text).not.toContain('下水道の届出は不要');
+    expect(w.contact).toContain('0570-091-100');
+    // 期限は東京都水道局の「3〜4日前まで」をそのまま示し、日付にはしない。
+    expect(ruleOf('procedure_water_supply').dueRule).toEqual({ type: 'unknown' });
+    expect(w.dueDescription).toContain('3〜4日前');
+  });
+
+  it('4件とも「市区町村以外の手続き」であることを cautions の先頭で明示し、「区」の言い回しが無い', () => {
+    for (const id of NON_MUNICIPAL_IDS) {
+      const p = byId(id);
+      expect(p.cautions?.[0], id).toContain('市区町村以外の機関・事業者への手続き');
+      const text = JSON.stringify(p) + JSON.stringify(ruleOf(id));
+      for (const bad of ['区以外', '区の手続き', '区(自治体)', '区の窓口']) {
+        expect(text.includes(bad), `${id}: ${bad}`).toBe(false);
+      }
+    }
+  });
+
+  it('該当判定: 水道・郵便・電気ガスは全員該当 / 運転免許は車・バイクの案内が必要な人だけ / 日付は出さない', () => {
+    for (const id of [
+      'procedure_water_supply',
+      'procedure_postal_forwarding',
+      'procedure_utilities_contact',
+    ]) {
+      for (const originType of ['outside_tokyo', 'inside_tokyo', 'overseas'] as const) {
+        const o = outcome(profile({ originType }), id);
+        expect(o.applicable, `${id}/${originType}`).toBe('applicable');
+        expect(o.dueDate, id).toBeUndefined();
+      }
+    }
+    expect(outcome(profile({}), 'procedure_driver_license_change').applicable).toBe(
+      'not_applicable',
+    );
+    const car = outcome(
+      profile({ flags: { needsVehicleGuidance: true } }),
+      'procedure_driver_license_change',
+    );
+    expect(car.applicable).toBe('applicable');
+    expect(car.dueDate).toBeUndefined();
+  });
+
+  it('東京都水道局の追加出典のスナップショットも content_hash と一致する', () => {
+    const s = registry.byId.get('src-13000-water_supply-002');
+    const dir = resolve(repoRoot, 'data/sources/13000/snapshots');
+    const current = pickCurrentSnapshot(readdirSync(dir), 'src-13000-water_supply-002', 'html');
+    expect(current).not.toBeNull();
+    const hash = createHash('sha256')
+      .update(readFileSync(resolve(dir, current as string)))
+      .digest('hex');
+    expect(hash).toBe(s?.contentHash);
+  });
+});
+
 describe('八王子市 — 来歴と越境しないこと', () => {
-  it('全ルール・全手続き・全施設の sourceIds が台帳に実在し、八王子市の出典である', () => {
+  it('全ルール・全手続き・全施設の sourceIds が台帳に実在し、市の手続きは八王子市の出典だけを使う', () => {
+    const isMunicipal = (id: string) => (MUNICIPAL_IDS as readonly string[]).includes(id);
     const ids = [
       ...ruleSet.rules.flatMap((r) => r.sourceIds),
       ...procedures().flatMap((p) => p.sourceIds),
       ...facilities().map((f) => f.sourceId),
     ];
     for (const sid of ids) {
-      const rec = registry.byId.get(sid);
-      expect(rec, `missing ${sid}`).toBeDefined();
-      expect(rec?.municipalityCode, sid).toBe(HACHIOJI);
+      expect(registry.byId.get(sid), `missing ${sid}`).toBeDefined();
+    }
+    const municipalIds = [
+      ...ruleSet.rules.filter((r) => isMunicipal(r.procedureId)).flatMap((r) => r.sourceIds),
+      ...procedures()
+        .filter((p) => isMunicipal(p.id))
+        .flatMap((p) => p.sourceIds),
+      ...facilities().map((f) => f.sourceId),
+    ];
+    for (const sid of municipalIds) {
+      expect(registry.byId.get(sid)?.municipalityCode, sid).toBe(HACHIOJI);
+    }
+    // 自治体以外の4件が使ってよいのは、八王子市・東京都(13000)・国(00000)の出典だけ(他の区の出典は使わない)。
+    for (const sid of procedures()
+      .filter((p) => !isMunicipal(p.id))
+      .flatMap((p) => p.sourceIds)) {
+      expect(['13201', '13000', '00000'], sid).toContain(registry.byId.get(sid)?.municipalityCode);
     }
     // 逆方向: 台帳に登録した出典は、どこからも参照されずに放置されていない。
     for (const s of hachiojiSources) {

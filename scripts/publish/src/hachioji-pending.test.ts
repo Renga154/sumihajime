@@ -27,7 +27,7 @@ describe('publish — 八王子市(13201)は承認まで公開されない', () 
     expect(SUPPORTED).not.toContain(HACHIOJI);
   });
 
-  it('対象に含めても、10手続き・10ルールはすべて除外され、ゲートは通る', () => {
+  it('対象に含めても、14手続き(市の10件+自治体以外の4件)・14ルールはすべて除外され、ゲートは通る', () => {
     expect(() => buildSeed(repoRoot, WITH_HACHIOJI)).not.toThrow();
     const data = loadPublishData(repoRoot, WITH_HACHIOJI);
     expect(
@@ -38,9 +38,9 @@ describe('publish — 八王子市(13201)は承認まで公開されない', () 
     ).toEqual([]);
 
     const excluded = data.excludedProcedures.filter((p) => p.municipalityCode === HACHIOJI);
-    expect(excluded).toHaveLength(10);
+    expect(excluded).toHaveLength(14);
     expect(excluded.every((p) => p.dataStatus === 'partial')).toBe(true);
-    expect(data.excludedRuleRefs.filter((r) => r.municipalityCode === HACHIOJI)).toHaveLength(10);
+    expect(data.excludedRuleRefs.filter((r) => r.municipalityCode === HACHIOJI)).toHaveLength(14);
 
     expect(data.procedures.some((p) => p.municipalityCode === HACHIOJI)).toBe(false);
     // 公開ルールが0件の自治体は rule_set 自体を seed しない。
