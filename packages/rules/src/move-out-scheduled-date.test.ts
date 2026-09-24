@@ -72,10 +72,13 @@ const CHILD_ALLOWANCE_MOVE_OUT = [
   '13123',
 ] as const;
 
-/** 子ども医療費助成で「転入日から N日以内」と日数で明記している3区(月単位の区は算定しない)。 */
+/**
+ * 子ども医療費助成で「転入日から N日以内」と日数で明記している区(月単位の区は算定しない)。
+ * 杉並(13115)は 2026-10-01 以降の転入から「翌日から3カ月以内」に変わったため(2026-09-25 再監査)、
+ * 月単位の区と同じく算定しない側へ移った。
+ */
 const CHILD_MEDICAL_DAYS: Record<string, number> = {
   '13113': 14,
-  '13115': 15,
   '13119': 14,
 };
 
@@ -314,7 +317,7 @@ describe('期日が出るタスク件数(全条件ONのペルソナ)', () => {
     '13112': 3,
     '13113': 3,
     '13114': 3,
-    '13115': 4,
+    '13115': 3,
     '13116': 3,
     '13117': 3,
     '13118': 3,
@@ -340,7 +343,7 @@ describe('期日が出るタスク件数(全条件ONのペルソナ)', () => {
     '13112': 4,
     '13113': 5,
     '13114': 5,
-    '13115': 5,
+    '13115': 4,
     '13116': 4,
     '13117': 3,
     '13118': 4,
@@ -361,12 +364,13 @@ describe('期日が出るタスク件数(全条件ONのペルソナ)', () => {
     expect(withDate, code).toBeGreaterThanOrEqual(EXPECTED_WITHOUT_MOVE_OUT[code]!);
   });
 
-  it('23区合計: 改修前55 → 転出予定日なし70 / 転出予定日ありは92(全322タスク中)', () => {
+  it('23区合計: 改修前55 → 転出予定日なし69 / 転出予定日ありは91(全322タスク中)', () => {
+    // 2026-09-25: 杉並の子ども医療費が月単位(3カ月)へ変わり、算定できる期日が1件減った(70→69 / 92→91)。
     // 改修前の55は、この改修の直前コミット(7d10110)の rules.json を同じペルソナで評価した実測値。
     const sumWithout = WARDS.reduce((n, c) => n + datedTaskCount(c, everythingOn(c)), 0);
     const sumWith = WARDS.reduce((n, c) => n + datedTaskCount(c, everythingOn(c, '2026-08-25')), 0);
-    expect(sumWithout).toBe(70);
-    expect(sumWith).toBe(92);
+    expect(sumWithout).toBe(69);
+    expect(sumWith).toBe(91);
 
     const total = WARDS.reduce(
       (n, c) =>

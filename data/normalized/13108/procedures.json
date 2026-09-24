@@ -156,7 +156,7 @@
     },
     {
       "id": "procedure_child_allowance",
-      "version": "2026-07-22.1",
+      "version": "2026-09-25.1",
       "municipalityCode": "13108",
       "canonicalType": "child_benefits",
       "title": "児童手当の認定請求(転入・出生等)",
@@ -174,8 +174,12 @@
           "status": "required"
         },
         {
-          "label": "申請者(請求者)および配偶者のマイナンバー(個人番号)",
+          "label": "マイナンバーカードの写し(申請者(請求者)および配偶者)",
           "status": "required"
+        },
+        {
+          "label": "(厚生年金・共済年金に加入の方)申請者(請求者)本人の健康保険の資格情報を確認できるもの(資格確認書や資格情報のお知らせの写し、マイナポータルの資格情報を印刷したもの等)",
+          "status": "conditional"
         },
         {
           "label": "(該当する方のみ)監護事実の同意書、監護相当・生計費の負担についての確認書 等",
@@ -189,7 +193,7 @@
       ],
       "contact": "こども未来部 こども家庭支援課 給付係(区役所3階14番)",
       "sourceIds": ["src-13108-child_benefits-001"],
-      "lastVerifiedAt": "2026-07-22T00:00:00Z",
+      "lastVerifiedAt": "2026-09-25T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
         "郵送申請では、区で申請を受領した日が申請日となります。電子申請(マイナポータル ぴったりサービス)も利用できます。",

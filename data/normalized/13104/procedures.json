@@ -50,7 +50,7 @@
     },
     {
       "id": "procedure_mynumber_continued_use",
-      "version": "2026-07-22.1",
+      "version": "2026-09-25.1",
       "municipalityCode": "13104",
       "canonicalType": "my_number",
       "title": "マイナンバーカードを利用した転入届(特例転入)と電子証明書の発行手続き",
@@ -82,9 +82,9 @@
       ],
       "channels": ["counter"],
       "locations": ["戸籍住民課住民記録係 区役所本庁舎1階7番窓口", "特別出張所(区内10か所)"],
-      "contact": "地域振興部 戸籍住民課 住民記録係(本庁舎1階7番窓口) 電話 03-5273-3821(直通)",
+      "contact": "地域振興部 戸籍住民課 住民記録係(本庁舎1階7番窓口) 電話 03-5273-3601",
       "sourceIds": ["src-13104-my_number-001", "src-13104-my_number-002"],
-      "lastVerifiedAt": "2026-07-22T00:00:00Z",
+      "lastVerifiedAt": "2026-09-25T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
         "署名用電子証明書の暗証番号(6〜16桁の英数字)と住民基本台帳用の暗証番号(4桁の数字)の入力が必要です(入力作業は原則職員が行います)。",

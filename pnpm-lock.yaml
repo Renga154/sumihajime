@@ -153,6 +153,9 @@ importers:
         specifier: workspace:*
         version: link:../schemas
     devDependencies:
+      '@tmn/drift':
+        specifier: workspace:*
+        version: link:../drift
       '@tmn/test-fixtures':
         specifier: workspace:*
         version: link:../test-fixtures

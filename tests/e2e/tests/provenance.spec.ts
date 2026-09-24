@@ -23,7 +23,8 @@ test('透明性ページ: 鮮度サマリー・台帳テーブル・CC BYバッ�
   // 同日さらにBatch10の足立(13121)16ソース+江戸川(13123)17ソースが人手レビュー承認(182→215)、
   // 同日さらに残る8区(Batch8=中央12/港14/文京14/台東13/墨田14、Batch9=目黒14/渋谷22/葛飾13)が
   // 人手レビュー承認(215→331)、渋谷区のArcGIS Hub配信の施設CSV1件を新規登録して331→332。
-  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('332');
+  // 2026-09-25 の再監査で花畑区民事務所の施設ページを出典に追加し 332→333。
+  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('333');
   await expect(page.getByRole('heading', { name: 'データの新しさ' })).toBeVisible();
   await expect(page.getByText(/残り\s*\d+日/).first()).toBeVisible();
 

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -6,6 +6,7 @@ import type { Profile, RuleSet } from '@tmn/schemas';
 import { facilitySchema, procedureVersionSchema, ruleSetSchema } from '@tmn/schemas';
 import { evaluate } from './evaluate.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
+import { pickCurrentSnapshot } from '@tmn/drift';
 
 /**
  * なぜ: Batch9(目黒13110 / 渋谷13113 / 葛飾13122)の縦切りデータの来歴・型・決定論・
@@ -686,7 +687,10 @@ describe('Batch9 — provenance integrity & scope safety', () => {
       const cells = row.split(',');
       const sourceId = cells[0] as string;
       const ext = cells[6] as string;
-      const file = resolve(repoRoot, `data/sources/${code}/snapshots/${sourceId}.${ext}`);
+      // 再監査で版付き(<id>.<YYYYMMDD>.<ext>)が増えていれば、その最新が現行の原文(台帳のハッシュもそれ)。
+      const dir = resolve(repoRoot, `data/sources/${code}/snapshots`);
+      const current = existsSync(dir) ? pickCurrentSnapshot(readdirSync(dir), sourceId, ext) : null;
+      const file = resolve(dir, current ?? `${sourceId}.${ext}`);
       expect(existsSync(file), `snapshot missing: ${file}`).toBe(true);
       const hash = createHash('sha256').update(readFileSync(file)).digest('hex');
       expect(hash, `hash mismatch for ${sourceId}`).toBe(cells[14]);

@@ -63,7 +63,7 @@ exports[`Suginami (13115) — provenance integrity & scope safety > 決定論: �
     {
       "applicabilityReason": "0歳〜18歳到達後最初の3月31日までの児童がいる世帯が対象です(健康保険に加入していること)。",
       "applicable": "applicable",
-      "dueDate": "2026-08-16",
+      "dueDescription": "原則、申請月の1日(転入日が1日以外の場合はその日)から認定します。出生日・転入日が令和8年10月1日以降の場合は、出生日・転入日の翌日から3カ月以内に申請すれば、出生日・転入日に遡って資格を認定します。申請が遅れた場合、資格を遡ることができません。",
       "priority": "high",
       "procedureId": "procedure_child_medical",
       "sourceIds": [
@@ -161,6 +161,6 @@ exports[`Suginami (13115) — provenance integrity & scope safety > 決定論: �
       "warnings": [],
     },
   ],
-  "ruleVersion": "2026-08-09.1",
+  "ruleVersion": "2026-09-25.1",
 }
 `;

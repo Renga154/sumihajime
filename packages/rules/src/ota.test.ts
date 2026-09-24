@@ -6,6 +6,7 @@ import type { Profile, RuleSet } from '@tmn/schemas';
 import { ruleSetSchema, procedureVersionSchema, facilitySchema } from '@tmn/schemas';
 import { evaluate } from './evaluate.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
+import { expectedLastVerifiedAt, expectedVersion } from './reaudited.fixture.js';
 
 /**
  * なぜ: Step5-B 大田区(13111)縦切りデータ(2026-07-26承認済み)の来歴・型・決定論・自治体差分をCIで機械検証する。
@@ -140,9 +141,9 @@ describe('Ota (13111) — schema validation (来歴・型検証; CI gate)', () =
       // 2026-07-26 人手レビュー承認(ユーザー決裁「2区とも承認」)により verified へ昇格。
       // ADR-007 で公開対象=verified のみ。
       expect(pv.dataStatus).toBe('verified');
-      expect(pv.version).toBe('2026-07-26.1');
+      expect(pv.version).toBe(expectedVersion(OTA, pv.id, '2026-07-26.1'));
       expect(pv.sourceIds.length).toBeGreaterThan(0);
-      expect(pv.lastVerifiedAt).toBe('2026-07-26T00:00:00Z');
+      expect(pv.lastVerifiedAt).toBe(expectedLastVerifiedAt(OTA, pv.id, '2026-07-26T00:00:00Z'));
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();
     }

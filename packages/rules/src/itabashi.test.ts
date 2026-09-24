@@ -384,11 +384,11 @@ describe('Itabashi (13119) — 自治体差分の実証(他区の値を混入さ
     for (const other of ['3か月', '3ヶ月', '6か月', '6カ月', '15日']) {
       expect(itabashiDue).not.toContain(other);
     }
-    // 対比: 杉並=15日 / 世田谷=3か月 / 練馬=記載なし。同じカテゴリでも区ごとに値が異なる。
-    // 杉並も日数明記のため算定済み。日付が板橋(14日)と異なることで値の違いを確かめる。
-    expect(family('13115', '阿佐谷北', suginamiRuleSet, 'procedure_child_medical').dueDate).toBe(
-      '2026-08-16',
-    );
+    // 対比: 杉並=3カ月(2026-10-01以降。2026-09-25 再監査で15日から変わった) / 世田谷=3か月 /
+    // 練馬=記載なし。同じカテゴリでも区ごとに値が異なる。月単位の杉並は日付を算定しない。
+    const suginami = family('13115', '阿佐谷北', suginamiRuleSet, 'procedure_child_medical');
+    expect(suginami.dueDate).toBeUndefined();
+    expect(suginami.dueDescription).toContain('3カ月以内');
     expect(
       family('13112', '世田谷4丁目', setagayaRuleSet, 'procedure_child_medical').dueDescription,
     ).toContain('3か月');
@@ -477,9 +477,13 @@ describe('Itabashi (13119) — provenance integrity & scope safety', () => {
     const csv = readFileSync(resolve(repoRoot, 'docs/data-sources/registry.csv'), 'utf-8');
     // なぜ: notes 欄には「旧URLは404のため登録しない」という説明文として同じ文字列が現れうるため、
     // 単純な部分一致ではなく前後をカンマで挟んだ source_url セルとして一致するかを見る。
-    const dead = ',https://www.city.itabashi.tokyo.jp/kosodate/teate/teate/1004634.html,';
-    const live = ',https://www.city.itabashi.tokyo.jp/kosodate/teate/teate/1063955/1004634.html,';
-    expect(csv).not.toContain(dead);
+    // 2026-09-25: 1063955/1004634.html も404になり、同名ページが 1063955/1065840.html へ移った(再監査)。
+    const dead = [
+      ',https://www.city.itabashi.tokyo.jp/kosodate/teate/teate/1004634.html,',
+      ',https://www.city.itabashi.tokyo.jp/kosodate/teate/teate/1063955/1004634.html,',
+    ];
+    const live = ',https://www.city.itabashi.tokyo.jp/kosodate/teate/teate/1063955/1065840.html,';
+    for (const d of dead) expect(csv).not.toContain(d);
     expect(csv).toContain(live);
   });
 

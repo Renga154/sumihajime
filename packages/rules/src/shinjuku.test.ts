@@ -12,6 +12,7 @@ import {
 } from '@tmn/schemas';
 import { evaluate } from './evaluate.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
+import { expectedLastVerifiedAt } from './reaudited.fixture.js';
 
 /**
  * なぜ: T-016 新宿区(13104)縦切りデータ(第3のデータ形式=HTML表収集曜日)の来歴・型・
@@ -160,7 +161,9 @@ describe('Shinjuku (13104) — schema validation (来歴・型検証; CI gate)',
       // 2026-07-22 人手レビュー承認済み(公開ゲートは approved ソースのみ通過)。
       expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
-      expect(pv.lastVerifiedAt).toBe('2026-07-22T00:00:00Z');
+      expect(pv.lastVerifiedAt).toBe(
+        expectedLastVerifiedAt(SHINJUKU, pv.id, '2026-07-22T00:00:00Z'),
+      );
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();
     }

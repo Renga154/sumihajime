@@ -47,5 +47,7 @@ test('主要導線: 免責→世田谷→入力→生成→チェックリスト
   const officialLink = evidence.getByRole('link', { name: '公式ページを開く' }).first();
   await expect(officialLink).toHaveAttribute('href', /city\.setagaya\.lg\.jp/);
   await expect(evidence.getByText('最終確認日')).toBeVisible();
-  await expect(evidence.getByText('2026年7月21日')).toBeVisible();
+  // 日付そのものは再監査のたびに進む(2026-09-25 に 7月21日→9月25日)。ここでは「確認日が日付として
+  // 出ている」ことだけを見る。値の正しさは台帳と API の統合テストが見る。
+  await expect(evidence.getByText(/^\d{4}年\d{1,2}月\d{1,2}日$/).first()).toBeVisible();
 });
