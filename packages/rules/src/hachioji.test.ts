@@ -300,7 +300,7 @@ describe('八王子市 — スキーマと承認状態', () => {
     expect(isOfficialUrl(s?.url ?? '')).toBe(true);
   });
 
-  it('coverage.csv — 承認済みカテゴリは verified、収集曜日・分別辞書・チャットは unavailable(未対応を対応済みに見せない)', () => {
+  it('coverage.csv — 承認済みカテゴリとチャットは verified、収集曜日・分別辞書は unavailable(未対応を対応済みに見せない)', () => {
     const rows = readFileSync(resolve(repoRoot, 'docs/data-sources/coverage.csv'), 'utf-8')
       .split(/\r?\n/)
       .filter((l) => l.trim().length > 0);
@@ -322,7 +322,8 @@ describe('八王子市 — スキーマと承認状態', () => {
       waste_schedule: 'unavailable',
       waste_sorting: 'unavailable',
       // 索引の作り直しと評価を通すまでは未対応(承認とは別の工程)。
-      rag: 'unavailable',
+      // 2026-09-25: 索引の再構築と186問の評価(断定0・混入0・越境違反0)を経て verified。
+      rag: 'verified',
       non_municipal: 'verified',
       overall_status: 'partial',
     };
