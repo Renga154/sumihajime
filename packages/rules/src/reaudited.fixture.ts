@@ -25,6 +25,11 @@ export const REAUDITS: readonly {
       '13121': ['procedure_childcare_application'],
     },
   },
+  {
+    // 2026-09-26: 葛飾区のマイナンバー継続利用のページが書き直され、注意書き2つの根拠が消えた(人手承認)。
+    date: '2026-09-26',
+    procedures: { '13122': ['procedure_mynumber_continued_use'] },
+  },
 ];
 
 /** その手続きが再監査で進んだ日付(無ければ undefined = 承認日のまま)。 */

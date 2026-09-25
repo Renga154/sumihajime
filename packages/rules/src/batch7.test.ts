@@ -12,6 +12,7 @@ import {
 import { evaluate } from './evaluate.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
 import { pickCurrentSnapshot } from '@tmn/drift';
+import { expectedLastVerifiedAt, expectedVersion } from './reaudited.fixture.js';
 
 /**
  * なぜ: Batch7(中野13114 / 荒川13118 / 豊島13116 / 北13117)の縦切りデータの来歴・型・
@@ -199,8 +200,8 @@ describe('Batch7 — schema validation & approved status (CI gate)', () => {
         expect(pv.municipalityCode).toBe(code);
         // ADR-007: 公開単位は verified のみ。2026-08-07 承認(ユーザー決裁「4区とも承認」)で公開対象へ。
         expect(pv.dataStatus).toBe('verified');
-        expect(pv.version).toBe(RULE_VERSION);
-        expect(pv.lastVerifiedAt).toBe(LAST_VERIFIED);
+        expect(pv.version).toBe(expectedVersion(code, pv.id, RULE_VERSION));
+        expect(pv.lastVerifiedAt).toBe(expectedLastVerifiedAt(code, pv.id, LAST_VERIFIED));
         expect(pv.sourceIds.length).toBeGreaterThan(0);
         // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持する。
         expect(pv.dueDate).toBeUndefined();
