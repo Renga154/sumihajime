@@ -22,9 +22,21 @@ const DEFAULT_ENDPOINT = 'https://app.sumihajime.workers.dev/api/chat';
 const DEFAULT_SPACING_MS = 7_000; // 10req/分=1req/6秒。余裕を見て7秒。
 const REQUEST_TIMEOUT_MS = 30_000;
 const RATE_LIMIT_BACKOFF_MS = 65_000;
+/** 応答が無かったケースを最後に取り直す回数(下の main 参照)。 */
+const MAX_ERROR_RETRIES = 2;
 // なぜ: レポート成果物名は実行日付(rag-eval-YYYY-MM-DD.md)にする。過去日で固定すると
 // 再実行が歴史記録(例: 初回7/23レポート)を上書きしてしまう。EVAL_REPORT_DATE で明示上書き可。
-const REPORT_DATE = process.env.EVAL_REPORT_DATE ?? new Date().toISOString().slice(0, 10);
+// 日付は日本時間で取る(UTC だと深夜〜朝9時の実行が前日名になり、前日の記録を上書きした。2026-09-26)。
+const REPORT_DATE =
+  process.env.EVAL_REPORT_DATE ??
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
+
+/** 既にある記録を上書きしない: 同名があれば -2, -3 … を付ける。 */
+function freshPath(dir: string, stem: string, ext: string): string {
+  let path = resolve(dir, `${stem}${ext}`);
+  for (let n = 2; existsSync(path); n++) path = resolve(dir, `${stem}-${n}${ext}`);
+  return path;
+}
 
 interface Args {
   endpoint: string;
@@ -43,9 +55,12 @@ function parseArgs(argv: string[]): Args {
     endpoint: get('--endpoint') ?? process.env.EVAL_ENDPOINT ?? DEFAULT_ENDPOINT,
     spacingMs: Number(get('--spacing') ?? process.env.EVAL_SPACING_MS ?? DEFAULT_SPACING_MS),
     dry: argv.includes('--dry-run'),
-    outMd: get('--out') ?? resolve(repoRoot, `docs/research/rag-eval-${REPORT_DATE}.md`),
+    outMd:
+      get('--out') ??
+      freshPath(resolve(repoRoot, 'docs/research'), `rag-eval-${REPORT_DATE}`, '.md'),
     outJson:
-      get('--out-json') ?? resolve(repoRoot, `docs/research/rag-eval-${REPORT_DATE}.result.json`),
+      get('--out-json') ??
+      freshPath(resolve(repoRoot, 'docs/research'), `rag-eval-${REPORT_DATE}`, '.result.json'),
   };
 }
 
@@ -206,6 +221,25 @@ async function main(): Promise<void> {
         (result.reviewFlags.length ? `\n    ~ review: ${result.reviewFlags.join(', ')}` : ''),
     );
     if (idx < dataset.cases.length - 1) await sleep(args.spacingMs);
+  }
+
+  // なぜ: 応答そのものが得られなかったケース(error)だけを、最後にまとめて再試行する。
+  // 2026-09-26〜27 の実行では、実行端末がスリープしてタイマーが止まり、数分〜17分止まった
+  // 要求が大量に error になった(本番は健全だった)。これは評価の対象ではなく計測側の失敗なので
+  // 取り直す。fail / 要レビューは答えが返ってきた結果なので、再試行で上書きしない。
+  for (let round = 1; round <= MAX_ERROR_RETRIES; round++) {
+    const pending = results.flatMap((r, i) => (r.status === 'error' ? [i] : []));
+    if (pending.length === 0) break;
+    console.log(
+      `\n[retry ${round}/${MAX_ERROR_RETRIES}] ${pending.length} case(s) got no response; retrying…`,
+    );
+    for (const i of pending) {
+      await sleep(args.spacingMs);
+      const c = dataset.cases[i]!;
+      const retried = scoreCase(c, await callChat(args.endpoint, c));
+      results[i] = retried;
+      console.log(`  ${c.id} → ${retried.status.toUpperCase()} ${retried.latencyMs}ms`);
+    }
   }
 
   const reportData: EvalReportData = { dataset, meta, results };
