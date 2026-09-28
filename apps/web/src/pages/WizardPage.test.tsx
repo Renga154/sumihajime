@@ -366,7 +366,7 @@ describe('WizardPage — 前住所地の転出予定日(任意)', () => {
     expect(screen.getByRole('button', { name: 'この内容でチェックリストを作成' })).toBeDisabled();
   });
 
-  it('保存済みプロフィールに項目が無くても壊れない(後方互換)', () => {
+  it('保存済みプロフィールに項目が無くても壊れない(後方互換)', async () => {
     // 転出予定日を持たない既存プロフィール(改修前に保存されたもの)。
     localStorage.setItem(
       'tmn:profile:13112',
@@ -391,7 +391,10 @@ describe('WizardPage — 前住所地の転出予定日(任意)', () => {
     );
     renderWizard();
     // 既存の回答は復元され、転出予定日だけが空欄で表示される。
-    expect(screen.getByLabelText('引越し日または転入予定日', { exact: false })).toHaveValue(
+    // なぜ findBy か: WizardPage は対応自治体一覧を useAsync で非同期に読み込む。getBy
+    // (同期)のまま return すると、そのPromiseの解決による状態更新がテスト関数の外で起きて
+    // act(...) 警告になる。findBy で待ち切ってから同期アサーションへ進む。
+    expect(await screen.findByLabelText('引越し日または転入予定日', { exact: false })).toHaveValue(
       '2026-08-01',
     );
     expect(moveOutInput()).toHaveValue('');

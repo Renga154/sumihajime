@@ -219,9 +219,12 @@ describe('Itabashi (13119) — schema validation & approved status (CI gate)', (
     expect(wasteProc?.dueDescription).toContain('地域別カレンダー');
   });
 
-  it('waste-sorting.json — 分別辞書1,125品目がparse; 粗大ごみ回収料金が feeNote に反映されている', () => {
+  it('waste-sorting.json — 分別辞書の全品目がparseされ; 粗大ごみ回収料金が feeNote に反映されている', () => {
     const items = parseSorting();
-    expect(items.length).toBe(1125);
+    // なぜ件数を定数で固定しないか: 出典CSVの更新のたびにテストを書き換える羽目になる。
+    // 「原本の行数と一致する(=parseで取りこぼさない)」というデータ由来の不変条件だけを見る。
+    expect(items.length).toBe(wasteSortingRaw.items.length);
+    expect(items.length).toBeGreaterThan(0);
     for (const i of items) {
       expect(i.municipalityCode).toBe(ITABASHI);
       expect(i.sourceId).toBe('src-13119-waste_sorting-001');
@@ -229,7 +232,11 @@ describe('Itabashi (13119) — schema validation & approved status (CI gate)', (
     // 板橋CSVは「料金種別」(無料/有料)を持たず「粗大ごみ回収料金」(円)を持つため、
     // feeNote は『粗大ごみ回収料金 400円』の形式になる(他区の 無料/有料 とは別形式)。
     const withFee = items.filter((i) => i.feeNote !== undefined);
-    expect(withFee.length).toBe(473);
+    const rawWithFee = (wasteSortingRaw.items as { feeNote?: string }[]).filter(
+      (i) => i.feeNote !== undefined,
+    );
+    expect(withFee.length).toBe(rawWithFee.length);
+    expect(withFee.length).toBeGreaterThan(0);
     for (const i of withFee) expect(i.feeNote).toMatch(/^粗大ごみ回収料金 \d+円$/);
     // 「注意点」列は全行空欄・「備考」列のみ実データを持つ。
     expect(items.filter((i) => i.notes && i.notes.length > 0).length).toBeGreaterThan(0);
