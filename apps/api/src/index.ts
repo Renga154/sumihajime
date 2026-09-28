@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import {
   checklistRequestSchema,
   checklistResponseSchema,
@@ -13,6 +14,8 @@ import {
   wardDifferencesResponseSchema,
   wasteSortingSearchResponseSchema,
   wasteSortingSummaryResponseSchema,
+  type Source,
+  type SourceLedgerEntry,
 } from '@tmn/schemas';
 import {
   buildWardDifferences,
@@ -29,6 +32,8 @@ import { buildTasks } from './checklist.js';
 import { handleChat, handleChatAvailability } from './chat.js';
 import { scheduled } from './drift.js';
 import { assessHealth } from './health.js';
+import { JSON_BODY_LIMIT_BYTES, fail, requireJsonContentType, type ApiEnv } from './http.js';
+import { API_VERSION } from './version.js';
 import type { Bindings, DriftMark } from './db.js';
 import {
   getActiveDriftMarks,
@@ -63,8 +68,7 @@ import {
  * 200 / 404 を出し分ける。
  */
 
-type Variables = { requestId: string };
-type Env = { Bindings: Bindings; Variables: Variables };
+type Env = ApiEnv;
 
 export const app = new Hono<Env>();
 
@@ -73,6 +77,48 @@ app.use('/api/*', async (c, next) => {
   c.set('requestId', crypto.randomUUID());
   await next();
 });
+
+/**
+ * 想定外の例外(D1障害・スキーマ検証の失敗など)の受け皿。
+ *
+ * なぜ要るか: 以前は onError が無く、ハンドラが投げると Hono 既定の素の "Internal Server Error"
+ * (text/plain・requestId なし)が返っていた。画面は errorResponseSchema で読めずに汎用文面へ落ち、
+ * ログには何も残らないため、利用者の報告と突き合わせる手がかりがなかった。
+ * 標準のエラー形で返し、allowlist ログへ error.unhandled として記録する(例外のメッセージ・
+ * スタック・リクエスト本文は出さない。上流の応答断片や入力値が混ざり得るため)。
+ */
+app.onError((_err, c) => {
+  // requestId は /api/* のミドルウェアより前で落ちた場合にも必ず持たせる。
+  if (!c.get('requestId')) c.set('requestId', crypto.randomUUID());
+  return fail(
+    c,
+    500,
+    'internal_error',
+    'サーバーで問題が発生しました。時間をおいて再度お試しください（チェックリストの控えと各手続きの公式ページは引き続きご利用いただけます）。',
+    { event: 'error.unhandled' },
+  );
+});
+
+/**
+ * JSON を受け取る POST の入口制限: 本文の大きさ(8KB)と Content-Type(application/json)。
+ * なぜ: 巨大な本文を JSON.parse させる負荷と、第三者サイトからの「単純リクエスト」(プリフライト
+ * 無しで送れる text/plain 等)による悪用を、ハンドラに届く前に断つ(理由の詳細は http.ts)。
+ */
+const jsonBodyGuards = [
+  bodyLimit({
+    maxSize: JSON_BODY_LIMIT_BYTES,
+    onError: (c) =>
+      fail(
+        c as Context<Env>,
+        413,
+        'payload_too_large',
+        '送信内容が大きすぎます。入力内容を短くしてから、もう一度お試しください。',
+      ),
+  }),
+  requireJsonContentType(),
+] as const;
+app.use('/api/chat', ...jsonBodyGuards);
+app.use('/api/checklists', ...jsonBodyGuards);
 
 /**
  * /api/* のJSON応答へセキュリティヘッダを付ける(REQUIREMENTS §16.3)。
@@ -85,36 +131,37 @@ app.use('/api/*', async (c, next) => {
   }
 });
 
-function fail(
-  c: Context<Env>,
-  status: 400 | 404 | 409 | 422 | 500,
-  code: string,
-  message: string,
-  extra?: { municipalityCode?: string; officialUrl?: string },
-) {
-  const requestId = c.get('requestId');
-  logEvent({
-    requestId,
-    event: `error.${code}`,
-    status,
-    municipalityCode: extra?.municipalityCode,
-  });
-  return c.json(
-    {
-      error: {
-        code,
-        message,
-        requestId,
-        ...(extra?.officialUrl ? { officialUrl: extra.officialUrl } : {}),
-      },
-    },
-    status,
-  );
-}
-
 /** ADR-014: 巡回マークを根拠カードの2項目へ写す(未検知なら空オブジェクト=項目を出さない)。 */
 function driftFields(mark: DriftMark | undefined) {
   return mark ? { driftDetectedOn: mark.detectedOn, driftKind: mark.status } : {};
+}
+
+/**
+ * 台帳の1行 → 公開してよい列だけの射影(GET /api/sources と GET /api/procedures/:id で共通)。
+ *
+ * なぜ1つにするか: 以前は2つのエンドポイントがそれぞれ手書きで射影しており、片方だけ notes を
+ * 出すなど食い違っていた(2026-08-08 にはレビュー担当者名が片方から漏れた前歴もある)。
+ *
+ * notes を公開しない判断(2026-09-29): notes は取り込み・監査の作業メモ(データ欠落の補完経緯、
+ * 決裁の経緯など)で、利用者向けの文面として書かれていない。web のどの画面も表示しておらず、
+ * GET /api/sources は当初から内部メタとして除外していた。出す理由が無いものは出さない。
+ */
+function publicSourceView(s: Source): SourceLedgerEntry {
+  return {
+    sourceId: s.sourceId,
+    sourceTitle: s.sourceTitle,
+    ownerOrganization: s.ownerOrganization,
+    ...(s.municipalityCode ? { municipalityCode: s.municipalityCode } : {}),
+    category: s.category,
+    sourceUrl: s.sourceUrl,
+    sourceType: s.sourceType,
+    license: s.license,
+    attributionText: s.attributionText,
+    ...(s.lastVerifiedAt ? { lastVerifiedAt: s.lastVerifiedAt } : {}),
+    updateFrequency: s.updateFrequency,
+    ...(s.effectiveFrom ? { effectiveFrom: s.effectiveFrom } : {}),
+    ...(s.effectiveTo ? { effectiveTo: s.effectiveTo } : {}),
+  };
 }
 
 /** クエリの municipality を検証(全read系で必須)。 */
@@ -153,7 +200,7 @@ app.get('/api/health', async (c) => {
     drift,
     now: new Date(),
   });
-  return c.json({ ok: true, version: '0.0.1', status, issues, drift });
+  return c.json({ ok: true, version: API_VERSION, status, issues, drift });
 });
 
 /**
@@ -209,11 +256,12 @@ app.post('/api/checklists', async (c) => {
 
   const municipality = await getMunicipality(c.env.DB, code);
   if (!municipality) {
+    // 入力値(自治体コード)は文面へ埋め込まない(反射させない。コードはログ側に残る)。
     return fail(
       c,
       404,
       'municipality_unknown',
-      `自治体コード ${code} は登録されていません。対応自治体の一覧からお選びください。`,
+      '指定の自治体は登録されていません。対応自治体の一覧からお選びください。',
       { municipalityCode: code },
     );
   }
@@ -289,11 +337,13 @@ app.get('/api/procedures/:id', async (c) => {
   const procedureId = c.req.param('id');
   const procedure = await getProcedureVersion(c.env.DB, code, procedureId);
   if (!procedure) {
+    // なぜ手続きIDを文面に入れないか: パス引数は任意の文字列を取れる。応答へ反射すると、細工した
+    // リンク(/procedures/<任意の文>)でサービスの案内文を装った文言を表示させる足場になる。
     return fail(
       c,
       404,
       'procedure_not_found',
-      `指定の手続き(${procedureId})はこの自治体では見つかりませんでした。手続き一覧からお選びください。`,
+      '指定の手続きはこの自治体では見つかりませんでした。手続き一覧からお選びください。',
       { municipalityCode: code },
     );
   }
@@ -301,29 +351,12 @@ app.get('/api/procedures/:id', async (c) => {
     getSourcesByIds(c.env.DB, procedure.sourceIds),
     getActiveDriftMarks(c.env.DB, procedure.sourceIds),
   ]);
-  // なぜ射影するのか: sourcesMap の値は台帳の全列(Source)を持つ。reviewStatus/reviewer
-  // (内部レビュー担当者名)/contentHash/fetchMethod は GET /api/sources と同じく公開しない
-  // (2026-08-08: このエンドポイントだけ射影が抜けており、レビュー担当者名が漏れていた)。
+  // なぜ射影するのか: sourcesMap の値は台帳の全列(Source)を持つ。公開列は GET /api/sources と
+  // 同じ publicSourceView で決める(内部レビュー用メタ・notes は出さない)。
   const sources = procedure.sourceIds
     .map((sid) => sourcesMap.get(sid))
     .filter((s) => s !== undefined)
-    .map((s) => ({
-      sourceId: s.sourceId,
-      sourceTitle: s.sourceTitle,
-      ownerOrganization: s.ownerOrganization,
-      ...(s.municipalityCode ? { municipalityCode: s.municipalityCode } : {}),
-      category: s.category,
-      sourceUrl: s.sourceUrl,
-      sourceType: s.sourceType,
-      license: s.license,
-      attributionText: s.attributionText,
-      ...(s.lastVerifiedAt ? { lastVerifiedAt: s.lastVerifiedAt } : {}),
-      updateFrequency: s.updateFrequency,
-      ...(s.effectiveFrom ? { effectiveFrom: s.effectiveFrom } : {}),
-      ...(s.effectiveTo ? { effectiveTo: s.effectiveTo } : {}),
-      ...(s.notes ? { notes: s.notes } : {}),
-      ...driftFields(driftMarks.get(s.sourceId)),
-    }));
+    .map((s) => ({ ...publicSourceView(s), ...driftFields(driftMarks.get(s.sourceId)) }));
 
   // ADR-014: 根拠のいずれかが巡回で揺らいでいれば、読み出し時に stale(再確認中)として返す
   // (公開データは書き換えない。unavailable は据え置き)。
@@ -397,23 +430,7 @@ app.get('/api/sources', async (c) => {
   const start = Date.now();
   const requestId = c.get('requestId');
   const sources = await getApprovedSources(c.env.DB);
-  const body = sourcesResponseSchema.parse(
-    sources.map((s) => ({
-      sourceId: s.sourceId,
-      sourceTitle: s.sourceTitle,
-      ownerOrganization: s.ownerOrganization,
-      ...(s.municipalityCode ? { municipalityCode: s.municipalityCode } : {}),
-      category: s.category,
-      sourceUrl: s.sourceUrl,
-      sourceType: s.sourceType,
-      license: s.license,
-      attributionText: s.attributionText,
-      ...(s.lastVerifiedAt ? { lastVerifiedAt: s.lastVerifiedAt } : {}),
-      updateFrequency: s.updateFrequency,
-      ...(s.effectiveFrom ? { effectiveFrom: s.effectiveFrom } : {}),
-      ...(s.effectiveTo ? { effectiveTo: s.effectiveTo } : {}),
-    })),
-  );
+  const body = sourcesResponseSchema.parse(sources.map(publicSourceView));
   logEvent({
     requestId,
     event: 'sources.list',

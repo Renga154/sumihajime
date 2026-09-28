@@ -100,11 +100,13 @@ export type ServiceStats = z.infer<typeof serviceStatsSchema>;
  * reviewStatus/reviewer(内部レビュー担当者名)/contentHash/fetchMethod といった内部運用列が
  * GET /api/sources とは別経路(このエンドポイント)から漏れていた(2026-08-08発覚。notes列の
  * 内部用語混入と同根の「公開経路が複数あり、片方だけ射影を絞っていた」構造的問題)。
- * sourceLedgerEntrySchema(公開列のみ)を土台に、根拠カードが利用する notes だけを追加した
- * 専用ビューに統一する。
+ * sourceLedgerEntrySchema(公開列のみ)を土台にした専用ビューに統一する。
+ *
+ * 2026-09-29: notes を外した。notes は取り込み・監査の作業メモで利用者向けに書かれておらず、
+ * どの画面も表示していなかった。GET /api/sources は当初から除外しており、この経路だけが
+ * 出していた(2エンドポイントの射影の食い違い)。API側は publicSourceView 1つで射影する。
  */
 export const procedureSourceSchema = sourceLedgerEntrySchema.extend({
-  notes: sourceSchema.shape.notes,
   // ADR-014: 巡回の検知結果(根拠カードの「更新を検知」行)。taskSourceRefSchema と同じ2項目。
   driftDetectedOn: z.iso.date().optional(),
   driftKind: driftKindSchema.optional(),

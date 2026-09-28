@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { app } from './index';
 import { API_SECURITY_HEADERS, DOCUMENT_SECURITY_HEADERS } from './headers.js';
+import { API_VERSION } from './version.js';
 
 describe('GET /api/health', () => {
   it('D1 未接続でも 200 を保ち、自己判定は degraded / db_unreachable を返す', async () => {
@@ -8,7 +9,7 @@ describe('GET /api/health', () => {
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({
       ok: true,
-      version: '0.0.1',
+      version: API_VERSION,
       status: 'degraded',
       issues: ['db_unreachable'],
       drift: null,
@@ -20,6 +21,113 @@ describe('GET /api/health', () => {
     for (const [name, value] of Object.entries(API_SECURITY_HEADERS)) {
       expect(res.headers.get(name)).toBe(value);
     }
+  });
+});
+
+/** どのクエリでも例外を投げる D1 の代役(D1 障害の再現)。 */
+const throwingDb = {
+  prepare() {
+    throw new Error('D1_ERROR: simulated outage for SELECT secret_column');
+  },
+  batch() {
+    throw new Error('D1_ERROR: simulated outage');
+  },
+};
+
+function captureLogs(): string[] {
+  const logs: string[] = [];
+  vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+    logs.push(args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
+  });
+  return logs;
+}
+
+/**
+ * なぜ: 以前は onError が無く、ハンドラの例外は Hono 既定の素の "Internal Server Error"(text/plain・
+ * requestId なし)になっていた。画面は標準のエラー形を読めず、ログにも何も残らなかった。
+ */
+describe('想定外の例外(app.onError)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('D1 が例外を投げると 500 の標準エラー形(requestId 付き)で返し、error.unhandled を記録する', async () => {
+    const logs = captureLogs();
+    const res = await app.request('/api/municipalities', undefined, { DB: throwingDb });
+    expect(res.status).toBe(500);
+    const body = (await res.json()) as {
+      error: { code: string; message: string; requestId: string };
+    };
+    expect(body.error.code).toBe('internal_error');
+    expect(body.error.message).toContain('時間をおいて');
+    expect(body.error.requestId).toMatch(/^[0-9a-f-]{36}$/);
+    // 例外の中身は応答にもログにも出さない(上流の断片・内部の列名などが混ざり得る)。
+    expect(JSON.stringify(body)).not.toContain('secret_column');
+    const joined = logs.join('\n');
+    expect(joined).toContain('"event":"error.unhandled"');
+    expect(joined).toContain(body.error.requestId);
+    expect(joined).not.toContain('secret_column');
+    // セキュリティヘッダも付く。
+    expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
+  });
+
+  it('POST の本文(利用者の入力)をログに残さない', async () => {
+    const logs = captureLogs();
+    const res = await app.request(
+      '/api/checklists',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          destination: { municipalityCode: '13112' },
+          moveDate: '2026-09-17',
+          originType: 'outside_tokyo',
+          household: { memberCount: 3, ageBands: ['adult', 'adult', 'age0_2'] },
+          flags: {
+            hasMyNumberCard: true,
+            needsNationalHealthInsurance: false,
+            needsNationalPension: false,
+            hasSchoolOrChildcareNeeds: true,
+            hasDog: false,
+            needsDisabilityOrCareSupport: false,
+            needsForeignResidentGuidance: false,
+          },
+        }),
+      },
+      { DB: throwingDb },
+    );
+    expect(res.status).toBe(500);
+    const joined = logs.join('\n');
+    expect(joined).toContain('error.unhandled');
+    expect(joined).not.toContain('2026-09-17');
+    expect(joined).not.toContain('age0_2');
+  });
+});
+
+describe('POST /api/checklists の入口制限', () => {
+  it('Content-Type が application/json でなければ 415(クロスサイトの単純リクエストを断る)', async () => {
+    const res = await app.request(
+      '/api/checklists',
+      { method: 'POST', headers: { 'content-type': 'text/plain' }, body: '{}' },
+      { DB: throwingDb },
+    );
+    expect(res.status).toBe(415);
+    const body = (await res.json()) as { error: { code: string; requestId?: string } };
+    expect(body.error.code).toBe('unsupported_media_type');
+    expect(body.error.requestId).toBeTruthy();
+  });
+
+  it('本文が 8KB を超えれば 413', async () => {
+    const res = await app.request(
+      '/api/checklists',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ pad: 'x'.repeat(9 * 1024) }),
+      },
+      { DB: throwingDb },
+    );
+    expect(res.status).toBe(413);
   });
 });
 

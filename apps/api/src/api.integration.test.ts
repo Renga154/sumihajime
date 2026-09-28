@@ -1,14 +1,21 @@
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Profile } from '@tmn/schemas';
 import { createTestDb, type TestDb } from '../test/d1-harness.js';
 import { app } from './index.js';
+import { loadPublishData } from '@tmn/publish';
 
 /**
  * なぜ: API+D1 の統合テスト(計画§9受入・§12)。Miniflare の本物のD1(SQLite)へ
  * migrations適用+承認済みシード投入し(test/d1-harness.ts)、app.request(path, init, { DB })
  * で Worker コードを通しで検証する。
  */
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+/** シード(test/d1-harness.ts の buildSeed)と同じ既定の自治体で読み込んだ公開データ。件数の期待値の出どころ。 */
+const PUBLISHED = loadPublishData(repoRoot);
 
 let harness: TestDb;
 let db: D1Database;
@@ -232,6 +239,34 @@ describe('GET /api/procedures/:id', () => {
       expect(s.sourceLastModifiedAt).toBeUndefined();
     }
   });
+
+  it('根拠ソースの公開列は GET /api/sources と同一(notes は両方とも出さない)', async () => {
+    // なぜ: 2つのエンドポイントが別々に射影を書いており、notes を片方だけが出していた。
+    // notes は取り込み・監査の作業メモで、どの画面も表示しない → 両方とも公開しないに揃えた。
+    const [detailRes, ledgerRes] = await Promise.all([
+      request('/api/procedures/procedure_resident_registration?municipality=13112'),
+      request('/api/sources'),
+    ]);
+    const detail = (await detailRes.json()) as { sources: Record<string, unknown>[] };
+    const ledger = new Map(
+      ((await ledgerRes.json()) as Record<string, unknown>[]).map((s) => [s.sourceId, s]),
+    );
+    for (const s of detail.sources) {
+      expect(s.notes).toBeUndefined();
+      const { driftDetectedOn: _d, driftKind: _k, ...publicColumns } = s;
+      expect(publicColumns).toEqual(ledger.get(s.sourceId));
+    }
+  });
+
+  it('存在しない手続きは 404 で、パスの値を文面へ反射しない', async () => {
+    const injected = encodeURIComponent('公式発表:こちらへ https://evil.example');
+    const res = await request(`/api/procedures/${injected}?municipality=13112`);
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe('procedure_not_found');
+    expect(body.error.message).not.toContain('evil.example');
+    expect(body.error.message).not.toContain('公式発表');
+  });
 });
 
 describe('GET /api/facilities', () => {
@@ -259,24 +294,16 @@ describe('GET /api/sources — データソース台帳の公開ビュー(Wave3)
     const res = await request('/api/sources');
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>[];
-    // 台帳には承認済み182件がシードされる(publish/load は approved のみ挿入。sql.ts は
+    // 台帳の承認済みソースは全件シードされる(publish/load は approved のみ挿入し、sql.ts は
     // supported の絞り込みなく approvedSources 全件を挿入する)。
-    // 2026-07-25 Step3承認で世田谷の学校転入・保育の4ソースが追加approved化(42→46)、
-    // 同日Step4-A承認で杉並(13115)の14ソース(46→60)、Step4-B承認で千代田(13101)の12ソース(60→72)、
-    // 2026-07-26 Step5-A承認で品川(13109)の12ソース(72→84)、同日Step5-B承認で大田(13111)の14ソース(84→98)、
-    // 2026-08-07 人手レビュー承認でライフライン等4手続きの出典5件が追加approved化(98→103。ADR-009)、
-    // 同日さらに練馬(13120)の11ソース+板橋(13119)の12ソースが人手レビュー承認(103→126。ユーザー決裁「2区とも承認」)、
-    // 同日さらにBatch7の4区が人手レビュー承認(ユーザー決裁「4区とも承認」)。中野13→16(wagmap許可で
-    // ごみ分別一覧・地域事務所・区役所の3ソースを追加登録)+豊島11+北15+荒川14で126→182。
-    // 同日さらにBatch10の足立(13121)16ソース+江戸川(13123)17ソースが人手レビュー承認
-    // (ユーザー決裁「2区とも承認」)で182→215。
-    // 同日さらに残る8区が人手レビュー承認(ユーザー決裁「5区とも承認」= 中央12+港14+文京14+
-    // 台東13+墨田14、「3区とも承認」= 目黒14+渋谷22+葛飾13)で215→331。加えて同日の決裁
-    // 「今許可する」で取得許可した渋谷区のArcGIS Hub配信の施設CSV1件を新規登録し331→332。
-    // これで台帳の全行が approved=23区が出そろった状態。
-    // 2026-09-25: 再監査で花畑区民事務所の施設ページ(仮設事務所への移転)を出典に追加し332→333。
-    // 同日さらに八王子市(13201)の23ソース+東京都水道局お客さまセンター1ソースが人手レビュー承認(333→357)。
-    expect(body.length).toBe(357);
+    // なぜ件数を定数で書かないか: 以前は toBe(357) のように手で更新しており、出典を1件承認する
+    // たびに無関係なこのテストが落ちた(件数の経緯はコミット履歴と registry.csv にある)。
+    // 検査したいのは「承認済みが過不足なく公開される」ことなので、シードと同じ読み込み結果と比べる。
+    expect(body.length).toBe(PUBLISHED.approvedSources.length);
+    expect(body.length).toBeGreaterThan(0);
+    expect(new Set(body.map((s) => s.sourceId))).toEqual(
+      new Set(PUBLISHED.approvedSources.map((s) => s.sourceId)),
+    );
 
     for (const s of body) {
       // 公開に必要な列は揃う。
@@ -349,7 +376,7 @@ describe('GET /api/stats — トップの実測サマリー', () => {
 });
 
 describe('GET /api/waste-schedules', () => {
-  it('area 未指定 → 118地区一覧 + caution', async () => {
+  it('area 未指定 → 公開データの全地区一覧 + caution', async () => {
     const res = await request('/api/waste-schedules?municipality=13112');
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -357,7 +384,10 @@ describe('GET /api/waste-schedules', () => {
       schedules?: unknown[];
       caution: string;
     };
-    expect(body.areas).toHaveLength(118);
+    // 地区数は公開データから導出する(収集地区の見直しでテストが落ちないように)。
+    const expected = PUBLISHED.wasteAreas.filter((a) => a.municipalityCode === '13112');
+    expect(expected.length).toBeGreaterThan(0);
+    expect(body.areas).toHaveLength(expected.length);
     expect(body.schedules).toBeUndefined();
     expect(body.caution).toContain('祝日');
   });

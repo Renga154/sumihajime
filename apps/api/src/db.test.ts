@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeForWasteSortingSearch } from './db.js';
+import { detectedOnTokyo, normalizeForWasteSortingSearch } from './db.js';
+
+/**
+ * なぜ: 巡回の検知時刻は UTC の ISO で記録する。以前は slice(0, 10) で UTC の日付を出しており、
+ * 日本時間の 0:00〜8:59 に検知したものが根拠カードで前日の日付になっていた。
+ */
+describe('detectedOnTokyo', () => {
+  it('UTC 15:30 の検知は日本時間の翌日として表示する', () => {
+    expect(detectedOnTokyo('2026-09-22T15:30:00Z')).toBe('2026-09-23');
+  });
+  it('日本時間の日中の検知は同じ日付', () => {
+    expect(detectedOnTokyo('2026-09-22T03:00:00Z')).toBe('2026-09-22');
+  });
+  it('欠落・読めない値は日付を推測しない(null)', () => {
+    expect(detectedOnTokyo(undefined)).toBeNull();
+    expect(detectedOnTokyo('not-a-date')).toBeNull();
+  });
+});
 
 /**
  * なぜ: GET /api/waste-sorting の検索正規化は D1(SQLite)にICU正規化がないためアプリ側の
