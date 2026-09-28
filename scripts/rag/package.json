@@ -17,6 +17,7 @@
   "dependencies": {
     "@tmn/drift": "workspace:*",
     "@tmn/ingest": "workspace:*",
+    "@tmn/publish": "workspace:*",
     "@tmn/rag": "workspace:*",
     "@tmn/schemas": "workspace:*"
   },

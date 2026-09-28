@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadSources } from './load.js';
 import { buildSeedStatements } from './sql.js';
-import { loadPublishData } from './load.js';
+import { DEFAULT_PUBLISH_CODES, loadPublishData } from './load.js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -46,7 +46,7 @@ describe('loadSources — snapshotPageUpdatedOn(ADR-014 の比較基準)', () =>
   });
 
   it('seed SQL の sources INSERT に snapshot_page_updated_on 列が含まれる', () => {
-    const data = loadPublishData(repoRoot);
+    const data = loadPublishData(repoRoot, DEFAULT_PUBLISH_CODES);
     const insert = buildSeedStatements(data).find((s) => s.startsWith('INSERT INTO sources ('));
     expect(insert).toContain('snapshot_page_updated_on');
   });

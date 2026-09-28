@@ -27,8 +27,8 @@ export const MUNICIPALITIES: Municipality[] = [
   // ── 23特別区(code=131xx) ──
   {
     // なぜ: Step4-Bで千代田区データ(手続き10件/窓口施設7件=本庁舎+出張所6/ごみ分別辞書446品目)を
-    // 整備しsupportedへ。収集曜日は公式PDFのみのため誠実縮退(waste.jsonなし)。全ソースは pending だが
-    // publish の承認ゲート(load.ts)で公開ビュー上の supported は承認済みソース有無に従う(承認まで false)。
+    // 整備しsupportedへ。収集曜日は公式PDFのみのため誠実縮退(waste.jsonなし)。全ソース承認済みのため
+    // publish の承認ゲート(load.ts)で公開ビュー上も supported=true になる。
     code: '13101',
     name: '千代田区',
     supported: true,
@@ -60,7 +60,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: T-016で新宿区データ(手続き10件/窓口施設10件/収集日HTML表→171地区)を整備しsupportedへ。
-    // 全ソースは pending だが publish の承認ゲートで公開ビュー上の supported は実データに従う。
+    // 全ソース承認済みのため publish の承認ゲートで公開ビュー上も supported=true になる。
     code: '13104',
     name: '新宿区',
     supported: true,

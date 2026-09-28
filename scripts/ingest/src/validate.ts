@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadPublishData } from '@tmn/publish';
+import { MUNICIPALITIES, loadPublishData } from '@tmn/publish';
 import { readRegistryTable, validateRegistryRows } from './registry.js';
 import { runValidations } from './validate-core.js';
 import { tokyoToday } from './dates.js';
@@ -22,6 +22,11 @@ import { tokyoToday } from './dates.js';
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 
+// なぜ全supported自治体を明示するのか: loadPublishData は既定値を持たない(引数必須)。
+// ここで省略すると意図せず一部の自治体だけを検証してしまい、「全公開データを検証する」という
+// このCLIの見出しコメントと実際の挙動が食い違う(過去に世田谷1区のみへ静かに縮退していた不具合)。
+const SUPPORTED_MUNICIPALITY_CODES = MUNICIPALITIES.filter((m) => m.supported).map((m) => m.code);
+
 function main(): void {
   const table = readRegistryTable(repoRoot);
   const rows = validateRegistryRows(table);
@@ -31,7 +36,7 @@ function main(): void {
   let approvedSourceIds = new Set<string>();
   let publishLoadError: string | undefined;
   try {
-    const pub = loadPublishData(repoRoot);
+    const pub = loadPublishData(repoRoot, SUPPORTED_MUNICIPALITY_CODES);
     references = pub.references;
     approvedSourceIds = pub.approvedSourceIds;
   } catch (err) {

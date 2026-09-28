@@ -197,12 +197,12 @@ export function loadCoverage(repoRoot: string): Coverage[] {
 }
 
 /**
- * なぜ: publish は「supportedな全自治体」を対象に走らせ、承認ゲートが未承認ソース参照を
- * 拒否するのが本来の運用(T-015)。一方、CI/統合テストのシード(d1-harness の buildSeed)は
- * 「承認済みで公開可能な自治体集合」だけを載せたい。両者を1関数で満たすため、
- * loadPublishData/buildSeed は対象自治体コードを引数化し、デフォルトは公開可能な世田谷のみ
- * (DEFAULT_PUBLISH_CODES)とする。CLI(publish.ts)は MUNICIPALITIES.supported を渡し、
- * 江東区(pending)を含めることでゲートを実際に発火させる。
+ * なぜ: publish は「supportedな全自治体」を対象に走らせるのが本来の運用(T-015)。一方、
+ * 軽量なCI/統合テストのシード(d1-harness の buildSeed)は「1自治体だけの最小フィクスチャ」で
+ * 十分なことが多い。両者を1関数で満たすため、loadPublishData/buildSeed は対象自治体コードを
+ * 引数化し、最小フィクスチャ用に世田谷のみの DEFAULT_PUBLISH_CODES を用意する。
+ * ただし loadPublishData 自体には既定値を持たせない(下記)。CLI(publish.ts)は
+ * MUNICIPALITIES.supported な全コードを明示的に渡す。
  */
 export const DEFAULT_PUBLISH_CODES = ['13112'] as const;
 
@@ -312,24 +312,27 @@ export function loadWasteSortingFor(repoRoot: string, code: string): WasteSortin
  * すべての公開データを読み込み・スキーマ検証し、ゲート入力(references)まで組み立てる。
  * SQL生成やゲート判定はここでは行わない(呼び出し側が assertPublishGate → buildSeedStatements)。
  *
- * @param municipalityCodes 公開対象の自治体コード。省略時は公開可能な世田谷のみ
- *   (DEFAULT_PUBLISH_CODES)。CLIは MUNICIPALITIES.supported を渡し、江東(pending)を
- *   含めることで承認ゲートを発火させる(T-015)。
+ * @param municipalityCodes 公開対象の自治体コード。呼び出し側に明示させる(引数必須)。
+ *   なぜ既定値を持たせないか: 「全自治体を検証したい」呼び出しが引数を省略すると、
+ *   最小フィクスチャ(DEFAULT_PUBLISH_CODES=世田谷のみ)へ静かに縮退し、他の自治体の
+ *   公開データ不整合を検知できなくなる(scripts/ingest/src/validate.ts が実際にこの
+ *   バグを踏んでいた)。CLI(publish.ts)は MUNICIPALITIES.supported な全コードを渡す。
+ *   軽量な単体テストは DEFAULT_PUBLISH_CODES を明示的に渡す。
  */
 export function loadPublishData(
   repoRoot: string,
-  municipalityCodes: readonly string[] = DEFAULT_PUBLISH_CODES,
+  municipalityCodes: readonly string[],
 ): PublishData {
   const sources = loadSources(repoRoot);
   const approvedSources = sources.filter((s) => s.reviewStatus === 'approved');
   const approvedSourceIds = new Set(approvedSources.map((s) => s.sourceId));
 
-  // なぜ: municipalities.ts の静的 supported は「MVP整備対象」という product意図を表す
-  // (T-015で江東=13108をtrueに)。ただし API/DB で実際に supported として公開するのは
-  // 「承認済みソースを1件以上持つ自治体」だけとする(municipalities.ts のコメント
-  // 『レビュー承認後に有効』の実装)。江東は全ソースが pending/candidate のため、静的に
-  // supported=true でも公開ビュー(seed→D1→API)では supported=false になる。これにより
-  // 未レビューの自治体が「対応済み」に見えること(CLAUDE.md原則9)を構造的に防ぐ。
+  // なぜ: municipalities.ts の静的 supported は「MVP整備対象」という product意図を表す。
+  // ただし API/DB で実際に supported として公開するのは「承認済みソースを1件以上持つ
+  // 自治体」だけとする(municipalities.ts のコメント『レビュー承認後に有効』の実装)。
+  // 承認前の自治体は静的に supported=true でも公開ビュー(seed→D1→API)では
+  // supported=false になる。これにより未レビューの自治体が「対応済み」に見えること
+  // (CLAUDE.md原則9)を構造的に防ぐ。
   const approvedMunicipalityCodes = new Set(
     approvedSources
       .map((s) => s.municipalityCode)
