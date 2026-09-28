@@ -53,7 +53,7 @@ export function FacilitiesPage() {
         </p>
       </header>
 
-      {state.loading && <Loading label="窓口一覧を読み込み中です…" />}
+      {state.loading && <Loading page label="窓口一覧を読み込み中です…" />}
       {state.error != null && <ErrorMessage error={state.error} onRetry={state.reload} />}
 
       {state.data && state.data.length > 0 && (

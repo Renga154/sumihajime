@@ -173,7 +173,7 @@ export function DifferencesPage() {
   const isOwnWard = mine != null && mine === municipalityCode;
   const mineLabel = isOwnWard ? 'あなたの自治体' : '基準の自治体';
 
-  if (state.loading) return <Loading label="自治体ごとの違いを読み込んでいます…" />;
+  if (state.loading) return <Loading page label="自治体ごとの違いを読み込んでいます…" />;
   if (state.error) return <ErrorMessage error={state.error} onRetry={state.reload} />;
   if (!report) return null;
 

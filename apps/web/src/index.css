@@ -1,19 +1,17 @@
 @import 'tailwindcss';
 
 /*
- * フォント: デジタル庁デザインシステム(DADS)に倣い本文書体を Noto Sans JP に統一する。
- * CDN/外部フォント読込みは禁止のため npm パッケージ @fontsource/noto-sans-jp を Vite に
- * 取り込ませる。weight は 400(本文)/500(強調)/700(見出し)の3つを維持する(見た目は不変)。
+ * フォント: 端末の日本語書体(システムフォント)を使い、Webフォントは配信しない(ADR-015)。
  *
- * 実体の @font-face は main.tsx が読み込む @fontsource の「分割サブセット」CSS
- * (400.css / 500.css / 700.css)にある。ここには置かない。
+ * なぜ: 以前は DADS に倣い Noto Sans JP(400/500/700)を @fontsource の分割サブセットで
+ * 配信していた。分割で1ページ数百KBまで減らしても、トップだけで55本・約650KBあり、
+ * モバイル(低速4G想定)の初回表示を約7秒まで遅らせていた(Lighthouse 性能 59)。
+ * 同じビルドからフォントだけ外すと初回表示 1.7秒・性能 95 になった(2026-09-29 計測)。
+ * 想定利用者は引越し直後の細い回線で見ることが多く、書体の統一より速さを取る。
  *
- * なぜ分割サブセットか(独立点検 P1-7): 以前は1ウェイト=約1MBの japanese 集約サブセットを
- * unicode-range 無しで宣言していたため、どのページでも3ウェイト計3.09MB(初回転送の96%)を
- * 必ず取得していた。@fontsource は Google Fonts と同じ 120 分割の unicode-range 付き
- * サブセットも同梱しているので、そちらへ切り替える。ブラウザは実際に描画する文字を含む
- * スライスだけを取りに行くため、見た目を一切変えずに初回転送量だけが落ちる。
- * woff レガシーは vite.config.ts のプラグインで剥がす(woff2 のみ配信)。
+ * 見た目: Android の既定の日本語書体は Noto Sans CJK(Noto Sans JP と同じ字形)、
+ * iOS/macOS はヒラギノ角ゴ、Windows は BIZ UDPゴシック(UDフォント)→メイリオ。
+ * Noto Sans JP を入れている端末ではそれを最優先で使う(DADS の指定順を保つ)。
  */
 
 /*
@@ -69,14 +67,10 @@ body {
   margin: 0;
   background-color: var(--color-slate-50);
   color: var(--color-slate-900);
-  /* DADS準拠: 本文は Noto Sans JP を最優先し、未読込時はシステムスタックへフォールバック。 */
+  /* 端末の日本語書体を使う(ADR-015)。Windows の游ゴシックは細く滲みやすいので指定しない。 */
   font-family:
-    'Noto Sans JP',
-    system-ui,
-    -apple-system,
-    'Hiragino Kaku Gothic ProN',
-    Meiryo,
-    sans-serif;
+    'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'BIZ UDPGothic', Meiryo,
+    system-ui, sans-serif;
   /* 日本語の可読性: 本文は行間ゆったり(DADS Std-170%相当)・文字間わずかに開ける。 */
   line-height: 1.75;
   letter-spacing: 0.01em;
@@ -129,9 +123,16 @@ input[type='radio'] {
   min-height: 24px;
 }
 
+/*
+ * 上下の余白は「24px − 文字の高さ」の半分。インライン要素の当たり判定の高さは書体の字面の
+ * 高さ(ascent+descent)で決まり、書体で違う。Noto Sans JP は約1.45em、ヒラギノは約1.0em しかない
+ * (ADR-015 で端末の書体に切り替えたとき、4px 固定では12pxの文字で20pxに縮んだ)。
+ * 字面はどの書体でもほぼ 1em 以上ある(ヒラギノの小さい文字で 0.98em 程度)ので、1px ずつ
+ * 上乗せしたこの式ならどの端末でも24px以上になる。
+ */
 .tap-target-inline {
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding-top: max(4px, calc((24px - 1em) / 2 + 1px));
+  padding-bottom: max(4px, calc((24px - 1em) / 2 + 1px));
 }
 
 /* スクリーンリーダー専用テキスト。 */

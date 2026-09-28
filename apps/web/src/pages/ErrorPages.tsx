@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Link, isRouteErrorResponse, useRouteError } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Card } from '../components/ui';
 import { useDocumentTitle } from '../lib/navigation';
+import { isStaleChunkError, reloadOnceForStaleChunk } from '../lib/stale-chunk';
 
 /**
  * 未定義URL(404)と、描画時の想定外例外の受け皿。
@@ -118,5 +119,12 @@ function UnexpectedError() {
 export function AppErrorPage() {
   const error = useRouteError();
   const isNotFound = isRouteErrorResponse(error) && error.status === 404;
+  const staleChunk = isStaleChunkError(error);
+  useEffect(() => {
+    // デプロイで画面のファイルが差し替わった後の古いタブ。URLは移動先になっているので、
+    // 再読み込みすればその画面が新しいファイルで開く(lib/stale-chunk.ts)。
+    if (staleChunk)
+      reloadOnceForStaleChunk(window.sessionStorage, Date.now(), () => window.location.reload());
+  }, [staleChunk]);
   return <Layout>{isNotFound ? <NotFoundPage /> : <UnexpectedError />}</Layout>;
 }

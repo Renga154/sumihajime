@@ -16,7 +16,7 @@ import { BROWSER_EXTERNAL_ORIGINS } from '@tmn/domain';
  * ■ CSP を機能する形にするための実測メモ(2026-08-08、本番相当ビルドで確認)
  *  - script-src 'self': Vite ビルドの出力は外部 `<script src>` のみ。インラインscriptは0件、
  *    `eval` / `new Function` も成果物に無いため 'unsafe-inline' / 'unsafe-eval' は不要。
- *  - style-src 'self': Tailwind/maplibre/@fontsource いずれも外部CSSファイル。唯一のインライン
+ *  - style-src 'self': Tailwind/maplibre いずれも外部CSSファイル。唯一のインライン
  *    スタイル(ChecklistPageの進捗バー幅)は React が CSSOM 経由(`node.style.width = ...`)で
  *    書くため CSP の対象外。よって 'unsafe-inline' は入れない。
  *  - img-src / connect-src に地理院タイルのオリジン: 地図はタイル画像を取得する(@tmn/domain の

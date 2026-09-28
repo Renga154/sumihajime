@@ -225,7 +225,7 @@ export function ChecklistPage() {
         )}
       </header>
 
-      {state.loading && <Loading label="チェックリストを作成中です…" />}
+      {state.loading && <Loading page label="チェックリストを作成中です…" />}
       {state.error != null && (
         <ErrorMessage error={state.error} onRetry={state.reload} retryLabel="もう一度作成する" />
       )}

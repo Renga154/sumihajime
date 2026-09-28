@@ -7,9 +7,24 @@ import { ApiError } from '../api/client';
  * 公式サイトへの導線(FR-021)を添える。
  */
 
-export function Loading({ label = '読み込み中です…' }: { label?: string }) {
+/**
+ * page: 画面全体の本文を読み込んでいる間に使う。読み込み中も1画面ぶんの高さを確保し、
+ * フッターを画面の外に置く。確保しないと、本文が届いた瞬間に画面内のフッターが下へ跳ね、
+ * 読んでいる位置がずれる(2026-09-29 の計測で /differences・/about-data の CLS 約0.4)。
+ */
+export function Loading({
+  label = '読み込み中です…',
+  page = false,
+}: {
+  label?: string;
+  page?: boolean;
+}) {
   return (
-    <div role="status" aria-live="polite" className="flex items-center justify-center gap-3 py-10">
+    <div
+      role="status"
+      aria-live="polite"
+      className={`flex justify-center gap-3 py-10 ${page ? 'min-h-[100svh] items-start' : 'items-center'}`}
+    >
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"

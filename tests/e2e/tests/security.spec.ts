@@ -197,6 +197,9 @@ test('CSP実測: 主要画面をひと通り操作してもCSP違反・コンソ
   ).toBeVisible({
     timeout: 20_000,
   });
+  // タイルの取得が終わるまで待ってから離れる。読み込み途中で次の画面へ移ると、ブラウザが
+  // 取得を打ち切り、maplibre が「Failed to fetch」をコンソールへ出す(アプリの不具合ではない)。
+  await page.waitForLoadState('networkidle');
   await drainCspViolations(page, problems);
 
   // (4) ごみ分別検索(入力→APIへのfetch→結果描画)。

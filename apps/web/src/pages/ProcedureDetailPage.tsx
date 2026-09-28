@@ -58,7 +58,7 @@ export function ProcedureDetailPage() {
         </Link>
       </p>
 
-      {state.loading && <Loading label="手続きの詳細を読み込み中です…" />}
+      {state.loading && <Loading page label="手続きの詳細を読み込み中です…" />}
       {state.error != null && <ErrorMessage error={state.error} onRetry={state.reload} />}
 
       {state.data && (

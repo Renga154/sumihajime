@@ -8,8 +8,8 @@ import { FEEDBACK_FORM_URL } from '../content/contact';
  * §15.3 の見出し・ランドマーク構造とキーボード操作の土台を担保する。footerには
  * §16.2「正式な行政サービスではない/公式ページで最終確認」の常設注意書きを置く。
  *
- * ロゴマークは東京の抽象(重なる街並み+チェック)をインラインSVGで表現し、外部リソースに
- * 依存しない(CDN/画像URL禁止)。ブランドカラー(brand)で信頼感を、アクセントで親しみを添える。
+ * ロゴマークは同一オリジンの画像(外部CDNは使わない)。ブランドカラー(brand)で信頼感を、
+ * アクセントで親しみを添える。
  *
  * 遷移まわりの基本もここで一括して担保する:
  *  - <ScrollRestoration />: 遷移時はページ先頭へ、戻る操作では元の位置へ復元する。
@@ -41,9 +41,14 @@ const navItems = [
 
 function LogoMark() {
   // 正式ロゴ(家+扉+チェック)。装飾画像のため alt は空にする。
+  // なぜ logo.png を使わないか: logo.png は共有カード用の512px(約134KB)で、全ページのヘッダーに
+  // 36px で出すには重すぎた(モバイルの初回表示で JS に次ぐ2番目に大きい転送だった)。
+  // ヘッダーには3倍密度ぶん(108px)の WebP(約2KB)を使う。width/height は描画前の枠確保のため。
   return (
     <img
-      src="/logo.png"
+      src="/logo-mark.webp"
+      width={36}
+      height={36}
       alt=""
       aria-hidden="true"
       className="h-9 w-9 shrink-0 rounded-xl shadow-sm ring-1 ring-brand-900/10"

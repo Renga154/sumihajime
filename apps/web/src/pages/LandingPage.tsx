@@ -104,9 +104,9 @@ export function LandingPage() {
             公式根拠つき・期限順
           </span>
           <h1 className="mt-3 text-2xl font-bold leading-snug tracking-tight text-slate-900 sm:text-3xl">
-            東京への転入手続きを、
-            <br className="hidden sm:block" />
-            やることリストに
+            {/* 句ごとに折り返す(「や／ることリスト」のような語の途中での改行を防ぐ)。 */}
+            <span className="inline-block">東京への転入手続きを、</span>
+            <span className="inline-block">やることリストに</span>
           </h1>
           <p className="mt-3 max-w-xl text-slate-700">
             お住まいになる自治体・引越し日・当てはまる条件を選ぶと、公式ページの根拠と最終確認日つきで、

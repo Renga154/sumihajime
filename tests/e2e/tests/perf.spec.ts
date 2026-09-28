@@ -64,42 +64,20 @@ test('性能: POST /api/checklists p95 < 2秒(ローカル20回)', async ({ requ
 });
 
 /**
- * 独立点検 P1-7 の回帰固定。修正前のトップ初回表示は約3.23MBで、うち3.09MB(96%)が
- * 日本語Webフォント3ウェイト(1ファイル=約1MB、unicode-range 無しで全ページ必ず取得)だった。
- * 想定利用者は引越し直後の細い回線であり、この構成は主要ターゲットに最も重い負担をかける。
- *
- * 現在は unicode-range で120分割したサブセットを使い、実際に描画する文字を含むスライスだけを
- * 取りに行く。DADS準拠の3ウェイトは維持したまま転送量だけが落ちる。
- * 閾値(800KB)は「1ウェイトぶんの集約サブセット(約1MB)すら下回る」ことを担保する水準に置く。
+ * ADR-015 の回帰固定。日本語Webフォントは分割サブセットでもトップだけで55本・約650KBあり、
+ * モバイルの初回表示を約7秒まで遅らせていた。端末の日本語書体へ切り替えたので、
+ * どの画面もフォントファイルを1本も取りに行かない。
  */
-test('性能: トップのフォント転送量が集約サブセット1本ぶんを下回る', async ({ page }, testInfo) => {
-  const fonts = new Map<string, number>();
-  page.on('response', async (res) => {
-    if (!/\.woff2?(\?|$)/.test(res.url())) return;
-    try {
-      fonts.set(res.url(), (await res.body()).byteLength);
-    } catch {
-      // 本文を取れない応答(キャンセル等)は計上しない。
-    }
+test('性能: トップはWebフォントを取りに行かない', async ({ page }) => {
+  const fonts: string[] = [];
+  page.on('request', (req) => {
+    if (req.resourceType() === 'font' || /\.woff2?(\?|$)/.test(req.url())) fonts.push(req.url());
   });
 
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-  const totalBytes = [...fonts.values()].reduce((a, b) => a + b, 0);
-  const stats = { requests: fonts.size, totalBytes, totalKB: Math.round(totalBytes / 1024) };
-  console.log(`[perf] landing font payload: ${JSON.stringify(stats)}`);
-  await testInfo.attach('landing-font-payload.json', {
-    body: JSON.stringify(stats, null, 2),
-    contentType: 'application/json',
-  });
-
-  // 分割が効いていれば数百KB以下に収まる。1本1MBの集約サブセットへ戻ると必ず超える。
-  expect(totalBytes, `landing font payload = ${stats.totalKB}KB`).toBeLessThan(800 * 1024);
-  // 分割されている(=1本あたりが小さい)ことも確認する。
-  for (const [url, size] of fonts) {
-    expect(size, `${url} = ${Math.round(size / 1024)}KB`).toBeLessThan(200 * 1024);
-  }
+  expect(fonts).toEqual([]);
 });
 
 test('性能(参考): チェックリスト画面のDOMContentLoadedを計測', async ({ page }, testInfo) => {

@@ -65,7 +65,7 @@ export function WastePage() {
         </p>
       </header>
 
-      {base.loading && <Loading label="地区一覧を読み込み中です…" />}
+      {base.loading && <Loading page label="地区一覧を読み込み中です…" />}
       {base.error != null && <ErrorMessage error={base.error} onRetry={base.reload} />}
 
       {base.data && base.data.waste === null && (
