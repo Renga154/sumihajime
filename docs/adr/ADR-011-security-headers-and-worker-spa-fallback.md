@@ -91,5 +91,21 @@ sitemap に載せるのは、アプリ状態なしで中身が出るページだ
 - **代償**: ブラウザ側の Zod は JIT を使わない。検証結果は同じで、対象は高々数十件のAPI応答。
 - **運用上の注意**: `_headers` と `apps/api/src/headers.ts` は必ず同時に変更する
   (ズレると `apps/api/src/headers.test.ts` が落ちる)。
-- **未着手**: Strict-Transport-Security と CSP の report-to は入れていない。前者は独自ドメイン
-  移行時、後者はレポート収集先を持ったときに再検討する。
+- **未着手**: CSP の report-to は入れていない。レポート収集先を持ったときに再検討する。
+
+## 追記(2026-09-29): HSTS・COOP・CORP を追加
+
+上の「未着手」にあった Strict-Transport-Security を、独自ドメイン移行を待たずに入れた。
+同時に Cross-Origin-Opener-Policy / Cross-Origin-Resource-Policy を加えた(セキュリティ監査の指摘)。
+値は `_headers` の `/*` と `headers.ts` の文書用・API用の3系統すべてで同一(headers.test.ts が固定)。
+
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains` — 待つ理由だった「独自ドメインで
+  将来サブドメインに http の何かを置くかもしれない」は、workers.dev では当てはまらない(HSTS は
+  応答したホスト app.sumihajime.workers.dev とその配下にだけ効き、親の workers.dev には及ばない)。
+  `preload` は付けない(登録の取り消しが難しく、親ドメインを管理していない)。ローカルの
+  http://localhost ではブラウザが HSTS を無視するため、E2E・開発に影響しない。
+- `Cross-Origin-Opener-Policy: same-origin` — 外部リンクはすべて noopener で開き、他サイトと
+  ウィンドウ参照を持ち合う機能が無い。
+- `Cross-Origin-Resource-Policy: same-origin` — 静的アセット・APIとも同一オリジンからしか
+  読まない。SNS のカード生成はサーバー側取得なので影響しない。他サイトに画像等を直接
+  埋め込ませたくなったら、その資源だけ `_headers` で緩める(全体は緩めない)。

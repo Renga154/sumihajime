@@ -76,6 +76,25 @@ const PERMISSIONS_POLICY = [
  */
 const REFERRER_POLICY = 'strict-origin-when-cross-origin';
 
+/**
+ * なぜ HSTS: workers.dev は https で配信されるが、利用者が http:// で打ち込んだ初回や、
+ * 公共Wi-Fi等での http への格下げ(SSL stripping)を防ぐには、ブラウザに「今後は https のみ」と
+ * 覚えさせる必要がある。1年・サブドメイン込み。preload は付けない(登録は取り消しが難しく、
+ * workers.dev の親ドメインを私たちは管理していない)。http://localhost ではブラウザが無視する。
+ */
+const STRICT_TRANSPORT_SECURITY = 'max-age=31536000; includeSubDomains';
+
+/**
+ * なぜ COOP/CORP same-origin: このアプリは他サイトのウィンドウと参照を持ち合う必要がなく
+ * (外部リンクは noopener で開く)、自分の資源を他サイトに読み込ませる必要もない。
+ * COOP は別サイトから開かれたときの window.opener 経由の操作を、CORP は他サイトが
+ * <img>/<script> 等でこちらの応答を読み込むこと(Spectre 系の横取りを含む)を断つ。
+ */
+const CROSS_ORIGIN_ISOLATION_HEADERS = {
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Resource-Policy': 'same-origin',
+} as const;
+
 /** HTML文書とその副資源(静的アセット・SPAフォールバック)へ付けるヘッダ。 */
 export const DOCUMENT_SECURITY_HEADERS: Readonly<Record<string, string>> = {
   'Content-Security-Policy': CONTENT_SECURITY_POLICY,
@@ -83,6 +102,8 @@ export const DOCUMENT_SECURITY_HEADERS: Readonly<Record<string, string>> = {
   'Referrer-Policy': REFERRER_POLICY,
   'X-Frame-Options': 'DENY',
   'Permissions-Policy': PERMISSIONS_POLICY,
+  'Strict-Transport-Security': STRICT_TRANSPORT_SECURITY,
+  ...CROSS_ORIGIN_ISOLATION_HEADERS,
 };
 
 /**
@@ -98,6 +119,8 @@ export const API_SECURITY_HEADERS: Readonly<Record<string, string>> = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': REFERRER_POLICY,
   'X-Frame-Options': 'DENY',
+  'Strict-Transport-Security': STRICT_TRANSPORT_SECURITY,
+  ...CROSS_ORIGIN_ISOLATION_HEADERS,
 };
 
 /**
