@@ -6,7 +6,12 @@
 
 export type DriftStatus = 'ok' | 'changed' | 'unreachable' | 'unverifiable' | 'transient';
 
-/** HTTP 取得の結果。ネットワーク層で失敗したときは networkError のみ。 */
+/**
+ * HTTP 取得の結果。ネットワーク層で失敗したときは networkError のみ。
+ * redirectRejected: リダイレクトを手動で辿った結果、取得を打ち切った(非公式ホストへの転送、
+ *   またはホップ数の上限超過)。非公式ホストの本文は読まない(原則5。Worker が任意の転送先へ
+ *   要求を送らないためでもある)。
+ */
 export type DriftFetchResult =
   | {
       ok: boolean;
@@ -16,8 +21,11 @@ export type DriftFetchResult =
       contentType?: string;
       lastModified?: string;
       declaredCharset?: string;
+      /** 本文が読み取り上限を超えたため読むのをやめた(判定材料が無い=検証不能)。 */
+      bodyTooLarge?: boolean;
     }
-  | { networkError: true };
+  | { networkError: true }
+  | { redirectRejected: 'redirect_not_official' | 'too_many_redirects' };
 
 export interface DriftCheckInput {
   sourceType: 'html' | 'csv' | 'xlsx' | string;
@@ -68,6 +76,10 @@ function parseUrl(url: string): URL | null {
  */
 function reachabilityFailure(fetch: DriftFetchResult, sourceType: string): string | null {
   if ('networkError' in fetch) return 'network_error';
+  // リダイレクトの打ち切り。HTML では「別サイトへ飛ばされた」は従来から host_changed として
+  // 到達性の失敗(2回連続で unreachable)だった。非公式ホストへの転送は必ず別ホストなので、
+  // 同じ扱いを理由名だけ変えて保つ。ファイルの非公式転送は classifyCheck 側で検証不能に倒す。
+  if ('redirectRejected' in fetch) return fetch.redirectRejected;
   if (!fetch.ok || fetch.status < 200 || fetch.status >= 300) return `http_${fetch.status}`;
   // なぜファイルは到達先を問わないか: オープンデータのダウンロードは、配信基盤が署名付きの
   // 保存先URL(別ホスト)へリダイレクトして返すのが普通(渋谷区の ArcGIS Hub で実際に
@@ -94,6 +106,16 @@ function isUtf8(charset: string): boolean {
 }
 
 export function classifyCheck(input: DriftCheckInput): DriftVerdict {
+  const isFile = input.sourceType === 'csv' || input.sourceType === 'xlsx';
+  // なぜファイルの非公式転送は失敗に数えないか: オープンデータの配信基盤は署名付きの保存先
+  // (別ホスト)へ転送して返すのが普通で、転送そのものは「消えた」の信号ではない(上の
+  // reachabilityFailure の注記)。ただし非公式ホストの中身は取りに行かないので、比べる材料が無い
+  // =検証不能として記録する(推測で ok にも changed にもしない。原則3)。
+  if (isFile && 'redirectRejected' in input.fetch) {
+    if (input.fetch.redirectRejected === 'redirect_not_official') {
+      return { status: 'unverifiable', reason: 'redirect_not_official', consecutiveFailures: 0 };
+    }
+  }
   const failure = reachabilityFailure(input.fetch, input.sourceType);
   if (failure !== null) {
     const consecutiveFailures = input.previousConsecutiveFailures + 1;
@@ -105,9 +127,15 @@ export function classifyCheck(input: DriftCheckInput): DriftVerdict {
     };
   }
 
-  const fetch = input.fetch as Exclude<DriftFetchResult, { networkError: true }>;
+  const fetch = input.fetch as Extract<DriftFetchResult, { ok: boolean }>;
 
-  if (input.sourceType === 'csv' || input.sourceType === 'xlsx') {
+  // 本文が上限を超えて読めなかった: 更新日もハッシュも得られない。到達はできているので
+  // 失敗には数えず、検証不能として記録する。
+  if (fetch.bodyTooLarge === true) {
+    return { status: 'unverifiable', reason: 'body_too_large', consecutiveFailures: 0 };
+  }
+
+  if (isFile) {
     // 静的ファイルは生バイトの SHA-256 が安定する(ADR-014 測定)。
     const base = input.baseline.contentHash ?? null;
     const cur = input.current.contentHash ?? null;

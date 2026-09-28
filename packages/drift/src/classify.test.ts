@@ -243,3 +243,68 @@ describe('classifyCheck — html(更新日表記なし → Last-Modified)', () =
     expect(v).toEqual({ status: 'unverifiable', reason: 'no_signal', consecutiveFailures: 0 });
   });
 });
+
+/**
+ * なぜ: 巡回はリダイレクトを自動では辿らず、各ホップで公式ホストかを確かめる(非公式ホストの
+ * 中身を根拠の判定に使わない=原則5)。打ち切り・本文の上限超過が、従来の判定の意味
+ * (HTMLの別サイト転送=到達性の失敗、判定材料なし=検証不能)を保つことを固定する。
+ */
+describe('classifyCheck — リダイレクトの打ち切り・本文の上限', () => {
+  it('HTML が非公式ホストへ転送: 従来の host_changed と同じく1回目 transient・2回目 unreachable', () => {
+    const fetch = { redirectRejected: 'redirect_not_official' as const };
+    expect(classifyCheck(input({ fetch }))).toEqual({
+      status: 'transient',
+      reason: 'redirect_not_official',
+      consecutiveFailures: 1,
+    });
+    expect(classifyCheck(input({ fetch, previousConsecutiveFailures: 1 })).status).toBe(
+      'unreachable',
+    );
+  });
+
+  it('ファイルが非公式ホスト(配信基盤の保存先)へ転送: 失敗に数えず検証不能', () => {
+    const v = classifyCheck(
+      input({
+        sourceType: 'csv',
+        fetch: { redirectRejected: 'redirect_not_official' },
+        baseline: { contentHash: 'abc' },
+        previousConsecutiveFailures: 1,
+      }),
+    );
+    expect(v).toEqual({
+      status: 'unverifiable',
+      reason: 'redirect_not_official',
+      consecutiveFailures: 0,
+    });
+  });
+
+  it('転送が多すぎる: 種類を問わず到達性の失敗', () => {
+    for (const sourceType of ['html', 'csv']) {
+      const v = classifyCheck(
+        input({ sourceType, fetch: { redirectRejected: 'too_many_redirects' } }),
+      );
+      expect(v).toEqual({
+        status: 'transient',
+        reason: 'too_many_redirects',
+        consecutiveFailures: 1,
+      });
+    }
+  });
+
+  it('本文が上限を超えた: 検証不能(更新日・ハッシュを推測しない)', () => {
+    for (const sourceType of ['html', 'xlsx']) {
+      const v = classifyCheck(
+        input({
+          sourceType,
+          fetch: okFetch({ bodyTooLarge: true }),
+          baseline: { pageUpdatedOn: '2026-09-01', contentHash: 'abc' },
+        }),
+      );
+      expect(v).toEqual({
+        status: 'unverifiable',
+        reason: 'body_too_large',
+        consecutiveFailures: 0,
+      });
+    }
+  });
+});

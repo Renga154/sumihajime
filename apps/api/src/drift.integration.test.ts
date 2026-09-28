@@ -3,7 +3,13 @@ import type { D1Database } from '@cloudflare/workers-types';
 import type { Profile } from '@tmn/schemas';
 import { createTestDb, type TestDb } from '../test/d1-harness.js';
 import { app } from './index.js';
-import { DRIFT_USER_AGENT, runDriftCheck } from './drift.js';
+import {
+  DRIFT_USER_AGENT,
+  MAX_BODY_BYTES,
+  MAX_REDIRECT_HOPS,
+  readBodyCapped,
+  runDriftCheck,
+} from './drift.js';
 
 /**
  * なぜ: ADR-014 の D1 統合検証。
@@ -373,6 +379,88 @@ describe('(c) runDriftCheck — fetch スタブで巡回を回す', () => {
       expect(r.get(id)?.reason).toBe('network_error');
       expect(r.get(id)?.consecutive_failures).toBe(1);
     }
+  });
+
+  /**
+   * なぜ: 以前は redirect: 'follow' で、公式ページが第三者サイトへ転送されると Worker がその先へ
+   * 要求を送り本文まで読んでいた。各ホップで公式ホストかを確かめ、非公式の転送先には要求自体を
+   * 送らないこと、転送の重ねすぎ・巨大な本文で巡回が詰まらないことを固定する。
+   */
+  it('リダイレクトは公式ホストの間だけ辿り、非公式の転送先へは要求を送らない', async () => {
+    await prefillOthers();
+    const requested: string[] = [];
+    const redirect = (location: string) =>
+      new Response(null, { status: 302, headers: { location } });
+    const redirectingFetch: typeof fetch = async (input, init) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      requested.push(url);
+      // 自動追従させていないこと(手動で1ホップずつ確かめている)。
+      expect(init?.redirect).toBe('manual');
+      // resident: 同じ公式ホスト内の転送(相対 Location)→ 辿って更新日を比べる。
+      if (url.endsWith('tennyu.html')) return redirect('./tennyu-new.html');
+      if (url.endsWith('tennyu-new.html')) {
+        return new Response('<html><body><p>更新日：2026年1月5日</p></body></html>', {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8' },
+        });
+      }
+      // my_number: 非公式ホストへの転送 → そこへは要求しない。
+      if (url.includes('card-keizoku')) return redirect('https://evil.example/landing');
+      // csv: 公式ホスト内で転送が終わらない → ホップ上限で打ち切る。
+      if (url.includes('public_facility.csv')) return redirect(`${url}?again`);
+      // waste_guide: 上限(5MB)を超える本文を Content-Length なしで流す → 読むのをやめる。
+      if (url.includes('wakekata')) {
+        const chunk = new Uint8Array(1024 * 1024);
+        let sent = 0;
+        const body = new ReadableStream<Uint8Array>({
+          pull(controller) {
+            sent += 1;
+            if (sent > 8) controller.close();
+            else controller.enqueue(chunk);
+          },
+        });
+        return new Response(body, { status: 200, headers: { 'content-type': 'text/html' } });
+      }
+      if (url.startsWith('https://evil.example/')) throw new Error('非公式ホストへ要求した');
+      throw new Error(`unexpected url in stub: ${url}`);
+    };
+
+    await runDriftCheck(db, {
+      now: new Date('2026-09-22T07:00:00Z'),
+      fetchImpl: redirectingFetch,
+      batchSize: 4,
+    });
+    const r = await rows();
+
+    expect(requested.some((u) => u.startsWith('https://evil.example/'))).toBe(false);
+    expect(r.get(HTML_SAME)).toMatchObject({ status: 'ok', reason: 'page_updated_on_same' });
+    // 別サイトへ飛ばされた HTML は従来の host_changed と同じく到達性の失敗(1回目は transient)。
+    expect(r.get(HTML_CHANGED)).toMatchObject({
+      status: 'transient',
+      reason: 'redirect_not_official',
+      consecutive_failures: 1,
+    });
+    expect(r.get(CSV_CHANGED)).toMatchObject({
+      status: 'transient',
+      reason: 'too_many_redirects',
+    });
+    // 最初の要求1 + 転送 MAX_REDIRECT_HOPS 回で打ち切り、それ以上は要求しない(サブリクエスト枠)。
+    expect(requested.filter((u) => u.includes('public_facility.csv'))).toHaveLength(
+      1 + MAX_REDIRECT_HOPS,
+    );
+    expect(r.get(HTML_404)).toMatchObject({ status: 'unverifiable', reason: 'body_too_large' });
+  });
+});
+
+describe('readBodyCapped', () => {
+  it('上限以内なら全バイトを返し、Content-Length が上限超えなら読まずに null', async () => {
+    const small = await readBodyCapped(new Response('abc'), 10);
+    expect(new TextDecoder().decode(small!)).toBe('abc');
+    expect(await readBodyCapped(new Response('abcdefghijk'), 10)).toBeNull();
+    const declared = new Response('x', {
+      headers: { 'content-length': String(MAX_BODY_BYTES + 1) },
+    });
+    expect(await readBodyCapped(declared, MAX_BODY_BYTES)).toBeNull();
   });
 });
 
