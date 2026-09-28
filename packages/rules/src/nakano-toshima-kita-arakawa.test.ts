@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { hasSourceSnapshots } from '@tmn/test-fixtures/source-snapshots';
 import type { Profile, RuleSet } from '@tmn/schemas';
 import {
   facilitySchema,
@@ -752,22 +753,28 @@ describe('Batch7 — provenance integrity & scope safety', () => {
     }
   });
 
-  it.each(BATCH7)('%s: 出典スナップショットが存在し content_hash と一致する', async (code) => {
-    const { createHash } = await import('node:crypto');
-    const rows = registryRows.filter((l) => l.startsWith(`src-${code}-`));
-    for (const row of rows) {
-      const cells = row.split(',');
-      const sourceId = cells[0] as string;
-      const ext = cells[6] as string;
-      // 再監査で版付き(<id>.<YYYYMMDD>.<ext>)が増えていれば、その最新が現行の原文(台帳のハッシュもそれ)。
-      const dir = resolve(repoRoot, `data/sources/${code}/snapshots`);
-      const current = existsSync(dir) ? pickCurrentSnapshot(readdirSync(dir), sourceId, ext) : null;
-      const file = resolve(dir, current ?? `${sourceId}.${ext}`);
-      expect(existsSync(file), `snapshot missing: ${file}`).toBe(true);
-      const hash = createHash('sha256').update(readFileSync(file)).digest('hex');
-      expect(hash, `hash mismatch for ${sourceId}`).toBe(cells[14]);
-    }
-  });
+  // 原文スナップショット(著作権の都合で公開リポジトリには含めない)が無いときだけ skip する。
+  it.skipIf(!hasSourceSnapshots()).each(BATCH7)(
+    '%s: 出典スナップショットが存在し content_hash と一致する',
+    async (code) => {
+      const { createHash } = await import('node:crypto');
+      const rows = registryRows.filter((l) => l.startsWith(`src-${code}-`));
+      for (const row of rows) {
+        const cells = row.split(',');
+        const sourceId = cells[0] as string;
+        const ext = cells[6] as string;
+        // 再監査で版付き(<id>.<YYYYMMDD>.<ext>)が増えていれば、その最新が現行の原文(台帳のハッシュもそれ)。
+        const dir = resolve(repoRoot, `data/sources/${code}/snapshots`);
+        const current = existsSync(dir)
+          ? pickCurrentSnapshot(readdirSync(dir), sourceId, ext)
+          : null;
+        const file = resolve(dir, current ?? `${sourceId}.${ext}`);
+        expect(existsSync(file), `snapshot missing: ${file}`).toBe(true);
+        const hash = createHash('sha256').update(readFileSync(file)).digest('hex');
+        expect(hash, `hash mismatch for ${sourceId}`).toBe(cells[14]);
+      }
+    },
+  );
 
   it('北区の出典URLは全件が移行後の新ドメイン(city.kita.lg.jp)である', () => {
     const rows = registryRows.filter((l) => l.startsWith(`src-${KITA}-`));

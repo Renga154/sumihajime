@@ -22,6 +22,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250109.0",
     "@tmn/publish": "workspace:*",
+    "@tmn/test-fixtures": "workspace:*",
     "@types/node": "^22.10.5",
     "miniflare": "^4.20250906.0",
     "vitest": "^3.2.0",

@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { hasSourceSnapshots } from '@tmn/test-fixtures/source-snapshots';
 import { wasteAreaSchema, wasteScheduleSchema, weekdaySchema } from '@tmn/schemas';
 import {
   buildOtaWaste,
@@ -11,7 +12,7 @@ import {
   type CellGrid,
   type Merge,
 } from './waste-xlsx.js';
-import { readOtaWasteSheet } from './waste-xlsx-read.js';
+import { readOtaWasteSheet, type SheetData } from './waste-xlsx-read.js';
 
 /**
  * なぜ: Step5-B。大田区(13111)収集曜日XLSX(結合セル・丁目/番地単位)の決定論パーサを
@@ -153,62 +154,71 @@ describe('waste-xlsx — buildOtaWaste(除外: 推測禁止)', () => {
   });
 });
 
-describe('waste-xlsx — 実スナップショットXLSX(令和7年度 R07全域)', () => {
-  const snapshotPath = fileURLToPath(
-    new URL(
-      '../../../data/sources/13111/snapshots/src-13111-waste_schedule-001.xlsx',
-      import.meta.url,
-    ),
-  );
-  const { sheetName, grid, merges } = readOtaWasteSheet(snapshotPath);
-  const built = buildOtaWaste(grid, merges, OPTS);
-
-  it('シート名は「R07全域」(令和7年度)。結合セル118個・範囲A1:H88', () => {
-    expect(sheetName).toBe('R07全域');
-    expect(merges.length).toBe(118);
-    expect(grid.length).toBe(88); // ヘッダ1 + データ87
-  });
-
-  it('87地区 / 435レコード / 除外0(全87行×プラ1+資源1+可燃2+不燃1)', () => {
-    expect(built.wasteAreas.length).toBe(87);
-    expect(built.wasteSchedules.length).toBe(435);
-    expect(built.excluded.length).toBe(0);
-    const byType: Record<string, number> = {};
-    for (const s of built.wasteSchedules) byType[s.wasteType] = (byType[s.wasteType] ?? 0) + 1;
-    expect(byType).toEqual({ プラスチック: 87, 資源: 87, 可燃ごみ: 174, 不燃ごみ: 87 });
-  });
-
-  it('管轄清掃事務所は大森/調布/蒲田の3事務所のみ(想定外の混入なし)', () => {
-    expect(built.offices).toEqual(['大森', '蒲田', '調布']);
-  });
-
-  it('地区ラベルは一意。先頭は監査どおり「池上 1丁目・2丁目・4丁目」(プラ水/資源土/可燃月木/不燃第2第4金)', () => {
-    const labels = built.wasteAreas.map((a) => a.areaLabel);
-    expect(new Set(labels).size).toBe(labels.length);
-    expect(labels[0]).toBe('池上 1丁目・2丁目・4丁目');
-    const a1 = built.wasteSchedules.filter((s) => s.areaId === 'area-13111-001');
-    expect(a1.find((s) => s.wasteType === 'プラスチック')?.weekday).toBe('wednesday');
-    expect(a1.find((s) => s.wasteType === '資源')?.weekday).toBe('saturday');
-    expect(a1.filter((s) => s.wasteType === '可燃ごみ').map((s) => s.weekday)).toEqual([
-      'monday',
-      'thursday',
-    ]);
-    const fu = a1.find((s) => s.wasteType === '不燃ごみ');
-    expect(fu?.weekday).toBe('friday');
-    expect(fu?.weekOfMonth).toEqual([2, 4]);
-  });
-
-  it('全レコードが共通スキーマ(WasteArea/WasteSchedule)でparse成功。不燃は全件weekOfMonth付き', () => {
-    for (const a of built.wasteAreas) expect(() => wasteAreaSchema.parse(a)).not.toThrow();
-    for (const s of built.wasteSchedules) {
-      expect(() => wasteScheduleSchema.parse(s)).not.toThrow();
-      expect(weekdaySchema.safeParse(s.weekday).success).toBe(true);
-      expect(s.effectiveFrom).toBe('2025-04-01');
-      expect(s.effectiveTo).toBe('2026-03-31'); // R07(令和7年度)の有効期間を正直に閉じる
-    }
-    const nonBurn = built.wasteSchedules.filter((s) => s.wasteType === '不燃ごみ');
-    expect(nonBurn.every((s) => Array.isArray(s.weekOfMonth) && s.weekOfMonth.length === 2)).toBe(
-      true,
+// 原文スナップショット(著作権の都合で公開リポジトリには含めない)が無いときだけ skip する。
+// skip しても vitest は収集のため describe の本体を実行するので、読み込みは beforeAll で行う。
+describe.skipIf(!hasSourceSnapshots())(
+  'waste-xlsx — 実スナップショットXLSX(令和7年度 R07全域)',
+  () => {
+    const snapshotPath = fileURLToPath(
+      new URL(
+        '../../../data/sources/13111/snapshots/src-13111-waste_schedule-001.xlsx',
+        import.meta.url,
+      ),
     );
-  });
-});
+    let sheet: SheetData;
+    let built: ReturnType<typeof buildOtaWaste>;
+    beforeAll(() => {
+      sheet = readOtaWasteSheet(snapshotPath);
+      built = buildOtaWaste(sheet.grid, sheet.merges, OPTS);
+    });
+
+    it('シート名は「R07全域」(令和7年度)。結合セル118個・範囲A1:H88', () => {
+      expect(sheet.sheetName).toBe('R07全域');
+      expect(sheet.merges.length).toBe(118);
+      expect(sheet.grid.length).toBe(88); // ヘッダ1 + データ87
+    });
+
+    it('87地区 / 435レコード / 除外0(全87行×プラ1+資源1+可燃2+不燃1)', () => {
+      expect(built.wasteAreas.length).toBe(87);
+      expect(built.wasteSchedules.length).toBe(435);
+      expect(built.excluded.length).toBe(0);
+      const byType: Record<string, number> = {};
+      for (const s of built.wasteSchedules) byType[s.wasteType] = (byType[s.wasteType] ?? 0) + 1;
+      expect(byType).toEqual({ プラスチック: 87, 資源: 87, 可燃ごみ: 174, 不燃ごみ: 87 });
+    });
+
+    it('管轄清掃事務所は大森/調布/蒲田の3事務所のみ(想定外の混入なし)', () => {
+      expect(built.offices).toEqual(['大森', '蒲田', '調布']);
+    });
+
+    it('地区ラベルは一意。先頭は監査どおり「池上 1丁目・2丁目・4丁目」(プラ水/資源土/可燃月木/不燃第2第4金)', () => {
+      const labels = built.wasteAreas.map((a) => a.areaLabel);
+      expect(new Set(labels).size).toBe(labels.length);
+      expect(labels[0]).toBe('池上 1丁目・2丁目・4丁目');
+      const a1 = built.wasteSchedules.filter((s) => s.areaId === 'area-13111-001');
+      expect(a1.find((s) => s.wasteType === 'プラスチック')?.weekday).toBe('wednesday');
+      expect(a1.find((s) => s.wasteType === '資源')?.weekday).toBe('saturday');
+      expect(a1.filter((s) => s.wasteType === '可燃ごみ').map((s) => s.weekday)).toEqual([
+        'monday',
+        'thursday',
+      ]);
+      const fu = a1.find((s) => s.wasteType === '不燃ごみ');
+      expect(fu?.weekday).toBe('friday');
+      expect(fu?.weekOfMonth).toEqual([2, 4]);
+    });
+
+    it('全レコードが共通スキーマ(WasteArea/WasteSchedule)でparse成功。不燃は全件weekOfMonth付き', () => {
+      for (const a of built.wasteAreas) expect(() => wasteAreaSchema.parse(a)).not.toThrow();
+      for (const s of built.wasteSchedules) {
+        expect(() => wasteScheduleSchema.parse(s)).not.toThrow();
+        expect(weekdaySchema.safeParse(s.weekday).success).toBe(true);
+        expect(s.effectiveFrom).toBe('2025-04-01');
+        expect(s.effectiveTo).toBe('2026-03-31'); // R07(令和7年度)の有効期間を正直に閉じる
+      }
+      const nonBurn = built.wasteSchedules.filter((s) => s.wasteType === '不燃ごみ');
+      expect(nonBurn.every((s) => Array.isArray(s.weekOfMonth) && s.weekOfMonth.length === 2)).toBe(
+        true,
+      );
+    });
+  },
+);

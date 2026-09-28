@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { hasSourceSnapshots } from '@tmn/test-fixtures/source-snapshots';
 import type { Profile, RuleSet } from '@tmn/schemas';
 import { facilitySchema, procedureVersionSchema, ruleSetSchema } from '@tmn/schemas';
 import { evaluate } from './evaluate.js';
@@ -12,7 +13,7 @@ import { pickCurrentSnapshot } from '@tmn/drift';
 /**
  * なぜ: Batch10(足立13121 / 江戸川13123)の縦切りデータの来歴・型・決定論・**区ごとに異なる
  * 期限** をCIで機械検証する。ユーザー決裁(2026-08-07「23区全対応・案A=手続き中心で埋め、
- * 付帯データは取れる区だけ」)に基づく追加。2026-08-07にユーザー(maintainer)決裁
+ * 付帯データは取れる区だけ」)に基づく追加。2026-08-07にユーザー決裁
  * 「2区とも承認」により人手レビュー承認され、全10手続きが dataStatus=verified、対応する
  * registry.csv のソースが review_status=approved へ更新された。あわせて自治体以外
  * (ライフライン等)の手続き4件(ADR-009)を共通テンプレートから追加し14件になった。
@@ -623,22 +624,28 @@ describe('Batch10 — provenance integrity & scope safety', () => {
     },
   );
 
-  it.each(BATCH10)('%s: 出典スナップショットが存在し content_hash と一致する', async (code) => {
-    const { createHash } = await import('node:crypto');
-    const rows = registryRows.filter((l) => l.startsWith(`src-${code}-`));
-    for (const row of rows) {
-      const cells = row.split(',');
-      const sourceId = cells[0] as string;
-      const ext = cells[6] as string;
-      // 再監査で版付き(<id>.<YYYYMMDD>.<ext>)が増えていれば、その最新が現行の原文(台帳のハッシュもそれ)。
-      const dir = resolve(repoRoot, `data/sources/${code}/snapshots`);
-      const current = existsSync(dir) ? pickCurrentSnapshot(readdirSync(dir), sourceId, ext) : null;
-      const file = resolve(dir, current ?? `${sourceId}.${ext}`);
-      expect(existsSync(file), `snapshot missing: ${file}`).toBe(true);
-      const hash = createHash('sha256').update(readFileSync(file)).digest('hex');
-      expect(hash, `hash mismatch for ${sourceId}`).toBe(cells[14]);
-    }
-  });
+  // 原文スナップショット(著作権の都合で公開リポジトリには含めない)が無いときだけ skip する。
+  it.skipIf(!hasSourceSnapshots()).each(BATCH10)(
+    '%s: 出典スナップショットが存在し content_hash と一致する',
+    async (code) => {
+      const { createHash } = await import('node:crypto');
+      const rows = registryRows.filter((l) => l.startsWith(`src-${code}-`));
+      for (const row of rows) {
+        const cells = row.split(',');
+        const sourceId = cells[0] as string;
+        const ext = cells[6] as string;
+        // 再監査で版付き(<id>.<YYYYMMDD>.<ext>)が増えていれば、その最新が現行の原文(台帳のハッシュもそれ)。
+        const dir = resolve(repoRoot, `data/sources/${code}/snapshots`);
+        const current = existsSync(dir)
+          ? pickCurrentSnapshot(readdirSync(dir), sourceId, ext)
+          : null;
+        const file = resolve(dir, current ?? `${sourceId}.${ext}`);
+        expect(existsSync(file), `snapshot missing: ${file}`).toBe(true);
+        const hash = createHash('sha256').update(readFileSync(file)).digest('hex');
+        expect(hash, `hash mismatch for ${sourceId}`).toBe(cells[14]);
+      }
+    },
+  );
 
   it('出典URLは各区の公式ドメインのみ(他区のドメインを混ぜない)', () => {
     const hostOf = (code: string) =>

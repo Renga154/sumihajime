@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { hasSourceSnapshots } from '@tmn/test-fixtures/source-snapshots';
 import type { DueRule, Profile, RuleSet } from '@tmn/schemas';
 import { facilitySchema, procedureVersionSchema, ruleSetSchema } from '@tmn/schemas';
 import { isOfficialUrl, pickCurrentSnapshot } from '@tmn/drift';
@@ -781,16 +782,20 @@ describe('八王子市 — 自治体以外(ライフライン等)の4手続き(A
     expect(car.dueDate).toBeUndefined();
   });
 
-  it('東京都水道局の追加出典のスナップショットも content_hash と一致する', () => {
-    const s = registry.byId.get('src-13000-water_supply-002');
-    const dir = resolve(repoRoot, 'data/sources/13000/snapshots');
-    const current = pickCurrentSnapshot(readdirSync(dir), 'src-13000-water_supply-002', 'html');
-    expect(current).not.toBeNull();
-    const hash = createHash('sha256')
-      .update(readFileSync(resolve(dir, current as string)))
-      .digest('hex');
-    expect(hash).toBe(s?.contentHash);
-  });
+  // 原文スナップショット(著作権の都合で公開リポジトリには含めない)が無いときだけ skip する。
+  it.skipIf(!hasSourceSnapshots())(
+    '東京都水道局の追加出典のスナップショットも content_hash と一致する',
+    () => {
+      const s = registry.byId.get('src-13000-water_supply-002');
+      const dir = resolve(repoRoot, 'data/sources/13000/snapshots');
+      const current = pickCurrentSnapshot(readdirSync(dir), 'src-13000-water_supply-002', 'html');
+      expect(current).not.toBeNull();
+      const hash = createHash('sha256')
+        .update(readFileSync(resolve(dir, current as string)))
+        .digest('hex');
+      expect(hash).toBe(s?.contentHash);
+    },
+  );
 });
 
 describe('八王子市 — 来歴と越境しないこと', () => {
@@ -826,7 +831,8 @@ describe('八王子市 — 来歴と越境しないこと', () => {
     }
   });
 
-  it('出典スナップショットが存在し content_hash と一致する', () => {
+  // 原文スナップショット(著作権の都合で公開リポジトリには含めない)が無いときだけ skip する。
+  it.skipIf(!hasSourceSnapshots())('出典スナップショットが存在し content_hash と一致する', () => {
     const dir = resolve(repoRoot, `data/sources/${HACHIOJI}/snapshots`);
     const files = readdirSync(dir);
     for (const s of hachiojiSources) {

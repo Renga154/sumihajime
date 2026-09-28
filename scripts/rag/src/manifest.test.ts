@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
+import { hasSourceSnapshots } from '@tmn/test-fixtures/source-snapshots';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -77,8 +78,13 @@ describe('loadApprovedHtmlSources', () => {
   });
 });
 
-describe('buildChunkManifest', () => {
-  const manifest = buildChunkManifest(repoRoot);
+// 原文スナップショット(著作権の都合で公開リポジトリには含めない)が無いときだけ skip する。
+// skip しても vitest は収集のため describe の本体を実行するので、構築は beforeAll で行う。
+describe.skipIf(!hasSourceSnapshots())('buildChunkManifest', () => {
+  let manifest: ReturnType<typeof buildChunkManifest>;
+  beforeAll(() => {
+    manifest = buildChunkManifest(repoRoot);
+  });
 
   it('全チャンクが対象自治体スコープ内で、id/メタデータが健全', () => {
     expect(manifest.municipalityCodes).toEqual([...RAG_MUNICIPALITIES]);
@@ -104,13 +110,17 @@ describe('buildChunkManifest', () => {
 });
 
 describe('buildRagChunksSql', () => {
-  it('先頭で対象sourceを DELETE(冪等)し、各チャンクを INSERT する', () => {
-    const manifest = buildChunkManifest(repoRoot);
-    const sql = buildRagChunksSql(manifest.chunks);
-    expect(sql[0]).toMatch(/^DELETE FROM rag_chunks WHERE source_id IN \(/);
-    const inserts = sql.filter((s) => s.startsWith('INSERT INTO rag_chunks'));
-    expect(inserts).toHaveLength(manifest.chunkCount);
-  });
+  // 原文スナップショット(著作権の都合で公開リポジトリには含めない)が無いときだけ skip する。
+  it.skipIf(!hasSourceSnapshots())(
+    '先頭で対象sourceを DELETE(冪等)し、各チャンクを INSERT する',
+    () => {
+      const manifest = buildChunkManifest(repoRoot);
+      const sql = buildRagChunksSql(manifest.chunks);
+      expect(sql[0]).toMatch(/^DELETE FROM rag_chunks WHERE source_id IN \(/);
+      const inserts = sql.filter((s) => s.startsWith('INSERT INTO rag_chunks'));
+      expect(inserts).toHaveLength(manifest.chunkCount);
+    },
+  );
 
   it("本文中のシングルクォートを '' にエスケープする(SQLインジェクション回避)", () => {
     const chunk = {
@@ -133,7 +143,8 @@ describe('buildRagChunksSql', () => {
 });
 
 describe('toVectorLine', () => {
-  it('id/values/metadata を持つ有効なNDJSON行を作る', () => {
+  // 原文スナップショット(著作権の都合で公開リポジトリには含めない)が無いときだけ skip する。
+  it.skipIf(!hasSourceSnapshots())('id/values/metadata を持つ有効なNDJSON行を作る', () => {
     const manifest = buildChunkManifest(repoRoot);
     const chunk = manifest.chunks[0]!;
     const line = toVectorLine(chunk, [0.1, 0.2, 0.3]);

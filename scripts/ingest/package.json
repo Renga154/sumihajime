@@ -24,6 +24,7 @@
     "@tmn/schemas": "workspace:*"
   },
   "devDependencies": {
+    "@tmn/test-fixtures": "workspace:*",
     "@types/node": "^22.10.5",
     "tsx": "^4.19.2",
     "xlsx": "^0.18.5"

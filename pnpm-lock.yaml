@@ -60,6 +60,9 @@ importers:
       '@tmn/publish':
         specifier: workspace:*
         version: link:../../scripts/publish
+      '@tmn/test-fixtures':
+        specifier: workspace:*
+        version: link:../../packages/test-fixtures
       '@types/node':
         specifier: ^22.10.5
         version: 22.20.1
@@ -178,6 +181,10 @@ importers:
       '@tmn/schemas':
         specifier: workspace:*
         version: link:../schemas
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.1
 
   scripts/eval:
     dependencies:
@@ -222,6 +229,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/schemas
     devDependencies:
+      '@tmn/test-fixtures':
+        specifier: workspace:*
+        version: link:../../packages/test-fixtures
       '@types/node':
         specifier: ^22.10.5
         version: 22.20.1
@@ -241,6 +251,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/schemas
     devDependencies:
+      '@tmn/test-fixtures':
+        specifier: workspace:*
+        version: link:../../packages/test-fixtures
       '@types/node':
         specifier: ^22.10.5
         version: 22.20.1
@@ -266,6 +279,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/schemas
     devDependencies:
+      '@tmn/test-fixtures':
+        specifier: workspace:*
+        version: link:../../packages/test-fixtures
       '@types/node':
         specifier: ^22.10.5
         version: 22.20.1
