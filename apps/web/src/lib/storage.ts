@@ -24,6 +24,19 @@ export interface DoneRecord {
 export type DoneMap = Record<string, DoneRecord>;
 
 /**
+ * 完了状態マップのスキーマ。procedureId をキーにした辞書であることを検証する。
+ *
+ * なぜ検証するか: 以前は `typeof obj === 'object'` だけで DoneMap とみなしていたため、
+ * 配列(`typeof [] === 'object'`)や、値の形が違う壊れたデータもそのまま通ってしまい、
+ * 後続コードが `doneAt`/`ruleVersion` の無い値を前提に動く危険があった。壊れたデータは
+ * 「完了記録なし」として扱う(C-4の記録を誤って復元しない側に倒す)。
+ */
+const doneMapSchema = z.record(
+  z.string(),
+  z.object({ doneAt: z.string(), ruleVersion: z.string() }),
+);
+
+/**
  * 任意ステップ(2:世帯 / 3:条件チェック)を利用者が実際に開いたか。
  *
  * なぜ Profile と別に持つか: Profile は `strictObject` で、そのまま POST /api/checklists の
@@ -192,9 +205,8 @@ export function loadDone(code: string): DoneMap {
   const raw = safeLocalStorage()?.getItem(doneKey(code));
   if (!raw) return {};
   try {
-    const obj = JSON.parse(raw) as unknown;
-    if (obj && typeof obj === 'object') return obj as DoneMap;
-    return {};
+    const parsed = doneMapSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : {};
   } catch {
     return {};
   }
@@ -227,4 +239,54 @@ export function toggleDone(
 
 export function isDone(map: DoneMap, procedureId: string): boolean {
   return Boolean(map[procedureId]);
+}
+
+/** ---- 端末に保存した入力の消去(プライバシーポリシー / チェックリスト画面) ---- */
+
+/**
+ * このアプリが localStorage/sessionStorage へ書き込むキーの接頭辞。
+ *
+ * なぜ接頭辞で一括判定するか: このファイルが持つキー(municipality/profile/done/
+ * reviewed-steps/wizard-draft)に加えて `checklist-cache.ts` が `tmn:checklist-cache:<code>` を
+ * 独自に書いている。キー名を1つずつ列挙すると増えるたびに漏れる恐れがあるため、
+ * 「このアプリが書くキーは必ずこの接頭辞を持つ」という規約を1か所(ここ)で保証する。
+ * 逆に、この接頭辞を持たない他サイト/他機能のキーには一切触れない。
+ */
+const APP_LOCAL_STORAGE_PREFIX = 'tmn:';
+/** `stale-chunk.ts` が sessionStorage に書く、デプロイ後の再読み込み抑制用タイムスタンプ。 */
+const APP_SESSION_STORAGE_KEY = 'sumihajime:stale-chunk-reloaded-at';
+
+/**
+ * この端末に保存した入力(プロフィール・下書き・完了状態・チェックリスト控え等)を
+ * すべて消す(CLAUDE.md 原則6・7 / §13 データ最小化)。
+ *
+ * なぜ列挙削除ではなく接頭辞で走査するか: `localStorage.clear()` はこのサイトの
+ * オリジン全体を消すため将来的な用途違いのキーまで巻き込みうる一方、個別キーの
+ * 列挙は追加時に消し忘れる。両方の接頭辞に一致するキーだけを走査して消すことで、
+ * 「このアプリが書いたものだけを消す」を保ちながら列挙漏れを防ぐ。
+ *
+ * 保存領域が使えない(プライベートモード等)場合は何もせず終える(呼び出し側は
+ * 消去の成否に関わらず完了メッセージを表示してよい。もともと保存できていない)。
+ */
+export function clearAllAppData(): void {
+  try {
+    const store = safeLocalStorage();
+    if (store) {
+      const doomed: string[] = [];
+      for (let i = 0; i < store.length; i++) {
+        const key = store.key(i);
+        if (key && key.startsWith(APP_LOCAL_STORAGE_PREFIX)) doomed.push(key);
+      }
+      for (const key of doomed) store.removeItem(key);
+    }
+  } catch {
+    // 読み書き不可(プライベートモード等)。もともと保存できていないため何もしない。
+  }
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem(APP_SESSION_STORAGE_KEY);
+    }
+  } catch {
+    // 同上。
+  }
 }

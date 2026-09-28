@@ -1,13 +1,18 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { profileSchema, type Profile } from '@tmn/schemas';
 import {
+  clearAllAppData,
   clearWizardDraft,
   isDone,
   isSameWizardAnswers,
   loadDone,
+  loadMunicipalityCode,
   loadProfile,
   loadReviewedSteps,
   loadWizardDraft,
   saveDone,
+  saveMunicipalityCode,
+  saveProfile,
   saveReviewedSteps,
   saveWizardDraft,
   toggleDone,
@@ -64,6 +69,26 @@ describe('完了状態(C-4)', () => {
     map = toggleDone(map, 'procedure_a', 'v1', false);
     saveDone(CODE, map);
     expect(isDone(loadDone(CODE), 'procedure_a')).toBe(false);
+  });
+
+  /**
+   * なぜ: `typeof obj === 'object'` だけでの判定は配列(`typeof [] === 'object'`)や
+   * 形の違う値まで DoneMap として通してしまう。壊れたデータは「完了記録なし」に倒れ、
+   * 存在しない procedureId のキーで後続コードが落ちないことを固定する。
+   */
+  it('壊れたJSON・想定外の型は完了記録なしとして扱う', () => {
+    localStorage.setItem(`tmn:done:${CODE}`, '{壊れた');
+    expect(loadDone(CODE)).toEqual({});
+
+    localStorage.setItem(`tmn:done:${CODE}`, '[]');
+    expect(loadDone(CODE)).toEqual({});
+
+    localStorage.setItem(`tmn:done:${CODE}`, '"文字列"');
+    expect(loadDone(CODE)).toEqual({});
+
+    // 値の形が違う(doneAt/ruleVersion が無い、または型違い)。
+    localStorage.setItem(`tmn:done:${CODE}`, JSON.stringify({ procedure_a: { doneAt: 1 } }));
+    expect(loadDone(CODE)).toEqual({});
   });
 });
 
@@ -234,5 +259,88 @@ describe('ウィザードの下書き', () => {
     expect(isSameWizardAnswers(ANSWERS, { ...ANSWERS, ageBands: ['adult'] })).toBe(false);
     expect(isSameWizardAnswers(ANSWERS, { ...ANSWERS, moveDate: '2026-08-16' })).toBe(false);
     expect(isSameWizardAnswers(ANSWERS, { ...ANSWERS, moveOutScheduledDate: '' })).toBe(false);
+  });
+});
+
+function makeProfile(): Profile {
+  return profileSchema.parse({
+    destination: { municipalityCode: CODE },
+    moveDate: '2026-08-01',
+    originType: 'outside_tokyo',
+    household: { memberCount: 1, ageBands: ['adult'] },
+    flags: {
+      hasMyNumberCard: false,
+      needsNationalHealthInsurance: false,
+      needsNationalPension: false,
+      hasSchoolOrChildcareNeeds: false,
+      hasDog: false,
+      needsDisabilityOrCareSupport: false,
+      needsForeignResidentGuidance: false,
+    },
+  });
+}
+
+/**
+ * なぜ: プライバシーポリシーの「この端末に保存した入力を消去」ボタンが呼ぶ関数。
+ * このアプリが書いたキー(`tmn:` 接頭辞・`sumihajime:` の再読み込み抑制)だけを消し、
+ * 無関係なキーには触れないことを固定する(原則6・7 / §13 データ最小化)。
+ */
+describe('端末に保存した入力の消去(clearAllAppData)', () => {
+  it('このアプリが書いた localStorage のキー(tmn: 接頭辞)をすべて消す', () => {
+    saveMunicipalityCode(CODE);
+    saveProfile(CODE, makeProfile());
+    saveDone(CODE, toggleDone({}, 'procedure_a', 'v1', true));
+    saveReviewedSteps(CODE, { household: true, conditions: true });
+    saveWizardDraft(CODE, {
+      answers: {
+        moveDate: '',
+        moveOutScheduledDate: '',
+        originType: '',
+        householdKind: 'single',
+        ageBands: [],
+        isPregnant: false,
+        flags: {
+          hasMyNumberCard: false,
+          needsNationalHealthInsurance: false,
+          needsNationalPension: false,
+          hasSchoolOrChildcareNeeds: false,
+          hasDog: false,
+          needsDisabilityOrCareSupport: false,
+          needsForeignResidentGuidance: false,
+          needsVehicleGuidance: false,
+        },
+        dogMicrochip: 'unknown',
+      },
+      step: 1,
+      reviewedSteps: { household: false, conditions: false },
+    });
+    // checklist-cache.ts が独自に書くキーも同じ `tmn:` 接頭辞を持つ想定。
+    localStorage.setItem('tmn:checklist-cache:' + CODE, '{}');
+
+    clearAllAppData();
+
+    expect(loadMunicipalityCode()).toBeNull();
+    expect(loadProfile(CODE)).toBeNull();
+    expect(loadDone(CODE)).toEqual({});
+    expect(loadReviewedSteps(CODE)).toEqual({ household: false, conditions: false });
+    expect(loadWizardDraft(CODE)).toBeNull();
+    expect(localStorage.getItem('tmn:checklist-cache:' + CODE)).toBeNull();
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('sumihajime: の再読み込み抑制タイムスタンプ(sessionStorage)も消す', () => {
+    sessionStorage.setItem('sumihajime:stale-chunk-reloaded-at', '123');
+    clearAllAppData();
+    expect(sessionStorage.getItem('sumihajime:stale-chunk-reloaded-at')).toBeNull();
+  });
+
+  it('このアプリと無関係なキーには触れない', () => {
+    localStorage.setItem('other-site:preference', 'keep-me');
+    saveMunicipalityCode(CODE);
+
+    clearAllAppData();
+
+    expect(localStorage.getItem('other-site:preference')).toBe('keep-me');
+    expect(loadMunicipalityCode()).toBeNull();
   });
 });
