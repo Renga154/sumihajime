@@ -43,6 +43,11 @@ export function useAsync<T>(fn: () => Promise<T>, deps: readonly unknown[]): Asy
     return () => {
       active = false;
     };
+    // なぜ fn を依存配列に含めないか: fn は呼び出し側が毎レンダー新しい関数として渡すのが通常で
+    // (例: ChecklistPage の `async () => { ... }`)、含めると条件(deps)が変わっていなくても
+    // 毎回再実行されてしまう。再取得のタイミングは呼び出し側が deps で明示する設計なので、
+    // fn 自体の同一性では再実行しない。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, attempt]);
 
   return { ...state, reload };

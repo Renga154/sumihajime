@@ -133,7 +133,11 @@ export function ChecklistPage() {
     saveDone(municipalityCode, next);
   }
 
-  const tasks = state.data?.checklist.tasks ?? [];
+  // useMemo にする理由: state.data が無い間(未取得時)は `?? []` が毎レンダー新しい配列を
+  // 作ってしまい、下の sections の useMemo が tasks の中身が変わっていなくても
+  // 毎回再計算される(react-hooks/exhaustive-deps の指摘どおり)。state.data が変わらない限り
+  // 同じ配列参照を返すようにする。
+  const tasks = useMemo(() => state.data?.checklist.tasks ?? [], [state.data]);
   const sections = useMemo(
     () => (profile ? groupIntoSections(tasks, profile.moveDate) : []),
     [tasks, profile],
