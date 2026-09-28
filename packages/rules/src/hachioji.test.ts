@@ -10,6 +10,7 @@ import { evaluate } from './evaluate.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
 import { moveOutScheduledDateImpact } from './move-out-date-impact.js';
 import { buildWardDifferences } from './ward-differences.js';
+import { expectedLastVerifiedAt, expectedVersion } from './reaudited.fixture.js';
 
 /**
  * なぜ: 八王子市(13201)は市部で最初に縦切りデータを置いた自治体。2026-09-25 に未公開(人手レビュー前)の
@@ -267,8 +268,8 @@ describe('八王子市 — スキーマと承認状態', () => {
       expect(pv.municipalityCode).toBe(HACHIOJI);
       // ADR-007: 公開単位は verified のみ。2026-09-25 の人手レビュー承認で partial → verified。
       expect(pv.dataStatus, pv.id).toBe('verified');
-      expect(pv.version, pv.id).toBe(RULE_VERSION);
-      expect(pv.lastVerifiedAt, pv.id).toBe(LAST_VERIFIED);
+      expect(pv.version, pv.id).toBe(expectedVersion(HACHIOJI, pv.id, RULE_VERSION));
+      expect(pv.lastVerifiedAt, pv.id).toBe(expectedLastVerifiedAt(HACHIOJI, pv.id, LAST_VERIFIED));
       expect(pv.sourceIds.length, pv.id).toBeGreaterThan(0);
       expect(pv.dueDate, pv.id).toBeUndefined();
       expect(pv.dueDescription, pv.id).toBeDefined();

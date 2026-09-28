@@ -5,7 +5,7 @@
   "procedures": [
     {
       "id": "procedure_resident_registration",
-      "version": "2026-08-07.1",
+      "version": "2026-09-29.1",
       "municipalityCode": "13107",
       "canonicalType": "resident_registration",
       "title": "転入届(他市区町村から墨田区への引っ越し)",
@@ -35,14 +35,13 @@
       "locations": [
         "墨田区役所 窓口課住民異動係(1階)",
         "緑出張所",
-        "横川出張所",
         "文花出張所",
         "墨田二丁目出張所",
         "東向島出張所"
       ],
       "contact": "墨田区役所 窓口課住民異動係 電話 03-5608-6102",
-      "sourceIds": ["src-13107-resident_registration-001"],
-      "lastVerifiedAt": "2026-08-07T00:00:00Z",
+      "sourceIds": ["src-13107-resident_registration-001", "src-13107-facilities-002"],
+      "lastVerifiedAt": "2026-09-29T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
         "引っ越し前の転入手続はできません。",
@@ -52,7 +51,7 @@
     },
     {
       "id": "procedure_mynumber_continued_use",
-      "version": "2026-08-07.1",
+      "version": "2026-09-29.1",
       "municipalityCode": "13107",
       "canonicalType": "my_number",
       "title": "マイナンバーカードの継続利用(墨田区へ転入される方)",
@@ -74,14 +73,17 @@
       "locations": [
         "墨田区役所 窓口課住民異動係(1階)",
         "緑出張所",
-        "横川出張所",
         "文花出張所",
         "墨田二丁目出張所",
         "東向島出張所"
       ],
       "contact": "墨田区役所 窓口課住民異動係 電話 03-5608-6102",
-      "sourceIds": ["src-13107-my_number-001", "src-13107-resident_registration-001"],
-      "lastVerifiedAt": "2026-08-07T00:00:00Z",
+      "sourceIds": [
+        "src-13107-my_number-001",
+        "src-13107-resident_registration-001",
+        "src-13107-facilities-002"
+      ],
+      "lastVerifiedAt": "2026-09-29T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
         "有効期限内のマイナンバーカードまたは住基カードをお持ちの場合、引っ越し前にあらかじめ転出届を墨田区役所に郵送しておくと、引っ越し先での転出証明書の提出が不要になります。",
@@ -90,7 +92,7 @@
     },
     {
       "id": "procedure_national_health_insurance",
-      "version": "2026-08-07.1",
+      "version": "2026-09-29.1",
       "municipalityCode": "13107",
       "canonicalType": "national_health_insurance",
       "title": "国民健康保険に加入するとき(墨田区に転入したとき)",
@@ -106,29 +108,32 @@
         {
           "label": "加入する方と世帯主のマイナンバーが確認できるもの",
           "status": "required"
+        },
+        {
+          "label": "転出証明書(転入してきたとき)",
+          "status": "required"
         }
       ],
       "channels": ["counter"],
       "locations": [
         "墨田区役所 国保年金課こくほ資格係",
         "緑出張所",
-        "横川出張所",
         "文花出張所",
         "墨田二丁目出張所",
         "東向島出張所"
       ],
-      "contact": "墨田区役所 国保年金課こくほ資格係 電話 03-5608-6121",
-      "sourceIds": ["src-13107-national_health_insurance-001"],
-      "lastVerifiedAt": "2026-08-07T00:00:00Z",
+      "contact": "墨田区役所 国保年金課こくほ資格係 電話 03-5608-6121(住民異動による加入は窓口課住民異動係で対応)",
+      "sourceIds": ["src-13107-national_health_insurance-001", "src-13107-facilities-002"],
+      "lastVerifiedAt": "2026-09-29T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
-        "資格の取得日は加入義務が発生した日までさかのぼります(届出が遅れても保険料は資格取得日からかかります)。",
+        "資格の取得日は加入義務が発生した日までさかのぼります。",
         "外国籍の方は3か月を超える在留期間が必要です(一部の在留資格を除く)。"
       ]
     },
     {
       "id": "procedure_national_pension_address",
-      "version": "2026-08-07.1",
+      "version": "2026-09-29.1",
       "municipalityCode": "13107",
       "canonicalType": "national_pension",
       "title": "国民年金の加入・変更等の届け出(墨田区)",
@@ -146,14 +151,13 @@
       "locations": [
         "墨田区役所 国保年金課国民年金係(2階)",
         "緑出張所",
-        "横川出張所",
         "文花出張所",
         "墨田二丁目出張所",
         "東向島出張所"
       ],
       "contact": "墨田区役所 国保年金課国民年金係 電話 03-5608-6130",
-      "sourceIds": ["src-13107-national_pension-001"],
-      "lastVerifiedAt": "2026-08-07T00:00:00Z",
+      "sourceIds": ["src-13107-national_pension-001", "src-13107-facilities-002"],
+      "lastVerifiedAt": "2026-09-29T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
         "公式ページに届け出が必要と記載されているのは、20歳になって加入のお知らせが届かないとき・会社等を退職したとき・扶養されなくなったときです。国内の区市町村間の転入については記載がありません。",
@@ -465,7 +469,7 @@
     },
     {
       "id": "procedure_driver_license_change",
-      "version": "2026-08-06.1",
+      "version": "2026-09-29.1",
       "municipalityCode": "13107",
       "canonicalType": "driver_license",
       "title": "運転免許証の記載事項変更(住所変更)",
@@ -497,9 +501,9 @@
         "運転免許更新センター(神田・新宿)(平日 午前8時30分から午後4時30分まで)",
         "運転免許試験場(府中・鮫洲・江東)(平日 午前8時30分から午後4時30分まで、日曜 午前8時30分から正午まで・午後1時から午後4時30分まで)"
       ],
-      "contact": "警視庁 運転免許本部 免許管理第一係 電話 03-6717-3137(代表)",
+      "contact": "府中運転免許試験場 免許第二係 電話 042-362-3591(代表)/鮫洲運転免許試験場 免許第二係 電話 03-3474-1374(代表)/江東運転免許試験場 免許第一係 電話 03-3699-1151(代表)",
       "sourceIds": ["src-13000-driver_license-001"],
-      "lastVerifiedAt": "2026-08-06T00:00:00Z",
+      "lastVerifiedAt": "2026-09-29T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
         "この手続きは区(自治体)の窓口ではなく、区以外の機関・事業者への手続きです。運転免許証の手続きは警視庁(警察)が所管します。",

@@ -11,6 +11,7 @@ import {
 } from '@tmn/schemas';
 import { evaluate } from './evaluate.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
+import { expectedLastVerifiedAt } from './reaudited.fixture.js';
 
 /**
  * なぜ: Batch6-A 板橋区(13119)縦切りデータの来歴・型・決定論・自治体差分をCIで機械検証する。
@@ -162,7 +163,9 @@ describe('Itabashi (13119) — schema validation & approved status (CI gate)', (
       expect(pv.municipalityCode).toBe(ITABASHI);
       expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
-      expect(pv.lastVerifiedAt).toBe('2026-08-07T00:00:00Z');
+      expect(pv.lastVerifiedAt).toBe(
+        expectedLastVerifiedAt('13119', pv.id, '2026-08-07T00:00:00Z'),
+      );
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();
       // 承認によりpending系のcaution文言は除去されている。

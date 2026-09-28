@@ -11,6 +11,7 @@ import {
 } from '@tmn/schemas';
 import { evaluate } from './evaluate.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
+import { expectedLastVerifiedAt } from './reaudited.fixture.js';
 
 /**
  * なぜ: Step4-B 千代田区(13101)縦切りデータの来歴・型・決定論・自治体差分・「誠実縮退」を
@@ -159,7 +160,9 @@ describe('Chiyoda (13101) — schema validation (来歴・型検証; CI gate)', 
       // 2026-07-25 人手レビュー承認済み(公開ゲートは approved ソースのみ通過=ADR-007)。
       expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
-      expect(pv.lastVerifiedAt).toBe('2026-07-25T00:00:00Z');
+      expect(pv.lastVerifiedAt).toBe(
+        expectedLastVerifiedAt(CHIYODA, pv.id, '2026-07-25T00:00:00Z'),
+      );
       // dueDateは静的には持たず、dueDescription(公式文言)のみ(実行時にルールが算定)。
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();

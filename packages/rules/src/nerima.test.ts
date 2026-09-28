@@ -6,6 +6,7 @@ import type { Profile, RuleSet } from '@tmn/schemas';
 import { ruleSetSchema, procedureVersionSchema, facilitySchema } from '@tmn/schemas';
 import { evaluate } from './evaluate.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
+import { expectedLastVerifiedAt } from './reaudited.fixture.js';
 
 /**
  * なぜ: Batch6-A 練馬区(13120)縦切りデータの来歴・型・決定論・自治体差分をCIで機械検証する。
@@ -149,7 +150,9 @@ describe('Nerima (13120) — schema validation & approved status (CI gate)', () 
       // 2026-08-07 人手レビュー承認(ユーザー決裁「2区とも承認」)によりverified(ADR-007の公開単位)。
       expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
-      expect(pv.lastVerifiedAt).toBe('2026-08-07T00:00:00Z');
+      expect(pv.lastVerifiedAt).toBe(
+        expectedLastVerifiedAt('13120', pv.id, '2026-08-07T00:00:00Z'),
+      );
       // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持。
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();

@@ -35,6 +35,73 @@ export const REAUDITS: readonly {
     date: '2026-09-28',
     procedures: { '13111': ['procedure_childcare_application'] },
   },
+  {
+    // 2026-09-29: 品質点検で無作為抽出した公開データを公式ページと突き合わせ、誤り・根拠の無い記述を
+    // 直した(閉所した出張所、漏れていた持ち物、試験場の問合せ先、全国共通の期限を「自治体により
+    // 異なる」とした注記など。人手承認)。
+    date: '2026-09-29',
+    procedures: {
+      '13101': [
+        'procedure_childcare_application',
+        'procedure_driver_license_change',
+        'procedure_mynumber_continued_use',
+      ],
+      '13102': ['procedure_driver_license_change'],
+      '13103': ['procedure_driver_license_change'],
+      '13104': ['procedure_driver_license_change', 'procedure_mynumber_continued_use'],
+      '13105': [
+        'procedure_child_medical',
+        'procedure_dog_registration_transfer',
+        'procedure_driver_license_change',
+      ],
+      '13106': ['procedure_driver_license_change'],
+      '13107': [
+        'procedure_driver_license_change',
+        'procedure_mynumber_continued_use',
+        'procedure_national_health_insurance',
+        'procedure_national_pension_address',
+        'procedure_resident_registration',
+      ],
+      '13108': ['procedure_driver_license_change', 'procedure_mynumber_continued_use'],
+      '13109': [
+        'procedure_driver_license_change',
+        'procedure_mynumber_continued_use',
+        'procedure_school_transfer',
+      ],
+      '13110': ['procedure_driver_license_change'],
+      '13111': [
+        'procedure_child_allowance',
+        'procedure_driver_license_change',
+        'procedure_mynumber_continued_use',
+      ],
+      '13112': ['procedure_driver_license_change'],
+      '13113': [
+        'procedure_child_medical',
+        'procedure_dog_registration_transfer',
+        'procedure_driver_license_change',
+        'procedure_mynumber_continued_use',
+      ],
+      '13114': [
+        'procedure_childcare_application',
+        'procedure_driver_license_change',
+        'procedure_mynumber_continued_use',
+      ],
+      '13115': ['procedure_driver_license_change', 'procedure_mynumber_continued_use'],
+      '13116': ['procedure_driver_license_change', 'procedure_mynumber_continued_use'],
+      '13117': [
+        'procedure_childcare_application',
+        'procedure_dog_registration_transfer',
+        'procedure_driver_license_change',
+      ],
+      '13118': ['procedure_driver_license_change', 'procedure_mynumber_continued_use'],
+      '13119': ['procedure_driver_license_change', 'procedure_mynumber_continued_use'],
+      '13120': ['procedure_driver_license_change', 'procedure_mynumber_continued_use'],
+      '13121': ['procedure_driver_license_change'],
+      '13122': ['procedure_driver_license_change'],
+      '13123': ['procedure_driver_license_change', 'procedure_waste_check'],
+      '13201': ['procedure_driver_license_change'],
+    },
+  },
 ];
 
 /** その手続きが再監査で進んだ日付(無ければ undefined = 承認日のまま)。 */

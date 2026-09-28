@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { Profile, ProcedureVersion, RuleSet } from '@tmn/schemas';
 import { procedureVersionSchema, ruleSetSchema } from '@tmn/schemas';
 import { evaluate } from './evaluate.js';
+import { expectedLastVerifiedAt } from './reaudited.fixture.js';
 
 /**
  * なぜ: 2026-08-06 に追加した「自治体以外(ライフライン等)の引越し手続き」4件を、全対応区
@@ -249,7 +250,7 @@ describe('非自治体手続き — 人手レビュー承認済みで公開さ�
     (code) => {
       for (const p of nonMunicipalOf(code)) {
         expect(p.dataStatus).toBe('verified');
-        expect(p.lastVerifiedAt).toBe('2026-08-06T00:00:00Z');
+        expect(p.lastVerifiedAt).toBe(expectedLastVerifiedAt(code, p.id, '2026-08-06T00:00:00Z'));
         expect(p.sourceIds.length).toBeGreaterThan(0);
       }
     },

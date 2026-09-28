@@ -244,7 +244,7 @@ describe('Batch8 — schema validation & approved status (CI gate)', () => {
     expect(ruleIds).toEqual(procIds);
   });
 
-  it('facilities.json — 窓口件数(中央4 / 港5 / 文京1 / 台東1 / 墨田6)と座標の有無', () => {
+  it('facilities.json — 窓口件数(中央4 / 港5 / 文京1 / 台東1 / 墨田5)と座標の有無', () => {
     // 中央: 本庁舎1 + 特別出張所3(公式ページ由来・緯度経度なし。都のCSVはID列が科学的記数法で破損)。
     const chuo = facilitiesOf(CHUO);
     expect(chuo.length).toBe(4);
@@ -265,9 +265,11 @@ describe('Batch8 — schema validation & approved status (CI gate)', () => {
     expect(taito.length).toBe(1);
     expect(taito[0]?.lat).toBeUndefined();
 
-    // 墨田: 自治体標準CSV由来(ID列破損なし)。区役所 + 出張所5、緯度経度は実値。
+    // 墨田: 自治体標準CSV由来(ID列破損なし)。区役所 + 出張所4、緯度経度は実値。
+    // 横川出張所は令和7年11月28日で窓口業務を終了したため除外(2026-09-29 再監査)。
     const sumida = facilitiesOf(SUMIDA);
-    expect(sumida.length).toBe(6);
+    expect(sumida.length).toBe(5);
+    expect(sumida.map((f) => f.name)).not.toContain('横川出張所');
     for (const f of sumida) {
       expect(typeof f.lat).toBe('number');
       expect(typeof f.lng).toBe('number');

@@ -11,6 +11,7 @@ import {
 } from '@tmn/schemas';
 import { evaluate } from './evaluate.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
+import { expectedLastVerifiedAt } from './reaudited.fixture.js';
 
 /**
  * なぜ: Step5-A 品川区(13109)縦切りデータの来歴・型・決定論・自治体差分をCIで機械検証する。
@@ -153,7 +154,9 @@ describe('Shinagawa (13109) — schema validation & approved status (CI gate)', 
       // 2026-07-26 人手レビュー承認(ユーザー決裁「2区とも承認」)によりverified(ADR-007の公開単位)。
       expect(pv.dataStatus).toBe('verified');
       expect(pv.sourceIds.length).toBeGreaterThan(0);
-      expect(pv.lastVerifiedAt).toBe('2026-07-26T00:00:00Z');
+      expect(pv.lastVerifiedAt).toBe(
+        expectedLastVerifiedAt('13109', pv.id, '2026-07-26T00:00:00Z'),
+      );
       // 期限は dueDate(算定式)ではなく dueDescription(公式文言)を静的に保持。
       expect(pv.dueDate).toBeUndefined();
       expect(pv.dueDescription).toBeDefined();
