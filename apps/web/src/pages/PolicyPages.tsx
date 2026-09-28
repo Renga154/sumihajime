@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { GSI_TILE_ORIGIN } from '@tmn/domain';
 import { ExternalLink } from '../components/ui';
+import { DeleteLocalDataControl } from '../components/DeleteLocalDataControl';
 import { useDocumentTitle } from '../lib/navigation';
 import { FEEDBACK_FORM_URL, FEEDBACK_TOPICS } from '../content/contact';
 
@@ -19,14 +20,18 @@ import { FEEDBACK_FORM_URL, FEEDBACK_TOPICS } from '../content/contact';
  */
 
 const REVISED_ON = '2026年9月24日';
+/** プライバシーポリシーのみ、本タスクでの改定(§2 消去ボタンの追加)により日付が進む。 */
+const PRIVACY_REVISED_ON = '2026年9月29日';
 
 function PolicyLayout({
   title,
   lead,
+  revisedOn = REVISED_ON,
   children,
 }: {
   title: string;
   lead: string;
+  revisedOn?: string;
   children: ReactNode;
 }) {
   return (
@@ -34,7 +39,7 @@ function PolicyLayout({
       <header className="space-y-2">
         <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
         <p className="text-sm leading-relaxed text-slate-600">{lead}</p>
-        <p className="text-xs text-slate-500">最終改定日: {REVISED_ON}</p>
+        <p className="text-xs text-slate-500">最終改定日: {revisedOn}</p>
       </header>
       {children}
       <ContactSection />
@@ -201,6 +206,7 @@ export function PrivacyPage() {
     <PolicyLayout
       title="プライバシーポリシー"
       lead="本サービスが何を集めず、何を端末内に保存し、何をサーバーで処理するかを、実装のとおりに書いています。"
+      revisedOn={PRIVACY_REVISED_ON}
     >
       <Section id="privacy-not-collected" title="1. そもそも集めない情報">
         <p>
@@ -223,9 +229,13 @@ export function PrivacyPage() {
           <li>通信できないときにも一覧を開けるようにするための、チェックリストの控え</li>
         </ul>
         <p>
-          これらはブラウザの設定から「サイトデータを削除」すると消えます。別の端末やブラウザには
-          引き継がれません。
+          ブラウザの設定から「サイトデータを削除」すると消えます。また、下の「この端末に保存した
+          入力を消去」からも、本サービス内の保存内容だけをその場で消去できます。別の端末やブラウザ
+          には引き継がれません。
         </p>
+        <div className="pt-1">
+          <DeleteLocalDataControl />
+        </div>
       </Section>
 
       <Section id="privacy-server" title="3. サーバーで処理する情報">

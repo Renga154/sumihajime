@@ -10,6 +10,15 @@ import { loadMunicipalityCode, saveMunicipalityCode } from '../lib/storage';
 interface AppState {
   municipalityCode: string | null;
   setMunicipalityCode: (code: string) => void;
+  /**
+   * メモリ上の状態だけを空へ戻す(storage への書き込みはしない)。
+   *
+   * なぜ setMunicipalityCode と分けるか: 「この端末に保存した入力を消去」操作は
+   * storage.clearAllAppData() で localStorage を先に消し終えている。その後で
+   * setMunicipalityCode(null相当)を呼ぶと再び書き込みが走ってしまうため、
+   * メモリ上の状態だけを落とす専用の関数を用意する。
+   */
+  resetMunicipalityCode: () => void;
 }
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -22,9 +31,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setCode(code);
   }, []);
 
+  const resetMunicipalityCode = useCallback(() => {
+    setCode(null);
+  }, []);
+
   const value = useMemo<AppState>(
-    () => ({ municipalityCode, setMunicipalityCode }),
-    [municipalityCode, setMunicipalityCode],
+    () => ({ municipalityCode, setMunicipalityCode, resetMunicipalityCode }),
+    [municipalityCode, setMunicipalityCode, resetMunicipalityCode],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

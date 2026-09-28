@@ -17,7 +17,7 @@
     "@tmn/rag": "workspace:*",
     "@tmn/rules": "workspace:*",
     "@tmn/schemas": "workspace:*",
-    "hono": "^4.6.16"
+    "hono": "^4.13.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250109.0",
