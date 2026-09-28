@@ -44,7 +44,7 @@
     「この手続きの誤りを報告する」を置き、手続き名・自治体コード・ページURLを事前入力して開く
     （利用者の入力条件は載せない）。
   - 4: `/api/health` が自己判定（`status` / `issues`: D1不達・公開データ0件・巡回未実行/停止）を返す。
-    見張り役は Google Apps Script「スミハジメ 外形監視」（maintainer のアカウント。`ops/monitoring/health-monitor.gs`
+    見張り役は Google Apps Script「スミハジメ 外形監視」（オーナーの個人アカウント。`ops/monitoring/health-monitor.gs`
     と同一内容）で、15分ごとに正典・ミラーの health・トップ・チェックリスト作成を確かめ、異常が30分続いたとき
     と復旧したときだけGmailへ通知する。故意に壊した宛先で3項目すべてが異常として出ることを確認済み。
     運用手順は `docs/ops/monitoring.md`。

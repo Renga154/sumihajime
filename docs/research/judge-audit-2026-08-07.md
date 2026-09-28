@@ -681,9 +681,9 @@ cache-control: public, max-age=0, must-revalidate
 
 **何が起きたか**
 
-`GET /api/procedures/:id` が根拠カード用に返す `sources[].notes` に、要件番号（`C-9`）・タスクID（`T-005`）・内部ソースID（`src-13112-waste_schedule-001`）・決裁者のユーザー名（`maintainer`）・開発工程の記述（「誠実縮退」「Batch7で取得」「SHA-256記録」等）が本番で利用者に露出していた。世田谷区のごみ確認の根拠カードで実例が確認された。同じ列が原因の混入は、他区名の混入（2回）に続いて**これで3回目**。
+`GET /api/procedures/:id` が根拠カード用に返す `sources[].notes` に、要件番号（`C-9`）・タスクID（`T-005`）・内部ソースID（`src-13112-waste_schedule-001`）・決裁者のユーザー名・開発工程の記述（「誠実縮退」「Batch7で取得」「SHA-256記録」等）が本番で利用者に露出していた。世田谷区のごみ確認の根拠カードで実例が確認された。同じ列が原因の混入は、他区名の混入（2回）に続いて**これで3回目**。
 
-さらに点検の過程で、`GET /api/procedures/:id` の `sources[]` が `GET /api/sources` とは別経路で台帳の内部列をそのまま返しており、`reviewer`（決裁者名 `maintainer`）・`reviewStatus`・`contentHash`・`fetchMethod` が同じ応答から漏れていたことも判明した（`GET /api/sources` 側は `sourceLedgerEntrySchema` で公開列だけに絞っていたが、手続き詳細側は素通しだった）。こちらも本追記の作業内であわせて修正・デプロイ済み。
+さらに点検の過程で、`GET /api/procedures/:id` の `sources[]` が `GET /api/sources` とは別経路で台帳の内部列をそのまま返しており、`reviewer`（決裁者名）・`reviewStatus`・`contentHash`・`fetchMethod` が同じ応答から漏れていたことも判明した（`GET /api/sources` 側は `sourceLedgerEntrySchema` で公開列だけに絞っていたが、手続き詳細側は素通しだった）。こちらも本追記の作業内であわせて修正・デプロイ済み。
 
 **なぜ3度目が起きたのか(構造的な原因)**
 

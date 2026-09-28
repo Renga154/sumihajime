@@ -16,7 +16,7 @@
 2. **提供環境にはミラーを構築する**(wrangler env `odh`)。提供環境の活用実績とデモ冗長化のため。
    - Worker: `sumihajime`(チームアカウント)/ D1: `sumihajime`(`7f95495f-a18b-4079-9eb8-287bfe579bfe`)/ Vectorize: `sumihajime-rag`(1536次元 cosine、metadata index: municipalityCode, category を投入前作成)
    - チームアカウントのサブドメインは `tokyo-odh-145`(登録済み)。ミラーURL: `https://sumihajime.tokyo-odh-145.workers.dev`
-3. **個人アカウントのサブドメインを `maintainer` → `sumihajime` に変更し、正典Workerを `app` に改名**(2026-07-26 ユーザー決裁: 「sumihajime」は失効リスクのない個人側に割当・Worker名はapp)。正典URLは **`https://app.sumihajime.workers.dev`**。`*.maintainer.workers.dev` の旧URLは即時失効(提出資料は未確定だったため影響なし。リポジトリ内の参照は一括更新済み)。
+3. **個人アカウントのサブドメインを旧名（個人のハンドル）から `sumihajime` に変更し、正典Workerを `app` に改名**(2026-07-26 ユーザー決裁: 「sumihajime」は失効リスクのない個人側に割当・Worker名はapp)。正典URLは **`https://app.sumihajime.workers.dev`**。旧サブドメインのURLは即時失効(提出資料は未確定だったため影響なし。リポジトリ内の参照は一括更新済み)。
 4. 運用コマンド(publish/rag-index)は `--env`(および `--index`)透過に対応し、D1指定は環境非依存のbinding名 `DB` に統一。既定動作(個人アカウント)は不変。
 5. バックアップ方針: **Gitリポジトリが唯一の原本**(正規化データ・ルール・スナップショット・migrations)。提供環境のD1/Vectorizeは `publish --remote --env odh` と `build:index --remote --env odh --index sumihajime-rag` でいつでも全再構築できるため、失効時に失うものはない。
 6. 提供環境の禁止事項への適合: Workers AIは不使用(LLM/埋め込みはOpenAI自前キー)。ハッカソン成果物以外をデプロイしない。他チームリソースに触れない。

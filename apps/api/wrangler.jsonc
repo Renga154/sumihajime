@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // 正典Worker。URLは https://app.sumihajime.workers.dev (2026-07-26 サブドメインを
-  // maintainer→sumihajime に変更・Worker名を app に変更。ADR-008)。
+  // 正典Worker。URLは https://app.sumihajime.workers.dev (2026-07-26 個人アカウントの
+  // サブドメインを旧名から sumihajime に変更・Worker名を app に変更。ADR-008)。
   "name": "app",
   // 個人アカウント(正典)。提供環境(tokyo_odh_145)追加で複数アカウントになったため明示(ADR-008)。
   "account_id": "<ACCOUNT_ID>",

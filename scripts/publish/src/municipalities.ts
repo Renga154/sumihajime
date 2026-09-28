@@ -38,7 +38,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Batch8で中央区データ(手続き10件+自治体以外のライフライン等4件/窓口施設4件)を整備し、
-    // 2026-08-07 ユーザー(maintainer)決裁「5区とも承認」により全件verified・approved化されたため
+    // 2026-08-07 ユーザー決裁「5区とも承認」により全件verified・approved化されたため
     // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13102',
     name: '中央区',
@@ -49,7 +49,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Batch8で港区データ(手続き10件+自治体以外のライフライン等4件/窓口施設5件)を整備し、
-    // 2026-08-07 ユーザー(maintainer)決裁「5区とも承認」により全件verified・approved化されたため
+    // 2026-08-07 ユーザー決裁「5区とも承認」により全件verified・approved化されたため
     // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13103',
     name: '港区',
@@ -70,7 +70,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Batch8で文京区データ(手続き10件+自治体以外のライフライン等4件/窓口施設1件)を整備し、
-    // 2026-08-07 ユーザー(maintainer)決裁「5区とも承認」により全件verified・approved化されたため
+    // 2026-08-07 ユーザー決裁「5区とも承認」により全件verified・approved化されたため
     // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13105',
     name: '文京区',
@@ -81,7 +81,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Batch8で台東区データ(手続き10件+自治体以外のライフライン等4件/窓口施設1件)を整備し、
-    // 2026-08-07 ユーザー(maintainer)決裁「5区とも承認」により全件verified・approved化されたため
+    // 2026-08-07 ユーザー決裁「5区とも承認」により全件verified・approved化されたため
     // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13106',
     name: '台東区',
@@ -92,7 +92,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Batch8で墨田区データ(手続き10件+自治体以外のライフライン等4件/窓口施設6件)を整備し、
-    // 2026-08-07 ユーザー(maintainer)決裁「5区とも承認」により全件verified・approved化されたため
+    // 2026-08-07 ユーザー決裁「5区とも承認」により全件verified・approved化されたため
     // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13107',
     name: '墨田区',
@@ -125,7 +125,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Batch9で目黒区データ(手続き10件+自治体以外のライフライン等4件/窓口施設5件)を整備し、
-    // 2026-08-07 ユーザー(maintainer)決裁「3区とも承認」により全件verified・approved化されたため
+    // 2026-08-07 ユーザー決裁「3区とも承認」により全件verified・approved化されたため
     // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13110',
     name: '目黒区',
@@ -157,7 +157,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Batch9で渋谷区データ(手続き10件+自治体以外のライフライン等4件/窓口施設10件)を整備し、
-    // 2026-08-07 ユーザー(maintainer)決裁「3区とも承認」により全件verified・approved化されたため
+    // 2026-08-07 ユーザー決裁「3区とも承認」により全件verified・approved化されたため
     // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13113',
     name: '渋谷区',
@@ -268,7 +268,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Batch10で足立区データ(手続き10件+自治体以外のライフライン等4件/窓口施設17件)を整備し、
-    // 2026-08-07 ユーザー(maintainer)決裁「2区とも承認」により全件verified・approved化されたため
+    // 2026-08-07 ユーザー決裁「2区とも承認」により全件verified・approved化されたため
     // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13121',
     name: '足立区',
@@ -279,7 +279,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Batch9で葛飾区データ(手続き10件+自治体以外のライフライン等4件/窓口施設7件)を整備し、
-    // 2026-08-07 ユーザー(maintainer)決裁「3区とも承認」により全件verified・approved化されたため
+    // 2026-08-07 ユーザー決裁「3区とも承認」により全件verified・approved化されたため
     // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13122',
     name: '葛飾区',
@@ -290,7 +290,7 @@ export const MUNICIPALITIES: Municipality[] = [
   },
   {
     // なぜ: Batch10で江戸川区データ(手続き10件+自治体以外のライフライン等4件/窓口施設6件)を整備し、
-    // 2026-08-07 ユーザー(maintainer)決裁「2区とも承認」により全件verified・approved化されたため
+    // 2026-08-07 ユーザー決裁「2区とも承認」により全件verified・approved化されたため
     // 公開ビュー(seed→D1→API)でも supported=true になる(loadPublishDataのapproved判定で担保)。
     code: '13123',
     name: '江戸川区',

@@ -301,7 +301,7 @@
   採用するには (a) 許可ホストに `wagmap.jp` を加えるかの判断(SSRF許可リストの拡張に
   あたるためADR相当)と、(b) 中野区専用の分別辞書アダプタの追加、の2点が必要。
   いずれも人手レビューでの決裁事項として残す。
-- 2026-08-07 解消: ユーザー(maintainer)が「完全一致で個別許可」を決裁し、(a) は
+- 2026-08-07 解消: ユーザーが「完全一致で個別許可」を決裁し、(a) は
   `ALLOWED_HOST_EXACT` へ **`www2.wagmap.jp` の完全一致のみ**を追加して解消した
   (`wagmap.jp` のワイルドカード許可はしない。`evil.wagmap.jp` /
   `www2.wagmap.jp.evil.com` を拒否する単体テストを `scripts/ingest/src/http.test.ts` に追加済み)。
