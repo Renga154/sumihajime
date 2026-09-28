@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { AppStateProvider } from '../state/AppState';
 import { PrivacyPage, TermsPage } from './PolicyPages';
 
 /**
@@ -11,7 +12,11 @@ import { PrivacyPage, TermsPage } from './PolicyPages';
  */
 
 function renderPage(node: React.ReactElement) {
-  return render(<MemoryRouter>{node}</MemoryRouter>);
+  return render(
+    <AppStateProvider>
+      <MemoryRouter>{node}</MemoryRouter>
+    </AppStateProvider>,
+  );
 }
 
 describe('利用規約', () => {
@@ -44,6 +49,28 @@ describe('プライバシーポリシー', () => {
     // 3節(サーバーでの処理)と7節(外部送信先)の両方に出る。どちらも必要なので件数で固定する。
     expect(screen.getAllByText(/OpenAI/).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('https://cyberjapandata.gsi.go.jp')).toBeInTheDocument();
+  });
+
+  /**
+   * なぜ: 「サイトデータを削除」しか案内していなかったが、ボタン1つでこのアプリの
+   * 保存内容だけを消せるようになった(§2消去操作)。文面とボタンの両方が実装と一致することを
+   * 固定する。改定にあわせて最終改定日も進んでいること(規約の日付は変えない)も固定する。
+   */
+  it('端末内保存の節に「この端末に保存した入力を消去」ボタンがあり、案内文もそれに触れる', () => {
+    renderPage(<PrivacyPage />);
+    expect(
+      screen.getByRole('button', { name: 'この端末に保存した入力を消去' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/この端末に保存した\s*入力を消去」からも/)).toBeInTheDocument();
+  });
+
+  it('プライバシーポリシーの最終改定日だけが進み、利用規約の日付は変わらない', () => {
+    const { unmount } = renderPage(<PrivacyPage />);
+    expect(screen.getByText('最終改定日: 2026年9月29日')).toBeInTheDocument();
+    unmount();
+
+    renderPage(<TermsPage />);
+    expect(screen.getByText('最終改定日: 2026年9月24日')).toBeInTheDocument();
   });
 });
 

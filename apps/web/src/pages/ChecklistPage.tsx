@@ -37,6 +37,7 @@ import { isNonMunicipal } from '../lib/provider-scope';
 import { ChatPanel, ChatUnavailable } from '../components/ChatPanel';
 import { DriftNotice, driftNoticeText } from '../components/DriftNotice';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { DeleteLocalDataControl } from '../components/DeleteLocalDataControl';
 
 /**
  * サーバーからの取得が通らなかったときに、端末内の控えへ切り替えるかどうか。
@@ -227,6 +228,10 @@ export function ChecklistPage() {
             </Link>
           </div>
         )}
+        {/* 保存済みの入力の消去。プロフィールが表示されている(=保存されている)場所の近くに置く。 */}
+        <div className="print-hide">
+          <DeleteLocalDataControl />
+        </div>
       </header>
 
       {state.loading && <Loading page label="チェックリストを作成中です…" />}
