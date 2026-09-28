@@ -32,7 +32,7 @@ test('チェックリストからリンク1つで比較ページへ到達し、�
   await expect(page.getByLabel('あなたの自治体')).toHaveValue('13112');
 
   // 子ども医療費助成: 世田谷(3か月)と渋谷(14日)で実際に値が違う。
-  await page.getByLabel('くらべる区').selectOption('13113');
+  await page.getByLabel('くらべる自治体').selectOption('13113');
   const section = page.locator('section', {
     has: page.getByRole('heading', { name: '子ども医療費助成の申請期限' }),
   });
@@ -46,7 +46,7 @@ test('チェックリストからリンク1つで比較ページへ到達し、�
   await expect(section.getByText(/最終確認 \d{4}年\d{1,2}月\d{1,2}日/).first()).toBeVisible();
 
   // 全区一覧へ到達できる(折りたたみ。情報は隠さない)。
-  const all = section.getByText(/対応している\d+区すべての値を見る/);
+  const all = section.getByText(/対応している\d+自治体すべての値を見る/);
   await expect(all).toBeVisible();
   await all.click();
   await expect(

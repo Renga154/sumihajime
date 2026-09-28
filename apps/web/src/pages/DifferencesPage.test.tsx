@@ -107,7 +107,7 @@ describe('自治体ごとの期限のちがい(比較ページ)', () => {
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
 
     fireEvent.change(screen.getByLabelText('基準の自治体'), { target: { value: '13101' } });
-    fireEvent.change(screen.getByLabelText('くらべる区'), { target: { value: '13102' } });
+    fireEvent.change(screen.getByLabelText('くらべる自治体'), { target: { value: '13102' } });
 
     // 値(比較セル + 全区一覧の両方に出るため getAllBy で確認する)
     expect(screen.getAllByText('3か月以内に申請').length).toBeGreaterThan(0);
@@ -134,17 +134,17 @@ describe('自治体ごとの期限のちがい(比較ページ)', () => {
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
     fireEvent.change(screen.getByLabelText('基準の自治体'), { target: { value: '13101' } });
-    fireEvent.change(screen.getByLabelText('くらべる区'), { target: { value: '13102' } });
+    fireEvent.change(screen.getByLabelText('くらべる自治体'), { target: { value: '13102' } });
     expect(screen.getByText(/この2つの自治体では扱いが違います/)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('くらべる区'), { target: { value: '13101' } });
+    fireEvent.change(screen.getByLabelText('くらべる自治体'), { target: { value: '13101' } });
     expect(screen.getByText(/この2つの自治体は同じ扱いです/)).toBeInTheDocument();
   });
 
   it('全区一覧へ到達できる(情報を隠さない)', async () => {
     renderPage();
     await screen.findByRole('heading', { name: '子ども医療費助成の申請期限' });
-    expect(screen.getByText('対応している3区すべての値を見る')).toBeInTheDocument();
+    expect(screen.getByText('対応している3自治体すべての値を見る')).toBeInTheDocument();
     // 一覧には選んでいない区も出る。
     expect(screen.getAllByText('テストC区').length).toBeGreaterThan(0);
   });

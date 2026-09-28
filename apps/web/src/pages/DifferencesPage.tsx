@@ -11,22 +11,22 @@ import { Card, ErrorMessage, ExternalLink, Loading } from '../components/ui';
 import { useDocumentTitle } from '../lib/navigation';
 
 /**
- * 「区ごとの期限のちがい」(/differences)。
+ * 「自治体ごとの期限のちがい」(/differences)。
  *
- * このページの存在理由: 23区すべてを整備して初めて見えたのが「同じ手続きでも、区によって
+ * このページの存在理由: 対応自治体すべてを整備して初めて見えたのが「同じ手続きでも、自治体によって
  * 期限や起算日が違う」という事実だった。転入者にとっては実害のある差(申請が数日遅れただけで
- * 助成が遡れない区がある)なので、プロダクトの中で体験できる形にする。
+ * 助成が遡れない自治体がある)なので、プロダクトの中で体験できる形にする。
  *
  * 設計上の絶対条件(CLAUDE.md原則4「選択自治体と異なる自治体の情報を混ぜない」):
- *   自治体間の比較は、利用者が「区ごとの違いを見る」と明示的に選んで到達したこのページだけで行う。
- *   チェックリスト・手続き詳細・ごみ・RAGの各画面には他区の値を一切出さない
+ *   自治体間の比較は、利用者が「自治体ごとの違いを見る」と明示的に選んで到達したこのページだけで行う。
+ *   チェックリスト・手続き詳細・ごみ・RAGの各画面には他の自治体の値を一切出さない
  *   (チェックリストからの導線はこのページへのリンク1つだけ。値は載せない)。
- *   ページ冒頭で「ここは比較ページであり、あなたのチェックリストは選んだ区だけを表示している」
+ *   ページ冒頭で「ここは比較ページであり、あなたのチェックリストは選んだ自治体だけを表示している」
  *   ことを必ず明示する。
  *
  * 表示の設計: 透明性ページで「全部載っているが誰も辿れない(モバイルで12万px)」を経験しているため、
- *   既定は「あなたの区 × くらべる区」の2区だけを縦に並べ、全23区は <details> で到達可能にする。
- *   横スクロールする表は作らない(375px幅で成立させる)。
+ *   既定は「あなたの自治体 × くらべる自治体」の2つだけを縦に並べ、対応自治体すべては <details> で
+ *   到達可能にする。横スクロールする表は作らない(375px幅で成立させる)。
  *
  * 値は API(/api/ward-differences)が公開済みデータから毎回導出したものをそのまま表示する。
  * このコンポーネントは判定ロジックを持たない(§4 UIとルールの分離)。
@@ -53,7 +53,7 @@ function SourceList({ cell }: { cell: WardDifferenceCell }) {
   );
 }
 
-/** 比較する2区のうち1区ぶんのカード。モバイルでは上下に積む(横スクロールさせない)。 */
+/** 比較する2自治体のうち1つぶんのカード。モバイルでは上下に積む(横スクロールさせない)。 */
 function WardCell({
   label,
   cell,
@@ -93,13 +93,13 @@ function WardCell({
   );
 }
 
-/** 全区一覧(既定は折りたたみ)。値ごとにまとめ、各区に出典と最終確認日を添える。 */
+/** 対応自治体の一覧(既定は折りたたみ)。値ごとにまとめ、各自治体に出典と最終確認日を添える。 */
 function AllWards({ topic }: { topic: WardDifferenceTopic }) {
   const cellByCode = new Map(topic.cells.map((c) => [c.municipalityCode, c]));
   return (
     <details className="mt-4 rounded-lg border border-slate-200 bg-white p-3">
       <summary className="tap-target cursor-pointer text-sm font-semibold text-brand-700">
-        対応している{topic.cells.length}区すべての値を見る
+        対応している{topic.cells.length}自治体すべての値を見る
       </summary>
       <div className="mt-3 space-y-4">
         {topic.valueGroups.map((group) => (
@@ -107,7 +107,7 @@ function AllWards({ topic }: { topic: WardDifferenceTopic }) {
             <p className="flex flex-wrap items-center gap-2">
               <Badge tone={group.tone === 'caution' ? 'amber' : 'brand'}>{group.label}</Badge>
               <span className="text-xs font-semibold text-slate-600">
-                {group.municipalityCodes.length}区
+                {group.municipalityCodes.length}自治体
               </span>
             </p>
             <ul className="mt-1.5 space-y-1.5">
@@ -144,7 +144,7 @@ export function DifferencesPage() {
   const [mine, setMine] = useState<string | null>(null);
   const [other, setOther] = useState<string | null>(null);
 
-  // 読み込み後に初期値を決める。自分の区は選択済みの自治体、相手は「いちばん違いが多い区」。
+  // 読み込み後に初期値を決める。自分の欄は選択済みの自治体、相手は「いちばん違いが多い自治体」。
   useEffect(() => {
     if (!report || report.municipalities.length === 0) return;
     const fallback = report.municipalities[0]?.code ?? null;
@@ -162,13 +162,13 @@ export function DifferencesPage() {
   }, [report]);
 
   /*
-   * 左側を「あなたの区」と呼べるのは、それが実際に利用者の選んだ自治体と一致するときだけ。
+   * 左側を「あなたの自治体」と呼べるのは、それが実際に利用者の選んだ自治体と一致するときだけ。
    *
    * なぜ(2026-08-09): このページをメインメニューへ載せたことで、自治体を一度も選んでいない
    * 初回訪問者が直接到達するようになった。そのとき左側は一覧の先頭(千代田区)が既定で入るが、
-   * それを「あなたの区」と呼ぶのは利用者について事実に反する断定になる(原則3)。
-   * 選択済みでも、利用者が左側の選択を別の区へ変えれば同じことが起きる。
-   * 一致しないときは役割だけを述べる「基準の区」にする。
+   * それを「あなたの自治体」と呼ぶのは利用者について事実に反する断定になる(原則3)。
+   * 選択済みでも、利用者が左側の選択を別の自治体へ変えれば同じことが起きる。
+   * 一致しないときは役割だけを述べる「基準の自治体」にする。
    */
   const isOwnWard = mine != null && mine === municipalityCode;
   const mineLabel = isOwnWard ? 'あなたの自治体' : '基準の自治体';
@@ -223,7 +223,7 @@ export function DifferencesPage() {
           </div>
           <div>
             <label htmlFor="ward-other" className="block text-sm font-semibold text-slate-800">
-              くらべる区
+              くらべる自治体
             </label>
             <select
               id="ward-other"
@@ -271,7 +271,7 @@ export function DifferencesPage() {
 
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <WardCell label={mineLabel} cell={a} municipalityName={nameOf(mine)} />
-                <WardCell label="くらべる区" cell={b} municipalityName={nameOf(other)} />
+                <WardCell label="くらべる自治体" cell={b} municipalityName={nameOf(other)} />
               </div>
 
               <p className="mt-3 text-sm font-medium text-slate-800">

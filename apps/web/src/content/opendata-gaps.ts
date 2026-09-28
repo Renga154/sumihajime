@@ -26,7 +26,7 @@ export const opendataGapCaseSchema = z.strictObject({
   summary: z.string().min(1),
   /** 本サービスが取った建設的な対処(捏造せず・原文改変せず、公式突き合わせで補完/補正)。 */
   contribution: z.string().min(1),
-  /** 同種の欠落を他区でも防ぐための一般化された観点。 */
+  /** 同種の欠落を他の自治体でも防ぐための一般化された観点。 */
   takeaway: z.string().min(1),
   /** md に記録された確認日(YYYY-MM-DD)。 */
   confirmedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

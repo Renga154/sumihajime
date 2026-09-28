@@ -137,9 +137,6 @@ export const OTA_COL = {
   office: 7,
 } as const;
 
-/** 管轄清掃事務所の想定値(検証用。想定外はテストで検知)。 */
-export const OTA_OFFICES = ['大森', '調布', '蒲田'] as const;
-
 export interface BuildOptions {
   municipalityCode: string;
   sourceId: string;
