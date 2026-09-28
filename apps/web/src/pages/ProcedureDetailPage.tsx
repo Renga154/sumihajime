@@ -11,22 +11,30 @@ import { buildReportUrl } from '../content/contact';
 import { ChatPanel, ChatUnavailable } from '../components/ChatPanel';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { useDocumentTitle } from '../lib/navigation';
+import { loadProfile } from '../lib/storage';
+import { loadChecklistCache } from '../lib/checklist-cache';
 
 /**
  * タスク詳細(§7.4/§10)。必要書類(unknownは「公式ページで要確認」)・方法(channels)・
  * 場所・注意事項・根拠カード(FR-008)・dataStatusバッジ(verified/partial/stale)を表示する。
  *
- * 期限表示: ProcedureVersion自体はdueRuleを持たず期限を計算できないため、チェックリスト画面
- * (ChecklistPage)から遷移した場合はルール評価済みのGeneratedTask(state)を受け取り、その
- * dueDateを表示する。直接URLで訪問された場合(stateなし)は、公式文言(dueDescription)のみの
- * 現行表示にフォールバックする。
+ * 期限表示: ProcedureVersion自体はdueRuleを持たず期限を計算できないため、ルール評価済みの
+ * GeneratedTask の dueDate を使う。チェックリスト画面から遷移した場合は state で受け取る。
+ *
+ * 直接URLで開いた場合(再読み込み・新しいタブ・共有リンク)は、端末内のチェックリストの控え
+ * (lib/checklist-cache.ts。今の条件と一致するときだけ読める)から同じタスクを探す。
+ * 以前はここで一律「期限は要確認」を出しており、再読み込みしただけで、チェックリストでは日付の
+ * 出ている手続きが「要確認」に変わっていた(2026-09-29 点検)。
+ * 控えも無いとき(別の端末で共有リンクを開いた等)は、期限が不明なのではなく日付をまだ計算して
+ * いないだけなので、警告色の「要確認」ではなく中立の案内にする。
  */
 export function ProcedureDetailPage() {
   const { id } = useParams();
   const { municipalityCode } = useAppState();
   const location = useLocation();
   const stateTask = (location.state as { task?: GeneratedTask } | null)?.task;
-  const stateDueDate = stateTask && stateTask.procedureId === id ? stateTask.dueDate : undefined;
+  const task: GeneratedTask | undefined =
+    stateTask?.procedureId === id ? stateTask : findCachedTask(municipalityCode, id);
 
   const state = useAsync(async () => {
     if (!municipalityCode || !id) return null;
@@ -76,7 +84,7 @@ export function ProcedureDetailPage() {
 
           <Card className="space-y-2">
             <div>
-              {(stateDueDate ?? state.data.procedure.dueDate) ? (
+              {(task?.dueDate ?? state.data.procedure.dueDate) ? (
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2.5 py-1 text-sm font-semibold text-slate-800 ring-1 ring-inset ring-slate-200">
                   <svg
                     aria-hidden="true"
@@ -87,8 +95,19 @@ export function ProcedureDetailPage() {
                     <path d="M9 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2V2a1 1 0 112 0v1h2V2zM5 7v7h10V7H5z" />
                   </svg>
                   <span className="text-slate-500">期限：</span>
-                  {formatDate(stateDueDate ?? state.data.procedure.dueDate!)}
+                  {formatDate(task?.dueDate ?? state.data.procedure.dueDate!)}
                 </span>
+              ) : task === undefined ? (
+                <p className="text-sm text-slate-600">
+                  期限の日付は、引越し日などの条件から
+                  <Link
+                    to="/checklist"
+                    className="tap-target-inline font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800"
+                  >
+                    チェックリスト
+                  </Link>
+                  で計算します。
+                </p>
               ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
                   <svg
@@ -274,5 +293,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       </h2>
       <div className="mt-2 pl-3.5">{children}</div>
     </section>
+  );
+}
+
+/** 端末内のチェックリストの控えから、この手続きの評価済みタスクを探す(今の条件と一致する控えのみ)。 */
+function findCachedTask(
+  municipalityCode: string | null,
+  procedureId: string | undefined,
+): GeneratedTask | undefined {
+  if (!municipalityCode || !procedureId) return undefined;
+  const profile = loadProfile(municipalityCode);
+  if (!profile) return undefined;
+  return loadChecklistCache(municipalityCode, profile)?.checklist.tasks.find(
+    (t) => t.procedureId === procedureId,
   );
 }

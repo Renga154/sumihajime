@@ -2,13 +2,47 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { GeneratedTask, ProcedureDetailResponse } from '@tmn/schemas';
+import type { Profile } from '@tmn/schemas';
 import { AppStateProvider } from '../state/AppState';
+import { saveProfile } from '../lib/storage';
+import { saveChecklistCache } from '../lib/checklist-cache';
+
+const PROFILE: Profile = {
+  destination: { municipalityCode: '13112' },
+  moveDate: '2026-08-15',
+  originType: 'outside_tokyo',
+  household: { memberCount: 1, ageBands: ['adult'] },
+  flags: {
+    hasMyNumberCard: true,
+    needsNationalHealthInsurance: false,
+    needsNationalPension: false,
+    hasSchoolOrChildcareNeeds: false,
+    hasDog: false,
+    dogHasMicrochip: 'unknown',
+    needsDisabilityOrCareSupport: false,
+    needsForeignResidentGuidance: false,
+    needsVehicleGuidance: false,
+    isPregnantMember: false,
+  },
+};
+
+/** チェックリスト画面が作る端末内の控えを、同じ関数で用意する。 */
+function seedChecklistCopy(tasks: GeneratedTask[]) {
+  saveProfile('13112', PROFILE);
+  saveChecklistCache({
+    municipalityCode: '13112',
+    municipalityName: '世田谷区',
+    profile: PROFILE,
+    checklist: { tasks, ruleVersion: 'v1', generatedAt: '2026-08-15T00:00:00Z' },
+  });
+}
 
 /**
  * なぜ: VS1ブラウザ検証で発見した不整合の再発防止。ChecklistPageから
- * state={{task}}付きで遷移した場合はルール評価済みの期限を表示し、
- * 直接URL訪問(stateなし)の場合は現行の「期限は要確認」表示にフォールバックする
- * ことを固定する。
+ * state={{task}}付きで遷移した場合はルール評価済みの期限を表示する。
+ * 直接URLで開いた場合(再読み込み・共有リンク)は端末内のチェックリストの控えから同じ期限を出し、
+ * 控えが無いときは警告色の「要確認」ではなく「チェックリストで計算します」と案内する
+ * (2026-09-29 点検: 再読み込みしただけで日付が「要確認」に変わっていた)。
  */
 
 function makeTask(o: Partial<GeneratedTask>): GeneratedTask {
@@ -111,11 +145,32 @@ describe('ProcedureDetailPage', () => {
     expect(screen.getByText('引越しをしてきた日から14日以内。')).toBeInTheDocument();
   });
 
-  it('stateなし(直接URL訪問)では「期限は要確認」にフォールバックする', async () => {
+  it('直接URLで開いても、端末内のチェックリストの控えにある期限を表示する(再読み込みで変わらない)', async () => {
+    seedChecklistCopy([makeTask({ dueDate: '2026-08-29' })]);
+    renderDetail('/procedures/procedure_resident_registration');
+
+    expect(await screen.findByText('転入届')).toBeInTheDocument();
+    expect(screen.getByText('2026年8月29日')).toBeInTheDocument();
+    expect(screen.queryByText('期限は要確認')).not.toBeInTheDocument();
+  });
+
+  it('控えのタスクに日付が無い(ルールが期限を出せない)ときは「期限は要確認」', async () => {
+    seedChecklistCopy([makeTask({ dueDate: undefined })]);
     renderDetail('/procedures/procedure_resident_registration');
 
     expect(await screen.findByText('転入届')).toBeInTheDocument();
     expect(screen.getByText('期限は要確認')).toBeInTheDocument();
+  });
+
+  it('控えも無いとき(共有リンク等)は、要確認ではなくチェックリストで計算すると案内する', async () => {
+    renderDetail('/procedures/procedure_resident_registration');
+
+    expect(await screen.findByText('転入届')).toBeInTheDocument();
+    expect(screen.queryByText('期限は要確認')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'チェックリスト' })).toHaveAttribute(
+      'href',
+      '/checklist',
+    );
     expect(screen.getByText('引越しをしてきた日から14日以内。')).toBeInTheDocument();
   });
 });
