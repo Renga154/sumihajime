@@ -110,8 +110,7 @@ export function LandingPage() {
             <span className="inline-block">やることリストに</span>
           </h1>
           <p className="mt-3 max-w-xl text-slate-700">
-            お住まいになる自治体・引越し日・当てはまる条件を選ぶと、公式ページの根拠と最終確認日つきで、
-            期限順のToDoチェックリストを作成します。まずは自治体を選んでください。
+            お住まいになる自治体・引越し日・当てはまる条件を選ぶと、公式ページの根拠と最終確認日つきで、期限順のToDoチェックリストを作成します。まずは自治体を選んでください。
           </p>
         </div>
       </section>

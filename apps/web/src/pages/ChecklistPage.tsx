@@ -228,10 +228,6 @@ export function ChecklistPage() {
             </Link>
           </div>
         )}
-        {/* 保存済みの入力の消去。プロフィールが表示されている(=保存されている)場所の近くに置く。 */}
-        <div className="print-hide">
-          <DeleteLocalDataControl />
-        </div>
       </header>
 
       {state.loading && <Loading page label="チェックリストを作成中です…" />}
@@ -377,6 +373,25 @@ export function ChecklistPage() {
               — 同じ手続きでも期限が異なることがあります（自治体間の比較ページです）
             </span>
           </p>
+
+          {/*
+            保存済みの入力の消去。取り消せない操作なので、主要な操作(チェック・印刷・カレンダー)と
+            並べず末尾に置く(誤って押しにくく、探せば見つかる場所)。プライバシーポリシーにも同じ部品がある。
+          */}
+          <section
+            aria-labelledby="local-data-heading"
+            className="print-hide border-t border-slate-200 pt-4"
+          >
+            <h2 id="local-data-heading" className="text-sm font-semibold text-slate-700">
+              この端末に保存した入力
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              自治体・引越し日・条件・完了状態は、この端末のブラウザにだけ保存しています。共用の端末では、使い終わったら消去してください。
+            </p>
+            <div className="mt-2">
+              <DeleteLocalDataControl />
+            </div>
+          </section>
         </>
       )}
     </div>

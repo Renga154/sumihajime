@@ -48,8 +48,7 @@ export function FacilitiesPage() {
       <header>
         <h1 className="text-2xl font-bold text-slate-900">窓口一覧</h1>
         <p className="text-sm text-slate-600">
-          手続きの窓口をカテゴリ別に掲載しています。開庁時間や取扱い業務は変わることがあるため、
-          お出かけ前に公式ページでご確認ください。
+          手続きの窓口をカテゴリ別に掲載しています。開庁時間や取扱い業務は変わることがあるため、お出かけ前に公式ページでご確認ください。
         </p>
       </header>
 

@@ -136,9 +136,7 @@ export function CoveragePage() {
       <header>
         <h1 className="text-2xl font-bold text-slate-900">このサービスのデータについて</h1>
         <p className="mt-1 text-sm text-slate-600">
-          安心してお使いいただけるよう、どの自治体・内容に対応しているか、表示している情報がどの公式
-          データに基づき、いつ確認したものかを、このページですべて公開しています。情報のもとをたどれる
-          状態にしておくことが、本サービスの土台です。
+          安心してお使いいただけるよう、どの自治体・内容に対応しているか、表示している情報がどの公式データに基づき、いつ確認したものかを、このページですべて公開しています。情報のもとをたどれる状態にしておくことが、本サービスの土台です。
         </p>
       </header>
 
@@ -176,8 +174,7 @@ export function CoveragePage() {
               </div>
             </div>
             <p className="text-sm text-slate-600">
-              自治体ごとの対応状況と出典の一覧は、下の各セクションで自治体名をタップすると開きます。
-              情報は省略していません。長い一覧を辿りやすくするため、既定では閉じています。
+              自治体ごとの対応状況と出典の一覧は、下の各セクションで自治体名をタップすると開きます。情報は省略していません。長い一覧を辿りやすくするため、既定では閉じています。
             </p>
             <MunicipalityFilter
               id="about-data-filter"
@@ -196,8 +193,7 @@ export function CoveragePage() {
           <section aria-labelledby="cov-heading" className="space-y-3">
             <SectionHeading id="cov-heading">対応している自治体と内容</SectionHeading>
             <p className="text-sm text-slate-600">
-              対応している自治体と、カテゴリごとの対応状況です。未対応の自治体は、対応済みのように
-              見せることはしません。
+              対応している自治体と、カテゴリごとの対応状況です。未対応の自治体は、対応済みのように見せることはしません。
             </p>
             {filteredMunis.length === 0 ? (
               <EmptyState title="一致する自治体は見つかりませんでした">
@@ -357,8 +353,7 @@ function DriftPatrolSection({
     <section aria-labelledby="drift-heading" className="space-y-3">
       <SectionHeading id="drift-heading">機械巡回の状況</SectionHeading>
       <p className="text-sm text-slate-600">
-        承認済みの公式ソースを毎時10件ずつ再取得し、自治体ページの「更新日」が変わったものを自動で「再確認中」にしています。
-        再確認中の手続きもチェックリストから消さず、公式ページへのリンクは残します。解除は人が再確認してからです。
+        承認済みの公式ソースを毎時10件ずつ再取得し、自治体ページの「更新日」が変わったものを自動で「再確認中」にしています。再確認中の手続きもチェックリストから消さず、公式ページへのリンクは残します。解除は人が再確認してからです。
       </p>
       {loading ? (
         <p className="text-sm text-slate-500">巡回の状況を読み込み中です…</p>
@@ -573,9 +568,7 @@ function OpendataQualitySection() {
     <section aria-labelledby="oq-heading" className="space-y-3">
       <SectionHeading id="oq-heading">オープンデータ品質レポート</SectionHeading>
       <p className="text-sm text-slate-600">
-        データ整備の過程で気づいた、公開オープンデータの改善余地を記録しています。自治体の
-        オープンデータ公開は横断利用の基盤であり、以下は品質向上に建設的に貢献する目的でまとめた
-        ものです（出典:{' '}
+        データ整備の過程で気づいた、公開オープンデータの改善余地を記録しています。自治体のオープンデータ公開は横断利用の基盤であり、以下は品質向上に建設的に貢献する目的でまとめたものです（出典:{' '}
         <code className="rounded bg-slate-100 px-1 py-0.5 text-xs">{OPENDATA_GAPS_SOURCE_DOC}</code>
         ）。
       </p>

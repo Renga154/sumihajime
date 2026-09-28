@@ -184,8 +184,8 @@ export function DifferencesPage() {
           自治体ごとの期限のちがい
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-700">
-          同じ名前の手続きでも、申請の期限や、期限を数えはじめる日は自治体ごとに違います。
-          対応している{report.municipalities.length}
+          同じ名前の手続きでも、申請の期限や、期限を数えはじめる日は自治体ごとに違います。対応している
+          {report.municipalities.length}
           自治体すべての公式ページをデータ化して分かった違いを、公開済みデータからそのまま集計しています。
         </p>
       </div>
@@ -197,8 +197,7 @@ export function DifferencesPage() {
       >
         <p className="font-semibold">これは自治体間の比較ページです。</p>
         <p className="mt-1">
-          あなたのチェックリストには、選んだ自治体の情報だけを表示しています。ここで見た他の自治体の値を、
-          ご自身の手続きに当てはめないでください。実際の手続きの前に、必ずお住まいの自治体の公式ページでご確認ください。
+          あなたのチェックリストには、選んだ自治体の情報だけを表示しています。ここで見た他の自治体の値を、ご自身の手続きに当てはめないでください。実際の手続きの前に、必ずお住まいの自治体の公式ページでご確認ください。
         </p>
       </div>
 
@@ -298,7 +297,7 @@ export function DifferencesPage() {
 
       <Card>
         <p className="text-sm text-slate-700">
-          自分の自治体の手続きは、チェックリストで確認できます（表示されるのは選んだ区の情報だけです）。
+          自分の自治体の手続きは、チェックリストで確認できます（表示されるのは選んだ自治体の情報だけです）。
         </p>
         <Link
           to="/checklist"

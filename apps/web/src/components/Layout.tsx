@@ -127,8 +127,7 @@ export function Layout({ children }: { children?: ReactNode }) {
               />
             </svg>
             <span>
-              本サービスは行政の正式なサービスではありません。表示内容は目安です。実際の手続きの前に、
-              必ず各自治体の公式ページで最新情報をご確認ください。
+              本サービスは行政の正式なサービスではありません。表示内容は目安です。実際の手続きの前に、必ず各自治体の公式ページで最新情報をご確認ください。
             </span>
           </p>
           {/*
@@ -173,14 +172,14 @@ export function Layout({ children }: { children?: ReactNode }) {
           <p className="mt-3 pl-6">
             <Link
               to="/terms"
-              className="tap-target-inline font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+              className="tap-target-inline whitespace-nowrap font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
             >
               利用規約
             </Link>
             <span className="mx-2 text-slate-300">/</span>
             <Link
               to="/privacy"
-              className="tap-target-inline font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+              className="tap-target-inline whitespace-nowrap font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
             >
               プライバシーポリシー
             </Link>
@@ -192,7 +191,7 @@ export function Layout({ children }: { children?: ReactNode }) {
                   href={FEEDBACK_FORM_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="tap-target-inline font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+                  className="tap-target-inline whitespace-nowrap font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
                 >
                   誤りの報告・お問い合わせ
                   <span className="sr-only">（別タブで開きます）</span>

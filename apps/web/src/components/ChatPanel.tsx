@@ -240,8 +240,8 @@ export function ChatPanel({
         <p className="font-semibold">ご利用上の注意</p>
         <ul className="mt-1 list-disc space-y-1 pl-5">
           <li>
-            回答は<span className="font-semibold">{name}の公式情報のみ</span>を対象にした目安です。
-            最終的な内容は必ず公式ページでご確認ください。
+            回答は<span className="font-semibold">{name}の公式情報のみ</span>
+            を対象にした目安です。最終的な内容は必ず公式ページでご確認ください。
           </li>
           <li>
             <span className="font-semibold">
@@ -255,8 +255,7 @@ export function ChatPanel({
             誠実な実装を説明不足で損なわないよう、送信と保存の扱いを明示する。
           */}
           <li>
-            ご質問の文章はこのサービスのサーバーへ送信され、AIモデルで処理されます。質問文と回答は
-            保存もログ記録もしていません。
+            ご質問の文章はこのサービスのサーバーへ送信され、AIモデルで処理されます。質問文と回答は保存もログ記録もしていません。
           </li>
         </ul>
       </div>

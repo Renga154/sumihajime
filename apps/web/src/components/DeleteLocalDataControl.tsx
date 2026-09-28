@@ -40,7 +40,7 @@ export function DeleteLocalDataControl() {
         <button
           type="button"
           onClick={() => setPhase('confirming')}
-          className="tap-target inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-50"
+          className="tap-target inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-800"
         >
           この端末に保存した入力を消去
         </button>
@@ -56,8 +56,7 @@ export function DeleteLocalDataControl() {
             本当に消去しますか？
           </p>
           <p className="mt-1 text-sm text-red-900">
-            選択した自治体、入力した条件、チェックリストの完了状態など、この端末に保存した内容が
-            すべて消えます。この操作は取り消せません。
+            選択した自治体、入力した条件、チェックリストの完了状態など、この端末に保存した内容がすべて消えます。この操作は取り消せません。
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
