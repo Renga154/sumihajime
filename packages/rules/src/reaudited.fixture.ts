@@ -30,6 +30,11 @@ export const REAUDITS: readonly {
     date: '2026-09-26',
     procedures: { '13122': ['procedure_mynumber_continued_use'] },
   },
+  {
+    // 2026-09-28: 大田区の保育ページが令和9年度版へ切り替わり、しおりの年度と様式名が変わった(人手承認)。
+    date: '2026-09-28',
+    procedures: { '13111': ['procedure_childcare_application'] },
+  },
 ];
 
 /** その手続きが再監査で進んだ日付(無ければ undefined = 承認日のまま)。 */

@@ -283,7 +283,9 @@ describe('八王子市 — スキーマと承認状態', () => {
       expect(s.municipalityCode, s.sourceId).toBe(HACHIOJI);
       expect(s.owner, s.sourceId).toBe('八王子市');
       expect(s.contentHash, s.sourceId).toMatch(/^[0-9a-f]{64}$/);
-      expect(s.lastVerifiedAt, s.sourceId).toBe('2026-09-25');
+      // 承認日(2026-09-25)以降であること。再監査で個別に進む(2026-09-28 に施設・国民年金の2件)。
+      expect(s.lastVerifiedAt, s.sourceId).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(s.lastVerifiedAt! >= '2026-09-25', s.sourceId).toBe(true);
       // 利用条件が不明なソースは公開しない(原則10)。八王子市の著作権ポリシーに従う旨と、
       // 2026-09-25 のユーザー決裁(原文は証跡としてのみ保持し公開リポジトリから除外)を記録する。
       expect(s.license, s.sourceId).toContain('市サイト著作権ポリシー');
