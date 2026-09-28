@@ -338,7 +338,7 @@
 ### 9.2 ルール入力
 
 - municipalityCode
-- townCode / postalCode（利用可能な場合）
+- （町丁目・郵便番号は受け取らない。必要になったときに用途・非保存・非ログを決めてから追加する。ADR-016、2026-09-29 決裁）
 - moveDate
 - originType
 - householdAgeBands
@@ -610,12 +610,12 @@ MVP対象3自治体は、Planのデータ監査で以下により決定する。
 
 ### 14.1 チェックリスト生成入力例
 
+`destination` は `municipalityCode` だけを受け付ける（郵便番号・町名は送ると 422。ADR-016、2026-09-29 決裁）。
+
 ```json
 {
   "destination": {
-    "municipalityCode": "131XX",
-    "postalCode": "0000000",
-    "town": "例町"
+    "municipalityCode": "131XX"
   },
   "moveDate": "2026-08-15",
   "originType": "outside_tokyo",
