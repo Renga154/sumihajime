@@ -40,7 +40,7 @@
         "東向島出張所"
       ],
       "contact": "墨田区役所 窓口課住民異動係 電話 03-5608-6102",
-      "sourceIds": ["src-13107-resident_registration-001", "src-13107-facilities-002"],
+      "sourceIds": ["src-13107-resident_registration-001"],
       "lastVerifiedAt": "2026-09-29T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
@@ -78,11 +78,7 @@
         "東向島出張所"
       ],
       "contact": "墨田区役所 窓口課住民異動係 電話 03-5608-6102",
-      "sourceIds": [
-        "src-13107-my_number-001",
-        "src-13107-resident_registration-001",
-        "src-13107-facilities-002"
-      ],
+      "sourceIds": ["src-13107-my_number-001", "src-13107-resident_registration-001"],
       "lastVerifiedAt": "2026-09-29T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
@@ -123,7 +119,7 @@
         "東向島出張所"
       ],
       "contact": "墨田区役所 国保年金課こくほ資格係 電話 03-5608-6121(住民異動による加入は窓口課住民異動係で対応)",
-      "sourceIds": ["src-13107-national_health_insurance-001", "src-13107-facilities-002"],
+      "sourceIds": ["src-13107-national_health_insurance-001"],
       "lastVerifiedAt": "2026-09-29T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
@@ -156,7 +152,7 @@
         "東向島出張所"
       ],
       "contact": "墨田区役所 国保年金課国民年金係 電話 03-5608-6130",
-      "sourceIds": ["src-13107-national_pension-001", "src-13107-facilities-002"],
+      "sourceIds": ["src-13107-national_pension-001"],
       "lastVerifiedAt": "2026-09-29T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
