@@ -1,128 +1,156 @@
 # スミハジメ 〜東京の新生活ToDo〜
 
-東京への転入者が、最低限の入力（転入先・引越し日・転入元・世帯構成・条件フラグ）から、
-**公式根拠と最終確認日つきの期限順ToDoチェックリスト**を得られる MVP です。
+東京へ引っ越す人が、**転入先・引越し日・世帯の条件**を選ぶだけで、必要な行政手続きを
+**期限順のToDo**にまとめるWebサービスです。すべてのタスクに、**自治体の公式ページと最終確認日**が付きます。
 
-- チェックリストの該当判定は決定論的ルールエンジン（LLM は判定に関与しない）
-- 全公開タスクは承認済みソース台帳に紐付く（来歴ファースト）
-- RAG は後付け可能な独立モジュール
-- Cloudflare ネイティブ構成（単一 Worker + 静的アセット）
+**https://app.sumihajime.workers.dev** （非公式サービス。登録・ログイン不要）
 
-要件の唯一の基準は [`REQUIREMENTS.md`](./REQUIREMENTS.md)、実装計画は
-[`docs/IMPLEMENTATION_PLAN.md`](./docs/IMPLEMENTATION_PLAN.md) を参照してください。
-プロジェクト固有ルールは [`CLAUDE.md`](./CLAUDE.md)、開発環境セットアップは
-[`CLAUDE_CODE_SETUP.md`](./CLAUDE_CODE_SETUP.md) にあります。
+![スマートフォンでの画面（トップ・チェックリスト・手続きの詳細）](docs/images/screens-mobile.webp)
+
+> A web service that turns "I'm moving to Tokyo" into a deadline-ordered to-do list of the
+> municipal procedures you actually need. Every task cites an approved official page with its
+> last-verified date; eligibility is decided by a deterministic rules engine, never by an LLM.
+
+## 何を解決するか
+
+引越しの手続きは、住民票・マイナンバーカード・国民健康保険・児童手当・保育・犬の登録……と自治体ごとに
+ページが分かれ、**期限も自治体によって違います**（子ども医療費助成の申請期限は、対応している
+24自治体だけで6通りに分かれます）。スミハジメは、選んだ自治体の公式情報だけを使って
+「自分に必要な手続き」と「いつまでに」を1画面に並べます。
+
+- **対応範囲**: 東京都の62市区町村のうち **24自治体**（23区＋八王子市）。未対応の自治体は「未対応」と明示し、
+  公式サイトへの導線だけを出します（対応済みに見せない）。
+- **公式根拠**: 承認済みの公式ソース **358件**。どのタスクにも出典URLと最終確認日が付きます。
+- **期限の計算**: 引越し日（と転出予定日）から、自治体ごとの起算日・日数で期限を計算します。
+  日数が公式ページに書かれていない手続きは、推測で埋めず「期限は要確認」と表示します。
+- **AIチャット（補助）**: 選んだ自治体の公式ページだけを根拠に答え、根拠がなければ答えずに公式ページへ案内します。
+
+![自治体ごとの期限のちがい（デスクトップ）](docs/images/differences-desktop.webp)
+
+## 設計の原則
+
+| 原則                           | 実装                                                                                                                                                                              |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 該当判定をLLMに任せない        | 手続きの該当・期限は純関数のルールエンジン（`packages/rules`）で決める。三値論理（該当／非該当／不明）で、不明は不明のまま出す                                                    |
+| すべての公開タスクに公式根拠   | 公開は人が承認したソースに紐づくデータだけ（[ADR-007](docs/adr/ADR-007-publish-unit-verified-only.md)）。承認前のデータは公開パイプラインのゲートで止まる                         |
+| 古くなった根拠を黙って出さない | 公式ページを毎時巡回し、更新を検知した手続きを自動で「再確認中」に落とす。解除できるのは人の再監査だけ（[ADR-014](docs/adr/ADR-014-scheduled-drift-check-and-auto-downgrade.md)） |
+| 自治体の情報を混ぜない         | 検索・チャット・画面のすべてで自治体コードを二重に強制。比較は専用の比較ページでだけ行う                                                                                          |
+| 個人情報を集めない・残さない   | 氏名・連絡先・生年月日・完全な住所は入力させない。入力はブラウザ内にだけ保存し、ログは許可リスト方式（`apps/api/src/log.ts`）                                                     |
+| 障害時もチェックリストは使える | チャットやAPIが落ちても、端末内の控えとチェックリスト・公式リンクは残る（[ADR-012](docs/adr/ADR-012-offline-checklist-copy-and-failure-isolation.md)）                            |
+
+## アーキテクチャ
+
+```mermaid
+flowchart LR
+  subgraph Browser[ブラウザ]
+    SPA[React SPA<br/>入力はlocalStorageのみ]
+  end
+  subgraph Worker[Cloudflare Workers（単一Worker）]
+    API[Hono API<br/>Zodで入出力を検証]
+    Rules[ルールエンジン<br/>純関数・三値論理]
+    RAG[RAG<br/>自治体スコープを二重強制]
+    Cron[毎時の巡回<br/>公式ページの更新検知]
+  end
+  D1[(D1<br/>公開データ・台帳・巡回状態)]
+  Vec[(Vectorize<br/>公式ページの埋め込み)]
+  LLM[OpenAI<br/>回答文の生成のみ]
+  Gov[自治体の公式ページ]
+
+  SPA -- 条件 --> API --> Rules
+  API --> D1
+  SPA -- 質問 --> RAG --> Vec
+  RAG --> LLM
+  Cron --> Gov
+  Cron --> D1
+
+  subgraph Repo[データパイプライン（リポジトリ内）]
+    Snap[原文スナップショット] --> Norm[正規化データ] --> Gate{承認ゲート} --> Pub[publish]
+  end
+  Pub --> D1
+```
+
+- **データの流れ**: 公式ページの原文を保存 → 手続き単位に正規化 → スキーマ検証 → **人が承認** → 公開。
+  取得原文・正規化データ・公開データを分け、出典・ライセンス・最終確認日を台帳
+  （[`docs/data-sources/registry.csv`](docs/data-sources/registry.csv)）の1行で追跡します。
+- **鮮度の維持**: Cron が毎時10ソースずつ公式ページを再取得し、ページ自身の「更新日」の変化を検知します。
+  検知した手続きは画面で「再確認中」になり、人が差分を読んで再承認するまで戻りません
+  （手順: [`docs/ops/reaudit.md`](docs/ops/reaudit.md)）。
+- **外形監視**: `/api/health` が DB・公開件数・巡回の停止を自己診断し、外部の監視が15分ごとに確認します
+  （[`docs/ops/monitoring.md`](docs/ops/monitoring.md)）。
+
+## 品質の根拠（2026-09-29 時点）
+
+| 観点                   | 結果                                                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 単体・統合テスト       | **2,589件**（ルールエンジン 1,416件を含む。Vitest）                                                                                         |
+| E2E                    | **87件**（Playwright。モバイル幅が主線。キーボード操作・タップ標的24px・CSP違反ゼロを含む）                                                 |
+| アクセシビリティ       | axe-core で全11画面 × モバイル/デスクトップの違反 **0件**。Lighthouse アクセシビリティ **100**                                              |
+| 性能（本番・モバイル） | Lighthouse 性能 **94〜96**、初回表示 約2秒、レイアウトのずれ（CLS）**0**（[ADR-015](docs/adr/ADR-015-system-fonts-and-route-splitting.md)） |
+| AIチャットの評価       | 186問を本番で評価。根拠のない断定 **0**・自治体混入 **0**・出典の自治体一致 **100%**（[最新レポート](docs/research/)）                      |
+| データの正確性         | 無作為抽出した25件（278項目）を公式ページと突き合わせ、見つかった誤り（閉所した出張所など）をすべて修正・再承認                             |
+| セキュリティ           | CSP（`unsafe-*` なし）・HSTS・COOP/CORP、入力サイズ上限、チャットの1日上限、回答中の非公式URLはリンクにしない                               |
 
 ## 技術スタック
 
-- pnpm monorepo / TypeScript（strict）
-- React + Vite SPA（`apps/web`）
-- Hono on Cloudflare Workers（静的アセット同居の単一 Worker、`apps/api`）
-- Zod / Vitest
-- Prettier + ESLint（flat config, typescript-eslint）
-
-## 前提
-
-- Node.js **22** 以上
-- pnpm **10** 以上（`corepack enable` で有効化推奨。`packageManager` にバージョン固定済み）
-
-```sh
-corepack enable
-```
-
-## セットアップ
-
-```sh
-pnpm install
-```
-
-## 主要コマンド
-
-| コマンド                                           | 内容                                                    |
-| -------------------------------------------------- | ------------------------------------------------------- |
-| `pnpm format`                                      | Prettier で整形                                         |
-| `pnpm format:check`                                | 整形チェック（CI）                                      |
-| `pnpm lint`                                        | ESLint                                                  |
-| `pnpm typecheck`                                   | 全パッケージの型チェック（再帰）                        |
-| `pnpm test`                                        | 全パッケージのテスト（再帰、Vitest。E2E は除外）        |
-| `pnpm test:e2e`                                    | E2E（Playwright。`pnpm --filter @tmn/e2e test` と同義） |
-| `pnpm --filter web dev`                            | Web SPA のローカル開発サーバ                            |
-| `pnpm --filter web build`                          | Web SPA を `apps/web/dist` へビルド                     |
-| `pnpm --filter api dev`                            | API Worker のローカル起動（wrangler dev）               |
-| `pnpm --filter api exec wrangler deploy --dry-run` | デプロイ構成の検証（dry-run）                           |
-
-## E2E テスト（Playwright + axe-core + 性能計測。T-017）
-
-ブラウザ依存のため **CI には組み込まず、ローカル/手動で実行**します（`ci.yml` では走りません）。
-`tests/e2e`（ワークスペースパッケージ `@tmn/e2e`）に基盤があります。
-
-**初回のみ** Chromium を取得します（webkit/firefox は不要）：
-
-```bash
-pnpm --filter @tmn/e2e exec playwright install chromium
-```
-
-実行：
-
-```bash
-pnpm --filter @tmn/e2e test      # = pnpm test:e2e
-```
-
-- テスト対象サーバーは **ポート 8788** の `wrangler dev`（`--local`）。8787 は使いません。
-- `playwright.config.ts` の `webServer` が **「ローカル D1 シード（3 自治体）→ `web` build →
-  `wrangler dev --port 8788`」** を自動実行し、テスト後に自動終了します
-  （既に 8788 が起動中なら再利用します）。手動で前提を整える場合は次を実行してください：
-
-  ```bash
-  pnpm --filter @tmn/publish exec tsx src/publish.ts   # ローカル D1 に 3 自治体をシード
-  pnpm --filter web build                              # SPA を apps/web/dist へ
-  ```
-
-- ビューポートは **モバイル(375×812)を主線**、デスクトップ(1280×800)は主要導線 1 本のみ。
-- チャット（`/api/chat`）は **Playwright の route interception で決定論的にモック**し、
-  実 OpenAI/Vectorize は叩きません。
-- カバー範囲: 主要導線（免責 5 項目→世田谷選択→入力→暫定生成→期限順→詳細→根拠カード）、
-  条件変更での増減、完了状態のリロード保持、未対応自治体（杉並）、RAG 正常/保留/無効時の劣化、
-  自治体切替（江東の学校・保育、新宿のごみ地区）、キーボード操作スモーク、
-  **axe-core による主要 5 画面の重大(critical/serious)違反 0 件**、
-  `POST /api/checklists` の p95（20 回、`< 2 秒`）と DOMContentLoaded の参考計測。
-
-HTML レポート（生成物は Git 管理外）：
-
-```bash
-pnpm --filter @tmn/e2e exec playwright show-report
-```
+- **フロントエンド**: React 18 + Vite（画面ごとのコード分割）、Tailwind CSS、React Router、MapLibre GL（地理院タイル）
+- **API**: Hono on Cloudflare Workers（静的アセットと同じ1つのWorker）、Zod
+- **データ**: Cloudflare D1（SQLite）、Vectorize、Cron Triggers
+- **AI**: OpenAI（埋め込みと回答文の生成のみ。判定には使わない）
+- **品質**: TypeScript strict（`noUncheckedIndexedAccess`）、Vitest、Testing Library、Playwright、axe-core、ESLint、Prettier
+- pnpm monorepo
 
 ## リポジトリ構成
 
 ```text
 apps/
-  web/        # React + Vite SPA
-  api/        # Hono Worker（静的アセット配信同居、wrangler.jsonc）
+  web/            React SPA
+  api/            Hono Worker（API・静的アセット配信・毎時の巡回）
 packages/
-  schemas/    # Zod スキーマ・API 契約（単一の真実）
-  domain/     # エンティティ型・カテゴリ定数・自治体コード
-  rules/      # 決定論的ルール評価器（純関数）+ 期限計算
-  rag/        # RAG モジュール（フラグで分離）
-  test-fixtures/
-data/         # 取得原文参照・正規化データ・RAG 評価
-scripts/      # ingest / validate / publish パイプライン
-docs/         # 実装計画・ADR・データソース台帳・調査メモ
-tests/e2e/    # Playwright + axe-core
+  schemas/        Zod スキーマ・API 契約（単一の定義）
+  rules/          ルールエンジン（純関数）と期限計算
+  rag/            検索・プロンプト・回答検証
+  drift/          公式ページの更新検知
+  domain/         Web と API で共有する定数（ルート・公式ホスト・日付）
+data/
+  sources/        取得原文のスナップショット（監査の証跡）
+  normalized/     手続き単位に正規化したデータ
+  evaluations/    AIチャットの評価データセット
+scripts/          取得・検証・再監査・公開・索引構築・評価
+docs/             ADR・運用手順・ソース台帳・調査記録
+tests/e2e/        Playwright + axe-core
 ```
 
-各ディレクトリの詳細は実装計画 §7 を参照。ドメインロジック（スキーマ・ルール実装）は
-後続タスク（T-002 以降）で追加します。
+## 開発
 
-## 重要な原則
+前提: Node.js 22 以上、pnpm 10 以上（`corepack enable`）。
 
-- まず 1 自治体の縦切りを完成させる
-- チェックリスト判定を LLM に任せない
-- 公式根拠と最終確認日を必須にする
-- 未対応範囲を隠さない
-- 個人情報を収集・ログ保存しない
+```sh
+pnpm install
+pnpm typecheck      # 全パッケージの型チェック
+pnpm test           # 単体・統合テスト（E2E を除く）
+pnpm lint
+pnpm format:check
+pnpm test:e2e       # E2E（初回のみ: pnpm --filter @tmn/e2e exec playwright install chromium）
+```
 
-## ライセンス / データ
+E2E は `wrangler dev --local`（ポート8788）に、ローカルD1へシードしたデータとビルド済みSPAを載せて実行します
+（`tests/e2e/playwright.config.ts` が自動で起動・終了します）。チャットはモックし、外部APIは呼びません。
 
-オープンデータの帰属表示は Sources ページで実装予定。手続き HTML 本文は転載せず、
-要約＋出典リンク＋最終確認日で扱います。
+`pnpm format`（リポジトリ全体の整形）は使わないでください。`data/sources/` の原文スナップショットは
+SHA-256 を台帳に記録しており、整形するとハッシュが変わります。変更したファイルだけを整形します。
+
+## ドキュメント
+
+- 要件: [`REQUIREMENTS.md`](REQUIREMENTS.md) ／ 実装計画: [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) ／ ロードマップ: [`docs/ROADMAP.md`](docs/ROADMAP.md)
+- 設計判断の記録: [`docs/adr/`](docs/adr/)
+- 運用: [巡回](docs/ops/drift-check.md)・[再監査](docs/ops/reaudit.md)・[外形監視](docs/ops/monitoring.md)
+- データの監査記録: [`docs/research/`](docs/research/)
+
+## ライセンス
+
+- **ソースコード**: MIT（[`LICENSE`](LICENSE)）
+- **データ**: 出典元の利用条件に従います（[`LICENSE-DATA.md`](LICENSE-DATA.md)）。手続きの本文は転載せず、
+  要約・出典リンク・最終確認日で扱います。オープンデータの帰属表示はサービス内の
+  「このサービスのデータについて」に掲載しています。
+
+本サービスは行政の公式サービスではありません。実際の手続きの前に、必ず各自治体の公式ページで最新情報をご確認ください。
