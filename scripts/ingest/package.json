@@ -18,6 +18,7 @@
     "reaudit": "tsx src/reaudit.ts"
   },
   "dependencies": {
+    "@tmn/domain": "workspace:*",
     "@tmn/drift": "workspace:*",
     "@tmn/publish": "workspace:*",
     "@tmn/schemas": "workspace:*"

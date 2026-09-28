@@ -1,4 +1,4 @@
-import { daysBetween } from './format';
+import { daysBetween, tokyoToday } from '@tmn/domain';
 
 /**
  * 引越し日の妥当範囲と「期限を過ぎている可能性」の判定。
@@ -14,15 +14,12 @@ import { daysBetween } from './format';
 /** 引越し日として受け付ける前後の年数。転入直後の利用者と、先の予定の両方を通す幅。 */
 export const MOVE_DATE_RANGE_YEARS = 1;
 
-/** 日本時間の「今日」を YYYY-MM-DD で返す。 */
+/**
+ * 日本時間の「今日」を YYYY-MM-DD で返す。
+ * 実体は @tmn/domain の tokyoToday(web/api/ingest/eval共通の単一実装)。
+ */
 export function todayInTokyo(now: Date = new Date()): string {
-  // en-CA は YYYY-MM-DD 形式。timeZone 指定で端末設定に依存しない。
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Tokyo',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(now);
+  return tokyoToday(now);
 }
 
 /** YYYY-MM-DD を years 年ずらす。うるう日(2/29)は JS の Date 準拠で 3/1 に送られる。 */

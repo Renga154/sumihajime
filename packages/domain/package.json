@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "Domain entity types, category constants, municipality codes. Implemented in T-002+.",
+  "description": "Domain entity types, category constants, municipality codes, and shared Asia/Tokyo date helpers.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

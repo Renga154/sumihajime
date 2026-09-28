@@ -8,6 +8,7 @@ import type {
   Priority,
   Weekday,
 } from '@tmn/schemas';
+import { daysBetween as domainDaysBetween } from '@tmn/domain';
 
 /**
  * なぜ: 行政用語・列挙値を利用者向け日本語ラベルへ変換する単一箇所(§15.3「行政用語に
@@ -172,15 +173,13 @@ export function formatDateTimeInTokyo(iso: string | undefined): string {
 }
 
 /**
- * なぜ: 期限までの残日数などの決定論的な算出に使う。YYYY-MM-DDをUTC正午基準で解釈し
- * タイムゾーン差の丸め誤差を避ける(CLAUDE.md §7 日付計算方針)。
- * 返り値 = (to - from) の日数。
+ * なぜ: 期限までの残日数などの決定論的な算出に使う。返り値 = (to - from) の日数。
+ * 実体は @tmn/domain の daysBetween(web/api/ingest/eval共通の単一実装。
+ * CLAUDE.md §7 日付計算方針)。この再エクスポートは既存の import 元(./format)を
+ * 変えずに済ませるための後方互換シム。
  */
 export function daysBetween(fromIso: string, toIso: string): number {
-  const from = Date.parse(`${fromIso.slice(0, 10)}T12:00:00Z`);
-  const to = Date.parse(`${toIso.slice(0, 10)}T12:00:00Z`);
-  if (Number.isNaN(from) || Number.isNaN(to)) return NaN;
-  return Math.round((to - from) / 86_400_000);
+  return domainDaysBetween(fromIso, toIso);
 }
 
 /** 第n週の配列(weekOfMonth)→「第1・3週」表記。空/未指定は「毎週」。 */

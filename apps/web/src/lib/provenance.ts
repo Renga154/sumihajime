@@ -1,5 +1,5 @@
 import type { SourceLedgerEntry } from '@tmn/schemas';
-import { daysBetween } from './format';
+import { daysBetween, tokyoToday } from '@tmn/domain';
 
 /**
  * なぜ: 来歴ダッシュボード(Wave3)の「鮮度サマリー」を決定論的に算出する純関数群。
@@ -8,15 +8,12 @@ import { daysBetween } from './format';
  * 判定ロジックは持たない(§4 UIとルールの分離)。
  */
 
-/** Asia/Tokyo の「今日」を YYYY-MM-DD で返す(鮮度計算の基準日。JST固定)。 */
+/**
+ * Asia/Tokyo の「今日」を YYYY-MM-DD で返す(鮮度計算の基準日。JST固定)。
+ * 実体は @tmn/domain の tokyoToday(web/api/ingest/eval共通の単一実装)。
+ */
 export function jstDateString(now: Date = new Date()): string {
-  // en-CA ロケールは YYYY-MM-DD 形式で安定して返す。timeZone指定でJSTの暦日を得る。
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Tokyo',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(now);
+  return tokyoToday(now);
 }
 
 export type FreshnessBucket = 'within7' | 'within30' | 'older';

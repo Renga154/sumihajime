@@ -174,6 +174,12 @@ importers:
 
   scripts/eval:
     dependencies:
+      '@tmn/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@tmn/publish':
+        specifier: workspace:*
+        version: link:../publish
       '@tmn/rag':
         specifier: workspace:*
         version: link:../../packages/rag
@@ -196,6 +202,9 @@ importers:
 
   scripts/ingest:
     dependencies:
+      '@tmn/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@tmn/drift':
         specifier: workspace:*
         version: link:../../packages/drift
@@ -240,6 +249,9 @@ importers:
       '@tmn/ingest':
         specifier: workspace:*
         version: link:../ingest
+      '@tmn/publish':
+        specifier: workspace:*
+        version: link:../publish
       '@tmn/rag':
         specifier: workspace:*
         version: link:../../packages/rag
