@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { httpsUrlSchema } from './url.js';
 
 /**
  * なぜ: REQUIREMENTS §12.6/§13.1/計画§8.1 municipalities テーブル。
@@ -21,7 +22,7 @@ export const municipalitySchema = z.strictObject({
   // なぜ: FR-021「未対応自治体でも公式サイトへの導線を必ず示す」。GET /api/municipalities と
   // POST /api/checklists の非対応エラーで公式トップURLを返すための追加的optionalフィールド
   // (T-006で追加。既存の {code,name,supported,note} を壊さない後方互換な拡張)。
-  officialUrl: z.url().optional(),
+  officialUrl: httpsUrlSchema.optional(),
 });
 export type Municipality = z.infer<typeof municipalitySchema>;
 

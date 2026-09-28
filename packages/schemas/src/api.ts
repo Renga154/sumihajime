@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { httpsUrlSchema } from './url.js';
 import { profileSchema } from './profile.js';
 import { driftKindSchema, generatedTaskSchema, taskSourceRefSchema } from './task.js';
 import { municipalityCodeSchema, municipalitySchema, coverageSchema } from './municipality.js';
@@ -245,7 +246,7 @@ export const chatCitationSchema = z.strictObject({
   sourceId: z.string().min(1),
   title: z.string().min(1),
   ownerOrganization: z.string().min(1),
-  url: z.url(),
+  url: httpsUrlSchema,
   lastVerifiedAt: z.iso.datetime(),
 });
 export type ChatCitation = z.infer<typeof chatCitationSchema>;
@@ -269,7 +270,7 @@ export const errorResponseSchema = z.strictObject({
     requestId: z.string().min(1).optional(),
     // なぜ: FR-021。未対応自治体などで「次の行動(公式サイトを見る)」を示すため、
     // 該当時のみ公式トップURLを添える追加的optionalフィールド(T-006で追加)。
-    officialUrl: z.url().optional(),
+    officialUrl: httpsUrlSchema.optional(),
   }),
 });
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;

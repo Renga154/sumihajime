@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { httpsUrlSchema } from './url.js';
 import { municipalityCodeSchema } from './municipality.js';
 
 /**
@@ -35,7 +36,7 @@ export const sourceSchema = z.strictObject({
   ownerOrganization: z.string().min(1),
   municipalityCode: municipalityCodeSchema.optional(),
   category: z.string().min(1),
-  sourceUrl: z.url(),
+  sourceUrl: httpsUrlSchema,
   sourceType: sourceTypeSchema,
   license: z.string().min(1),
   attributionText: z.string().min(1),

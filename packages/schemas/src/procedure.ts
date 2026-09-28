@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { httpsUrlSchema } from './url.js';
 import { municipalityCodeSchema } from './municipality.js';
 import { prioritySchema } from './rule.js';
 
@@ -48,7 +49,7 @@ export const procedureVersionSchema = z.strictObject({
   requiredDocuments: z.array(requiredDocumentSchema),
   channels: z.array(channelSchema),
   locations: z.array(z.string().min(1)).optional(),
-  onlineUrl: z.url().optional(),
+  onlineUrl: httpsUrlSchema.optional(),
   contact: z.string().optional(),
   sourceIds: z.array(z.string().min(1)).min(1),
   lastVerifiedAt: z.iso.datetime(),

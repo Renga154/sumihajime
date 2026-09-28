@@ -3,6 +3,7 @@
 // ドメインごとにファイルを分割し(profile/rule/procedure/source/task/api/municipality/
 // facility)、ここから再export する(T-002)。
 
+export * from './url.js';
 export * from './municipality.js';
 export * from './profile.js';
 export * from './rule.js';
