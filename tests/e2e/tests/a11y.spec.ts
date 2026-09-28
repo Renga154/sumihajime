@@ -77,9 +77,12 @@ test('a11y: AIの回答(本文中の公式リンク込み)に重大違反なし'
   await page.getByRole('button', { name: '質問する' }).click();
 
   // 回答本文のURLが <a href> として描画されている(ただの文字列ではない)。
-  const link = page.getByRole('link', { name: /www\.town\.hachijo\.tokyo\.jp/ });
+  const link = page.getByRole('link', { name: /^https:\/\/www\.city\.setagaya\.lg\.jp\/（/ });
   await expect(link).toBeVisible();
-  await expect(link).toHaveAttribute('href', 'https://www.town.hachijo.tokyo.jp/');
+  await expect(link).toHaveAttribute('href', 'https://www.city.setagaya.lg.jp/');
+  // 質問文から写り込んだ非公式URLは文字として見えるが、リンクにはならない。
+  await expect(page.getByText(/evil\.example\/login/)).toBeVisible();
+  await expect(page.getByRole('link', { name: /evil\.example/ })).toHaveCount(0);
   await assertNoSerious(page);
 });
 

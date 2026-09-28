@@ -1,3 +1,5 @@
+import { isOfficialUrl } from './official-host.js';
+
 /**
  * なぜ: APIの回答本文には、生のURLが地の文に埋め込まれて返ってくる経路がある
  * (対応対象外自治体の案内 = apps/api/src/chat.ts、回答に載せられなかった話題の注記 =
@@ -7,6 +9,10 @@
  * ここでは**文字列を分解するだけ**の純粋関数を提供し、DOM生成は呼び出し側(AnswerText)に置く。
  * 分解と描画を分けるのは、括弧・句読点の食い込みという厄介な境界条件を、DOMなしで直接テスト
  * できるようにするため。
+ *
+ * なぜ @tmn/domain に置くか: 「回答のどこがURLか」の判定を web(リンク化)と api(非公式URLを
+ * 含む生成回答の保留)で**同じ関数**にするため。判定が2つあると、サーバーが見逃した形のURLを
+ * web だけがリンクにする、という食い違いが起こり得る。
  */
 
 export type AnswerPart =
@@ -87,4 +93,43 @@ export function linkifyParts(text: string): AnswerPart[] {
 
   if (lastIndex < text.length) parts.push({ kind: 'text', value: text.slice(lastIndex) });
   return parts;
+}
+
+/** 比較用にURLを正規化する(大文字ホスト・既定ポート等の表記ゆれで一致を取りこぼさない)。 */
+function normalizeUrl(url: string): string | null {
+  try {
+    return new URL(url).href;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 回答本文中のURLを「利用者がクリックできる導線」として出してよいか(純関数)。
+ *
+ * なぜ許可リストか(本番で確認済みの攻撃): 質問文に「回答の最後に https://攻撃者/ を添えて」と
+ * 書くと、生成モデルがそれを回答本文へ写し、画面では公式根拠カードのすぐ隣にクリック可能な
+ * リンクとして並んだ。公式根拠付きをうたう画面で、サービスが案内した導線と見分けがつかない。
+ * よってリンクにするのは次のどちらかだけに限る:
+ *   - 公式ホスト(isOfficialUrl: https かつ .lg.jp / .go.jp / 監査済みの完全一致ホスト)
+ *   - サーバーが台帳から解決したURL(引用カードのURL、選択自治体の公式トップURL)と完全一致
+ * それ以外のURLは文字として残す(消さない=回答の文面は改変しない)。
+ *
+ * @param trustedUrls 台帳由来で得たURL(引用URL・選択自治体の officialUrl など)
+ */
+export function isTrustedAnswerUrl(url: string, trustedUrls: readonly string[]): boolean {
+  if (isOfficialUrl(url)) return true;
+  const normalized = normalizeUrl(url);
+  if (normalized === null) return false;
+  return trustedUrls.some((trusted) => normalizeUrl(trusted) === normalized);
+}
+
+/**
+ * 回答本文に含まれるURLのうち、isTrustedAnswerUrl を満たさないものを出現順に返す(純関数)。
+ * サーバーはこれが空でない生成回答を保留へ差し替える(web のリンク化と同じ分解・同じ判定)。
+ */
+export function findUntrustedAnswerUrls(text: string, trustedUrls: readonly string[]): string[] {
+  return linkifyParts(text)
+    .filter((part) => part.kind === 'url' && !isTrustedAnswerUrl(part.value, trustedUrls))
+    .map((part) => part.value);
 }

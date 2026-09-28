@@ -72,7 +72,9 @@ for (const vp of VIEWPORTS) {
       // 折り返しを含む実寸で24pxを満たすかは実ブラウザでしか測れない。
       await page.getByLabel(/質問を入力/).fill('粗大ごみの出し方は？');
       await page.getByRole('button', { name: '質問する' }).click();
-      await expect(page.getByRole('link', { name: /www\.town\.hachijo\.tokyo\.jp/ })).toBeVisible();
+      await expect(
+        page.getByRole('link', { name: /^https:\/\/www\.city\.setagaya\.lg\.jp\/（/ }),
+      ).toBeVisible();
       await expectNoSmallTargets(page, 'チェックリスト(AI回答の本文リンク込み)');
 
       await page.goto('/procedures/procedure_resident_registration');

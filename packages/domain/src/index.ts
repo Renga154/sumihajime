@@ -18,3 +18,9 @@ export {
   isOfficialHost,
   isOfficialUrl,
 } from './official-host.js';
+export {
+  findUntrustedAnswerUrls,
+  isTrustedAnswerUrl,
+  linkifyParts,
+  type AnswerPart,
+} from './linkify.js';

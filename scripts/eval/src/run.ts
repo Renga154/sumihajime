@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PROMPT_VERSION } from '@tmn/rag';
 import { chatResponseSchema } from '@tmn/schemas';
 import { RAG_MUNICIPALITIES, buildChunkManifest, loadApprovedHtmlSources } from '@tmn/rag-index';
 import { assertDatasetShape, parseDataset } from './cases.js';
@@ -180,7 +181,9 @@ function buildMeta(endpoint: string, spacingMs: number): RunMeta {
     approvedHtmlSourceTotal,
     indexedVectorCount,
     ruleVersion: readRuleVersions(),
-    promptVersion: 'SYSTEM_PROMPT (packages/rag/src/prompt.ts, fixed)',
+    // なぜ定数を読むか: 以前は固定文字列で、プロンプトを変えても評価レポートから版を区別できなかった。
+    // 注意: 値はこのリポジトリの版。評価先(本番)へ同じ版がデプロイ済みかは実行者が確かめる。
+    promptVersion: `${PROMPT_VERSION} (packages/rag/src/prompt.ts)`,
   };
 }
 
