@@ -5,9 +5,10 @@
     "types": ["node"],
     "moduleResolution": "Bundler",
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "declaration": false,
     "sourceMap": false,
     "verbatimModuleSyntax": false
   },
-  "include": ["**/*.ts", "playwright.config.ts"]
+  "include": ["**/*.ts", "**/*.mts", "playwright.config.ts"]
 }
