@@ -30,6 +30,7 @@ import {
  */
 
 import type { VectorizeQueryable } from '@tmn/rag';
+import { tokyoDate } from './tokyo-date.js';
 
 export interface Bindings {
   DB: D1Database;
@@ -50,6 +51,11 @@ export interface Bindings {
   RAG_MIN_SCORE?: string;
   /** ADR-014: 1回の定期巡回で再取得する承認済みソース件数(既定10。Workers Free の枠内)。 */
   DRIFT_BATCH_SIZE?: string;
+  /**
+   * 生成(OpenAI)を伴うチャットの全体1日上限(日本時間の暦日ごと)。既定1500。
+   * 不正値は既定値に倒す(config.ts parseChatDailyLimit)。
+   */
+  CHAT_DAILY_LIMIT?: string;
 }
 
 type Row = Record<string, unknown>;
@@ -435,8 +441,42 @@ const ACTIVE_DRIFT_CONDITION =
 
 export interface DriftMark {
   status: 'changed' | 'unreachable';
-  /** 検知日(YYYY-MM-DD)。根拠カードに出す。 */
+  /** 検知日(日本時間の YYYY-MM-DD)。根拠カードに出す。 */
   detectedOn: string;
+}
+
+/**
+ * source_drift.detected_at(UTC の ISO 時刻。drift.ts が記録)→ 利用者に見せる検知日。
+ *
+ * なぜ slice(0, 10) ではないか: それは UTC の日付で、日本時間の 0:00〜8:59 に検知したものが
+ * 前日の日付で根拠カードに出る(毎時巡回のうち9回ぶん)。利用者の暦(Asia/Tokyo)で表示する。
+ * 記録は UTC のまま残す(時刻の比較・並べ替えはUTCのほうが扱いやすい)。
+ */
+export function detectedOnTokyo(detectedAt: string | undefined): string | null {
+  if (!detectedAt) return null;
+  const at = new Date(detectedAt);
+  if (Number.isNaN(at.getTime())) return null;
+  return tokyoDate(at);
+}
+
+/**
+ * チャットの全体1日上限(migrations/0006_chat_usage.sql)の計数を1つ進め、加算後の件数を返す。
+ * 1文の UPSERT … RETURNING なので、同時要求でも取りこぼし・二重計上がない(D1 は文単位で直列)。
+ * 失敗は呼び出し側へ投げる(呼び出し側がチャットだけを閉じる側に倒す)。
+ */
+export async function incrementChatUsage(db: D1Database, day: string): Promise<number> {
+  const row = await db
+    .prepare(
+      'INSERT INTO chat_usage (day, count) VALUES (?, 1) ' +
+        'ON CONFLICT(day) DO UPDATE SET count = count + 1 RETURNING count',
+    )
+    .bind(day)
+    .first<Row>();
+  const count = Number(row?.count);
+  if (!Number.isInteger(count) || count < 1) {
+    throw new Error('chat_usage returned no count');
+  }
+  return count;
 }
 
 /**
@@ -472,10 +512,10 @@ export async function getActiveDriftMarks(
   for (const row of rows) {
     const status = asString(row.status);
     if (status !== 'changed' && status !== 'unreachable') continue;
-    const detectedOn = optString(row.detected_at)?.slice(0, 10);
-    // 検知日が無い(遷移記録の欠落)行はカードに日付を出せないため、検知日を巡回日の代わりに
-    // 推測しない=マークとして扱わない。detected_at は遷移時に必ず入るので通常は起きない。
-    if (!detectedOn || !/^\d{4}-\d{2}-\d{2}$/.test(detectedOn)) continue;
+    // 検知日が無い(遷移記録の欠落)行・読めない行はカードに日付を出せないため、検知日を巡回日の
+    // 代わりに推測しない=マークとして扱わない。detected_at は遷移時に必ず入るので通常は起きない。
+    const detectedOn = detectedOnTokyo(optString(row.detected_at));
+    if (!detectedOn) continue;
     map.set(asString(row.source_id), { status, detectedOn });
   }
   return map;

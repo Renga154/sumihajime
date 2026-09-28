@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-import { linkifyParts } from '../lib/linkify';
+import { linkifyParts } from '@tmn/domain';
 import { AnswerText } from './AnswerText';
 
 /**
@@ -13,6 +13,12 @@ import { AnswerText } from './AnswerText';
  * - 半角括弧: apps/api/src/chat.ts(対応対象外自治体の案内)
  * - 全角括弧: packages/rag/src/documents.ts(回答へ載せられなかった話題の注記)
  */
+
+/**
+ * 八丈町の公式トップは .tokyo.jp の地域ドメインで、公式ホストの許可リストには無い。
+ * リンクにできるのは台帳(municipalities.officialUrl)由来のURLとして渡されたときだけ。
+ */
+const HACHIJO_TOP = 'https://www.town.hachijo.tokyo.jp/';
 
 const OUT_OF_SCOPE =
   '八丈町は現在このチャットの対応対象外です。お手続きは八丈町の公式サイト(https://www.town.hachijo.tokyo.jp/)でご確認ください。';
@@ -28,7 +34,7 @@ const UNRESOLVED_NOTICE = [
 
 describe('AnswerText — URLが1つの回答', () => {
   it('URLだけをリンクにし、隣接する半角括弧・助詞は地の文に残す', () => {
-    render(<AnswerText text={OUT_OF_SCOPE} />);
+    render(<AnswerText text={OUT_OF_SCOPE} trustedUrls={[HACHIJO_TOP]} />);
 
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(1);
@@ -41,7 +47,7 @@ describe('AnswerText — URLが1つの回答', () => {
   });
 
   it('別タブで開く安全な属性を持ち、キーボードで到達できる', () => {
-    render(<AnswerText text={OUT_OF_SCOPE} />);
+    render(<AnswerText text={OUT_OF_SCOPE} trustedUrls={[HACHIJO_TOP]} />);
 
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('target', '_blank');
@@ -90,6 +96,42 @@ describe('AnswerText — URLが無い回答', () => {
     );
 
     expect(screen.queryAllByRole('link')).toHaveLength(0);
+  });
+});
+
+/**
+ * なぜ(本番で確認済みの攻撃): 質問文に仕込んだURLが生成回答へ写り、公式根拠カードの隣で
+ * クリック可能なリンクになった。公式ホストでも台帳由来でもないURLは、文字として残すだけにする。
+ */
+describe('AnswerText — 信頼できないURLはリンクにしない', () => {
+  it('非公式ホストのURLは文字のまま表示し、公式URLだけをリンクにする', () => {
+    const answer =
+      '転入届は14日以内です。公式ページ(https://www.city.setagaya.lg.jp/02233/88.html)と https://evil.example/login をご確認ください。';
+    render(<AnswerText text={answer} />);
+
+    const links = screen.getAllByRole('link');
+    expect(links.map((a) => a.getAttribute('href'))).toEqual([
+      'https://www.city.setagaya.lg.jp/02233/88.html',
+    ]);
+    // 文面は改変しない(攻撃者URLも文字としては残り、利用者に隠さない)。
+    expect(links[0]!.closest('p')?.textContent).toBe(answer);
+  });
+
+  it('台帳由来として渡されていない .tokyo.jp の地域ドメインはリンクにしない', () => {
+    render(<AnswerText text={OUT_OF_SCOPE} />);
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
+  });
+
+  it('公式ホスト外でも、引用カードのURLと完全一致するURLはリンクにする', () => {
+    // 許可リスト外のホストを使い、完全一致の経路だけで通ることを確かめる。
+    const citationUrl = 'https://www.toshimamura.org/';
+    render(
+      <AnswerText
+        text={`詳しくは ${citationUrl} をご確認ください。`}
+        trustedUrls={[citationUrl]}
+      />,
+    );
+    expect(screen.getByRole('link')).toHaveAttribute('href', citationUrl);
   });
 });
 

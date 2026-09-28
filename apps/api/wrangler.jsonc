@@ -57,6 +57,9 @@
     // 外部サブリクエスト50(リダイレクト込み)・CPU 10ms のため、10件を直列に取る
     // (332件は毎時10件で約1.4日で一巡)。
     "DRIFT_BATCH_SIZE": "10",
+    // 生成(OpenAI)を伴うチャットの全体1日上限(日本時間の暦日ごと。migrations/0006_chat_usage.sql)。
+    // 超えると /api/chat は 429(必要書類の質問・チェックリストは影響なし)。"0" で当日の生成を止められる。
+    "CHAT_DAILY_LIMIT": "1500",
   },
   // ADR-014: 公式ソースの定期巡回(src/drift.ts scheduled)。毎時0分。Free の Cron 上限は5本。
   // triggers は env に継承される鍵だが、bindings/vars と同じく env.odh にも明示して読みやすくする。
@@ -99,6 +102,8 @@
         "RAG_MIN_SCORE": "0.30",
         // ADR-014: 正典と同じ値(Free の枠: サブリクエスト50・CPU 10ms)。
         "DRIFT_BATCH_SIZE": "10",
+        // 正典と同じ1日上限(ミラーの D1 で独立に数える)。
+        "CHAT_DAILY_LIMIT": "1500",
       },
       // ADR-014: 正典と同じ毎時巡回(ミラーでも source_drift は環境ごとの D1 に独立して持つ)。
       "triggers": {

@@ -82,7 +82,6 @@ const SHINAGAWA = '13109';
 
 function profile(overrides: {
   municipalityCode?: string;
-  town?: string;
   originType?: Profile['originType'];
   memberCount?: number;
   ageBands?: Profile['household']['ageBands'];
@@ -91,7 +90,6 @@ function profile(overrides: {
   return {
     destination: {
       municipalityCode: overrides.municipalityCode ?? SHINAGAWA,
-      town: overrides.town ?? '大井',
     },
     moveDate: '2026-08-01',
     originType: overrides.originType ?? 'outside_tokyo',
@@ -310,7 +308,6 @@ describe('Shinagawa (13109) — 自治体差分の実証(他区の値を混入�
   const withCard = profile({ flags: { hasMyNumberCard: true } });
   const setagayaWithCard = profile({
     municipalityCode: '13112',
-    town: '世田谷4丁目',
     flags: { hasMyNumberCard: true },
   });
 
@@ -335,11 +332,10 @@ describe('Shinagawa (13109) — 自治体差分の実証(他区の値を混入�
   });
 
   it('子ども医療費の遡及: 品川=6カ月(3か月/15日を混入させない) / 世田谷=3か月', () => {
-    const family = (code: string, town: string, rs: RuleSet) =>
+    const family = (code: string, rs: RuleSet) =>
       outcomeFor(
         profile({
           municipalityCode: code,
-          town,
           memberCount: 3,
           ageBands: ['elementary', 'adult'],
           flags: { hasMyNumberCard: true, needsNationalPension: false },
@@ -347,8 +343,8 @@ describe('Shinagawa (13109) — 自治体差分の実証(他区の値を混入�
         rs,
         'procedure_child_medical',
       );
-    const shinagawa = family('13109', '大井', shinagawaRuleSet);
-    const setagaya = family('13112', '世田谷4丁目', setagayaRuleSet);
+    const shinagawa = family('13109', shinagawaRuleSet);
+    const setagaya = family('13112', setagayaRuleSet);
     expect(shinagawa.dueDescription).toContain('6カ月');
     expect(shinagawa.dueDescription).not.toContain('3か月');
     expect(shinagawa.dueDescription).not.toContain('3ヶ月');

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { httpsUrlSchema } from './url.js';
 import { requiredDocumentSchema, channelSchema, dataStatusSchema } from './procedure.js';
 import { prioritySchema, applicabilitySchema } from './rule.js';
 
@@ -20,7 +21,7 @@ export type DriftKind = z.infer<typeof driftKindSchema>;
 export const taskSourceRefSchema = z.strictObject({
   sourceId: z.string().min(1),
   title: z.string().min(1),
-  url: z.url(),
+  url: httpsUrlSchema,
   lastVerifiedAt: z.iso.datetime(),
   // ADR-014: 巡回がこのソースの揺らぎを検知していれば、検知日(YYYY-MM-DD)と種類を添える
   // (根拠カードに検知日を出す)。未検知なら両方とも無い(後方互換な追加的optional)。

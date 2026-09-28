@@ -80,7 +80,7 @@ function profile(overrides: {
   flags?: Partial<Profile['flags']>;
 }): Profile {
   return {
-    destination: { municipalityCode: MUNICIPALITY, town: '世田谷4丁目' },
+    destination: { municipalityCode: MUNICIPALITY },
     moveDate: '2026-08-01',
     originType: overrides.originType ?? 'outside_tokyo',
     household: {

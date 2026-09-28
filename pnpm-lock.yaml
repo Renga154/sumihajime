@@ -136,7 +136,11 @@ importers:
 
   packages/domain: {}
 
-  packages/drift: {}
+  packages/drift:
+    dependencies:
+      '@tmn/domain':
+        specifier: workspace:*
+        version: link:../domain
 
   packages/rag:
     devDependencies:

@@ -12,3 +12,15 @@ export {
   type SpaRoutePath,
 } from './routes.js';
 export { BROWSER_EXTERNAL_ORIGINS, GSI_STD_TILE_URL, GSI_TILE_ORIGIN } from './external-origins.js';
+export {
+  ALLOWED_HOST_EXACT,
+  ALLOWED_HOST_SUFFIXES,
+  isOfficialHost,
+  isOfficialUrl,
+} from './official-host.js';
+export {
+  findUntrustedAnswerUrls,
+  isTrustedAnswerUrl,
+  linkifyParts,
+  type AnswerPart,
+} from './linkify.js';

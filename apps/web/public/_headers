@@ -16,6 +16,9 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
   Permissions-Policy: accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
 
 # なぜ(独立点検 P2-8): /assets/* は Vite が内容ハッシュ付きのファイル名で出力する不変資産
 # だが、既定では `max-age=0, must-revalidate` が付き、ページ遷移のたびに JS/CSS/フォントへ

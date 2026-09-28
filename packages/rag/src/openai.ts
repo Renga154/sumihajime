@@ -61,6 +61,14 @@ export async function embedText(text: string, model: string, cfg: OpenAIConfig):
   return vec;
 }
 
+/**
+ * 生成トークンの上限。なぜ: 未指定だとモデル既定の上限まで生成でき、質問文で「長く書け」と
+ * 指示されれば1件あたりの費用が青天井になる。実回答(端的な回答+条件・注意+SOURCES行)は
+ * 評価データで数百トークンに収まっており、800 はその余裕を見た値。上限で切れた回答は
+ * SOURCES 行を失うため、出力検証(引用なし→保留)で自然に保留へ倒れる。
+ */
+export const CHAT_MAX_TOKENS = 800;
+
 /** チャット補完 → 応答テキスト。temperature=0 で決定論寄りに。 */
 export async function chatComplete(
   messages: ChatMessage[],
@@ -73,7 +81,7 @@ export async function chatComplete(
     res = await f(endpoint(cfg.baseURL, 'chat/completions'), {
       method: 'POST',
       headers: authHeaders(cfg),
-      body: JSON.stringify({ model, messages, temperature: 0 }),
+      body: JSON.stringify({ model, messages, temperature: 0, max_tokens: CHAT_MAX_TOKENS }),
       signal: cfg.signal,
     });
   } catch (e) {

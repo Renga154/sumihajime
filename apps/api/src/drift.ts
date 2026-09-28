@@ -9,6 +9,7 @@ import {
 } from '@tmn/drift';
 import type { Bindings } from './db.js';
 import { logEvent } from './log.js';
+import { parseDriftBatchSize } from './config.js';
 
 /**
  * 定期巡回(ADR-014): 承認済み公式ソースを少量ずつ再取得し、到達性とページ自身の「更新日」
@@ -29,6 +30,97 @@ export const DRIFT_USER_AGENT =
 const FETCH_TIMEOUT_MS = 15_000;
 /** charset 宣言を探す先頭バイト数(<head> 内の meta は通常ここに収まる)。 */
 const CHARSET_SNIFF_BYTES = 4096;
+
+/**
+ * 辿るリダイレクトの最大ホップ数。
+ * なぜ 4 か: Workers Free の外部サブリクエストは1実行50で、各ホップが1件に数える。
+ * 1回10件(DRIFT_BATCH_SIZE)× (最初の要求1 + 転送4) = 50 で枠にちょうど収まる。
+ * 自治体サイトの転送は実測で www 付け外し・https 化・末尾スラッシュの1〜2段が普通。
+ */
+export const MAX_REDIRECT_HOPS = 4;
+
+/**
+ * 本文の読み取り上限(バイト)。
+ * なぜ: 公式ページでも巨大ファイル(PDF 誤登録、全件の xlsx など)を全部メモリへ読むと
+ * Worker のメモリ上限(128MB)と CPU 枠を圧迫し、同じ実行の他のソースまで巻き添えにする。
+ * 超えたら読むのをやめて検証不能として記録する(推測しない)。
+ */
+export const MAX_BODY_BYTES = 5 * 1024 * 1024;
+
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
+type FollowResult =
+  | { kind: 'response'; res: Response; finalUrl: string }
+  | { kind: 'rejected'; reason: 'redirect_not_official' | 'too_many_redirects' };
+
+/**
+ * リダイレクトを手動で辿る。各ホップの転送先が公式ホストでなければ、その先へは要求を送らない。
+ *
+ * なぜ redirect: 'follow' をやめたか: 自動追従では、公式ページが第三者サイトへ転送されても
+ * Worker がその先へ要求を送り本文まで読んでいた。転送先はページ側の設定次第で任意に変わり得る
+ * (乗っ取られたページ・期限切れドメインの再取得など)。非公式ホストの中身は根拠の判定に
+ * 使わない(原則5)ので、要求自体を送らないのが筋。
+ */
+async function fetchFollowingOfficialRedirects(
+  url: string,
+  opts: DriftRunOptions,
+  init: { headers: Record<string, string>; signal: AbortSignal },
+): Promise<FollowResult> {
+  const doFetch = opts.fetchImpl;
+  let current = url;
+  for (let hop = 0; ; hop += 1) {
+    const res = await doFetch(current, { ...init, redirect: 'manual' });
+    const location = res.headers.get('location');
+    if (!REDIRECT_STATUSES.has(res.status) || location === null) {
+      return { kind: 'response', res, finalUrl: current };
+    }
+    // 転送応答の本文は使わない。接続を早く返すために捨てる。
+    await res.body?.cancel().catch(() => undefined);
+    if (hop >= MAX_REDIRECT_HOPS) return { kind: 'rejected', reason: 'too_many_redirects' };
+    let next: string;
+    try {
+      next = new URL(location, current).href;
+    } catch {
+      return { kind: 'rejected', reason: 'redirect_not_official' };
+    }
+    if (!isOfficialUrl(next)) return { kind: 'rejected', reason: 'redirect_not_official' };
+    current = next;
+  }
+}
+
+/**
+ * 本文を上限付きで読む。上限を超えたら読むのをやめて null を返す。
+ * Content-Length が上限を超えると分かっていれば最初から読まない(嘘の申告もあり得るので、
+ * 読みながら数える側が本当の防御)。
+ */
+export async function readBodyCapped(res: Response, maxBytes: number): Promise<ArrayBuffer | null> {
+  const declared = Number(res.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    await res.body?.cancel().catch(() => undefined);
+    return null;
+  }
+  if (!res.body) return new ArrayBuffer(0);
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      return null;
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return out.buffer;
+}
 
 export interface DriftRunOptions {
   now: Date;
@@ -97,17 +189,17 @@ async function observe(
     };
   }
 
-  // なぜローカル変数へ取り出すか: `opts.fetchImpl(...)` と書くと this=opts で呼ばれ、workerd の
-  // グローバル fetch は "Illegal invocation" を投げる(ローカル検証で全件 network_error になった)。
-  const doFetch = opts.fetchImpl;
-  let res: Response;
+  // なぜ fetchImpl を関数内でローカル変数へ取り出すか: `opts.fetchImpl(...)` と書くと this=opts で
+  // 呼ばれ、workerd のグローバル fetch は "Illegal invocation" を投げる(ローカル検証で全件
+  // network_error になった)。fetchFollowingOfficialRedirects が取り出して呼ぶ。
+  let followed: FollowResult;
   try {
-    res = await doFetch(row.source_url, {
-      redirect: 'follow',
+    followed = await fetchFollowingOfficialRedirects(row.source_url, opts, {
       headers: {
         'User-Agent': opts.userAgent ?? DRIFT_USER_AGENT,
         Accept: 'text/html,application/xhtml+xml,text/csv,application/octet-stream;q=0.9,*/*;q=0.8',
       },
+      // 全ホップ合計の制限時間(転送を重ねても1件あたり15秒を超えない)。
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
   } catch {
@@ -124,9 +216,23 @@ async function observe(
     };
   }
 
+  if (followed.kind === 'rejected') {
+    // 非公式ホストへの転送・転送の重ねすぎ。転送先へは要求を送っていない(URL はログにも出さない)。
+    return {
+      ...none,
+      verdict: classifyCheck({
+        sourceType: row.source_type,
+        fetch: { redirectRejected: followed.reason },
+        baseline: {},
+        current: {},
+        previousConsecutiveFailures: previousFailures,
+      }),
+    };
+  }
+
+  const { res, finalUrl } = followed;
   const contentType = res.headers.get('content-type');
   const lastModified = res.headers.get('last-modified');
-  const finalUrl = res.url || row.source_url;
   const base = {
     ok: res.ok,
     status: res.status,
@@ -137,8 +243,8 @@ async function observe(
   };
 
   if (row.source_type === 'csv' || row.source_type === 'xlsx') {
-    const bytes = res.ok ? await res.arrayBuffer() : new ArrayBuffer(0);
-    const contentHash = res.ok ? await sha256HexWeb(bytes) : null;
+    const bytes = res.ok ? await readBodyCapped(res, MAX_BODY_BYTES) : new ArrayBuffer(0);
+    const contentHash = res.ok && bytes !== null ? await sha256HexWeb(bytes) : null;
     return {
       currentPageUpdatedOn: null,
       httpStatus: res.status,
@@ -146,7 +252,7 @@ async function observe(
       lastModified,
       verdict: classifyCheck({
         sourceType: row.source_type,
-        fetch: base,
+        fetch: { ...base, ...(bytes === null ? { bodyTooLarge: true } : {}) },
         baseline: { contentHash: row.content_hash },
         current: { contentHash },
         previousConsecutiveFailures: previousFailures,
@@ -157,13 +263,21 @@ async function observe(
   // HTML: 本文は text/html(または content-type 無し)のときだけ読む。
   let text = '';
   let declaredCharset: string | undefined;
+  let bodyTooLarge = false;
   if (res.ok && (!contentType || /text\/html|application\/xhtml/i.test(contentType))) {
-    const buf = await res.arrayBuffer();
-    // 既定(非 fatal)の UTF-8 デコーダ。化けた文字は U+FFFD になるだけで例外にしない。
-    const decoder = new TextDecoder();
-    const head = decoder.decode(buf.slice(0, CHARSET_SNIFF_BYTES));
-    declaredCharset = detectDeclaredCharset(contentType, head);
-    text = decoder.decode(buf);
+    const buf = await readBodyCapped(res, MAX_BODY_BYTES);
+    if (buf === null) {
+      bodyTooLarge = true;
+    } else {
+      // 既定(非 fatal)の UTF-8 デコーダ。化けた文字は U+FFFD になるだけで例外にしない。
+      const decoder = new TextDecoder();
+      const head = decoder.decode(buf.slice(0, CHARSET_SNIFF_BYTES));
+      declaredCharset = detectDeclaredCharset(contentType, head);
+      text = decoder.decode(buf);
+    }
+  } else {
+    // 読まない本文は捨てて接続を返す。
+    await res.body?.cancel().catch(() => undefined);
   }
   const currentPageUpdatedOn = text ? extractPageUpdatedOn(text) : null;
   return {
@@ -173,7 +287,11 @@ async function observe(
     lastModified,
     verdict: classifyCheck({
       sourceType: row.source_type,
-      fetch: { ...base, ...(declaredCharset ? { declaredCharset } : {}) },
+      fetch: {
+        ...base,
+        ...(declaredCharset ? { declaredCharset } : {}),
+        ...(bodyTooLarge ? { bodyTooLarge: true } : {}),
+      },
       baseline: {
         pageUpdatedOn: row.snapshot_page_updated_on,
         lastModified: row.d_baseline_last_modified,
@@ -331,7 +449,8 @@ export const scheduled: ExportedHandlerScheduledHandler<Bindings> = (_event, env
       now: new Date(),
       // グローバル fetch をそのまま渡さずラップする(this の取り違えで Illegal invocation にしない)。
       fetchImpl: (input, init) => fetch(input, init),
-      batchSize: Number(env.DRIFT_BATCH_SIZE ?? 10),
+      // 以前の Number(...) は空文字・誤記で NaN になり、SQL の LIMIT に NaN が入っていた。
+      batchSize: parseDriftBatchSize(env.DRIFT_BATCH_SIZE),
     }),
   );
 };

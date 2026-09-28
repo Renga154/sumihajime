@@ -66,10 +66,9 @@ const parseFacilities = () => facilitiesRaw.facilities.map((x) => facilitySchema
 
 const OTA = '13111';
 
-/** 大田(13111)固定のプロフィールを組み立てる。town は収集曜日データ非依存(蒲田を使用)。 */
+/** 大田(13111)固定のプロフィールを組み立てる。 */
 function profile(overrides: {
   municipalityCode?: string;
-  town?: string;
   originType?: Profile['originType'];
   memberCount?: number;
   ageBands?: Profile['household']['ageBands'];
@@ -78,7 +77,6 @@ function profile(overrides: {
   return {
     destination: {
       municipalityCode: overrides.municipalityCode ?? OTA,
-      town: overrides.town ?? '蒲田',
     },
     moveDate: '2026-08-01',
     originType: overrides.originType ?? 'outside_tokyo',
@@ -280,7 +278,7 @@ describe('Ota (13111) — 自治体差分の実証(デモの根拠)', () => {
     // 90日(転入届日起算)は算定できないが、14日は引越し日から算定できる。
     const withCard = { flags: { hasMyNumberCard: true } };
     const ota = outcomeFor(
-      profile({ municipalityCode: OTA, town: '蒲田', ...withCard }),
+      profile({ municipalityCode: OTA, ...withCard }),
       otaRuleSet,
       'procedure_mynumber_continued_use',
     );
@@ -290,7 +288,7 @@ describe('Ota (13111) — 自治体差分の実証(デモの根拠)', () => {
         ?.dueDescription,
     ).toContain('90日');
     const seta = outcomeFor(
-      profile({ municipalityCode: '13112', town: '世田谷4丁目', ...withCard }),
+      profile({ municipalityCode: '13112', ...withCard }),
       setagayaRuleSet,
       'procedure_mynumber_continued_use',
     );

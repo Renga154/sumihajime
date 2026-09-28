@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { linkifyParts } from '../lib/linkify';
+import { isTrustedAnswerUrl, linkifyParts } from '@tmn/domain';
 
 /**
  * なぜ: 回答本文に埋め込まれた公式URLをそのままクリックできるようにする。
@@ -8,17 +8,31 @@ import { linkifyParts } from '../lib/linkify';
  * (質問欄の内容)をここへ通してはならない。任意の入力をリンク化すると、画面上に
  * 利用者由来のURLを「サービスが案内した導線」の見た目で置けてしまう。
  *
+ * それでも回答本文は安全ではない(本番で確認済み): 生成回答には質問文に仕込まれたURLが
+ * 写り込み得る。よってリンクにするのは isTrustedAnswerUrl を満たすURL(公式ホスト、または
+ * trustedUrls=台帳由来の引用URL・選択自治体の公式トップと完全一致)だけにし、それ以外は
+ * 文字のまま表示する。判定は @tmn/domain にあり、サーバー側の保留判定と同じ関数を使う。
+ *
  * 実装上の制約:
  * - dangerouslySetInnerHTML は使わない。文字列をURLと地の文へ分解し、Reactノードとして組む。
  * - リンクは色だけで区別しない(下線を必ず引く。WCAG 1.4.1)。
  * - 生成するのは <a href> なので、キーボードのTab移動に素直に乗る(tabIndexを触らない)。
  * - 長いURLは折り返す(break-all)。モバイル幅で横スクロールを作らないため。
  */
-export function AnswerText({ text, className = '' }: { text: string; className?: string }) {
+export function AnswerText({
+  text,
+  trustedUrls = [],
+  className = '',
+}: {
+  text: string;
+  /** 台帳由来で信頼できるURL(引用カードのURL・選択自治体の officialUrl)。 */
+  trustedUrls?: readonly string[];
+  className?: string;
+}) {
   return (
     <p className={`whitespace-pre-wrap text-sm text-slate-800 ${className}`}>
       {linkifyParts(text).map((part, i) =>
-        part.kind === 'url' ? (
+        part.kind === 'url' && isTrustedAnswerUrl(part.value, trustedUrls) ? (
           <a
             key={i}
             href={part.value}

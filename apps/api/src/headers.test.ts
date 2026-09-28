@@ -88,6 +88,28 @@ describe('CSP の中身', () => {
   });
 });
 
+/**
+ * なぜ: https への格下げ防止(HSTS)と、他サイトとのウィンドウ参照・資源の読み込みの遮断
+ * (COOP/CORP)。文書・静的アセット(_headers)・API の3系統すべてで同じ値であることを固定する
+ * (_headers との一致は上の describe が、ここでは値そのものと API 側を確かめる)。
+ */
+describe('HSTS / COOP / CORP', () => {
+  const expected = {
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Resource-Policy': 'same-origin',
+  };
+
+  it.each(Object.entries(expected))('文書・API の両方に %s: %s が付く', (name, value) => {
+    expect(DOCUMENT_SECURITY_HEADERS[name]).toBe(value);
+    expect(API_SECURITY_HEADERS[name]).toBe(value);
+  });
+
+  it('HSTS に preload を付けない(親ドメイン workers.dev を管理していないため)', () => {
+    expect(DOCUMENT_SECURITY_HEADERS['Strict-Transport-Security']).not.toContain('preload');
+  });
+});
+
 describe('withDocumentSecurityHeaders', () => {
   it('本文とステータスを保ったままヘッダだけ足す', async () => {
     const res = withDocumentSecurityHeaders(

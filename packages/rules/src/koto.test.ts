@@ -81,7 +81,6 @@ const KOTO = '13108';
  */
 function profile(overrides: {
   municipalityCode?: string;
-  town?: string;
   originType?: Profile['originType'];
   memberCount?: number;
   ageBands?: Profile['household']['ageBands'];
@@ -90,7 +89,6 @@ function profile(overrides: {
   return {
     destination: {
       municipalityCode: overrides.municipalityCode ?? KOTO,
-      town: overrides.town ?? '青海',
     },
     moveDate: '2026-08-01',
     originType: overrides.originType ?? 'outside_tokyo',
@@ -276,7 +274,6 @@ describe('Koto (13108) — persona evaluations (子育てペルソナで該当�
     expect(koto.dueDate).toBe('2026-08-15');
     const setagayaProfile = profile({
       municipalityCode: '13112',
-      town: '世田谷4丁目',
       flags: { hasMyNumberCard: true },
     });
     const seta = outcomeFor(setagayaProfile, setagayaRuleSet, 'procedure_mynumber_continued_use');
@@ -360,14 +357,12 @@ describe('Koto (13108) — 自治体差分の実証(デモの根拠)', () => {
     // 該当集合も一致する。この「変化点」を回帰ガードとして固定する(残る自治体差分は下のtestで維持)。
     const koto = profile({
       municipalityCode: KOTO,
-      town: '青海',
       memberCount: 4,
       ageBands: ['age0_2', 'elementary', 'adult'],
       flags: { hasMyNumberCard: true, needsNationalPension: false },
     });
     const setagaya = profile({
       municipalityCode: '13112',
-      town: '世田谷4丁目',
       memberCount: 4,
       ageBands: ['age0_2', 'elementary', 'adult'],
       flags: { hasMyNumberCard: true, needsNationalPension: false },
@@ -386,11 +381,10 @@ describe('Koto (13108) — 自治体差分の実証(デモの根拠)', () => {
   it('残る自治体差分: 子ども医療費の遡及期限は江東=記載なし(要確認)/世田谷=3か月', () => {
     // なぜ: 学校・保育の差分は解消し、マイナンバーの期日も両区とも14日算定になったため、
     // 「同じ手続きでも区で違う」を示す差分としてはこちらを固定する(推測で差分を作らない)。
-    const family = (code: string, town: string, rs: RuleSet) =>
+    const family = (code: string, rs: RuleSet) =>
       outcomeFor(
         profile({
           municipalityCode: code,
-          town,
           memberCount: 4,
           ageBands: ['age0_2', 'elementary', 'adult'],
           flags: { hasMyNumberCard: true, needsNationalPension: false },
@@ -398,8 +392,8 @@ describe('Koto (13108) — 自治体差分の実証(デモの根拠)', () => {
         rs,
         'procedure_child_medical',
       );
-    const koto = family(KOTO, '青海', kotoRuleSet);
-    const setagaya = family('13112', '世田谷4丁目', setagayaRuleSet);
+    const koto = family(KOTO, kotoRuleSet);
+    const setagaya = family('13112', setagayaRuleSet);
     expect(koto.dueDate).toBeUndefined();
     expect(koto.dueDescription).toContain('記載がない');
     expect(setagaya.dueDate).toBeUndefined();

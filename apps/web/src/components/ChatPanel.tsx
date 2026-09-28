@@ -129,6 +129,9 @@ export function ChatPanel({
   // null=判定中, enabled=false=無効(非表示)
   const [availability, setAvailability] = useState<ChatAvailability | null>(null);
   const [name, setName] = useState<string>(municipalityName ?? 'この自治体');
+  // 選択自治体の公式トップ(台帳由来)。公式ホストの許可リストに無い地域ドメインでも、
+  // このURLだけは回答本文でリンクにしてよい(対応対象外自治体の案内が指す先)。
+  const [officialUrl, setOfficialUrl] = useState<string | null>(null);
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ChatResponse | null>(null);
@@ -142,14 +145,19 @@ export function ChatPanel({
       const avail = await getChatAvailability();
       if (!active) return;
       setAvailability(avail);
-      // 自治体名が渡されていなければ台帳から解決(スコープ表示を正確にするため)。
-      if (avail.enabled && !municipalityName) {
+      // 台帳から自治体名(渡されていなければ。スコープ表示を正確にするため)と公式トップURL
+      // (回答本文のリンク化で信頼してよいURL)を解決する。
+      if (avail.enabled) {
         try {
           const munis = await getMunicipalities();
           const found = munis.find((m) => m.code === municipalityCode);
-          if (active && found) setName(found.name);
+          if (active && found) {
+            if (!municipalityName) setName(found.name);
+            setOfficialUrl(found.officialUrl ?? null);
+          }
         } catch {
-          // 解決に失敗しても既定表示のまま続行(必須ではない)。
+          // 解決に失敗しても続行する(必須ではない)。公式ホストのURLは引き続きリンクになり、
+          // 地域ドメインの公式トップだけが文字表示に倒れる=安全側。
         }
       }
     })();
@@ -308,10 +316,18 @@ export function ChatPanel({
           )}
           {/*
             回答本文には公式URLが地の文に埋め込まれて返ることがある(対応対象外自治体の案内、
-            回答へ載せられなかった話題の注記)。AnswerText がその http(s) URLだけをリンクに
-            変える。ここへ渡すのは API 由来の result.answer のみで、質問欄の入力は通さない。
+            回答へ載せられなかった話題の注記)。AnswerText がそのうち信頼できるURL(公式ホスト、
+            またはこの回答の引用URL・選択自治体の公式トップと完全一致)だけをリンクに変える。
+            生成回答には質問文から写り込んだURLが混ざり得るため、それ以外は文字のまま出す。
+            ここへ渡すのは API 由来の result.answer のみで、質問欄の入力は通さない。
           */}
-          <AnswerText text={result.answer} />
+          <AnswerText
+            text={result.answer}
+            trustedUrls={[
+              ...result.citations.map((cite) => cite.url),
+              ...(officialUrl ? [officialUrl] : []),
+            ]}
+          />
 
           {result.citations.length > 0 && (
             <div>

@@ -93,7 +93,6 @@ const ITABASHI = '13119';
 
 function profile(overrides: {
   municipalityCode?: string;
-  town?: string;
   originType?: Profile['originType'];
   memberCount?: number;
   ageBands?: Profile['household']['ageBands'];
@@ -102,7 +101,6 @@ function profile(overrides: {
   return {
     destination: {
       municipalityCode: overrides.municipalityCode ?? ITABASHI,
-      town: overrides.town ?? '板橋',
     },
     moveDate: '2026-08-01',
     originType: overrides.originType ?? 'outside_tokyo',
@@ -330,7 +328,6 @@ describe('Itabashi (13119) — 自治体差分の実証(他区の値を混入さ
   const withCard = profile({ flags: { hasMyNumberCard: true } });
   const setagayaWithCard = profile({
     municipalityCode: '13112',
-    town: '世田谷4丁目',
     flags: { hasMyNumberCard: true },
   });
 
@@ -360,11 +357,10 @@ describe('Itabashi (13119) — 自治体差分の実証(他区の値を混入さ
     );
   });
 
-  const family = (code: string, town: string, rs: RuleSet, procedureId: string) =>
+  const family = (code: string, rs: RuleSet, procedureId: string) =>
     outcomeFor(
       profile({
         municipalityCode: code,
-        town,
         memberCount: 3,
         ageBands: ['elementary', 'adult'],
         flags: { hasMyNumberCard: true, needsNationalPension: false },
@@ -377,7 +373,7 @@ describe('Itabashi (13119) — 自治体差分の実証(他区の値を混入さ
     // 2026-08-09: 板橋は「転入の場合は原則として14日以内の申請」と日数で明記しているため
     // moveDate+14日 を算定するようになった。算定できた区は outcome から dueDescription が
     // 落ちるため、公式文言は rules.json 側で検証する。
-    const itabashi = family('13119', '板橋', itabashiRuleSet, 'procedure_child_medical');
+    const itabashi = family('13119', itabashiRuleSet, 'procedure_child_medical');
     expect(itabashi.dueDate).toBe('2026-08-15');
     const itabashiDue = itabashiRuleSet.rules.find(
       (r) => r.procedureId === 'procedure_child_medical',
@@ -389,36 +385,35 @@ describe('Itabashi (13119) — 自治体差分の実証(他区の値を混入さ
     }
     // 対比: 杉並=3カ月(2026-10-01以降。2026-09-25 再監査で15日から変わった) / 世田谷=3か月 /
     // 練馬=記載なし。同じカテゴリでも区ごとに値が異なる。月単位の杉並は日付を算定しない。
-    const suginami = family('13115', '阿佐谷北', suginamiRuleSet, 'procedure_child_medical');
+    const suginami = family('13115', suginamiRuleSet, 'procedure_child_medical');
     expect(suginami.dueDate).toBeUndefined();
     expect(suginami.dueDescription).toContain('3カ月以内');
-    expect(
-      family('13112', '世田谷4丁目', setagayaRuleSet, 'procedure_child_medical').dueDescription,
-    ).toContain('3か月');
-    expect(
-      family('13120', '豊玉北', nerimaRuleSet, 'procedure_child_medical').dueDescription,
-    ).toContain('記載がない');
+    expect(family('13112', setagayaRuleSet, 'procedure_child_medical').dueDescription).toContain(
+      '3か月',
+    );
+    expect(family('13120', nerimaRuleSet, 'procedure_child_medical').dueDescription).toContain(
+      '記載がない',
+    );
   });
 
   it('犬の登録事項変更: 板橋=30日算定(既存7区・練馬はいずれも期限を出さない)', () => {
-    const noChip = (code: string, town: string, rs: RuleSet) =>
+    const noChip = (code: string, rs: RuleSet) =>
       outcomeFor(
         profile({
           municipalityCode: code,
-          town,
           flags: { hasDog: true, dogHasMicrochip: false },
         }),
         rs,
         'procedure_dog_registration_transfer',
       );
-    expect(noChip('13119', '板橋', itabashiRuleSet).dueDate).toBe('2026-08-31');
-    expect(noChip('13120', '豊玉北', nerimaRuleSet).dueDate).toBeUndefined();
-    expect(noChip('13112', '世田谷4丁目', setagayaRuleSet).dueDate).toBeUndefined();
-    expect(noChip('13115', '阿佐谷北', suginamiRuleSet).dueDate).toBeUndefined();
+    expect(noChip('13119', itabashiRuleSet).dueDate).toBe('2026-08-31');
+    expect(noChip('13120', nerimaRuleSet).dueDate).toBeUndefined();
+    expect(noChip('13112', setagayaRuleSet).dueDate).toBeUndefined();
+    expect(noChip('13115', suginamiRuleSet).dueDate).toBeUndefined();
   });
 
   it('学校転入: 板橋の交付書類名は『転入学通知書』(世田谷『学校指定通知書』・練馬『入学通知書』を混入させない)', () => {
-    const school = family('13119', '板橋', itabashiRuleSet, 'procedure_school_transfer');
+    const school = family('13119', itabashiRuleSet, 'procedure_school_transfer');
     expect(school.dueDescription).toContain('転入学通知書');
     expect(school.dueDescription).not.toContain('学校指定通知書');
     // 板橋固有: 『教科書給与証明書』(練馬は『教科用図書給与証明書』と表記が異なる)。
@@ -427,7 +422,7 @@ describe('Itabashi (13119) — 自治体差分の実証(他区の値を混入さ
   });
 
   it('児童手当: 板橋=15日特例の文言(起算日が転出予定日等のため dueDate は算定しない)', () => {
-    const itabashi = family('13119', '板橋', itabashiRuleSet, 'procedure_child_allowance');
+    const itabashi = family('13119', itabashiRuleSet, 'procedure_child_allowance');
     expect(itabashi.dueDescription).toContain('15日以内');
     expect(itabashi.dueDate).toBeUndefined();
   });

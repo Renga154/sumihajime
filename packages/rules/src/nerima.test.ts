@@ -79,7 +79,6 @@ const NERIMA = '13120';
 
 function profile(overrides: {
   municipalityCode?: string;
-  town?: string;
   originType?: Profile['originType'];
   memberCount?: number;
   ageBands?: Profile['household']['ageBands'];
@@ -88,7 +87,6 @@ function profile(overrides: {
   return {
     destination: {
       municipalityCode: overrides.municipalityCode ?? NERIMA,
-      town: overrides.town ?? '豊玉北',
     },
     moveDate: '2026-08-01',
     originType: overrides.originType ?? 'outside_tokyo',
@@ -294,7 +292,6 @@ describe('Nerima (13120) — 自治体差分の実証(他区の値を混入さ�
   const withCard = profile({ flags: { hasMyNumberCard: true } });
   const setagayaWithCard = profile({
     municipalityCode: '13112',
-    town: '世田谷4丁目',
     flags: { hasMyNumberCard: true },
   });
 
@@ -314,11 +311,10 @@ describe('Nerima (13120) — 自治体差分の実証(他区の値を混入さ�
     expect(nerima.dueDate).not.toBe(setagaya.dueDate);
   });
 
-  const family = (code: string, town: string, rs: RuleSet, procedureId: string) =>
+  const family = (code: string, rs: RuleSet, procedureId: string) =>
     outcomeFor(
       profile({
         municipalityCode: code,
-        town,
         memberCount: 3,
         ageBands: ['elementary', 'adult'],
         flags: { hasMyNumberCard: true, needsNationalPension: false },
@@ -328,25 +324,25 @@ describe('Nerima (13120) — 自治体差分の実証(他区の値を混入さ�
     );
 
   it('子ども医療費助成: 練馬は公式に期限の記載が無いため日数を出さない(3か月/15日/6か月/14日をいずれも混入させない)', () => {
-    const nerima = family('13120', '豊玉北', nerimaRuleSet, 'procedure_child_medical');
+    const nerima = family('13120', nerimaRuleSet, 'procedure_child_medical');
     expect(nerima.dueDate).toBeUndefined();
     expect(nerima.dueDescription).toContain('記載がない');
     for (const other of ['3か月', '3ヶ月', '15日', '6か月', '6カ月', '14日以内']) {
       expect(nerima.dueDescription).not.toContain(other);
     }
     // 対比: 世田谷は3か月を明示する(区ごとに異なることの実証)。
-    const setagaya = family('13112', '世田谷4丁目', setagayaRuleSet, 'procedure_child_medical');
+    const setagaya = family('13112', setagayaRuleSet, 'procedure_child_medical');
     expect(setagaya.dueDescription).toContain('3か月');
   });
 
   it('児童手当: 練馬=15日特例の文言(起算日が転出予定日のため dueDate は算定しない)', () => {
-    const nerima = family('13120', '豊玉北', nerimaRuleSet, 'procedure_child_allowance');
+    const nerima = family('13120', nerimaRuleSet, 'procedure_child_allowance');
     expect(nerima.dueDescription).toContain('15日以内');
     expect(nerima.dueDate).toBeUndefined();
   });
 
   it('学校転入: 練馬の交付書類名は『入学通知書』(杉並/板橋の『転入学通知書』・世田谷の『学校指定通知書』を混入させない)', () => {
-    const school = family('13120', '豊玉北', nerimaRuleSet, 'procedure_school_transfer');
+    const school = family('13120', nerimaRuleSet, 'procedure_school_transfer');
     expect(school.dueDescription).toContain('入学通知書');
     expect(school.dueDescription).not.toContain('転入学通知書');
     expect(school.dueDescription).not.toContain('学校指定通知書');

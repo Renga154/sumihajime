@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { httpsUrlSchema } from './url.js';
 import { profileSchema } from './profile.js';
 import { driftKindSchema, generatedTaskSchema, taskSourceRefSchema } from './task.js';
 import { municipalityCodeSchema, municipalitySchema, coverageSchema } from './municipality.js';
@@ -100,11 +101,13 @@ export type ServiceStats = z.infer<typeof serviceStatsSchema>;
  * reviewStatus/reviewer(内部レビュー担当者名)/contentHash/fetchMethod といった内部運用列が
  * GET /api/sources とは別経路(このエンドポイント)から漏れていた(2026-08-08発覚。notes列の
  * 内部用語混入と同根の「公開経路が複数あり、片方だけ射影を絞っていた」構造的問題)。
- * sourceLedgerEntrySchema(公開列のみ)を土台に、根拠カードが利用する notes だけを追加した
- * 専用ビューに統一する。
+ * sourceLedgerEntrySchema(公開列のみ)を土台にした専用ビューに統一する。
+ *
+ * 2026-09-29: notes を外した。notes は取り込み・監査の作業メモで利用者向けに書かれておらず、
+ * どの画面も表示していなかった。GET /api/sources は当初から除外しており、この経路だけが
+ * 出していた(2エンドポイントの射影の食い違い)。API側は publicSourceView 1つで射影する。
  */
 export const procedureSourceSchema = sourceLedgerEntrySchema.extend({
-  notes: sourceSchema.shape.notes,
   // ADR-014: 巡回の検知結果(根拠カードの「更新を検知」行)。taskSourceRefSchema と同じ2項目。
   driftDetectedOn: z.iso.date().optional(),
   driftKind: driftKindSchema.optional(),
@@ -225,8 +228,10 @@ export const chatRequestSchema = z.strictObject({
   municipalityCode: municipalityCodeSchema,
   // なぜ: 質問は最大500字(T-013。過大入力・コスト・インジェクション面を抑える)。
   question: z.string().min(1).max(500),
-  procedureId: z.string().min(1).optional(),
-  category: z.string().min(1).optional(),
+  // なぜ上限100字: 識別子(例: procedure_resident_registration)は40字程度。自由文を詰め込める
+  // 長さにしない(サーバーは現状これらを検索に使わないが、受け取る以上は形を絞る)。
+  procedureId: z.string().min(1).max(100).optional(),
+  category: z.string().min(1).max(100).optional(),
 });
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 
@@ -243,7 +248,7 @@ export const chatCitationSchema = z.strictObject({
   sourceId: z.string().min(1),
   title: z.string().min(1),
   ownerOrganization: z.string().min(1),
-  url: z.url(),
+  url: httpsUrlSchema,
   lastVerifiedAt: z.iso.datetime(),
 });
 export type ChatCitation = z.infer<typeof chatCitationSchema>;
@@ -267,7 +272,7 @@ export const errorResponseSchema = z.strictObject({
     requestId: z.string().min(1).optional(),
     // なぜ: FR-021。未対応自治体などで「次の行動(公式サイトを見る)」を示すため、
     // 該当時のみ公式トップURLを添える追加的optionalフィールド(T-006で追加)。
-    officialUrl: z.url().optional(),
+    officialUrl: httpsUrlSchema.optional(),
   }),
 });
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
