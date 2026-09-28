@@ -337,6 +337,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
     logEvent({
       requestId,
       event: 'chat.abstained',
+      reason: 'unsupported_municipality',
       municipalityCode: code,
       latencyMs: Date.now() - start,
       abstained: true,
@@ -444,6 +445,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       logEvent({
         requestId,
         event: 'chat.abstained',
+        reason: 'below_min_score',
         municipalityCode: code,
         latencyMs: Date.now() - start,
         abstained: true,
@@ -468,6 +470,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       logEvent({
         requestId,
         event: 'chat.abstained',
+        reason: 'no_scoped_chunks',
         municipalityCode: code,
         latencyMs: Date.now() - start,
         abstained: true,
@@ -518,6 +521,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       logEvent({
         requestId,
         event: 'chat.abstained',
+        reason: 'model_held',
         municipalityCode: code,
         latencyMs: Date.now() - start,
         abstained: true,
@@ -530,6 +534,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       logEvent({
         requestId,
         event: 'chat.abstained',
+        reason: 'no_valid_citation',
         municipalityCode: code,
         latencyMs: Date.now() - start,
         abstained: true,
@@ -543,6 +548,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       logEvent({
         requestId,
         event: 'chat.abstained',
+        reason: 'unresolved_citation',
         municipalityCode: code,
         latencyMs: Date.now() - start,
         abstained: true,

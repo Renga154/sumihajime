@@ -37,6 +37,20 @@ export type LogEventName =
   | 'drift.run'
   | `error.${string}`;
 
+/**
+ * チャットが保留した理由(固定の分類コード。質問・回答の中身は含まない)。
+ * なぜ持つか: 保留の経路は6つあり、以前はどれも同じ `chat.abstained` だった。評価で「以前は答えて
+ * いた問いが保留になった」とき、検索の閾値なのか、生成が保留したのか、引用の検証で落ちたのかを
+ * ログから切り分けられなかった(2026-09-29)。
+ */
+export type AbstainReason =
+  | 'unsupported_municipality'
+  | 'below_min_score'
+  | 'no_scoped_chunks'
+  | 'model_held'
+  | 'no_valid_citation'
+  | 'unresolved_citation';
+
 export interface LogEvent {
   requestId: string;
   event: LogEventName;
@@ -49,6 +63,8 @@ export interface LogEvent {
   count?: number;
   /** RAG保留フラグ(§13。質問本文・回答本文は残さず、保留したか否かのみ記録)。 */
   abstained?: boolean;
+  /** 保留の理由(chat.abstained のときだけ)。 */
+  reason?: AbstainReason;
   /** ADR-014 定期巡回: 今回巡回したソースID(台帳の公開IDであり PII ではない。URL・本文は出さない)。 */
   driftSourceIds?: string[];
   /** ADR-014 定期巡回: 今回 changed/unreachable と判定した件数。 */
@@ -63,6 +79,7 @@ const ALLOWED_KEYS: (keyof LogEvent)[] = [
   'status',
   'count',
   'abstained',
+  'reason',
   'driftSourceIds',
   'driftFlagged',
 ];

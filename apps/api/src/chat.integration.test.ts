@@ -329,6 +329,33 @@ describe('POST /api/chat — 保留系', () => {
     expect(body.answer).toContain('確認できません');
   });
 
+  // なぜ: 保留の経路は6つあり、理由が残らないと「以前は答えていた問いが保留になった」原因を
+  // 切り分けられない。理由は固定の分類コードで、質問・回答の中身はログへ出ない。
+  it('保留の理由を分類コードでログに残す(質問本文は残さない)', async () => {
+    const lines: string[] = [];
+    const spy = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+      lines.push(String(args[0]));
+    });
+    try {
+      stubOpenAI('(抜粋に無いため確認できません)\nSOURCES:');
+      await chat(baseEnv({ VECTORIZE: mockVectorize([{ id: CHUNK_ID, score: 0.1 }]) }), {
+        municipalityCode: '13112',
+        question: '保育園の空き状況は?',
+      });
+      await chat(baseEnv({ VECTORIZE: mockVectorize([{ id: CHUNK_ID, score: 0.7 }]) }), {
+        municipalityCode: '13112',
+        question: '保育園の空き状況は?',
+      });
+    } finally {
+      spy.mockRestore();
+    }
+    const abstained = lines
+      .map((l) => JSON.parse(l) as Record<string, unknown>)
+      .filter((e) => e.event === 'chat.abstained');
+    expect(abstained.map((e) => e.reason)).toEqual(['below_min_score', 'no_valid_citation']);
+    expect(lines.join('\n')).not.toContain('保育園の空き状況');
+  });
+
   it('未対応自治体(supported=false)は対象外を明示+公式誘導で保留', async () => {
     // なぜ: 杉並(13115)・千代田(13101)・品川(13109)・大田(13111)は人手レビュー承認により
     // supported=trueへ、八王子市(13201)も2026-09-25の承認で supported=true へ変わったため、
