@@ -1,4 +1,20 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
+
+const registryPath = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../docs/data-sources/registry.csv',
+);
+
+/** 台帳(registry.csv)の review_status=approved の行数。公開されるのは承認済みのみ(ADR-007)。 */
+function approvedSourceCount(): number {
+  const [header, ...rows] = readFileSync(registryPath, 'utf8').split(/\r?\n/).filter(Boolean);
+  const statusCol = header!.split(',').indexOf('review_status');
+  // 先頭から review_status 列までは引用符を含まない(注記など後ろの列にだけカンマが入る)。
+  return rows.filter((r) => r.split(',')[statusCol] === 'approved').length;
+}
 
 /**
  * 透明性ページ「このサービスのデータについて」(/about-data)。
@@ -16,16 +32,10 @@ test('透明性ページ: 鮮度サマリー・台帳テーブル・CC BYバッ�
 
   // 1. 鮮度サマリー: ソース総数タイルと、年度データの残日数カウントダウン。
   await expect(page.getByText('公式ソース総数')).toBeVisible();
-  // Step5統合後、承認済み公式ソースは98件(Step4時点の72 + 品川12 + 大田14)。
-  // 2026-08-07 人手レビュー承認(ADR-009)でライフライン等4手続きの出典5件が追加approved化(98→103)、
-  // 同日さらに練馬(13120)の11ソース+板橋(13119)の12ソースが人手レビュー承認(103→126)、
-  // 同日さらにBatch7の4区(中野16=既存13+wagmap由来3 / 豊島11 / 北15 / 荒川14)が承認(126→182)、
-  // 同日さらにBatch10の足立(13121)16ソース+江戸川(13123)17ソースが人手レビュー承認(182→215)、
-  // 同日さらに残る8区(Batch8=中央12/港14/文京14/台東13/墨田14、Batch9=目黒14/渋谷22/葛飾13)が
-  // 人手レビュー承認(215→331)、渋谷区のArcGIS Hub配信の施設CSV1件を新規登録して331→332。
-  // 2026-09-25 の再監査で花畑区民事務所の施設ページを出典に追加し 332→333。
-  // 同日さらに八王子市(13201)の23ソース+東京都水道局お客さまセンター1ソースが承認(333→357)。
-  await expect(page.getByText('公式ソース総数').locator('..')).toContainText('357');
+  // 件数は台帳の承認済み行数と一致する(出典を1件承認するたびに手で書き換えずに済むよう、台帳から数える)。
+  await expect(page.getByText('公式ソース総数').locator('..')).toContainText(
+    String(approvedSourceCount()),
+  );
   await expect(page.getByRole('heading', { name: 'データの新しさ' })).toBeVisible();
   await expect(page.getByText(/残り\s*\d+日/).first()).toBeVisible();
 

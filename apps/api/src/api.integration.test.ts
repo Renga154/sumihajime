@@ -5,7 +5,7 @@ import type { D1Database } from '@cloudflare/workers-types';
 import type { Profile } from '@tmn/schemas';
 import { createTestDb, type TestDb } from '../test/d1-harness.js';
 import { app } from './index.js';
-import { loadPublishData } from '@tmn/publish';
+import { DEFAULT_PUBLISH_CODES, loadPublishData } from '@tmn/publish';
 
 /**
  * なぜ: API+D1 の統合テスト(計画§9受入・§12)。Miniflare の本物のD1(SQLite)へ
@@ -15,7 +15,8 @@ import { loadPublishData } from '@tmn/publish';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 /** シード(test/d1-harness.ts の buildSeed)と同じ既定の自治体で読み込んだ公開データ。件数の期待値の出どころ。 */
-const PUBLISHED = loadPublishData(repoRoot);
+// createTestDb() と同じ既定の自治体で読む(台帳の承認済みソースは自治体によらず全件シードされる)。
+const PUBLISHED = loadPublishData(repoRoot, DEFAULT_PUBLISH_CODES);
 
 let harness: TestDb;
 let db: D1Database;
