@@ -118,7 +118,7 @@ describe('越境混線なし: 共有 procedure_id が自治体ごとに正しく
 
 function kotoChildProfile(): Profile {
   return {
-    destination: { municipalityCode: '13108', town: 'テスト町1丁目' },
+    destination: { municipalityCode: '13108' },
     moveDate: '2026-08-01',
     originType: 'outside_tokyo',
     household: {

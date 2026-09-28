@@ -15,12 +15,12 @@ import {
  * 置き換えている(README「スキーマ ↔ REQUIREMENTS対応表」に記載)。
  * また flags のうち dogHasMicrochip/needsVehicleGuidance/isPregnantMember は
  * §14.1の例に含まれないため、Zodのdefault値で補完される(profile.tsのJSDoc参照)。
+ * さらに §14.1 の例の destination.postalCode / town は受け付けない(2026-09-29。ADR-016)。
+ * ここでは例からその2項目を除いた形を使い、除かない形が 422 相当で拒まれることは下で固定する。
  */
 const requirements141FixtureRaw = {
   destination: {
     municipalityCode: '13112',
-    postalCode: '0000000',
-    town: '例町',
   },
   moveDate: '2026-08-15',
   originType: 'outside_tokyo',
@@ -53,7 +53,7 @@ describe('profileSchema — §14.1 fixture', () => {
 });
 
 describe('destinationSchema', () => {
-  it('accepts destination without postalCode/town (optional)', () => {
+  it('accepts destination with only municipalityCode', () => {
     expect(destinationSchema.safeParse({ municipalityCode: '13112' }).success).toBe(true);
   });
 
@@ -61,10 +61,30 @@ describe('destinationSchema', () => {
     expect(destinationSchema.safeParse({ municipalityCode: '1' }).success).toBe(false);
   });
 
-  it('rejects a postalCode that is not 7 digits', () => {
-    expect(
-      destinationSchema.safeParse({ municipalityCode: '13112', postalCode: '123' }).success,
-    ).toBe(false);
+  /**
+   * なぜ(ADR-016): どの画面も送らず、どのルールも読まない住所の細目を受け付けない
+   * (原則6・7: 要らない住所情報を受け取らない=誤って記録する経路自体を持たない)。
+   */
+  it.each([{ postalCode: '0000000' }, { town: '例町' }])(
+    'rejects address detail the service never uses: %o',
+    (extra) => {
+      expect(destinationSchema.safeParse({ municipalityCode: '13112', ...extra }).success).toBe(
+        false,
+      );
+    },
+  );
+});
+
+describe('input size limits', () => {
+  it('memberCount は 20 まで(過大な値を拒む)', () => {
+    expect(householdSchema.safeParse({ memberCount: 20, ageBands: [] }).success).toBe(true);
+    expect(householdSchema.safeParse({ memberCount: 21, ageBands: [] }).success).toBe(false);
+  });
+
+  it('ageBands は 20 件まで', () => {
+    const bands = (n: number) => Array.from({ length: n }, () => 'adult');
+    expect(householdSchema.safeParse({ memberCount: 20, ageBands: bands(20) }).success).toBe(true);
+    expect(householdSchema.safeParse({ memberCount: 20, ageBands: bands(21) }).success).toBe(false);
   });
 });
 

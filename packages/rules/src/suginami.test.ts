@@ -81,7 +81,6 @@ const SUGINAMI = '13115';
 
 function profile(overrides: {
   municipalityCode?: string;
-  town?: string;
   originType?: Profile['originType'];
   memberCount?: number;
   ageBands?: Profile['household']['ageBands'];
@@ -90,7 +89,6 @@ function profile(overrides: {
   return {
     destination: {
       municipalityCode: overrides.municipalityCode ?? SUGINAMI,
-      town: overrides.town ?? '阿佐谷南',
     },
     moveDate: '2026-08-01',
     originType: overrides.originType ?? 'outside_tokyo',
@@ -309,7 +307,6 @@ describe('Suginami (13115) — 自治体差分の実証(他区の値を混入さ
   const withCard = profile({ flags: { hasMyNumberCard: true } });
   const setagayaWithCard = profile({
     municipalityCode: '13112',
-    town: '世田谷4丁目',
     flags: { hasMyNumberCard: true },
   });
 
@@ -332,11 +329,10 @@ describe('Suginami (13115) — 自治体差分の実証(他区の値を混入さ
   });
 
   it('子ども医療費の遡及: 杉並=2026-10-01以降は3カ月(日付は算定しない・9/30までの15日は注意事項) / 世田谷=3か月', () => {
-    const family = (code: string, town: string, rs: RuleSet) =>
+    const family = (code: string, rs: RuleSet) =>
       outcomeFor(
         profile({
           municipalityCode: code,
-          town,
           memberCount: 3,
           ageBands: ['elementary', 'adult'],
           flags: { hasMyNumberCard: true, needsNationalPension: false },
@@ -344,8 +340,8 @@ describe('Suginami (13115) — 自治体差分の実証(他区の値を混入さ
         rs,
         'procedure_child_medical',
       );
-    const suginami = family('13115', '阿佐谷南', suginamiRuleSet);
-    const setagaya = family('13112', '世田谷4丁目', setagayaRuleSet);
+    const suginami = family('13115', suginamiRuleSet);
+    const setagaya = family('13112', setagayaRuleSet);
     // 2026-09-25 再監査: 杉並の公式ページが「出生日・転入日が令和8年10月1日以降は翌日から3カ月以内」に
     // 変わった(9月30日までは従来の15日)。月単位は日付を算定しない方針(他の3か月の区と同じ)のため期日なし。
     // 比較ページが3か月の区として数えるよう、期限の本文は10月1日以降の値だけにし、15日は注意事項へ移した。

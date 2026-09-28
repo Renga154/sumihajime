@@ -11,7 +11,7 @@ const DUMMY_MUNICIPALITY_CODE = '13999';
 
 /** なぜ: 最も単純な正例基準線。単身・都外からの転入・条件フラグはすべてfalse/未確認なし。 */
 export const singlePersonFromOutsideTokyo: Profile = {
-  destination: { municipalityCode: DUMMY_MUNICIPALITY_CODE, town: 'ダミー町1丁目' },
+  destination: { municipalityCode: DUMMY_MUNICIPALITY_CODE },
   moveDate: '2026-08-01',
   originType: 'outside_tokyo',
   household: { memberCount: 1, ageBands: ['adult'] },
@@ -31,7 +31,7 @@ export const singlePersonFromOutsideTokyo: Profile = {
 
 /** なぜ: 子育て世帯(児童手当特例等のageBandsIntersects述語を確定trueで踏む)。 */
 export const familyWithChildren: Profile = {
-  destination: { municipalityCode: DUMMY_MUNICIPALITY_CODE, town: 'ダミー町2丁目' },
+  destination: { municipalityCode: DUMMY_MUNICIPALITY_CODE },
   moveDate: '2026-08-01',
   originType: 'outside_tokyo',
   household: {
@@ -58,7 +58,7 @@ export const familyWithChildren: Profile = {
  * マイクロチップ有無に依存するルールはunknownに帰着する。
  */
 export const dogOwnerWithUnknownMicrochip: Profile = {
-  destination: { municipalityCode: DUMMY_MUNICIPALITY_CODE, town: 'ダミー町3丁目' },
+  destination: { municipalityCode: DUMMY_MUNICIPALITY_CODE },
   moveDate: '2026-08-01',
   originType: 'outside_tokyo',
   household: { memberCount: 2, ageBands: ['adult'] },
@@ -78,7 +78,7 @@ export const dogOwnerWithUnknownMicrochip: Profile = {
 
 /** なぜ: 都内別自治体からの転居(originTypeIn述語のinside_tokyo分岐を踏む)。 */
 export const movingWithinTokyo: Profile = {
-  destination: { municipalityCode: DUMMY_MUNICIPALITY_CODE, town: 'ダミー町4丁目' },
+  destination: { municipalityCode: DUMMY_MUNICIPALITY_CODE },
   moveDate: '2026-12-20',
   originType: 'inside_tokyo',
   household: { memberCount: 1, ageBands: ['senior65plus'] },
@@ -102,7 +102,7 @@ export const movingWithinTokyo: Profile = {
  * RuleSetとのみ一致する。
  */
 export const profileForOtherMunicipality: Profile = {
-  destination: { municipalityCode: '13998', town: 'ダミー町5丁目' },
+  destination: { municipalityCode: '13998' },
   moveDate: '2026-08-01',
   originType: 'outside_tokyo',
   household: { memberCount: 1, ageBands: ['adult'] },

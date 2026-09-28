@@ -44,7 +44,6 @@ function postChecklist(profile: unknown): Promise<Response> {
 const MOVE_DATE = '2026-08-01';
 
 function profile(overrides: {
-  town?: string;
   moveDate?: string;
   memberCount?: number;
   ageBands?: Profile['household']['ageBands'];
@@ -54,7 +53,6 @@ function profile(overrides: {
   return {
     destination: {
       municipalityCode: overrides.municipalityCode ?? '13112',
-      town: overrides.town ?? 'テスト町1丁目',
     },
     moveDate: overrides.moveDate ?? MOVE_DATE,
     originType: 'outside_tokyo',
@@ -493,17 +491,15 @@ describe('構造化ログ: プロフィール内容(PII)を出さない(§13)', 
     vi.restoreAllMocks();
   });
 
-  it('checklist 実行時のログに moveDate / ageBand / 町丁目 が現れない', async () => {
+  it('checklist 実行時のログに moveDate / ageBand が現れない', async () => {
     const logs: string[] = [];
     vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
       logs.push(args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
     });
 
-    const secretTown = 'ヒミツ町9丁目';
     const secretMoveDate = '2026-09-17';
     await postChecklist(
       profile({
-        town: secretTown,
         moveDate: secretMoveDate,
         memberCount: 3,
         ageBands: ['adult', 'adult', 'age0_2'],
@@ -516,12 +512,34 @@ describe('構造化ログ: プロフィール内容(PII)を出さない(§13)', 
     expect(joined).toContain('checklist.generated');
     expect(joined).toContain('13112');
     // プロフィール内容は出ない(allowlist方式の構造的保証)。
-    expect(joined).not.toContain(secretTown);
     expect(joined).not.toContain(secretMoveDate);
     expect(joined).not.toContain('age0_2');
     expect(joined).not.toContain('ageBands');
     expect(joined).not.toContain('hasSchoolOrChildcareNeeds');
   });
+
+  /**
+   * なぜ(ADR-016): 町丁目・郵便番号はどの画面も送らず、ルールも読まない。受け取る口そのものを
+   * 閉じ、送られたら 422 にする(住所の細目がログや保存へ流れる経路を構造的に持たない)。
+   */
+  it.each([{ town: 'ヒミツ町9丁目' }, { postalCode: '1540001' }])(
+    'destination に住所の細目 %o を含むプロフィールは 422 で、値はログに出ない',
+    async (detail) => {
+      const logs: string[] = [];
+      vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+        logs.push(args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
+      });
+      const base = profile({});
+      const res = await postChecklist({
+        ...base,
+        destination: { ...base.destination, ...detail },
+      });
+      expect(res.status).toBe(422);
+      const body = (await res.json()) as { error: { code: string } };
+      expect(body.error.code).toBe('invalid_profile');
+      for (const value of Object.values(detail)) expect(logs.join('\n')).not.toContain(value);
+    },
+  );
 });
 
 describe('レイテンシ計測(ローカル目安。厳密なCIアサートは不要)', () => {

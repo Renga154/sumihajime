@@ -12,7 +12,7 @@ import {
 } from './api.js';
 
 const profile141Fixture = {
-  destination: { municipalityCode: '13112', postalCode: '0000000', town: '例町' },
+  destination: { municipalityCode: '13112' },
   moveDate: '2026-08-15',
   originType: 'outside_tokyo',
   household: { memberCount: 3, ageBands: ['adult', 'adult', 'age3_5'] },
@@ -115,6 +115,21 @@ describe('chatRequestSchema (§11.3 scope)', () => {
 
   it('rejects a request without municipalityCode (scope isolation required)', () => {
     expect(chatRequestSchema.safeParse({ question: 'x' }).success).toBe(false);
+  });
+
+  it('bounds question (500) and the optional identifiers (100)', () => {
+    const base = { municipalityCode: '13112', question: 'x' };
+    expect(chatRequestSchema.safeParse({ ...base, question: 'あ'.repeat(500) }).success).toBe(true);
+    expect(chatRequestSchema.safeParse({ ...base, question: 'あ'.repeat(501) }).success).toBe(
+      false,
+    );
+    expect(chatRequestSchema.safeParse({ ...base, procedureId: 'p'.repeat(100) }).success).toBe(
+      true,
+    );
+    expect(chatRequestSchema.safeParse({ ...base, procedureId: 'p'.repeat(101) }).success).toBe(
+      false,
+    );
+    expect(chatRequestSchema.safeParse({ ...base, category: 'c'.repeat(101) }).success).toBe(false);
   });
 });
 

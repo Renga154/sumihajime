@@ -89,7 +89,6 @@ const CHIYODA = '13101';
  */
 function profile(overrides: {
   municipalityCode?: string;
-  town?: string;
   originType?: Profile['originType'];
   memberCount?: number;
   ageBands?: Profile['household']['ageBands'];
@@ -98,7 +97,6 @@ function profile(overrides: {
   return {
     destination: {
       municipalityCode: overrides.municipalityCode ?? CHIYODA,
-      town: overrides.town ?? '九段南',
     },
     moveDate: '2026-08-01',
     originType: overrides.originType ?? 'outside_tokyo',
@@ -318,17 +316,14 @@ describe('Chiyoda (13101) — 4自治体差分の実証(デモの根拠)', () =>
   const withCard = profile({ flags: { hasMyNumberCard: true } });
   const shinjukuWithCard = profile({
     municipalityCode: '13104',
-    town: '愛住町',
     flags: { hasMyNumberCard: true },
   });
   const kotoWithCard = profile({
     municipalityCode: '13108',
-    town: '青海',
     flags: { hasMyNumberCard: true },
   });
   const setagayaWithCard = profile({
     municipalityCode: '13112',
-    town: '世田谷4丁目',
     flags: { hasMyNumberCard: true },
   });
 
@@ -361,11 +356,10 @@ describe('Chiyoda (13101) — 4自治体差分の実証(デモの根拠)', () =>
   });
 
   it('子ども医療費助成の期限文言(4区比較): 千代田=3か月 / 世田谷=3か月 / 新宿=3ヶ月 / 江東=3か月記載なし', () => {
-    const family = (code: string, town: string, rs: RuleSet) =>
+    const family = (code: string, rs: RuleSet) =>
       outcomeFor(
         profile({
           municipalityCode: code,
-          town,
           memberCount: 3,
           ageBands: ['elementary', 'adult'],
           flags: { hasMyNumberCard: true, needsNationalPension: false },
@@ -373,10 +367,10 @@ describe('Chiyoda (13101) — 4自治体差分の実証(デモの根拠)', () =>
         rs,
         'procedure_child_medical',
       );
-    const chiyoda = family('13101', '九段南', chiyodaRuleSet);
-    const setagaya = family('13112', '世田谷4丁目', setagayaRuleSet);
-    const shinjuku = family('13104', '愛住町', shinjukuRuleSet);
-    const koto = family('13108', '青海', kotoRuleSet);
+    const chiyoda = family('13101', chiyodaRuleSet);
+    const setagaya = family('13112', setagayaRuleSet);
+    const shinjuku = family('13104', shinjukuRuleSet);
+    const koto = family('13108', kotoRuleSet);
 
     // 千代田は3か月遡及の公式文言を保持(いずれも日数固定ではないため dueDate は出さない)。
     expect(chiyoda.dueDate).toBeUndefined();
@@ -389,17 +383,16 @@ describe('Chiyoda (13101) — 4自治体差分の実証(デモの根拠)', () =>
   });
 
   it('同一プロフィール(子育て)で4区とも学校転入・保育が該当する(条件式は全区共通)', () => {
-    const family = (code: string, town: string) => ({
+    const family = (code: string) => ({
       municipalityCode: code,
-      town,
       memberCount: 4,
       ageBands: ['age0_2', 'elementary', 'adult'] as Profile['household']['ageBands'],
       flags: { hasMyNumberCard: true, needsNationalPension: false },
     });
-    const chiyodaIds = applicableIds(profile(family(CHIYODA, '九段南')), chiyodaRuleSet);
-    const shinjukuIds = applicableIds(profile(family('13104', '愛住町')), shinjukuRuleSet);
-    const kotoIds = applicableIds(profile(family('13108', '青海')), kotoRuleSet);
-    const setagayaIds = applicableIds(profile(family('13112', '世田谷4丁目')), setagayaRuleSet);
+    const chiyodaIds = applicableIds(profile(family(CHIYODA)), chiyodaRuleSet);
+    const shinjukuIds = applicableIds(profile(family('13104')), shinjukuRuleSet);
+    const kotoIds = applicableIds(profile(family('13108')), kotoRuleSet);
+    const setagayaIds = applicableIds(profile(family('13112')), setagayaRuleSet);
     for (const ids of [chiyodaIds, shinjukuIds, kotoIds, setagayaIds]) {
       expect(ids).toContain('procedure_school_transfer');
       expect(ids).toContain('procedure_childcare_application');

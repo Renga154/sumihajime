@@ -89,7 +89,6 @@ const SHINJUKU = '13104';
  */
 function profile(overrides: {
   municipalityCode?: string;
-  town?: string;
   originType?: Profile['originType'];
   memberCount?: number;
   ageBands?: Profile['household']['ageBands'];
@@ -98,7 +97,6 @@ function profile(overrides: {
   return {
     destination: {
       municipalityCode: overrides.municipalityCode ?? SHINJUKU,
-      town: overrides.town ?? '愛住町',
     },
     moveDate: '2026-08-01',
     originType: overrides.originType ?? 'outside_tokyo',
@@ -306,12 +304,10 @@ describe('Shinjuku (13104) — 3自治体差分の実証(デモの根拠)', () =
   const withCard = profile({ flags: { hasMyNumberCard: true } });
   const kotoWithCard = profile({
     municipalityCode: '13108',
-    town: '青海',
     flags: { hasMyNumberCard: true },
   });
   const setagayaWithCard = profile({
     municipalityCode: '13112',
-    town: '世田谷4丁目',
     flags: { hasMyNumberCard: true },
   });
 
@@ -339,11 +335,10 @@ describe('Shinjuku (13104) — 3自治体差分の実証(デモの根拠)', () =
   });
 
   it('子ども医療費助成の期限文言(3区比較): 世田谷=3か月 / 新宿=3ヶ月 / 江東=3か月記載なし', () => {
-    const family = (code: string, town: string, rs: RuleSet) =>
+    const family = (code: string, rs: RuleSet) =>
       outcomeFor(
         profile({
           municipalityCode: code,
-          town,
           memberCount: 3,
           ageBands: ['elementary', 'adult'],
           flags: { hasMyNumberCard: true, needsNationalPension: false },
@@ -351,9 +346,9 @@ describe('Shinjuku (13104) — 3自治体差分の実証(デモの根拠)', () =
         rs,
         'procedure_child_medical',
       );
-    const shinjuku = family('13104', '愛住町', shinjukuRuleSet);
-    const setagaya = family('13112', '世田谷4丁目', setagayaRuleSet);
-    const koto = family('13108', '青海', kotoRuleSet);
+    const shinjuku = family('13104', shinjukuRuleSet);
+    const setagaya = family('13112', setagayaRuleSet);
+    const koto = family('13108', kotoRuleSet);
 
     // 新宿は3ヶ月遡及の公式文言を保持(いずれも日数固定ではないため dueDate は出さない)。
     expect(shinjuku.dueDate).toBeUndefined();
@@ -369,16 +364,15 @@ describe('Shinjuku (13104) — 3自治体差分の実証(デモの根拠)', () =
     // という差分だった。Step3で世田谷にも procedure_school_transfer / childcare_application を
     // 追加(江東・新宿と同一の条件式)したため、同一の子育てプロフィールでは3区とも該当する。
     // この差分の「変化点」を回帰ガードとして固定する(残る自治体差分=マイナンバー期限等は別testで維持)。
-    const family = (code: string, town: string) => ({
+    const family = (code: string) => ({
       municipalityCode: code,
-      town,
       memberCount: 4,
       ageBands: ['age0_2', 'elementary', 'adult'] as Profile['household']['ageBands'],
       flags: { hasMyNumberCard: true, needsNationalPension: false },
     });
-    const shinjukuIds = applicableIds(profile(family(SHINJUKU, '愛住町')), shinjukuRuleSet);
-    const kotoIds = applicableIds(profile(family('13108', '青海')), kotoRuleSet);
-    const setagayaIds = applicableIds(profile(family('13112', '世田谷4丁目')), setagayaRuleSet);
+    const shinjukuIds = applicableIds(profile(family(SHINJUKU)), shinjukuRuleSet);
+    const kotoIds = applicableIds(profile(family('13108')), kotoRuleSet);
+    const setagayaIds = applicableIds(profile(family('13112')), setagayaRuleSet);
     for (const ids of [shinjukuIds, kotoIds, setagayaIds]) {
       expect(ids).toContain('procedure_school_transfer');
       expect(ids).toContain('procedure_childcare_application');

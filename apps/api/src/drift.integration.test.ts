@@ -44,7 +44,7 @@ function request(path: string, init?: RequestInit): Promise<Response> {
 
 function profile(municipalityCode: string): Profile {
   return {
-    destination: { municipalityCode, town: 'テスト町1丁目' },
+    destination: { municipalityCode },
     moveDate: '2026-08-01',
     originType: 'outside_tokyo',
     household: { memberCount: 1, ageBands: ['adult'] },

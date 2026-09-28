@@ -228,8 +228,10 @@ export const chatRequestSchema = z.strictObject({
   municipalityCode: municipalityCodeSchema,
   // なぜ: 質問は最大500字(T-013。過大入力・コスト・インジェクション面を抑える)。
   question: z.string().min(1).max(500),
-  procedureId: z.string().min(1).optional(),
-  category: z.string().min(1).optional(),
+  // なぜ上限100字: 識別子(例: procedure_resident_registration)は40字程度。自由文を詰め込める
+  // 長さにしない(サーバーは現状これらを検索に使わないが、受け取る以上は形を絞る)。
+  procedureId: z.string().min(1).max(100).optional(),
+  category: z.string().min(1).max(100).optional(),
 });
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 

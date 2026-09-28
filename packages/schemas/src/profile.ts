@@ -8,17 +8,16 @@ import { municipalityCodeSchema } from './municipality.js';
  */
 
 /**
- * なぜ: §7.3 Step1「転入先自治体」「町丁目または郵便番号(必要な自治体のみ)」。
- * postalCode/townは自治体により有無が異なるため任意項目とする(C-1/C-5: 自動解決はP1、
- * MVPは町丁目選択式だが、DTO自体は将来の郵便番号入力にも耐えるようにする)。
+ * なぜ: §7.3 Step1「転入先自治体」。
+ *
+ * 2026-09-29(ADR-016): 以前は §14.1 の例に合わせて postalCode / town(町丁目)を任意で受け付けて
+ * いたが、どの画面も送らず、ルール評価もAPIも読まない項目だった。使わない住所の細目を受け取る口が
+ * あると、誤ってログや保存へ流れる経路にもなる(原則6・7)。strictObject なので、送られた場合は
+ * 検証エラー(API は 422)になる。町丁目が必要になった時点(ごみ収集地区の自動解決など)で、
+ * 用途・保存しないこと・ログに出さないことを決めてから改めて足す。
  */
 export const destinationSchema = z.strictObject({
   municipalityCode: municipalityCodeSchema,
-  postalCode: z
-    .string()
-    .regex(/^\d{7}$/, 'postalCode must be a 7-digit string (no hyphen)')
-    .optional(),
-  town: z.string().min(1).optional(),
 });
 export type Destination = z.infer<typeof destinationSchema>;
 
@@ -46,10 +45,15 @@ export type AgeBand = z.infer<typeof ageBandSchema>;
 /**
  * なぜ: §7.3 Step2「単身/複数人」+年齢帯配列。memberCountは正整数(0人世帯は無意味な
  * 入力のため境界値として拒否する)。
+ * 上限20(人数・年齢帯の件数とも): 巨大な数・配列でルール評価と検証の負荷を上げられないように
+ * する。画面(WizardPage)は年齢帯をチェックボックスで選ぶため最大6件・memberCount も最大6で、
+ * 20 は正当な入力に十分な余裕を持たせた値(保存済みプロフィールの再読込も落とさない)。
  */
+export const MAX_HOUSEHOLD_MEMBERS = 20;
+
 export const householdSchema = z.strictObject({
-  memberCount: z.int().positive(),
-  ageBands: z.array(ageBandSchema),
+  memberCount: z.int().positive().max(MAX_HOUSEHOLD_MEMBERS),
+  ageBands: z.array(ageBandSchema).max(MAX_HOUSEHOLD_MEMBERS),
 });
 export type Household = z.infer<typeof householdSchema>;
 
