@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { readRegistryTable, tableToRecords, extractTextLines } from '@tmn/ingest';
 import { pickCurrentSnapshot } from '@tmn/drift';
+import { MUNICIPALITIES } from '@tmn/publish';
 import {
   buildSourceChunks,
   type ChunkOptions,
@@ -17,47 +18,26 @@ import {
  */
 
 /**
- * 索引対象 = 人手レビュー承認済みの対応自治体(特別区23区すべて: 13101〜13123 と、市部の八王子市 13201)。
- * なぜ: 23区の手続き・出典が人手レビュー承認済みで本番公開されたため、RAGコーパスも23区へ揃える
+ * 索引対象 = 人手レビュー承認済みの対応自治体。
+ * なぜ: 対応自治体の手続き・出典が人手レビュー承認済みで本番公開されたら、RAGコーパスも揃える
  * (対応済み自治体とチャット可能自治体が食い違うと、原則9「未対応を対応済みに見せない」の逆=
  * 対応済みなのにチャットだけ使えない不整合になる)。
  * 実際の Vectorize 投入(embeddings)は build.ts を後段で実行して行い、投入完了までは
  * coverage.csv の rag 列は unavailable のまま(未対応を対応済みに見せない=CLAUDE.md原則9)。
+ *
+ * なぜ @tmn/publish の MUNICIPALITIES から導出するのか: 対応自治体コードの一覧は
+ * scripts/publish/src/municipalities.ts が唯一の定義。ここへ別の一覧を持つと、
+ * 新規自治体を対応させたときに更新漏れで「対応済みなのにRAG索引には無い」不整合が起きる
+ * (実際に八王子市追加時にこのファイルを手で書き足していた)。
  *
  * なぜ 2026-08-06 追加の非自治体ソース(13000: 東京都水道局・下水道局・警視庁 / 00000: 日本郵便・
  * デジタル庁)を索引しないか(ADR-009): チャットは「選択した1自治体のスコープに強制する」ことで
  * 自治体をまたいだ回答混入を防いでいる(CLAUDE.md原則4)。区に属さないコードのチャンクを
  * 同じコーパスへ入れると、そのスコープ強制に例外を作ることになり、混入検知の評価も
  * 前提から作り直しになる。この4手続きはチェックリストと公式リンクで完結するため、
- * RAG_MUNICIPALITIES を承認済み自治体のコードだけに保って(13000/00000 を入れない)索引対象から自然に外す。
+ * MUNICIPALITIES には元々 13000/00000 が含まれておらず、索引対象から自然に外れる。
  */
-export const RAG_MUNICIPALITIES = [
-  '13101',
-  '13102',
-  '13103',
-  '13104',
-  '13105',
-  '13106',
-  '13107',
-  '13108',
-  '13109',
-  '13110',
-  '13111',
-  '13112',
-  '13113',
-  '13114',
-  '13115',
-  '13116',
-  '13117',
-  '13118',
-  '13119',
-  '13120',
-  '13121',
-  '13122',
-  '13123',
-  // 市部で最初の八王子市(2026-09-25 人手レビュー承認)。市のコードも「承認済みの対応自治体」として同じ扱い。
-  '13201',
-] as const;
+export const RAG_MUNICIPALITIES = MUNICIPALITIES.filter((m) => m.supported).map((m) => m.code);
 
 function toDateTime(v: string): string {
   const s = (v ?? '').trim();

@@ -6,7 +6,7 @@ import {
   type PublishGateInput,
 } from './gate.js';
 import { buildSeed } from './seed.js';
-import { loadPublishData } from './load.js';
+import { DEFAULT_PUBLISH_CODES, loadPublishData } from './load.js';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
@@ -108,7 +108,7 @@ describe('publish gate — real repository data (13112)', () => {
     // 2026-08-07 の人手レビュー承認により publishedRuleVersion(据え置き)が除去され、
     // rules.json の ruleVersion がそのまま公開版になった。
     // 2026-08-09: 前住所地の転出予定日を起算日にできるようにした改訂で 2026-08-09.1 へ更新。
-    const data = loadPublishData(repoRoot);
+    const data = loadPublishData(repoRoot, DEFAULT_PUBLISH_CODES);
     expect(data.ruleSets[0]?.ruleVersion).toBe('2026-08-09.1');
     expect(data.ruleSets[0]?.publishedRuleVersion).toBeUndefined();
     expect(data.ruleSets[0]?.rules).toHaveLength(14);
@@ -120,14 +120,14 @@ describe('publish gate — real repository data (13112)', () => {
   });
 
   it('synthesizes unique facility_ids (源データの壊れたIDを機械置換)', () => {
-    const data = loadPublishData(repoRoot);
+    const data = loadPublishData(repoRoot, DEFAULT_PUBLISH_CODES);
     const ids = data.facilities.map((f) => f.facilityId);
     expect(new Set(ids).size).toBe(ids.length); // 一意
     expect(ids[0]).toMatch(/^13112-fac-\d{3}$/);
   });
 
   it('injecting a non-approved reference into the real dataset trips the gate', () => {
-    const data = loadPublishData(repoRoot);
+    const data = loadPublishData(repoRoot, DEFAULT_PUBLISH_CODES);
     // なぜ: 実データ(approved参照のみ)に「台帳に存在しない=決してapprovedにならない」合成ソースを
     // 1件注入するとゲートが必ず発火することを固定する。実台帳の承認状態が Step ごとに前進しても
     // (どの自治体が approved かに関係なく)壊れない恒久形にするため、実在の source_id は使わない。
@@ -216,7 +216,7 @@ describe('publish gate — Setagaya school-transfer & childcare after human revi
   ];
 
   it('(a) 承認後: 世田谷の区の10手続き+ライフライン等4件の計14件が公開対象、既定buildSeedは通過する', () => {
-    const data = loadPublishData(repoRoot); // 既定=13112のみ
+    const data = loadPublishData(repoRoot, DEFAULT_PUBLISH_CODES); // 世田谷13112のみ
     // 公開対象は verified 14手続き全件(区の10件 + ライフライン等4件。ADR-009)。
     expect(data.procedures.length).toBe(14);
     expect(data.procedures.every((p) => p.dataStatus === 'verified')).toBe(true);
@@ -235,7 +235,7 @@ describe('publish gate — Setagaya school-transfer & childcare after human revi
   });
 
   it('(b) 回帰ガード: 公開対象(verified)が非approvedソースを参照したら従来どおり PublishGateError で全停止する', () => {
-    const data = loadPublishData(repoRoot);
+    const data = loadPublishData(repoRoot, DEFAULT_PUBLISH_CODES);
     // なぜ: 承認によりゲートが無条件で緑になったわけではないことの証明。もし verified 手続き/ルールが
     // 非approvedソースを参照する状態になれば、ゲートは必ず発火する(不変条件は維持)。
     // なぜ: 実台帳に存在しない合成ソースを使う。どの自治体が承認済みかに依存しない恒久形

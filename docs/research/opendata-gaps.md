@@ -661,7 +661,7 @@
   `dueRule: unknown` とし、`dueDescription` に「区外から転入したときの住所変更の
   届出について、日数の期限はこのページには記載がありません(『犬を飼い始めてから
   30日以内…』は、新たに犬を飼い始めたときの登録の期限です)」と明記した。
-  `packages/rules/src/batch9.test.ts` で、期限が算定されないことと当該注記が
+  `packages/rules/src/meguro-shibuya-katsushika.test.ts` で、期限が算定されないことと当該注記が
   含まれることを回帰ガードとして固定している。
 - 教訓: 同一ページ内に複数の手続き(新規登録・所有者変更・住所変更・死亡届)が
   並ぶ場合、日数の記載がどの見出し配下にあるかを必ず確認する。事前監査の
@@ -712,7 +712,7 @@
   でください」という一般的な注意のみに書き直した。あわせて `procedures.json` /
   `facilities.json` のファイル先頭 `note`、`registry.csv` / `coverage.csv` の
   `notes` からも他区名を除去し、他区との比較は本ファイル(`opendata-gaps.md`)と
-  監査メモにのみ残す運用とした。`packages/rules/src/batch9.test.ts` に、
+  監査メモにのみ残す運用とした。`packages/rules/src/meguro-shibuya-katsushika.test.ts` に、
   `title` / `shortDescription` / `applicabilityReason` / `dueDescription` /
   `contact` / `locations` / `cautions` / `requiredDocuments[].label` および
   rules.json の `dueDescription` / `applicabilityReasonTemplate` /

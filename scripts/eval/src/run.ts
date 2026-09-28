@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PROMPT_VERSION } from '@tmn/rag';
 import { chatResponseSchema } from '@tmn/schemas';
+import { tokyoToday } from '@tmn/domain';
 import { RAG_MUNICIPALITIES, buildChunkManifest, loadApprovedHtmlSources } from '@tmn/rag-index';
 import { assertDatasetShape, parseDataset } from './cases.js';
 import { scoreCase } from './scoring.js';
@@ -28,9 +29,7 @@ const MAX_ERROR_RETRIES = 2;
 // なぜ: レポート成果物名は実行日付(rag-eval-YYYY-MM-DD.md)にする。過去日で固定すると
 // 再実行が歴史記録(例: 初回7/23レポート)を上書きしてしまう。EVAL_REPORT_DATE で明示上書き可。
 // 日付は日本時間で取る(UTC だと深夜〜朝9時の実行が前日名になり、前日の記録を上書きした。2026-09-26)。
-const REPORT_DATE =
-  process.env.EVAL_REPORT_DATE ??
-  new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
+const REPORT_DATE = process.env.EVAL_REPORT_DATE ?? tokyoToday();
 
 /** 既にある記録を上書きしない: 同名があれば -2, -3 … を付ける。 */
 function freshPath(dir: string, stem: string, ext: string): string {

@@ -8,7 +8,7 @@ export async function sha256HexWeb(bytes: ArrayBuffer | Uint8Array): Promise<str
   // SharedArrayBuffer 上にある場合でも、digest へ渡す型を環境差なく ArrayBuffer に揃えるため。
   const buffer: ArrayBuffer =
     bytes instanceof Uint8Array
-      ? bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
+      ? (bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer)
       : bytes;
   const digest = await crypto.subtle.digest('SHA-256', buffer);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');

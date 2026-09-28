@@ -1,9 +1,6 @@
 // @tmn/domain — domain entity types, category constants, municipality codes.
 // 実データ型は @tmn/schemas 側にあり、ここは「web と api の両方が同じ値を見る必要がある定数」を置く。
 
-/** Placeholder package version. Replaced by real domain exports later. */
-export const DOMAIN_PACKAGE_VERSION = '0.0.1';
-
 export {
   SPA_ROUTES,
   isKnownSpaPath,
@@ -24,3 +21,4 @@ export {
   linkifyParts,
   type AnswerPart,
 } from './linkify.js';
+export { tokyoToday, daysBetween } from './date.js';

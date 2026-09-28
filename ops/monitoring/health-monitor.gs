@@ -61,7 +61,10 @@ function checkNow() {
       if (!alerted && fails >= FAILS_BEFORE_ALERT) {
         notify_(
           '[スミハジメ] 異常: ' + t.name,
-          t.base + ' で次の異常が ' + fails * 15 + ' 分ほど続いています。\n\n- ' +
+          t.base +
+            ' で次の異常が ' +
+            fails * 15 +
+            ' 分ほど続いています。\n\n- ' +
             problems.join('\n- '),
         );
         alerted = true;
@@ -85,7 +88,9 @@ function probe_(base) {
     } else {
       var body = JSON.parse(h.getContentText());
       if (body.status !== 'ok') {
-        problems.push('/api/health の自己判定が ' + body.status + '（' + (body.issues || []).join(', ') + '）');
+        problems.push(
+          '/api/health の自己判定が ' + body.status + '（' + (body.issues || []).join(', ') + '）',
+        );
       }
     }
   } catch (e) {
@@ -94,7 +99,8 @@ function probe_(base) {
 
   try {
     var top = UrlFetchApp.fetch(base + '/', opt);
-    if (top.getResponseCode() !== 200) problems.push('トップページが HTTP ' + top.getResponseCode());
+    if (top.getResponseCode() !== 200)
+      problems.push('トップページが HTTP ' + top.getResponseCode());
   } catch (e) {
     problems.push('トップページに接続できない: ' + e.message);
   }

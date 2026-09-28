@@ -46,7 +46,7 @@ const ROUTE_CONFIGS: Record<
   ),
   '/facilities': page(() => import('./pages/FacilitiesPage').then((m) => m.FacilitiesPage)),
   '/waste': page(() => import('./pages/WastePage').then((m) => m.WastePage)),
-  // 区ごとの期限差分の比較ページ。利用者が「区ごとの違いを見る」と明示的に選んで到達する
+  // 自治体ごとの期限差分の比較ページ。利用者が「自治体ごとの違いを見る」と明示的に選んで到達する
   // 独立ページで、自治体間の比較はここだけで行う(CLAUDE.md原則4)。
   '/differences': page(() => import('./pages/DifferencesPage').then((m) => m.DifferencesPage)),
   // 透明性ページ(来歴・鮮度・出典)。Step2でメインナビから外しフッター導線へ移設。

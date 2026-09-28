@@ -1,5 +1,9 @@
-import type { CaseResult, EvalReportData } from './types.js';
+import { MUNICIPALITIES } from '@tmn/publish';
+import type { CaseResult, EvalDataset, EvalReportData } from './types.js';
 import { decideRelease, summarize, type Summary } from './scoring.js';
+
+/** 自治体コード → 表示名(単一の定義 scripts/publish/src/municipalities.ts から)。 */
+const MUNI_NAME_BY_CODE = new Map(MUNICIPALITIES.map((m) => [m.code, m.name]));
 
 /**
  * なぜ: rag-evalスキルの様式(corpus/index/prompt版・総ケース数・retrieval hit rate・citation
@@ -33,11 +37,30 @@ export function groupFailuresByRootCause(results: CaseResult[]): Map<string, str
   return groups;
 }
 
-function summaryTable(s: Summary): string {
+/**
+ * なぜ: 総ケース数の閾値をハードコードすると自治体を追加するたびにレポートが古くなる
+ * (実際に186ケースのデータセットに対し旧コメントが「30(23区は各区3問以上)」のまま残っていた)。
+ * 「自治体ごとに3問以上」の対象は索引対象自治体(dataset.corpus.municipalities)に限る。
+ * 越境/保留系ケースが未対応自治体(例: 13202)を1問だけ使うことがあり、これらは
+ * 「3問以上」の対象ではないため母数(自治体数)に含めると閾値・実績とも過大/過小になる。
+ */
+function datasetThresholdLabel(dataset: EvalDataset): string {
+  const supported = new Set(dataset.corpus.municipalities);
+  const perMunicipality = new Map<string, number>();
+  for (const c of dataset.cases) {
+    if (!supported.has(c.municipalityCode)) continue;
+    perMunicipality.set(c.municipalityCode, (perMunicipality.get(c.municipalityCode) ?? 0) + 1);
+  }
+  const minPerMunicipality = perMunicipality.size > 0 ? Math.min(...perMunicipality.values()) : 0;
+  const minTotal = supported.size * 3;
+  return `${minTotal}以上(索引対象自治体ごとに3問以上・実績: 最小${minPerMunicipality}問/自治体)`;
+}
+
+function summaryTable(s: Summary, dataset: EvalDataset): string {
   const rows = [
     `| 指標 | 値 | §12閾値 |`,
     `| --- | --- | --- |`,
-    `| 総ケース数 | ${s.total} | 30(23区は各区3問以上) |`,
+    `| 総ケース数 | ${s.total} | ${datasetThresholdLabel(dataset)} |`,
     `| pass / fail / 要レビュー / error | ${s.pass} / ${s.fail} / ${s.needsHumanReview} / ${s.error} | — |`,
     `| retrieval hit rate(正答系) | ${pct(s.retrievalHitRate)} | 高いほど良 |`,
     `| 正自治体出典率(正答系・非保留) | ${pct(s.correctMunicipalitySourceRate)} | **100%** |`,
@@ -72,35 +95,12 @@ export function renderReport(data: EvalReportData): string {
 
   lines.push(`## 1. corpus / index / prompt バージョン`);
   lines.push('');
-  // 特別区23区(13101〜13123)。索引対象が23区全体になったため名称も全区分を持つ。
-  const MUNI_NAMES: Record<string, string> = {
-    '13101': '千代田',
-    '13102': '中央',
-    '13103': '港',
-    '13104': '新宿',
-    '13105': '文京',
-    '13106': '台東',
-    '13107': '墨田',
-    '13108': '江東',
-    '13109': '品川',
-    '13110': '目黒',
-    '13111': '大田',
-    '13112': '世田谷',
-    '13113': '渋谷',
-    '13114': '中野',
-    '13115': '杉並',
-    '13116': '豊島',
-    '13117': '北',
-    '13118': '荒川',
-    '13119': '板橋',
-    '13120': '練馬',
-    '13121': '足立',
-    '13122': '葛飾',
-    '13123': '江戸川',
-  };
-  const muniLabel = dataset.corpus.municipalities.map((c) => MUNI_NAMES[c] ?? c).join('・');
+  // 自治体名は単一の定義(MUNI_NAME_BY_CODE = @tmn/publish の MUNICIPALITIES)から取る。
+  const muniLabel = dataset.corpus.municipalities
+    .map((c) => MUNI_NAME_BY_CODE.get(c) ?? c)
+    .join('・');
   lines.push(
-    `- 索引対象自治体: ${dataset.corpus.municipalities.length}区(${muniLabel}) = ${dataset.corpus.municipalities.join(' / ')}`,
+    `- 索引対象自治体: ${dataset.corpus.municipalities.length}自治体(${muniLabel}) = ${dataset.corpus.municipalities.join(' / ')}`,
   );
   lines.push(`- 索引ソース種別: ${dataset.corpus.indexedSourceType}(CSVソースは未索引=コーパス外)`);
   const srcRows = Object.entries(meta.approvedHtmlSources)
@@ -120,7 +120,7 @@ export function renderReport(data: EvalReportData): string {
 
   lines.push(`## 2. サマリ指標`);
   lines.push('');
-  lines.push(summaryTable(s));
+  lines.push(summaryTable(s, dataset));
   lines.push('');
   lines.push(`### 種別別`);
   lines.push('');
@@ -138,11 +138,11 @@ export function renderReport(data: EvalReportData): string {
   lines.push('');
   if (s.contaminationTotal === 0) {
     lines.push(
-      `**混入 0 件。** 全 citation が問い合わせ先の区の \`src-{code}-\` 接頭辞に一致(自治体分離OK)。`,
+      `**混入 0 件。** 全 citation が問い合わせ先の自治体の \`src-{code}-\` 接頭辞に一致(自治体分離OK)。`,
     );
   } else {
     lines.push(
-      `**混入 ${s.contaminationTotal} 件(重大障害)。** 以下のケースで他区ソースが引用された:`,
+      `**混入 ${s.contaminationTotal} 件(重大障害)。** 以下のケースで他自治体のソースが引用された:`,
     );
     for (const r of results.filter((r) => r.contaminationCount > 0)) {
       lines.push(`- ${r.id}(${r.municipalityCode}): ${r.citationSourceIds.join(', ')}`);
@@ -183,7 +183,7 @@ export function renderReport(data: EvalReportData): string {
 
   lines.push(`## 6. 全ケース結果`);
   lines.push('');
-  lines.push(`| id | 種別 | 区 | 判定 | 保留 | 引用 | latency | 備考 |`);
+  lines.push(`| id | 種別 | 自治体 | 判定 | 保留 | 引用 | latency | 備考 |`);
   lines.push(`| --- | --- | --- | --- | --- | --- | --- | --- |`);
   for (const r of results) {
     const note =
@@ -222,7 +222,7 @@ export function renderReport(data: EvalReportData): string {
     `6. 出典に title/owner/url/lastVerified を露出 → citation 整合率で検査(${pct(s.citationCorrectnessRate)})`,
   );
   lines.push(
-    `7. 抜粋内インジェクションを無視 → SYSTEM_PROMPT規則7で強制(越境系(X-*)で自区外へ踏み込まないことを併せて確認)`,
+    `7. 抜粋内インジェクションを無視 → SYSTEM_PROMPT規則7で強制(越境系(X-*)で自治体外へ踏み込まないことを併せて確認)`,
   );
   lines.push(`8. レイテンシ/コスト → p95 ${s.latency.p95}ms(閾値8000ms)`);
   lines.push('');

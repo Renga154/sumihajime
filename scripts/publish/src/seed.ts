@@ -1,4 +1,4 @@
-import { loadPublishData, type PublishData } from './load.js';
+import { DEFAULT_PUBLISH_CODES, loadPublishData, type PublishData } from './load.js';
 import { assertPublishGate } from './gate.js';
 import { buildSeedStatements } from './sql.js';
 
@@ -12,7 +12,15 @@ export interface Seed {
   statements: string[];
 }
 
-export function buildSeed(repoRoot: string, municipalityCodes?: readonly string[]): Seed {
+/**
+ * @param municipalityCodes 省略時は最小フィクスチャ(DEFAULT_PUBLISH_CODES=世田谷のみ)。
+ *   これは軽量な統合テスト用の意図した既定値であり、loadPublishData自体には既定値を
+ *   持たせていない(全自治体検証がここへ静かに縮退しないため。scripts/publish/src/load.ts参照)。
+ */
+export function buildSeed(
+  repoRoot: string,
+  municipalityCodes: readonly string[] = DEFAULT_PUBLISH_CODES,
+): Seed {
   const data = loadPublishData(repoRoot, municipalityCodes);
   assertPublishGate({
     approvedSourceIds: data.approvedSourceIds,

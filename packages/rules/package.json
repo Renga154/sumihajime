@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "Deterministic rule evaluator (pure functions) + due-date utils. Implemented in T-003.",
+  "description": "Deterministic rule evaluator (pure functions) + due-date utils.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

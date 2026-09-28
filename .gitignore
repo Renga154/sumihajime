@@ -28,6 +28,7 @@ coverage/
 tests/e2e/playwright-report/
 tests/e2e/test-results/
 tests/e2e/.last-run.json
+tests/e2e/.artifacts/
 
 # Editor / OS
 .DS_Store
