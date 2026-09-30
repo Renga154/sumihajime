@@ -98,7 +98,7 @@
     },
     {
       "id": "procedure_national_health_insurance",
-      "version": "2026-08-07.1",
+      "version": "2026-09-30.1",
       "municipalityCode": "13102",
       "canonicalType": "national_health_insurance",
       "title": "国民健康保険の加入の届出(中央区に転入したとき)",
@@ -129,8 +129,9 @@
       ],
       "contact": "中央区役所 福祉保健部保険年金課資格係 電話 03-3546-5362",
       "sourceIds": ["src-13102-national_health_insurance-001"],
-      "lastVerifiedAt": "2026-08-07T00:00:00Z",
-      "dataStatus": "verified"
+      "lastVerifiedAt": "2026-09-30T00:00:00Z",
+      "dataStatus": "verified",
+      "cautions": []
     },
     {
       "id": "procedure_national_pension_address",
