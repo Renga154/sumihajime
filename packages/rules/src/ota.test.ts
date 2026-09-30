@@ -155,14 +155,27 @@ describe('Ota (13111) — schema validation (来歴・型検証; CI gate)', () =
     expect(ruleIds).toEqual(procIds);
   });
 
-  it('facilities.json — 26 窓口/庁舎施設が parse; 本庁舎/地域庁舎/特別出張所/その他庁舎 present。全件に緯度経度', () => {
+  it('facilities.json — 23 窓口/庁舎施設が parse; 本庁舎/地域庁舎/特別出張所/その他庁舎(教育委員会) present。千束以外は緯度経度あり', () => {
+    // 2026-09-30 窓口一覧の点検: 窓口業務を休止した蒲田東特別出張所(「令和8年8月末日をもって休止」)と、
+    // 手続きの窓口ではない産業プラザ庁舎・本庁舎分室(公園課)を外した(26 → 23)。千束特別出張所は
+    // 2024-01-09 に移転しており、CSV の住所・座標は移転前のもののため、区の施設ページの所在地に
+    // 置き換えて座標を持たない(出典を混ぜない)。
     const facilities = parseFacilities();
-    expect(facilities.length).toBe(26);
+    expect(facilities.length).toBe(23);
     for (const f of facilities) {
       expect(f.municipalityCode).toBe(OTA);
+      if (f.name === '千束特別出張所') {
+        expect(f.address).toBe('東京都大田区北千束二丁目35番8号');
+        expect(f.sourceId).toBe('src-13111-facilities-004');
+        expect(f.lat).toBeUndefined();
+        continue;
+      }
       expect(typeof f.lat).toBe('number');
       expect(typeof f.lng).toBe('number');
     }
+    const names = facilities.map((f) => f.name);
+    expect(names).not.toContain('蒲田東特別出張所');
+    expect(names.filter((n) => n.includes('特別出張所'))).toHaveLength(17);
     const cats = new Set(facilities.map((f) => f.category));
     expect(cats.has('本庁舎')).toBe(true);
     expect(cats.has('地域庁舎')).toBe(true);

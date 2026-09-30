@@ -12,6 +12,7 @@ import {
 } from '@tmn/schemas';
 import { dummyRuleSet } from '@tmn/test-fixtures';
 import { evaluate } from './evaluate.js';
+import { expectedLastVerifiedAt, expectedVersion } from './reaudited.fixture.js';
 import { MunicipalityScopeMismatchError } from './errors.js';
 
 /**
@@ -151,17 +152,26 @@ describe('Setagaya (13112) — schema validation (来歴・型検証; CI gate)',
       // 2026-07-25時点で13112の全手続きが人手レビュー承認済み(ADR-007の公開単位)
       expect(pv.dataStatus).toBe('verified');
     }
-    const original = procedures.filter((p) => p.version === '2026-07-21.1');
-    const approvedStep3 = procedures.filter((p) => p.version === '2026-07-25.1');
-    // 既存8件は verified のまま、2026-07-21 人手レビュー承認の版・確認日を保持(不変の回帰ガード)。
-    expect(original.length).toBe(8);
-    for (const pv of original) {
-      expect(pv.lastVerifiedAt).toBe('2026-07-21T11:44:00Z');
+    // 既存8件は 2026-07-21、Step3 追加の2件は 2026-07-25 に人手レビュー承認された版・確認日を保持する
+    // (不変の回帰ガード)。再監査で内容を直した手続きだけは、その日の版・確認日へ進む
+    // (reaudited.fixture.ts。2026-09-30: 窓口一覧の点検で「10か所」の表記と本庁舎の窓口の移転予定を直した)。
+    const approvedStep3 = procedures.filter((p) => APPROVED_STEP3_IDS.includes(p.id));
+    expect(approvedStep3.map((p) => p.id).sort()).toEqual(APPROVED_STEP3_IDS);
+    for (const pv of procedures) {
+      const step3 = APPROVED_STEP3_IDS.includes(pv.id);
+      expect(pv.version, pv.id).toBe(
+        expectedVersion(MUNICIPALITY, pv.id, step3 ? '2026-07-25.1' : '2026-07-21.1'),
+      );
+      expect(pv.lastVerifiedAt, pv.id).toBe(
+        expectedLastVerifiedAt(
+          MUNICIPALITY,
+          pv.id,
+          step3 ? '2026-07-25T00:00:00Z' : '2026-07-21T11:44:00Z',
+        ),
+      );
     }
     // Step3 追加の2件は 2026-07-25 に人手レビュー承認され、pending系のcaution文言は除去されている。
-    expect(approvedStep3.map((p) => p.id).sort()).toEqual(APPROVED_STEP3_IDS);
     for (const pv of approvedStep3) {
-      expect(pv.lastVerifiedAt).toBe('2026-07-25T00:00:00Z');
       expect(pv.cautions?.some((c) => c.includes('人手レビュー未了'))).toBe(false);
     }
   });
@@ -173,15 +183,35 @@ describe('Setagaya (13112) — schema validation (来歴・型検証; CI gate)',
     expect(ruleIds).toEqual(procIds);
   });
 
-  it('facilities.json — all facilities parse; window facilities present (本庁舎/総合支所/出張所/まちづくりセンター)', () => {
+  it('facilities.json — 転入届を扱う10窓口(くみん窓口5+出張所5)だけ。ID は一意、まちづくりセンター等は含めない', () => {
+    // 2026-09-30 窓口一覧の点検: 以前は公共施設一覧CSVの窓口系48行(まちづくりセンター28・旧施設・倉庫・
+    // 店舗区画・区の出張所ではない施設など。facilityId は全行同じ壊れた値)を載せていた。区の
+    // 「受付窓口（10か所）」ページと転入届ページ(「各総合支所くみん窓口、各出張所の受付窓口（10か所）」)
+    // に合わせて10窓口に絞った。
     const facilities = parseFacilities();
-    expect(facilities.length).toBeGreaterThan(0);
+    expect(facilities).toHaveLength(10);
     for (const f of facilities) expect(f.municipalityCode).toBe(MUNICIPALITY);
-    const cats = new Set(facilities.map((f) => f.category));
-    expect(cats.has('本庁舎')).toBe(true);
-    expect(cats.has('総合支所')).toBe(true);
-    expect(cats.has('出張所')).toBe(true);
-    expect(cats.has('まちづくりセンター')).toBe(true);
+    expect(new Set(facilities.map((f) => f.facilityId)).size).toBe(10);
+    const cats = facilities.map((f) => f.category);
+    expect(cats.filter((c) => c === '総合支所くみん窓口')).toHaveLength(5);
+    expect(cats.filter((c) => c === '出張所')).toHaveLength(5);
+    expect(
+      facilities.some((f) => /まちづくりセンター|（旧）|倉庫|集会所|Factory/.test(f.name)),
+    ).toBe(false);
+    // 世田谷総合支所くみん窓口は現在の所在地(第2庁舎1階)を示し、西棟への移転予定を添える。
+    // この所在地に当たる行が CSV に無いので、区の受付窓口一覧ページを出典にして座標は持たない。
+    const setagaya = facilities.find((f) => f.facilityId === '13112-fac-kumin-setagaya');
+    expect(setagaya?.address).toContain('世田谷区役所第2庁舎1階');
+    expect(setagaya?.name).toContain('西棟1階へ移転予定');
+    expect(setagaya?.sourceId).toBe('src-13112-facilities-002');
+    expect(setagaya?.lat).toBeUndefined();
+    // 残る9窓口は CSV の同じ建物・同じ番地の行(座標あり)。
+    const others = facilities.filter((f) => f !== setagaya);
+    for (const f of others) {
+      expect(f.sourceId).toBe('src-13112-facilities-001');
+      expect(typeof f.lat).toBe('number');
+      expect(typeof f.lng).toBe('number');
+    }
   });
 
   it('waste.json — all areas and schedules parse; area labels are the district picker options', () => {

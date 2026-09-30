@@ -245,36 +245,54 @@ describe('Batch8 — schema validation & approved status (CI gate)', () => {
     expect(ruleIds).toEqual(procIds);
   });
 
-  it('facilities.json — 窓口件数(中央4 / 港5 / 文京1 / 台東1 / 墨田5)と座標の有無', () => {
+  it('facilities.json — 窓口件数(中央4 / 港6 / 文京1 / 台東6 / 墨田5)と座標の有無', () => {
     // 中央: 本庁舎1 + 特別出張所3(公式ページ由来・緯度経度なし。都のCSVはID列が科学的記数法で破損)。
     const chuo = facilitiesOf(CHUO);
     expect(chuo.length).toBe(4);
     for (const f of chuo) expect(f.lat).toBeUndefined();
 
-    // 港: 5地区の総合支所(公式ページ由来・緯度経度なし。施設CSVは区独自CKANでGIF標準ではない)。
+    // 港: 5地区の総合支所 + 芝浦港南地区総合支所台場分室(公式ページ由来・緯度経度なし。施設CSVは
+    // 区独自CKANでGIF標準ではない)。台場分室は転入届の届出窓口で、2026-09-30 に区の「総合支所・分室」
+    // ページを出典に追加した。
     const minato = facilitiesOf(MINATO);
-    expect(minato.length).toBe(5);
+    expect(minato.length).toBe(6);
     for (const f of minato) expect(f.lat).toBeUndefined();
+    expect(minato.find((f) => f.name === '芝浦港南地区総合支所台場分室')?.sourceId).toBe(
+      'src-13103-facilities-002',
+    );
 
     // 文京: 住民異動の受付は文京シビックセンター2階のみ(統一の公共施設CSVが存在しない)。
     const bunkyo = facilitiesOf(BUNKYO);
     expect(bunkyo.length).toBe(1);
     expect(bunkyo[0]?.lat).toBeUndefined();
 
-    // 台東: 区民事務所の所在地が公式一覧ページに無いため本庁舎のみ(所在地を推測で補わない)。
+    // 台東: 本庁舎 + 区民事務所3・分室2。一覧ページには名称しか無く、所在地は各施設のページ
+    // (2026-09-30 に出典として登録)による。緯度経度は各ページに無いため持たない。
     const taito = facilitiesOf(TAITO);
-    expect(taito.length).toBe(1);
-    expect(taito[0]?.lat).toBeUndefined();
+    expect(taito.length).toBe(6);
+    for (const f of taito) expect(f.lat).toBeUndefined();
+    for (const f of taito.filter((x) => x.facilityId !== '13106-fac-honcho')) {
+      expect(f.sourceId).toMatch(/^src-13106-facilities-00[2-6]$/);
+      expect(f.address).toMatch(/^東京都台東区/);
+    }
 
     // 墨田: 自治体標準CSV由来(ID列破損なし)。区役所 + 出張所4、緯度経度は実値。
     // 横川出張所は令和7年11月28日で窓口業務を終了したため除外(2026-09-29 再監査)。
+    // 文花出張所は CSV の番地列が崩れていた(「32-1102室」)ため、2026-09-30 に区の出張所ページの
+    // 所在地へ置き換えた。そのページに緯度経度は無いので座標を持たない(出典を混ぜない)。
     const sumida = facilitiesOf(SUMIDA);
     expect(sumida.length).toBe(5);
     expect(sumida.map((f) => f.name)).not.toContain('横川出張所');
     for (const f of sumida) {
+      expect(f.facilityId).toMatch(/^13107500000\d$/);
+      if (f.name === '文花出張所') {
+        expect(f.address).toBe('東京都墨田区文花一丁目32番1号102号室');
+        expect(f.sourceId).toBe('src-13107-facilities-004');
+        expect(f.lat).toBeUndefined();
+        continue;
+      }
       expect(typeof f.lat).toBe('number');
       expect(typeof f.lng).toBe('number');
-      expect(f.facilityId).toMatch(/^13107500000\d$/);
     }
   });
 

@@ -49,6 +49,16 @@ const ARAKAWA = '13118';
 const TOSHIMA = '13116';
 const KITA = '13117';
 const BATCH7 = [NAKANO, ARAKAWA, TOSHIMA, KITA] as const;
+/**
+ * 2026-09-30 の窓口一覧の点検で登録した区公式の窓口一覧ページ(定期巡回で閉所・移転を検知するため)。
+ * 2026-08-07 の承認より後に登録したので、承認者の記録の日付が異なる。
+ */
+const LATER_REVIEWED: ReadonlySet<string> = new Set([
+  'src-13114-facilities-004',
+  'src-13116-facilities-001',
+  'src-13118-facilities-002',
+  'src-13118-facilities-003',
+]);
 const RULE_VERSION = '2026-08-07.1';
 /**
  * 2026-08-09: 前住所地の転出予定日(任意入力)を起算日にできるようにした改訂で ruleVersion を
@@ -235,9 +245,16 @@ describe('Batch7 — schema validation & approved status (CI gate)', () => {
     }
 
     // 荒川: 区役所本庁舎/北庁舎 + 区民事務所4(自治体標準CSV由来・緯度経度は実値)。
+    // 2026-09-30: 南千住区民事務所だけは CSV の建物名が旧表記のため、区のよくある質問ページの
+    // 所在地に置き換えた。そのページに緯度経度は無いので座標を持たない(出典を混ぜない)。
     const arakawa = facilitiesOf(ARAKAWA);
     expect(arakawa.length).toBe(6);
     for (const f of arakawa) {
+      if (f.sourceId === 'src-13118-facilities-003') {
+        expect(f.address).toContain('ブランズタワー（アクレスティ）南千住2階');
+        expect(f.lat).toBeUndefined();
+        continue;
+      }
       expect(typeof f.lat).toBe('number');
       expect(typeof f.lng).toBe('number');
     }
@@ -723,7 +740,11 @@ describe('Batch7 — provenance integrity & scope safety', () => {
         const cells = row.split(',');
         // 列順: ... 15:content_hash, 16:effective_from, 17:effective_to, 18:review_status, 19:reviewer
         expect(cells[17], row.slice(0, 60)).toBe('approved');
-        expect(cells[18], row.slice(0, 60)).toBe('maintainer (2026-08-07 human review)');
+        // 2026-09-30 の窓口一覧の点検で登録した窓口一覧ページだけは、その日の人手レビューで承認する。
+        const reviewer = LATER_REVIEWED.has(cells[0] ?? '')
+          ? 'maintainer (2026-09-30 human review)'
+          : 'maintainer (2026-08-07 human review)';
+        expect(cells[18], row.slice(0, 60)).toBe(reviewer);
         // content_hash(SHA-256 16進64桁)が記録されていること。
         expect(cells[14], row.slice(0, 60)).toMatch(/^[0-9a-f]{64}$/);
       }

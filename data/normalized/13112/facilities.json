@@ -1,14 +1,17 @@
 {
   "municipalityCode": "13112",
+  "version": "2026-09-30.1",
+  "note": "2026-09-30 窓口一覧の点検(区公式の窓口一覧ページを出典として登録し、定期巡回の対象にした): 窓口一覧を、転入届を扱う10窓口(各総合支所くみん窓口5か所と出張所5か所)に作り直した。区の受付窓口一覧ページ「受付窓口（10か所）」(更新日2024年8月9日)と転入届ページ(『各総合支所くみん窓口、各出張所の受付窓口（10か所）で受付しています』)による。以前の48行は公共施設一覧CSVの窓口系の行をそのまま載せており、転入届を扱わないまちづくりセンター28か所、旧施設3件(「（旧）若林まちづくりセンター」など)、防災資材倉庫、区民集会所、店舗区画、区の出張所ではない「Factory藍出張所Felice di Ai」、マイナンバーカード特設窓口、本庁舎の建物単位の行(東棟・西棟)を含んでいた。facilityId も全行が同じ壊れた値だった。世田谷総合支所くみん窓口は現在「世田谷区役所第2庁舎1階」(世田谷4丁目22番35号)で、2026年10月13日から西棟1階へ移る予定(区の「本庁舎等整備に伴う窓口の移転について」、更新日2026年7月30日)。人手承認(承認待ち)。",
   "sourceId": "src-13112-facilities-001",
   "dataQualityNotes": [
-    "出典CSVの『所在地_番地以下』列にExcelの日付誤変換汚損（例: 8-18→『8月18日』, 34-2→『Feb-34』）が複数行で発生。住所は汚損のない『所在地_連結表記』列（正規の完全住所）を採用した。番地の捏造補完は行っていない。該当行はcorruptedRows参照。",
-    "『名称』列にExcel数式/セル範囲の混入（例: 『+E4:F4』）を検出した行は重複・破損のため除外した: ['世田谷区役所西棟+E4:F4（複合施設）']",
-    "窓口の受付時間はCSVに未収録（利用可能曜日/開始/終了時間が空）のため hours は設定していない。手続きごとの受付時間は各手続きページ（procedures.json）を参照。"
+    "出典CSVの『所在地_番地以下』列にExcelの日付誤変換汚損（例: 8-18→『8月18日』）が複数行で発生。住所は汚損のない『所在地_連結表記』列（正規の完全住所）を採用した。番地の捏造補完は行っていない。掲載している行のうち該当するものは corruptedRows 参照。",
+    "出典CSVの施設IDは全行が同じ値(Excelの指数表記化で壊れた「1.31121E+11」)だったため、facilityId は窓口ごとに一意な値を振り直した(出典の値ではない)。",
+    "窓口の受付時間はCSVに未収録（利用可能曜日/開始/終了時間が空）のため hours は設定していない。手続きごとの受付時間は各手続きページ（procedures.json）を参照。",
+    "9窓口は、区の受付窓口一覧ページの所在地と番地まで一致する出典CSVの建物の行(「北沢総合支所（複合施設）」など)の住所・緯度経度を使い、名称は受付窓口一覧の窓口名にした。建物名・階は受付窓口一覧の記載を名称に添えた(前例: 品川区役所・練馬区民事務所の名称)。",
+    "世田谷総合支所くみん窓口だけは、受付窓口一覧の所在地(世田谷4丁目22番35号 世田谷区役所第2庁舎1階)に当たる行が出典CSVに無いため、受付窓口一覧ページを出典にし、緯度経度は設定しない。2026年10月13日から西棟1階へ移る予定(区の「本庁舎等整備に伴う窓口の移転について」)を名称に添えた。移転後の所在地番号は区が受付窓口一覧を更新した時点で確かめる。"
   ],
   "corruptedRows": [
     {
-      "facilityId": "13112-fac-1.31121E+11",
       "name": "北沢総合支所（複合施設）",
       "corruptedColumn": "所在地_番地以下",
       "rawCorruptedValue": "8月18日",
@@ -16,7 +19,6 @@
       "adoptedAddress": "東京都世田谷区北沢2-8-18"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
       "name": "玉川総合支所（複合施設）",
       "corruptedColumn": "所在地_番地以下",
       "rawCorruptedValue": "4月1日",
@@ -24,7 +26,6 @@
       "adoptedAddress": "東京都世田谷区等々力3-4-1"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
       "name": "砧総合支所（複合施設）",
       "corruptedColumn": "所在地_番地以下",
       "rawCorruptedValue": "2月1日",
@@ -32,7 +33,6 @@
       "adoptedAddress": "東京都世田谷区成城6-2-1"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
       "name": "太子堂出張所（複合施設）",
       "corruptedColumn": "所在地_番地以下",
       "rawCorruptedValue": "1月17日",
@@ -40,7 +40,6 @@
       "adoptedAddress": "東京都世田谷区太子堂2-17-1"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
       "name": "二子玉川出張所（複合施設）",
       "corruptedColumn": "所在地_番地以下",
       "rawCorruptedValue": "4月5日",
@@ -48,726 +47,111 @@
       "adoptedAddress": "東京都世田谷区玉川4-4-5"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
       "name": "烏山出張所（複合施設）",
       "corruptedColumn": "所在地_番地以下",
       "rawCorruptedValue": "2月19日",
       "addressUsed": "所在地_連結表記(汚損なし)",
       "adoptedAddress": "東京都世田谷区南烏山6-2-19"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "太子堂まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "1月17日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区太子堂2-17-1"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "若林まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "Feb-34",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区若林1-34-2"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "上町まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "5月23日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区世田谷1-23-5"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "下馬まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "4月13日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区下馬4-13-4"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "上馬まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "10月17日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区上馬4-10-17"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "北沢まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "8月18日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区北沢2-8-18"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "代沢まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "1月15日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区代沢5-1-15"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "新代田まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "6月14日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区羽根木1-6-14"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "松沢まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "5月31日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区赤堤5-31-5"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "奥沢まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "7月15日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区奥沢3-15-7"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "九品仏まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "Apr-35",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区奥沢7-35-4"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "等々力まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "4月1日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区等々力3-4-1"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "上野毛まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "Nov-33",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区中町2-33-11"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "二子玉川まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "4月5日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区玉川4-4-5"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "深沢まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "Dec-33",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区駒沢4-33-12"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "祖師谷まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "1月23日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区祖師谷4-1-23"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "成城まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "3月10日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区成城6-3-10"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "船橋まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "3月2日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区船橋4-3-2"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "喜多見まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "11月10日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区喜多見5-11-10"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "砧まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "8月18日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区砧5-8-18"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "上北沢まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "Sep-32",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区上北沢4-32-9"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "上祖師谷まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "7月6日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区上祖師谷2-7-6"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "烏山まちづくりセンター（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "4月26日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区南烏山6-4ｰ26"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "砧総合支所区民集会所（複合施設）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "2月1日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区成城6-2-1"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "（旧）若林まちづくりセンター",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "Jan-34",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区若林3-34-1"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "（旧）奥沢まちづくりセンター",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "5月7日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区奥沢3-5-7"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "（旧）船橋まちづくりセンター",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "1月12日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区船橋4-1-12"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "烏山総合支所マイナンバーカード特設窓口",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "6月28日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区南烏山6-28-6"
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "name": "北沢総合支所（地下１階店舗③区画）",
-      "corruptedColumn": "所在地_番地以下",
-      "rawCorruptedValue": "8月18日",
-      "addressUsed": "所在地_連結表記(汚損なし)",
-      "adoptedAddress": "東京都世田谷区北沢2-8-18"
     }
   ],
   "facilities": [
     {
-      "facilityId": "13112-fac-1.31121E+11",
+      "facilityId": "13112-fac-kumin-setagaya",
       "municipalityCode": "13112",
-      "name": "世田谷区役所東棟（複合施設）",
-      "category": "本庁舎",
-      "address": "東京都世田谷区世田谷4-21-27",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.646581,
-      "lng": 139.653243
+      "name": "世田谷総合支所くみん窓口(2026年10月13日から区役所西棟1階へ移転予定)",
+      "category": "総合支所くみん窓口",
+      "address": "東京都世田谷区世田谷4丁目22番35号 世田谷区役所第2庁舎1階",
+      "sourceId": "src-13112-facilities-002"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
+      "facilityId": "13112-fac-kumin-kitazawa",
       "municipalityCode": "13112",
-      "name": "世田谷区役所西棟（複合施設）",
-      "category": "本庁舎",
-      "address": "東京都世田谷区世田谷4-22-33",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.64647,
-      "lng": 139.652243
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "世田谷総合支所（複合施設）",
-      "category": "総合支所",
-      "address": "東京都世田谷区世田谷4-22-33",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.64647,
-      "lng": 139.652243
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "北沢総合支所（複合施設）",
-      "category": "総合支所",
+      "name": "北沢総合支所くみん窓口(北沢タウンホール地下1階)",
+      "category": "総合支所くみん窓口",
       "address": "東京都世田谷区北沢2-8-18",
-      "sourceId": "src-13112-facilities-001",
       "lat": 35.662208,
-      "lng": 139.66972
+      "lng": 139.66972,
+      "sourceId": "src-13112-facilities-001"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
+      "facilityId": "13112-fac-kumin-tamagawa",
       "municipalityCode": "13112",
-      "name": "玉川総合支所（複合施設）",
-      "category": "総合支所",
+      "name": "玉川総合支所くみん窓口(玉川総合支所1階)",
+      "category": "総合支所くみん窓口",
       "address": "東京都世田谷区等々力3-4-1",
-      "sourceId": "src-13112-facilities-001",
       "lat": 35.608582,
-      "lng": 139.648462
+      "lng": 139.648462,
+      "sourceId": "src-13112-facilities-001"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
+      "facilityId": "13112-fac-kumin-kinuta",
       "municipalityCode": "13112",
-      "name": "砧総合支所（複合施設）",
-      "category": "総合支所",
+      "name": "砧総合支所くみん窓口(砧総合支所1階)",
+      "category": "総合支所くみん窓口",
       "address": "東京都世田谷区成城6-2-1",
-      "sourceId": "src-13112-facilities-001",
       "lat": 35.641265,
-      "lng": 139.600691
+      "lng": 139.600691,
+      "sourceId": "src-13112-facilities-001"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
+      "facilityId": "13112-fac-kumin-karasuyama",
       "municipalityCode": "13112",
-      "name": "烏山総合支所（複合施設）",
-      "category": "総合支所",
+      "name": "烏山総合支所くみん窓口(烏山総合支所1階)",
+      "category": "総合支所くみん窓口",
       "address": "東京都世田谷区南烏山6-22-14",
-      "sourceId": "src-13112-facilities-001",
       "lat": 35.669836,
-      "lng": 139.597976
+      "lng": 139.597976,
+      "sourceId": "src-13112-facilities-001"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
+      "facilityId": "13112-fac-shutchojo-taishido",
       "municipalityCode": "13112",
-      "name": "太子堂出張所（複合施設）",
+      "name": "太子堂出張所",
       "category": "出張所",
       "address": "東京都世田谷区太子堂2-17-1",
-      "sourceId": "src-13112-facilities-001",
       "lat": 35.644777,
-      "lng": 139.671139
+      "lng": 139.671139,
+      "sourceId": "src-13112-facilities-001"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
+      "facilityId": "13112-fac-shutchojo-kyodo",
       "municipalityCode": "13112",
-      "name": "経堂出張所（複合施設）",
+      "name": "経堂出張所",
       "category": "出張所",
       "address": "東京都世田谷区宮坂1-44-29",
-      "sourceId": "src-13112-facilities-001",
       "lat": 35.650582,
-      "lng": 139.641481
+      "lng": 139.641481,
+      "sourceId": "src-13112-facilities-001"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
+      "facilityId": "13112-fac-shutchojo-yoga",
       "municipalityCode": "13112",
-      "name": "用賀出張所（複合施設）",
+      "name": "用賀出張所",
       "category": "出張所",
       "address": "東京都世田谷区用賀2-29-22",
-      "sourceId": "src-13112-facilities-001",
       "lat": 35.62561,
-      "lng": 139.636452
+      "lng": 139.636452,
+      "sourceId": "src-13112-facilities-001"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
+      "facilityId": "13112-fac-shutchojo-futakotamagawa",
       "municipalityCode": "13112",
-      "name": "二子玉川出張所（複合施設）",
+      "name": "二子玉川出張所",
       "category": "出張所",
       "address": "東京都世田谷区玉川4-4-5",
-      "sourceId": "src-13112-facilities-001",
       "lat": 35.615468,
-      "lng": 139.626705
+      "lng": 139.626705,
+      "sourceId": "src-13112-facilities-001"
     },
     {
-      "facilityId": "13112-fac-1.31121E+11",
+      "facilityId": "13112-fac-shutchojo-karasuyama",
       "municipalityCode": "13112",
-      "name": "烏山出張所（複合施設）",
+      "name": "烏山出張所(烏山区民センター1階)",
       "category": "出張所",
       "address": "東京都世田谷区南烏山6-2-19",
-      "sourceId": "src-13112-facilities-001",
       "lat": 35.668837,
-      "lng": 139.600537
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "池尻まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区池尻3-27-21",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.649821,
-      "lng": 139.67869
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "太子堂まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区太子堂2-17-1",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.644777,
-      "lng": 139.671139
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "若林まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区若林1-34-2",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.646106,
-      "lng": 139.66376
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "上町まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区世田谷1-23-5",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.641906,
-      "lng": 139.647502
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "経堂まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区宮坂1-44-29",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.650582,
-      "lng": 139.641481
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "下馬まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区下馬4-13-4",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.635975,
-      "lng": 139.679084
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "上馬まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区上馬4-10-17",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.635039,
-      "lng": 139.662542
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "北沢まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区北沢2-8-18",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.662208,
-      "lng": 139.66972
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "梅丘まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区梅丘1-61-16",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.653407,
-      "lng": 139.652326
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "代沢まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区代沢5-1-15",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.654901,
-      "lng": 139.66779
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "新代田まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区羽根木1-6-14",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.66454,
-      "lng": 139.660427
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "松原まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区松原5-43-28",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.66465,
-      "lng": 139.651171
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "松沢まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区赤堤5-31-5",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.665384,
-      "lng": 139.638033
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "奥沢まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区奥沢3-15-7",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.600773,
-      "lng": 139.672945
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "九品仏まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区奥沢7-35-4",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.606917,
-      "lng": 139.661764
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "等々力まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区等々力3-4-1",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.608582,
-      "lng": 139.648462
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "上野毛まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区中町2-33-11",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.611404,
-      "lng": 139.641027
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "用賀まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区用賀2-29-22",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.62561,
-      "lng": 139.636452
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "二子玉川まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区玉川4-4-5",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.615468,
-      "lng": 139.626705
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "深沢まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区駒沢4-33-12",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.62792,
-      "lng": 139.652654
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "祖師谷まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区祖師谷4-1-23",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.646928,
-      "lng": 139.608218
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "成城まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区成城6-3-10",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.640809,
-      "lng": 139.600514
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "船橋まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区船橋4-3-2",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.655308,
-      "lng": 139.622534
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "喜多見まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区喜多見5-11-10",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.628916,
-      "lng": 139.601209
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "砧まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区砧5-8-18",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.637791,
-      "lng": 139.610003
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "上北沢まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区上北沢4-32-9",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.669968,
-      "lng": 139.617974
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "上祖師谷まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区上祖師谷2-7-6",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.6571,
-      "lng": 139.599674
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "烏山まちづくりセンター（複合施設）",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区南烏山6-4ｰ26",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.668858,
-      "lng": 139.600048
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "砧総合支所区民集会所（複合施設）",
-      "category": "総合支所",
-      "address": "東京都世田谷区成城6-2-1",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.641265,
-      "lng": 139.600691
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "烏山総合支所防災資材倉庫",
-      "category": "総合支所",
-      "address": "東京都世田谷区北烏山8-8",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.67493,
-      "lng": 139.589988
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "Factory藍出張所Felice di Ai",
-      "category": "出張所",
-      "address": "東京都世田谷区喜多見9-2-33",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.636799,
-      "lng": 139.58787
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "（旧）若林まちづくりセンター",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区若林3-34-1",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.644989,
-      "lng": 139.660456
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "（旧）奥沢まちづくりセンター",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区奥沢3-5-7",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.599967,
-      "lng": 139.673127
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "（旧）船橋まちづくりセンター",
-      "category": "まちづくりセンター",
-      "address": "東京都世田谷区船橋4-1-12",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.654228,
-      "lng": 139.621584
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "烏山総合支所マイナンバーカード特設窓口",
-      "category": "総合支所",
-      "address": "東京都世田谷区南烏山6-28-6",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.66965,
-      "lng": 139.59864
-    },
-    {
-      "facilityId": "13112-fac-1.31121E+11",
-      "municipalityCode": "13112",
-      "name": "北沢総合支所（地下１階店舗③区画）",
-      "category": "総合支所",
-      "address": "東京都世田谷区北沢2-8-18",
-      "sourceId": "src-13112-facilities-001",
-      "lat": 35.662208,
-      "lng": 139.66972
+      "lng": 139.600537,
+      "sourceId": "src-13112-facilities-001"
     }
   ]
 }

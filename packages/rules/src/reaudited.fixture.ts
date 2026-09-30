@@ -102,6 +102,30 @@ export const REAUDITS: readonly {
       '13201': ['procedure_driver_license_change'],
     },
   },
+  {
+    // 2026-09-30: 窓口一覧の点検。区公式の窓口一覧ページを出典として登録し、手続きの窓口の誤りを直した
+    // (台場分室ではマイナンバーカードの手続きを扱わない、特別出張所では保育の申込みを受け付けない、
+    // 赤塚支所は年金の請求・受給のみ、デジタルフロントスポット長房は転入・国保・転入学を扱わない、
+    // 「10か所」はくみん窓口と出張所の合計、本庁舎の窓口の移転予定。人手承認待ち)。
+    date: '2026-09-30',
+    procedures: {
+      '13103': ['procedure_mynumber_continued_use'],
+      '13104': ['procedure_childcare_application'],
+      '13112': [
+        'procedure_mynumber_continued_use',
+        'procedure_national_health_insurance',
+        'procedure_national_pension_address',
+        'procedure_resident_registration',
+        'procedure_school_transfer',
+      ],
+      '13119': ['procedure_national_pension_address'],
+      '13201': [
+        'procedure_national_health_insurance',
+        'procedure_resident_registration',
+        'procedure_school_transfer',
+      ],
+    },
+  },
 ];
 
 /** その手続きが再監査で進んだ日付(無ければ undefined = 承認日のまま)。 */

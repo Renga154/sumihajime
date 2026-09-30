@@ -11,7 +11,11 @@ import { seedProfile, tabUntil } from './helpers';
  *
  * 地図のピンが伝える情報(名称・カテゴリ・住所)は下の窓口一覧が完全に代替するため、
  * マーカーをタブ順から外すことで情報は失われない。
+ *
+ * 2026-09-30: 世田谷の窓口一覧は転入届を扱う10窓口に絞った(座標を持つのは9か所)。マーカー数の
+ * 下限は「複数のマーカーが描画された」ことを確かめるためのもので、件数そのものは固定しない。
  */
+const MIN_MARKERS = 5;
 
 test('窓口一覧: 地図マーカーはタブ順に入らず、日本語のラベルを持つ(世田谷)', async ({ page }) => {
   await page.goto('/');
@@ -21,7 +25,7 @@ test('窓口一覧: 地図マーカーはタブ順に入らず、日本語のラ
 
   // マーカーが描画されるまで待つ(地図が出ない環境ではこのテストはスキップ相当になる)。
   const markers = page.locator('.maplibregl-marker');
-  await expect.poll(() => markers.count(), { timeout: 20_000 }).toBeGreaterThan(10);
+  await expect.poll(() => markers.count(), { timeout: 20_000 }).toBeGreaterThan(MIN_MARKERS);
 
   const attrs = await markers.evaluateAll((els) =>
     els.map((el) => ({
@@ -29,7 +33,7 @@ test('窓口一覧: 地図マーカーはタブ順に入らず、日本語のラ
       label: el.getAttribute('aria-label') ?? '',
     })),
   );
-  expect(attrs.length).toBeGreaterThan(10);
+  expect(attrs.length).toBeGreaterThan(MIN_MARKERS);
   for (const a of attrs) {
     expect(a.tabIndex).toBe(-1);
     // 英語の既定ラベルではなく、施設名を含む日本語ラベルになっている。
@@ -48,7 +52,7 @@ test('窓口一覧: 数回のTabで窓口一覧の最初のリンクに到達で
   await expect(page.getByRole('heading', { name: '窓口一覧' })).toBeVisible();
   await expect
     .poll(() => page.locator('.maplibregl-marker').count(), { timeout: 20_000 })
-    .toBeGreaterThan(10);
+    .toBeGreaterThan(MIN_MARKERS);
 
   // フォーカス可能要素の中で、最初の施設リンクが何番目かを数える(点検が使った式と同じ)。
   const indexOfFirstFacilityLink = await page.evaluate(() =>

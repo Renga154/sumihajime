@@ -177,7 +177,11 @@ describe('Shinagawa (13109) — schema validation & approved status (CI gate)', 
     for (const f of facilities) {
       expect(f.municipalityCode).toBe(SHINAGAWA);
       // 出典公共施設CSVはGIF非準拠(名称/所在地/カテゴリの3列のみ)で緯度経度なし=捏造回避で座標未設定。
-      expect(f.sourceId).toBe('src-13109-facilities-001');
+      // 2026-09-30: 地域センター6か所の出典は区の「地域センター・区民集会所」ページ(所在地と、
+      // 届出を受け付ける6センターを載せる)へ切り替えた。本庁舎は従来どおり CSV。
+      expect(f.sourceId).toBe(
+        f.category === '地域センター' ? 'src-13109-facilities-002' : 'src-13109-facilities-001',
+      );
       expect(f.lat).toBeUndefined();
       expect(f.lng).toBeUndefined();
     }
