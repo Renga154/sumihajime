@@ -83,6 +83,8 @@
   },
   // 独自ドメイン。custom_domain は DNS レコードと証明書を Cloudflare が自動で作る(同じアカウントのゾーン)。
   // workers.dev の旧URLも残し、画面だけ転送する(API は移行の間どちらでも応答する)。
+  // routes を置くと wrangler は workers.dev を既定で無効にする。旧URLを 301 の転送元として残すため明示する。
+  "workers_dev": true,
   "routes": [
     { "pattern": "sumihajime.com", "custom_domain": true },
     { "pattern": "www.sumihajime.com", "custom_domain": true },
