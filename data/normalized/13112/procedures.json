@@ -5,7 +5,7 @@
   "procedures": [
     {
       "id": "procedure_resident_registration",
-      "version": "2026-07-21.1",
+      "version": "2026-09-30.1",
       "municipalityCode": "13112",
       "canonicalType": "resident_registration",
       "title": "転入届(区外・国外から世田谷区への引越し)",
@@ -36,10 +36,10 @@
         }
       ],
       "channels": ["counter"],
-      "locations": ["各総合支所くみん窓口", "各出張所の受付窓口(10か所)"],
+      "locations": ["各総合支所くみん窓口", "各出張所(くみん窓口とあわせて区内10か所)"],
       "contact": "受付窓口(各総合支所くみん窓口・各出張所)。お問い合わせセンター「せたがやコール」電話 03-5432-3333",
       "sourceIds": ["src-13112-resident_registration-001"],
-      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "lastVerifiedAt": "2026-09-30T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
         "窓口でのみ受付。規定により郵送等での届出はできません。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "procedure_mynumber_continued_use",
-      "version": "2026-07-21.1",
+      "version": "2026-09-30.1",
       "municipalityCode": "13112",
       "canonicalType": "my_number",
       "title": "マイナンバーカードの継続利用・電子証明書の手続き(住所変更に伴う)",
@@ -72,10 +72,10 @@
         }
       ],
       "channels": ["counter"],
-      "locations": ["各総合支所くみん窓口", "各出張所の受付窓口(10か所)"],
+      "locations": ["各総合支所くみん窓口", "各出張所(くみん窓口とあわせて区内10か所)"],
       "contact": "地域行政部 住民記録・戸籍課 電話 03-5432-2236 / 各くみん窓口・出張所",
       "sourceIds": ["src-13112-my_number-001", "src-13112-resident_registration-001"],
-      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "lastVerifiedAt": "2026-09-30T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
         "署名用電子証明書は転入に伴い失効するため、改めて発行の手続きが必要です。転入届出と同時に、同一世帯員・法定代理人に限り手続きを完了できます。",
@@ -84,7 +84,7 @@
     },
     {
       "id": "procedure_national_health_insurance",
-      "version": "2026-07-21.1",
+      "version": "2026-09-30.1",
       "municipalityCode": "13112",
       "canonicalType": "national_health_insurance",
       "title": "国民健康保険の加入の届出",
@@ -108,13 +108,13 @@
       ],
       "channels": ["counter", "online", "mail"],
       "locations": [
-        "国保・年金課資格賦課(区役所第2庁舎2階26番窓口)",
+        "国保・年金課資格賦課(区役所第2庁舎2階26番窓口。2026年10月13日から区役所西棟2階へ移転予定)",
         "各総合支所くみん窓口",
         "各出張所"
       ],
-      "contact": "国保・年金課資格賦課(区役所第2庁舎2階26番窓口)",
+      "contact": "国保・年金課資格賦課(区役所第2庁舎2階26番窓口。2026年10月13日から区役所西棟2階へ移転予定)",
       "sourceIds": ["src-13112-national_health_insurance-001"],
-      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "lastVerifiedAt": "2026-09-30T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
         "郵送・オンライン(ぴったりサービス)での届出は、加入事由が『職場の健康保険や国保組合から脱退したとき』に限られます。転入に伴う加入は、転入手続きの際に窓口で加入を申し出てください。",
@@ -123,14 +123,14 @@
     },
     {
       "id": "procedure_national_pension_address",
-      "version": "2026-07-21.1",
+      "version": "2026-09-30.1",
       "municipalityCode": "13112",
       "canonicalType": "national_pension",
       "title": "国民年金(第1号)の住所変更手続き",
       "shortDescription": "国民年金第1号被保険者の住所変更。マイナンバーと基礎年金番号が連携済みの場合は原則届出不要で、住民票の届出により自動的に変更されます。",
       "applicabilityReason": "国民年金(第1号)に加入している方の住所変更に関する案内です。マイナンバーと基礎年金番号が連携済みの場合は原則届出は不要です。",
       "priority": "normal",
-      "dueDescription": "マイナンバーと基礎年金番号が連携済みの場合は原則届出不要(住民票の届出により概ね1〜2か月後に自動変更)。連携していない場合や旧住所での郵送物が届く場合は届出が必要。期限は公式ページに記載なし(unknown)。",
+      "dueDescription": "マイナンバーと基礎年金番号が連携済みの場合は原則届出不要(住民票の届出により概ね1〜2か月後に自動変更)。連携していない場合や旧住所での郵送物が届く場合は届出が必要。期限は公式ページに記載がありません。",
       "requiredDocuments": [
         {
           "label": "(連携済みで原則不要。手続きする場合)本人確認書類・基礎年金番号がわかるもの",
@@ -139,17 +139,17 @@
       ],
       "channels": ["counter"],
       "locations": [
-        "国保・年金課国民年金係(区役所第2庁舎2階24番窓口)",
+        "国保・年金課国民年金係(区役所第2庁舎2階24番窓口。2026年10月13日から区役所西棟2階へ移転予定)",
         "各総合支所くみん窓口",
         "各出張所",
         "世田谷年金事務所"
       ],
       "contact": "保健福祉政策部 国保・年金課 国民年金係 電話 03-5432-2356",
       "sourceIds": ["src-13112-national_pension-001"],
-      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "lastVerifiedAt": "2026-09-30T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
-        "マイナンバーと基礎年金番号が結びついているかどうかで届出要否が変わります。連携状況は年金事務所へお問い合わせください(判定はneeds_confirmation相当)。",
+        "マイナンバーと基礎年金番号が結びついているかどうかで届出要否が変わります。連携状況は年金事務所へお問い合わせください。",
         "本ページは住所・氏名変更手続きのページです。国外からの転入や第1号加入そのものの手続きは別ページです。"
       ]
     },
@@ -226,7 +226,7 @@
     },
     {
       "id": "procedure_school_transfer",
-      "version": "2026-07-25.1",
+      "version": "2026-09-30.1",
       "municipalityCode": "13112",
       "canonicalType": "school_transfer",
       "title": "小・中学校の転入学(転校)手続き(他の区市町村・海外から世田谷区へ)",
@@ -251,11 +251,11 @@
       "channels": ["counter"],
       "locations": [
         "くみん窓口・出張所(転入届出・学校指定通知書の交付)",
-        "教育委員会事務局 学務課 就学係(区役所第2庁舎5階53番窓口)"
+        "教育委員会事務局 学務課 就学係(区役所第2庁舎5階53番窓口。2026年11月2日から区役所西棟5階へ移転予定)"
       ],
-      "contact": "教育委員会事務局 学務課 就学係(区役所第2庁舎5階53番窓口) 電話 03-5432-2683",
+      "contact": "教育委員会事務局 学務課 就学係(区役所第2庁舎5階53番窓口。2026年11月2日から区役所西棟5階へ移転予定) 電話 03-5432-2683",
       "sourceIds": ["src-13112-school_transfer-001", "src-13112-school_transfer-002"],
-      "lastVerifiedAt": "2026-07-25T00:00:00Z",
+      "lastVerifiedAt": "2026-09-30T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
         "世田谷区が交付する書類の名称は「学校指定通知書」です(交付される書類の名称は自治体により異なります)。",
@@ -331,7 +331,7 @@
     },
     {
       "id": "procedure_waste_check",
-      "version": "2026-07-21.1",
+      "version": "2026-09-30.1",
       "municipalityCode": "13112",
       "canonicalType": "waste_schedule",
       "title": "資源・ごみ収集日の確認",
@@ -344,10 +344,10 @@
       "locations": ["管轄清掃事務所(世田谷・玉川・砧)"],
       "contact": "お住まいの地域の管轄清掃事務所(世田谷・玉川・砧)",
       "sourceIds": ["src-13112-waste_guide-001", "src-13112-waste_schedule-001"],
-      "lastVerifiedAt": "2026-07-21T11:44:00Z",
+      "lastVerifiedAt": "2026-09-30T00:00:00Z",
       "dataStatus": "verified",
       "cautions": [
-        "祝日・年末年始は収集日が変更になる場合があります。区の公式収集カレンダー・区公式LINE・アプリ『さんあ〜る』で最新の日程を必ず確認してください(例外日は本データに展開していません)。",
+        "祝日・年末年始は収集日が変更になる場合があります。区の公式収集カレンダー・区公式LINE・アプリ『さんあ〜る』で最新の日程を必ず確認してください(例外日はこのサービスでは表示していません)。",
         "収集日一覧の粒度は町名＋丁目の範囲単位(例: 赤堤1・3〜5丁目)で、番地単位ではありません。",
         "資源とごみは収集日の午前8時までに出してください。"
       ]

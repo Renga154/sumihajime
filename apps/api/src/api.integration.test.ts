@@ -269,22 +269,26 @@ describe('GET /api/procedures/:id', () => {
 });
 
 describe('GET /api/facilities', () => {
-  it('世田谷の窓口一覧を返す(本庁舎/総合支所/出張所を含む)', async () => {
+  it('世田谷の窓口一覧を返す(総合支所くみん窓口/出張所を含む)', async () => {
     const res = await request('/api/facilities?municipality=13112');
     expect(res.status).toBe(200);
     const body = (await res.json()) as { facilityId: string; category: string }[];
     expect(body.length).toBeGreaterThan(0);
     const cats = new Set(body.map((f) => f.category));
-    expect(cats.has('本庁舎')).toBe(true);
+    // 2026-09-30: 世田谷の窓口一覧は転入届を扱う10窓口(くみん窓口5+出張所5)だけになった
+    // (本庁舎の建物単位の行やまちづくりセンターは転入届の窓口ではないため載せない)。
+    expect(cats.has('総合支所くみん窓口')).toBe(true);
+    expect(cats.has('出張所')).toBe(true);
     // facility_id は publish で採番した一意キー。
     expect(new Set(body.map((f) => f.facilityId)).size).toBe(body.length);
   });
 
   it('category で絞り込める', async () => {
-    const res = await request('/api/facilities?municipality=13112&category=本庁舎');
+    const res = await request('/api/facilities?municipality=13112&category=出張所');
     expect(res.status).toBe(200);
     const body = (await res.json()) as { category: string }[];
-    expect(body.every((f) => f.category === '本庁舎')).toBe(true);
+    expect(body.length).toBeGreaterThan(0);
+    expect(body.every((f) => f.category === '出張所')).toBe(true);
   });
 });
 

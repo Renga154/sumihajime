@@ -102,6 +102,66 @@ export const REAUDITS: readonly {
       '13201': ['procedure_driver_license_change'],
     },
   },
+  {
+    // 2026-09-30: 窓口一覧の点検。区公式の窓口一覧ページを出典として登録し、手続きの窓口の誤りを直した
+    // (台場分室ではマイナンバーカードの手続きを扱わない、特別出張所では保育の申込みを受け付けない、
+    // 赤塚支所は年金の請求・受給のみ、デジタルフロントスポット長房は転入・国保・転入学を扱わない、
+    // 「10か所」はくみん窓口と出張所の合計、本庁舎の窓口の移転予定)。同じ日に、利用者に見える注意書きの
+    // 開発者向けの言い回し(「本データでは」「unknown としています」など)を利用者向けに直した(人手承認)。
+    date: '2026-09-30',
+    procedures: {
+      '13101': ['procedure_dog_registration_transfer'],
+      '13102': ['procedure_national_health_insurance'],
+      '13103': ['procedure_mynumber_continued_use', 'procedure_national_health_insurance'],
+      '13104': ['procedure_childcare_application', 'procedure_waste_check'],
+      '13108': [
+        'procedure_child_medical',
+        'procedure_childcare_application',
+        'procedure_waste_check',
+      ],
+      '13109': [
+        'procedure_child_medical',
+        'procedure_dog_registration_transfer',
+        'procedure_national_pension_address',
+        'procedure_school_transfer',
+      ],
+      '13111': ['procedure_national_pension_address'],
+      '13112': [
+        'procedure_mynumber_continued_use',
+        'procedure_national_health_insurance',
+        'procedure_national_pension_address',
+        'procedure_resident_registration',
+        'procedure_school_transfer',
+        'procedure_waste_check',
+      ],
+      '13114': ['procedure_national_pension_address'],
+      '13116': [
+        'procedure_child_medical',
+        'procedure_dog_registration_transfer',
+        'procedure_school_transfer',
+      ],
+      '13117': [
+        'procedure_childcare_application',
+        'procedure_dog_registration_transfer',
+        'procedure_national_health_insurance',
+      ],
+      '13118': ['procedure_dog_registration_transfer', 'procedure_school_transfer'],
+      '13119': ['procedure_national_pension_address', 'procedure_waste_check'],
+      '13120': [
+        'procedure_child_medical',
+        'procedure_childcare_application',
+        'procedure_national_pension_address',
+        'procedure_waste_check',
+      ],
+      '13121': ['procedure_childcare_application'],
+      '13122': ['procedure_school_transfer'],
+      '13201': [
+        'procedure_national_health_insurance',
+        'procedure_resident_registration',
+        'procedure_school_transfer',
+      ],
+    },
+  },
 ];
 
 /** その手続きが再監査で進んだ日付(無ければ undefined = 承認日のまま)。 */
