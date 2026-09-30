@@ -148,12 +148,13 @@ export const REAUDITS: readonly {
       '13118': ['procedure_dog_registration_transfer', 'procedure_school_transfer'],
       '13119': ['procedure_national_pension_address', 'procedure_waste_check'],
       '13120': [
+        'procedure_child_allowance',
         'procedure_child_medical',
         'procedure_childcare_application',
         'procedure_national_pension_address',
         'procedure_waste_check',
       ],
-      '13121': ['procedure_childcare_application'],
+      '13121': ['procedure_childcare_application', 'procedure_national_health_insurance'],
       '13122': ['procedure_school_transfer'],
       '13201': [
         'procedure_national_health_insurance',
