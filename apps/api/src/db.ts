@@ -56,6 +56,11 @@ export interface Bindings {
    * 不正値は既定値に倒す(config.ts parseChatDailyLimit)。
    */
   CHAT_DAILY_LIMIT?: string;
+  /**
+   * 独自ドメインのオリジン(例 https://sumihajime.com)。設定した環境だけ、旧URL・www の画面を
+   * 301 でここへ送る(canonical-host.ts)。ミラーでは設定しない。
+   */
+  CANONICAL_ORIGIN?: string;
 }
 
 type Row = Record<string, unknown>;

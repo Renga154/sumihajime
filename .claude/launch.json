@@ -10,7 +10,18 @@
     {
       "name": "api-local",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "api", "exec", "wrangler", "dev", "--port", "8788", "--local"],
+      "runtimeArgs": [
+        "--filter",
+        "api",
+        "exec",
+        "wrangler",
+        "dev",
+        "--port",
+        "8788",
+        "--local",
+        "--local-upstream",
+        "localhost:8788"
+      ],
       "port": 8788
     }
   ]

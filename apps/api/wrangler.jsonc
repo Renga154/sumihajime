@@ -1,7 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // 正典Worker。URLは https://app.sumihajime.workers.dev (2026-07-26 個人アカウントの
-  // サブドメインを旧名から sumihajime に変更・Worker名を app に変更。ADR-008)。
+  // 正典Worker。公開URLは独自ドメイン https://sumihajime.com (2026-10-01〜、ADR-017)。
+  // workers.dev の https://app.sumihajime.workers.dev も残り、画面はそこから独自ドメインへ 301 で送る
+  // (2026-07-26 個人アカウントのサブドメインを旧名から sumihajime に変更・Worker名を app に変更。ADR-008)。
   "name": "app",
   // 個人アカウント(正典)。提供環境(tokyo_odh_145)追加で複数アカウントになったため明示(ADR-008)。
   "account_id": "<ACCOUNT_ID>",
@@ -21,7 +22,24 @@
     "not_found_handling": "none",
     // Worker を先に通すパス。/api/* に加え、robots.txt / sitemap.xml は Worker が
     // ルート表から生成する(静的ファイルを置かずに済ませ、内容のズレを防ぐ)。
-    "run_worker_first": ["/api/*", "/robots.txt", "/sitemap.xml"],
+    "run_worker_first": [
+      "/api/*",
+      "/robots.txt",
+      "/sitemap.xml",
+      // 画面(SPA_ROUTES)も Worker が先に受ける。旧URL・www の画面を独自ドメインへ 301 で送るため
+      // (canonical-host.ts)。ハッシュ付きの JS/CSS や画像は従来どおり静的配信のまま。
+      "/",
+      "/wizard",
+      "/checklist",
+      "/procedures/*",
+      "/facilities",
+      "/waste",
+      "/differences",
+      "/about-data",
+      "/coverage",
+      "/terms",
+      "/privacy",
+    ],
   },
   // D1: チェックリスト/手続き/施設/ごみ/台帳の読み取り元(T-006)。
   // database_id は 2026-07-22 に `wrangler d1 create tokyo-move-navi` で採番した本番ID(T-011)。
@@ -60,7 +78,15 @@
     // 生成(OpenAI)を伴うチャットの全体1日上限(日本時間の暦日ごと。migrations/0006_chat_usage.sql)。
     // 超えると /api/chat は 429(必要書類の質問・チェックリストは影響なし)。"0" で当日の生成を止められる。
     "CHAT_DAILY_LIMIT": "1500",
+    // 独自ドメイン(2026-10-01 取得)。旧URL(app.sumihajime.workers.dev)と www の画面をここへ 301 で送る。
+    "CANONICAL_ORIGIN": "https://sumihajime.com",
   },
+  // 独自ドメイン。custom_domain は DNS レコードと証明書を Cloudflare が自動で作る(同じアカウントのゾーン)。
+  // workers.dev の旧URLも残し、画面だけ転送する(API は移行の間どちらでも応答する)。
+  "routes": [
+    { "pattern": "sumihajime.com", "custom_domain": true },
+    { "pattern": "www.sumihajime.com", "custom_domain": true },
+  ],
   // ADR-014: 公式ソースの定期巡回(src/drift.ts scheduled)。毎時0分。Free の Cron 上限は5本。
   // triggers は env に継承される鍵だが、bindings/vars と同じく env.odh にも明示して読みやすくする。
   "triggers": {
@@ -77,7 +103,24 @@
         "directory": "../web/dist",
         "binding": "ASSETS",
         "not_found_handling": "none",
-        "run_worker_first": ["/api/*", "/robots.txt", "/sitemap.xml"],
+        "run_worker_first": [
+          "/api/*",
+          "/robots.txt",
+          "/sitemap.xml",
+          // 画面(SPA_ROUTES)も Worker が先に受ける。旧URL・www の画面を独自ドメインへ 301 で送るため
+          // (canonical-host.ts)。ハッシュ付きの JS/CSS や画像は従来どおり静的配信のまま。
+          "/",
+          "/wizard",
+          "/checklist",
+          "/procedures/*",
+          "/facilities",
+          "/waste",
+          "/differences",
+          "/about-data",
+          "/coverage",
+          "/terms",
+          "/privacy",
+        ],
       },
       "d1_databases": [
         {
@@ -104,7 +147,11 @@
         "DRIFT_BATCH_SIZE": "10",
         // 正典と同じ1日上限(ミラーの D1 で独立に数える)。
         "CHAT_DAILY_LIMIT": "1500",
+        // ミラーは転送しない(ハッカソンの提供環境として、このURLのまま見られるようにする)。
+        "CANONICAL_ORIGIN": "",
       },
+      // ミラーは独自ドメインを持たない(ゾーンは正典のアカウントにある)。継承されないよう空にする。
+      "routes": [],
       // ADR-014: 正典と同じ毎時巡回(ミラーでも source_drift は環境ごとの D1 に独立して持つ)。
       "triggers": {
         "crons": ["0 * * * *"],

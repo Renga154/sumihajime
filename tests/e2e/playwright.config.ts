@@ -53,8 +53,10 @@ export default defineConfig({
     },
   ],
 
+  // --local-upstream: wrangler dev は既定で routes の最初のドメイン(sumihajime.com)を要求のホストにする。
+  // そのままだと robots/sitemap が本番のURLを載せ、テストが本番を叩くので、ローカルのホストに固定する。
   webServer: {
-    command: `pnpm --filter @tmn/publish exec tsx src/publish.ts && pnpm --filter web build && pnpm --filter api exec wrangler dev --port ${PORT} --local`,
+    command: `pnpm --filter @tmn/publish exec tsx src/publish.ts && pnpm --filter web build && pnpm --filter api exec wrangler dev --port ${PORT} --local --local-upstream localhost:${PORT}`,
     cwd: repoRoot,
     url: `${BASE_URL}/api/health`,
     reuseExistingServer: true,

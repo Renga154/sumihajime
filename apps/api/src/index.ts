@@ -34,6 +34,7 @@ import { scheduled } from './drift.js';
 import { assessHealth } from './health.js';
 import { JSON_BODY_LIMIT_BYTES, fail, requireJsonContentType, type ApiEnv } from './http.js';
 import { API_VERSION } from './version.js';
+import { canonicalRedirectTarget } from './canonical-host.js';
 import type { Bindings, DriftMark } from './db.js';
 import {
   getActiveDriftMarks,
@@ -71,6 +72,13 @@ import {
 type Env = ApiEnv;
 
 export const app = new Hono<Env>();
+
+/** 旧URL(workers.dev)と www の画面を独自ドメインへ一本化する(canonical-host.ts)。 */
+app.use('*', async (c, next) => {
+  const target = canonicalRedirectTarget(new URL(c.req.url), c.req.method, c.env?.CANONICAL_ORIGIN);
+  if (!target) return next();
+  return c.redirect(target, 301);
+});
 
 /** リクエストIDを採番(ログ相関用。PIIではない)。 */
 app.use('/api/*', async (c, next) => {
@@ -681,7 +689,7 @@ app.get('/api/waste-sorting', async (c) => {
  * GET /robots.txt : クローラ向け指示。
  *
  * なぜ静的ファイルではなく Worker が返すのか: Sitemap 行に絶対URLが要る。静的ファイルだと
- * 本番(app.sumihajime.workers.dev)とミラー環境(ADR-008)でオリジンが違うぶん、
+ * 本番(sumihajime.com)とミラー環境(ADR-008)でオリジンが違うぶん、
  * どちらかが必ず嘘になる。リクエストのオリジンから組み立てれば常に正しい。
  * /api/ を除外するのは、APIがクロール対象の「ページ」ではないため(クロール予算の無駄と、
  * 自治体コード付きURLの無意味な収集を避ける)。

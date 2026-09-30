@@ -83,7 +83,7 @@ curl -s http://localhost:8787/api/health | jq .drift
 - そのため 1回 10件・直列・本文全体のテキスト抽出なし（更新日はラベル直後の200文字だけを見る）。
   `DRIFT_BATCH_SIZE` を増やすときはサブリクエスト（リダイレクト込み）が 50 を超えないこと、
   csv/xlsx のハッシュ計算（最大348KB）が CPU 枠に収まることを先に測る。
-- User-Agent は `Mozilla/5.0 (compatible; SumihajimeDriftCheck/1.0; +https://app.sumihajime.workers.dev)`
+- User-Agent は `Mozilla/5.0 (compatible; SumihajimeDriftCheck/1.0; +https://sumihajime.com)`
   で固定（ADR-014 で全32公式ホストが 200 を返すことを確認済み。変えるなら再測定する）。
 
 ## 6. 既知の限界

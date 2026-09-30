@@ -20,7 +20,7 @@ import type { ApiOutcome, CaseResult, EvalCase, EvalReportData, RunMeta } from '
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../../..');
 
-const DEFAULT_ENDPOINT = 'https://app.sumihajime.workers.dev/api/chat';
+const DEFAULT_ENDPOINT = 'https://sumihajime.com/api/chat';
 const DEFAULT_SPACING_MS = 7_000; // 10req/分=1req/6秒。余裕を見て7秒。
 const REQUEST_TIMEOUT_MS = 30_000;
 const RATE_LIMIT_BACKOFF_MS = 65_000;

@@ -15,7 +15,7 @@
  */
 
 var TARGETS = [
-  { name: '正典', base: 'https://app.sumihajime.workers.dev' },
+  { name: '正典', base: 'https://sumihajime.com' },
   { name: 'ミラー（提供環境）', base: 'https://sumihajime.tokyo-odh-145.workers.dev' },
 ];
 

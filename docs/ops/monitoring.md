@@ -25,7 +25,7 @@
 ## 2. 通知が来たら
 
 1. 件名の環境（正典／ミラー）と本文の異常を見る。
-2. `curl -s https://app.sumihajime.workers.dev/api/health` で現状を確かめる。
+2. `curl -s https://sumihajime.com/api/health` で現状を確かめる。
 3. issue ごとの初動:
    - `db_unreachable` … Cloudflare のステータスと D1 のダッシュボードを見る。こちらで直せる
      ことは少ない。長引く場合も、利用者の端末に残る控え（ADR-012）で一覧は開ける。

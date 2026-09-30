@@ -25,7 +25,7 @@ import { parseDriftBatchSize } from './config.js';
 
 /** ADR-014 で全32公式ホストが 200 を返すことを確認した UA。変更すると再測定が要る。 */
 export const DRIFT_USER_AGENT =
-  'Mozilla/5.0 (compatible; SumihajimeDriftCheck/1.0; +https://app.sumihajime.workers.dev)';
+  'Mozilla/5.0 (compatible; SumihajimeDriftCheck/1.0; +https://sumihajime.com)';
 
 const FETCH_TIMEOUT_MS = 15_000;
 /** charset 宣言を探す先頭バイト数(<head> 内の meta は通常ここに収まる)。 */
