@@ -12,7 +12,105 @@ import {
   type CellGrid,
   type Merge,
 } from './waste-xlsx.js';
-import { readOtaWasteSheet, type SheetData } from './waste-xlsx-read.js';
+import {
+  MAX_SHEET_COLS,
+  MAX_SHEET_ROWS,
+  readOtaWasteSheet,
+  type SheetData,
+} from './waste-xlsx-read.js';
+import { readRegistryTable, tableToRecords } from './registry.js';
+import { createHash } from 'node:crypto';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import XLSX from 'xlsx';
+import { SnapshotIntegrityError } from '@tmn/publish';
+
+const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
+
+/** 台帳の content_hash(読み取り前の照合に使う)。 */
+function registrySource(sourceId: string): { sourceId: string; contentHash: string } {
+  const rec = tableToRecords(readRegistryTable(repoRoot)).find((r) => r.source_id === sourceId);
+  return { sourceId, contentHash: rec?.content_hash ?? '' };
+}
+
+/**
+ * なぜ: xlsx@0.18.5 には既知の脆弱性(CVE-2023-30533 プロトタイプ汚染 / CVE-2024-22363 ReDoS)が
+ * あり、どちらも「細工されたファイルを読む」ことが条件。パッケージの更新は人の判断に残し、
+ * ここでは (1) 台帳のハッシュと一致したファイルしかパーサへ渡さない (2) 読む範囲と反復を
+ * 上限で縛る、の2点を固定する。合成ファイルは一時ディレクトリに作る(実データは触らない)。
+ */
+describe('readOtaWasteSheet — 読む前の照合と範囲の上限', () => {
+  let dir: string;
+  beforeAll(() => {
+    dir = mkdtempSync(join(tmpdir(), 'tmn-xlsx-'));
+    return () => rmSync(dir, { recursive: true, force: true });
+  });
+
+  function writeBook(
+    rows: string[][],
+    merges: XLSX.Range[] = [],
+  ): {
+    path: string;
+    hash: string;
+  } {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    if (merges.length > 0) ws['!merges'] = merges;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'S');
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+    const path = join(dir, `${Math.random().toString(36).slice(2)}.xlsx`);
+    writeFileSync(path, buf);
+    return { path, hash: createHash('sha256').update(buf).digest('hex') };
+  }
+
+  const SRC = 'src-13111-waste_schedule-001';
+
+  it('正常系: ハッシュが一致する小さな表は読める', () => {
+    const { path, hash } = writeBook([
+      ['a', 'b'],
+      ['c', 'd'],
+    ]);
+    const sheet = readOtaWasteSheet(path, { sourceId: SRC, contentHash: hash });
+    expect(sheet.grid).toEqual([
+      ['a', 'b'],
+      ['c', 'd'],
+    ]);
+  });
+
+  it('攻撃系: ハッシュが台帳と違うファイルはパーサへ渡さない', () => {
+    const { path } = writeBook([['a']]);
+    expect(() => readOtaWasteSheet(path, { sourceId: SRC, contentHash: 'a'.repeat(64) })).toThrow(
+      SnapshotIntegrityError,
+    );
+  });
+
+  it('攻撃系: 行数が上限を超える表は(切り詰めて黙って使わず)拒否する', () => {
+    const rows = Array.from({ length: MAX_SHEET_ROWS + 5 }, (_, i) => [String(i)]);
+    const { path, hash } = writeBook(rows);
+    expect(() => readOtaWasteSheet(path, { sourceId: SRC, contentHash: hash })).toThrow(
+      /rows|範囲/,
+    );
+  });
+
+  it('攻撃系: 列数が上限を超える表は拒否する', () => {
+    const { path, hash } = writeBook([Array.from({ length: MAX_SHEET_COLS + 1 }, () => 'x')]);
+    expect(() => readOtaWasteSheet(path, { sourceId: SRC, contentHash: hash })).toThrow(
+      /columns|範囲/,
+    );
+  });
+
+  it('攻撃系: 表の外へ広がる結合セルは拒否する(結合展開の反復が膨らむため)', () => {
+    const { path, hash } = writeBook(
+      [
+        ['a', 'b'],
+        ['c', 'd'],
+      ],
+      [{ s: { r: 0, c: 0 }, e: { r: 0, c: 100_000 } }],
+    );
+    expect(() => readOtaWasteSheet(path, { sourceId: SRC, contentHash: hash })).toThrow(/merge/);
+  });
+});
 
 /**
  * なぜ: Step5-B。大田区(13111)収集曜日XLSX(結合セル・丁目/番地単位)の決定論パーサを
@@ -168,7 +266,7 @@ describe.skipIf(!hasSourceSnapshots())(
     let sheet: SheetData;
     let built: ReturnType<typeof buildOtaWaste>;
     beforeAll(() => {
-      sheet = readOtaWasteSheet(snapshotPath);
+      sheet = readOtaWasteSheet(snapshotPath, registrySource(OPTS.sourceId));
       built = buildOtaWaste(sheet.grid, sheet.merges, OPTS);
     });
 
