@@ -10,6 +10,7 @@ import { RAG_MUNICIPALITIES, buildChunkManifest, loadApprovedHtmlSources } from 
 import { assertDatasetShape, parseDataset } from './cases.js';
 import { scoreCase } from './scoring.js';
 import { renderReport } from './report.js';
+import { extractModel, modelsSeen } from './model.js';
 import type { ApiOutcome, CaseResult, EvalCase, EvalReportData, RunMeta } from './types.js';
 
 /**
@@ -116,13 +117,16 @@ async function callChat(endpoint: string, c: EvalCase, allowRetry = true): Promi
     }
 
     if (status === 200) {
-      const parsed = chatResponseSchema.safeParse(bodyJson);
+      // 応答が回答モデルを名乗っていれば記録し、厳格スキーマで読む前に取り外す(model.ts)。
+      const { model, body } = extractModel(bodyJson);
+      const parsed = chatResponseSchema.safeParse(body);
       if (parsed.success) {
-        return { httpStatus: status, latencyMs, response: parsed.data };
+        return { httpStatus: status, latencyMs, response: parsed.data, model };
       }
       return {
         httpStatus: status,
         latencyMs,
+        model,
         networkError: `200 but response failed schema: ${parsed.error.message.slice(0, 200)}`,
       };
     }
@@ -250,6 +254,8 @@ async function main(): Promise<void> {
     }
   }
 
+  // 回答モデル(API が返したときだけ)。空ならレポートに「不明」と出る。
+  meta.models = modelsSeen(results);
   const reportData: EvalReportData = { dataset, meta, results };
   const md = renderReport(reportData);
   writeFileSync(args.outMd, md, 'utf-8');

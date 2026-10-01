@@ -134,6 +134,7 @@ export function scoreCase(evalCase: EvalCase, outcome: ApiOutcome): CaseResult {
         outcome.networkError ??
           `api_error(status=${outcome.httpStatus}, code=${outcome.errorCode ?? 'unknown'})`,
       ],
+      model: outcome.model ?? null,
     };
   }
 
@@ -219,6 +220,7 @@ export function scoreCase(evalCase: EvalCase, outcome: ApiOutcome): CaseResult {
     reviewFlags,
     status,
     failReasons,
+    model: outcome.model ?? null,
   };
 }
 
