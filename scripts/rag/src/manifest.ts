@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { readRegistryTable, tableToRecords, extractTextLines } from '@tmn/ingest';
-import { MUNICIPALITIES, readVerifiedSnapshot } from '@tmn/publish';
+import {
+  MUNICIPALITIES,
+  readVerifiedSnapshot,
+  sqlNullableString,
+  sqlNumber,
+  sqlString,
+} from '@tmn/publish';
 import {
   buildSourceChunks,
   type ChunkOptions,
@@ -156,12 +162,10 @@ export function buildChunkManifest(repoRoot: string, opts?: ChunkOptions): Chunk
 
 /* ---- SQL / NDJSON シリアライズ ---- */
 
-function str(v: string): string {
-  return `'${v.replace(/'/g, "''")}'`;
-}
-function nstr(v: string | undefined): string {
-  return v === undefined ? 'NULL' : str(v);
-}
+// publish のシード SQL と同じリテラル化を使う(`'` の二重化に加え、NUL などの制御文字・
+// 孤立サロゲート・NaN/Infinity を黙って埋め込まずに拒否する。scripts/publish/src/sql.ts)。
+const str = sqlString;
+const nstr = sqlNullableString;
 
 /**
  * D1 rag_chunks への冪等シードSQL。対象sourceを一度DELETEしてから INSERT(sourceId単位で差し替え)。
@@ -178,7 +182,7 @@ export function buildRagChunksSql(chunks: RagChunk[]): string[] {
       `INSERT INTO rag_chunks (chunk_id, municipality_code, source_id, procedure_id, category, ` +
         `title, url, last_verified_at, seq, text) VALUES (` +
         `${str(c.id)}, ${str(m.municipalityCode)}, ${str(m.sourceId)}, ${nstr(m.procedureId)}, ` +
-        `${str(m.category)}, ${str(m.title)}, ${str(m.url)}, ${str(m.lastVerifiedAt)}, ${c.seq}, ` +
+        `${str(m.category)}, ${str(m.title)}, ${str(m.url)}, ${str(m.lastVerifiedAt)}, ${sqlNumber(c.seq)}, ` +
         `${str(c.text)})`,
     );
   }

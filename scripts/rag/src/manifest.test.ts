@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SnapshotIntegrityError } from '@tmn/publish';
+import { SnapshotIntegrityError, SqlLiteralError } from '@tmn/publish';
 import {
   RAG_MUNICIPALITIES,
   buildChunkManifest,
@@ -151,6 +151,34 @@ describe('buildRagChunksSql', () => {
     const sql = buildRagChunksSql([chunk]);
     const insert = sql.find((s) => s.startsWith('INSERT INTO rag_chunks'))!;
     expect(insert).toContain("It''s a test with ''quotes''.");
+  });
+
+  const baseChunk = {
+    id: 'src-13112-resident_registration-001#0',
+    seq: 0,
+    text: '',
+    metadata: {
+      municipalityCode: '13112',
+      category: 'resident_registration',
+      sourceId: 'src-13112-resident_registration-001',
+      title: '転入届',
+      url: 'https://www.city.setagaya.lg.jp/x.html',
+      lastVerifiedAt: '2026-07-21T00:00:00Z',
+    },
+  };
+
+  it('バックスラッシュ・改行・全角はそのまま値として埋め込む(SQLite の規則)', () => {
+    const sql = buildRagChunksSql([{ ...baseChunk, text: 'C:\\path\\ 改行\nあり' }]);
+    expect(sql[1]).toContain("'C:\\path\\ 改行\nあり'");
+  });
+
+  it('攻撃系: NUL などの制御文字を含む本文は SQL に埋め込まない(拒否)', () => {
+    expect(() => buildRagChunksSql([{ ...baseChunk, text: 'a\u0000b' }])).toThrow(SqlLiteralError);
+    expect(() => buildRagChunksSql([{ ...baseChunk, text: '\u001b[2J' }])).toThrow(SqlLiteralError);
+  });
+
+  it('攻撃系: seq が有限の数でなければ拒否する', () => {
+    expect(() => buildRagChunksSql([{ ...baseChunk, seq: Number.NaN }])).toThrow(SqlLiteralError);
   });
 });
 

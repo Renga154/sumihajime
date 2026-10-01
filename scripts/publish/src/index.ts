@@ -4,7 +4,14 @@ export { DEFAULT_PUBLISH_CODES, loadPublishData } from './load.js';
 export type { PublishData, WasteDataset } from './load.js';
 export { assertPublishGate, findGateViolations, PublishGateError } from './gate.js';
 export type { PublishGateInput, SourceRef, GateViolation } from './gate.js';
-export { buildSeedStatements } from './sql.js';
+export {
+  buildSeedStatements,
+  SqlLiteralError,
+  sqlJson,
+  sqlNullableString,
+  sqlNumber,
+  sqlString,
+} from './sql.js';
 export { buildSeed } from './seed.js';
 export type { Seed } from './seed.js';
 export { MUNICIPALITIES } from './municipalities.js';

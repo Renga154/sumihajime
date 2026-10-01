@@ -23,6 +23,31 @@ describe('extractTextLines', () => {
   it('decodes basic entities', () => {
     expect(extractTextLines('<p>A&amp;B&nbsp;C</p>')).toEqual(['A&B C']);
   });
+
+  it('decodes valid numeric character references', () => {
+    expect(extractTextLines('<p>&#65;&#x42;&#12354;&#x1F600;</p>')).toEqual(['ABあ\u{1F600}']);
+  });
+
+  /**
+   * なぜ: 数値文字参照は原文(外部入力)がそのまま値を決める。`&#0;` は NUL になって後段の
+   * SQL 生成で拒否され、範囲外(`&#x110000;` 等)は String.fromCodePoint が RangeError を投げて
+   * 索引の構築ごと落ちる。孤立サロゲートは UTF-8 で書くと化ける。HTML の仕様どおり置換文字
+   * (U+FFFD)にして、1ページの不正な参照で全体を止めない。
+   */
+  it.each([
+    ['NUL', '&#0;'],
+    ['NUL(16進)', '&#x0;'],
+    ['範囲外', '&#x110000;'],
+    ['極端に大きい値', '&#99999999999999999999;'],
+    ['上位サロゲート', '&#xD800;'],
+    ['下位サロゲート', '&#57343;'],
+    ['ベル(制御文字)', '&#7;'],
+    ['エスケープ(端末制御)', '&#x1b;'],
+    ['DEL', '&#127;'],
+  ])('攻撃系: 不正な数値参照(%s)は例外にせず U+FFFD にする', (_label, ref) => {
+    expect(() => extractTextLines(`<p>a${ref}b</p>`)).not.toThrow();
+    expect(extractTextLines(`<p>a${ref}b</p>`)).toEqual(['a�b']);
+  });
 });
 
 describe('summarizeLineDiff', () => {
