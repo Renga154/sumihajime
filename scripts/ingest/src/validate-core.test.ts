@@ -100,7 +100,9 @@ describe('runValidations — offline registry & published-data checks', () => {
 
   it('FAILS when a published reference points to a non-existent sourceId', () => {
     const table = makeTable([{ source_id: 'src-13112-a-001' }]);
-    const references: SourceRef[] = [{ owner: 'procedure_p', sourceIds: ['src-13112-ghost-001'] }];
+    const references: SourceRef[] = [
+      { owner: 'procedure_p', municipalityCode: '13112', sourceIds: ['src-13112-ghost-001'] },
+    ];
     const result = runValidations({
       rows: validateRegistryRows(table),
       references,
@@ -111,12 +113,29 @@ describe('runValidations — offline registry & published-data checks', () => {
     expect(result.errors.join('\n')).toMatch(/does NOT exist in registry/);
   });
 
+  it('FAILS when a municipality cites another municipality’s source (principle 4)', () => {
+    const table = makeTable([{ source_id: 'src-13112-a-001' }]);
+    const references: SourceRef[] = [
+      { owner: 'procedure_p', municipalityCode: '13108', sourceIds: ['src-13112-a-001'] },
+    ];
+    const result = runValidations({
+      rows: validateRegistryRows(table),
+      references,
+      approvedSourceIds: new Set(['src-13112-a-001']),
+      today: TODAY,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.join('\n')).toMatch(/another municipality \(13112\)/);
+  });
+
   it('FAILS when a published reference points to a non-approved (existing) sourceId', () => {
     const table = makeTable([
       { source_id: 'src-13112-a-001' },
       { source_id: 'src-13112-cand-001', review_status: 'candidate' },
     ]);
-    const references: SourceRef[] = [{ owner: 'procedure_p', sourceIds: ['src-13112-cand-001'] }];
+    const references: SourceRef[] = [
+      { owner: 'procedure_p', municipalityCode: '13112', sourceIds: ['src-13112-cand-001'] },
+    ];
     const result = runValidations({
       rows: validateRegistryRows(table),
       references,

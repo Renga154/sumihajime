@@ -24,6 +24,7 @@ export function buildSeed(
   const data = loadPublishData(repoRoot, municipalityCodes);
   assertPublishGate({
     approvedSourceIds: data.approvedSourceIds,
+    sourceMunicipalities: data.sourceMunicipalities,
     references: data.references,
   });
   return { data, statements: buildSeedStatements(data) };

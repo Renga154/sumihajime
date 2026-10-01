@@ -67,13 +67,24 @@ export function runValidations(input: ValidateInput): ValidateResult {
   const registryIds = new Set(
     input.rows.map((r) => r.record.source_id).filter((s): s is string => !!s),
   );
+  // 自治体の混在検査(原則4)に使う台帳の municipality_code。台帳の行から作る(呼び出し側に渡させない)。
+  const sourceMunicipalities = new Map(
+    input.rows.map((r) => [r.record.source_id ?? '', r.record.municipality_code || undefined]),
+  );
   const violations = findGateViolations({
     approvedSourceIds: input.approvedSourceIds,
+    sourceMunicipalities,
     references: input.references,
   });
   for (const v of violations) {
-    // 実在しない参照と、実在するが未承認の参照でメッセージを分ける(修正の指針を明確化)。
-    if (!registryIds.has(v.sourceId)) {
+    // 実在しない参照と、実在するが未承認の参照と、別の自治体の参照でメッセージを分ける
+    // (修正の指針を明確化)。
+    if (v.reason === 'municipality_mismatch') {
+      errors.push(
+        `Published ${v.owner} (municipality ${v.ownerMunicipalityCode}) cites sourceId ` +
+          `"${v.sourceId}" of another municipality (${v.sourceMunicipalityCode}).`,
+      );
+    } else if (!registryIds.has(v.sourceId)) {
       errors.push(
         `Published ${v.owner} references sourceId "${v.sourceId}" that does NOT exist in registry.`,
       );

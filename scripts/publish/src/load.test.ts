@@ -5,7 +5,15 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadSources } from './load.js';
+import {
+  assertOwnMunicipality,
+  loadFacilitiesFor,
+  loadProceduresFor,
+  loadRuleSetFor,
+  loadSources,
+  loadWasteFor,
+  loadWasteSortingFor,
+} from './load.js';
 import { buildSeedStatements } from './sql.js';
 import { SnapshotIntegrityError } from './snapshot-files.js';
 import { DEFAULT_PUBLISH_CODES, loadPublishData } from './load.js';
@@ -129,5 +137,36 @@ describe('loadSources — スナップショットの改ざん検査(fail closed
     rmSync(resolve(root, 'data/sources'), { recursive: true, force: true });
     const [s] = loadSources(root);
     expect(s?.snapshotPageUpdatedOn).toBeUndefined();
+  });
+});
+
+/**
+ * なぜ: ゲートの自治体混在検査(原則4)は「読み込んだディレクトリの自治体コード」を公開物の自治体と
+ * みなす。ファイルの中身が別の自治体を名乗っていると、その検査の前提が崩れるので読み込みで止める。
+ */
+describe('assertOwnMunicipality — ファイルの中身が自分の自治体を名乗っているか', () => {
+  const code = '13112';
+  const procs = loadProceduresFor(repoRoot, code);
+  const rules = loadRuleSetFor(repoRoot, code);
+  const facs = loadFacilitiesFor(repoRoot, code);
+  const waste = loadWasteFor(repoRoot, code).dataset;
+  const sorting = loadWasteSortingFor(repoRoot, code);
+
+  it('正常系: 実データ(世田谷)は通る', () => {
+    expect(() => assertOwnMunicipality(code, procs, rules, facs, waste, sorting)).not.toThrow();
+  });
+
+  it('攻撃系: 世田谷のファイルに江東を名乗る手続きが混ざっていたら止める', () => {
+    const mixed = [...procs, { ...procs[0]!, municipalityCode: '13108' }];
+    expect(() => assertOwnMunicipality(code, mixed, rules, facs, waste, sorting)).toThrow(/13108/);
+  });
+
+  it('攻撃系: 施設・分別辞書・ルールセットでも同じ', () => {
+    const otherRules = { ...rules, municipalityCode: '13108' };
+    const otherFacs = [{ ...facs[0]!, municipalityCode: '13108' }];
+    const otherSorting = [{ ...sorting[0]!, municipalityCode: '13108' }];
+    expect(() => assertOwnMunicipality(code, procs, otherRules, facs, waste, sorting)).toThrow();
+    expect(() => assertOwnMunicipality(code, procs, rules, otherFacs, waste, sorting)).toThrow();
+    expect(() => assertOwnMunicipality(code, procs, rules, facs, waste, otherSorting)).toThrow();
   });
 });

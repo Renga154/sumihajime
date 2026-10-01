@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   assertPublishGate,
   findGateViolations,
+  isPrefectureOrNationalCode,
   PublishGateError,
   type PublishGateInput,
 } from './gate.js';
+import { MUNICIPALITIES } from './municipalities.js';
 import { buildSeed } from './seed.js';
 import { DEFAULT_PUBLISH_CODES, loadPublishData } from './load.js';
 import { resolve } from 'node:path';
@@ -40,9 +42,10 @@ describe('publish gate — approved-only enforcement (FR-022〜024)', () => {
   it('passes when every referenced source is approved', () => {
     const input: PublishGateInput = {
       approvedSourceIds: new Set(['src-a', 'src-b']),
+      sourceMunicipalities: new Map(),
       references: [
-        { owner: 'procedure_x', sourceIds: ['src-a'] },
-        { owner: 'rule_y', sourceIds: ['src-a', 'src-b'] },
+        { owner: 'procedure_x', municipalityCode: '13112', sourceIds: ['src-a'] },
+        { owner: 'rule_y', municipalityCode: '13112', sourceIds: ['src-a', 'src-b'] },
       ],
     };
     expect(findGateViolations(input)).toEqual([]);
@@ -54,9 +57,14 @@ describe('publish gate — approved-only enforcement (FR-022〜024)', () => {
     // 混ざったら publish を必ず止める(人手レビュー未了データの公開を構造的に防ぐ)。
     const input: PublishGateInput = {
       approvedSourceIds: new Set(['src-approved']),
+      sourceMunicipalities: new Map(),
       references: [
-        { owner: 'procedure_ok', sourceIds: ['src-approved'] },
-        { owner: 'procedure_bad', sourceIds: ['src-candidate-not-approved'] },
+        { owner: 'procedure_ok', municipalityCode: '13112', sourceIds: ['src-approved'] },
+        {
+          owner: 'procedure_bad',
+          municipalityCode: '13112',
+          sourceIds: ['src-candidate-not-approved'],
+        },
       ],
     };
     const violations = findGateViolations(input);
@@ -76,12 +84,107 @@ describe('publish gate — approved-only enforcement (FR-022〜024)', () => {
   it('collects ALL violations across procedures and rules before throwing', () => {
     const input: PublishGateInput = {
       approvedSourceIds: new Set(['ok']),
+      sourceMunicipalities: new Map(),
       references: [
-        { owner: 'procedure_a', sourceIds: ['ok', 'bad1'] },
-        { owner: 'rule_b', sourceIds: ['bad2'] },
+        { owner: 'procedure_a', municipalityCode: '13112', sourceIds: ['ok', 'bad1'] },
+        { owner: 'rule_b', municipalityCode: '13112', sourceIds: ['bad2'] },
       ],
     };
     expect(findGateViolations(input)).toHaveLength(2);
+  });
+});
+
+/**
+ * なぜ: CLAUDE.md原則4「選択自治体と異なる自治体の情報を混ぜない」。自治体Xの手続き・ルール・
+ * 施設・ごみデータが別の区市町村のソースを根拠に引いていたら、その区の利用者に他区の情報を
+ * 公式根拠として見せることになる。東京都(13000)・国(00000)のソースは区をまたいで共通なので許す。
+ */
+describe('publish gate — municipality consistency (principle 4)', () => {
+  const sourceMunicipalities = new Map<string, string | undefined>([
+    ['src-13112-resident_registration-001', '13112'],
+    ['src-13108-resident_registration-001', '13108'],
+    ['src-13000-water_supply-001', '13000'],
+    ['src-00000-postal_forwarding-001', '00000'],
+    ['src-13201-resident_registration-001', '13201'],
+  ]);
+  const approved = new Set(sourceMunicipalities.keys());
+
+  it('正常系: 自区・東京都・国のソースは引ける', () => {
+    const input: PublishGateInput = {
+      approvedSourceIds: approved,
+      sourceMunicipalities,
+      references: [
+        {
+          owner: 'procedure_version procedure_resident_registration@1',
+          municipalityCode: '13112',
+          sourceIds: [
+            'src-13112-resident_registration-001',
+            'src-13000-water_supply-001',
+            'src-00000-postal_forwarding-001',
+          ],
+        },
+      ],
+    };
+    expect(findGateViolations(input)).toEqual([]);
+    expect(() => assertPublishGate(input)).not.toThrow();
+  });
+
+  it('攻撃系: 世田谷の手続きが江東のソースを引いたら公開を止める', () => {
+    const input: PublishGateInput = {
+      approvedSourceIds: approved,
+      sourceMunicipalities,
+      references: [
+        {
+          owner: 'rule 13112/procedure_resident_registration',
+          municipalityCode: '13112',
+          sourceIds: ['src-13112-resident_registration-001', 'src-13108-resident_registration-001'],
+        },
+      ],
+    };
+    expect(findGateViolations(input)).toEqual([
+      {
+        owner: 'rule 13112/procedure_resident_registration',
+        sourceId: 'src-13108-resident_registration-001',
+        reason: 'municipality_mismatch',
+        ownerMunicipalityCode: '13112',
+        sourceMunicipalityCode: '13108',
+      },
+    ]);
+    expect(() => assertPublishGate(input)).toThrow(/another municipality \(13108\)/);
+  });
+
+  it('攻撃系: 市部(13201)と区部の混在も止める(下3桁が000でないコードは区市町村)', () => {
+    const input: PublishGateInput = {
+      approvedSourceIds: approved,
+      sourceMunicipalities,
+      references: [
+        {
+          owner: 'facilities (13112)',
+          municipalityCode: '13112',
+          sourceIds: ['src-13201-resident_registration-001'],
+        },
+      ],
+    };
+    expect(findGateViolations(input).map((v) => v.reason)).toEqual(['municipality_mismatch']);
+  });
+
+  it('isPrefectureOrNationalCode は下3桁が000のコードだけを都道府県・国とみなす', () => {
+    expect(isPrefectureOrNationalCode('13000')).toBe(true);
+    expect(isPrefectureOrNationalCode('00000')).toBe(true);
+    expect(isPrefectureOrNationalCode('13100')).toBe(false);
+    expect(isPrefectureOrNationalCode('13112')).toBe(false);
+    expect(isPrefectureOrNationalCode('1300')).toBe(false);
+  });
+
+  it('実データ: 全対応自治体の公開物に自治体の混在が無い(2026-10-02 時点で0件)', () => {
+    const codes = MUNICIPALITIES.filter((m) => m.supported).map((m) => m.code);
+    const data = loadPublishData(repoRoot, codes);
+    const mismatches = findGateViolations({
+      approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
+      references: data.references,
+    }).filter((v) => v.reason === 'municipality_mismatch');
+    expect(mismatches).toEqual([]);
   });
 });
 
@@ -134,9 +237,14 @@ describe('publish gate — real repository data (13112)', () => {
     expect(data.approvedSourceIds.has('src-synthetic-never-in-registry-000')).toBe(false);
     const input: PublishGateInput = {
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: [
         ...data.references,
-        { owner: 'procedure_injected', sourceIds: ['src-synthetic-never-in-registry-000'] },
+        {
+          owner: 'procedure_injected',
+          municipalityCode: '13112',
+          sourceIds: ['src-synthetic-never-in-registry-000'],
+        },
       ],
     };
     expect(() => assertPublishGate(input)).toThrow(PublishGateError);
@@ -155,6 +263,7 @@ describe('publish gate — Koto (13108) after human review approval (T-015)', ()
     const data = loadPublishData(repoRoot, SUPPORTED);
     const violations = findGateViolations({
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: data.references,
     });
     expect(violations).toEqual([]);
@@ -186,6 +295,7 @@ describe('publish gate — Shinjuku (13104) after human review approval (T-016)'
     const data = loadPublishData(repoRoot, SUPPORTED);
     const violations = findGateViolations({
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: data.references,
     });
     expect(violations).toEqual([]);
@@ -243,10 +353,12 @@ describe('publish gate — Setagaya school-transfer & childcare after human revi
     expect(data.approvedSourceIds.has('src-synthetic-never-in-registry-000')).toBe(false);
     const input: PublishGateInput = {
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: [
         ...data.references,
         {
           owner: 'procedure_version (hypothetical verified referencing non-approved)',
+          municipalityCode: '13112',
           sourceIds: ['src-synthetic-never-in-registry-000'],
         },
       ],
@@ -270,6 +382,7 @@ describe('publish gate — Suginami (13115) after human review approval (Step4-A
     const data = loadPublishData(repoRoot, SUPPORTED);
     const violations = findGateViolations({
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: data.references,
     });
     expect(violations).toEqual([]);
@@ -321,6 +434,7 @@ describe('publish gate — Chiyoda (13101) after human review approval (Step4-B)
     const data = loadPublishData(repoRoot, SUPPORTED);
     const violations = findGateViolations({
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: data.references,
     });
     expect(violations).toEqual([]);
@@ -355,6 +469,7 @@ describe('publish gate — Shinagawa (13109) after human review approval (Step5-
     const data = loadPublishData(repoRoot, SUPPORTED);
     const violations = findGateViolations({
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: data.references,
     });
     expect(violations).toEqual([]);
@@ -411,6 +526,7 @@ describe('publish gate — Ota (13111) after human review approval (Step5-B)', (
     const data = loadPublishData(repoRoot, SUPPORTED);
     const violations = findGateViolations({
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: data.references,
     });
     expect(violations).toEqual([]);
@@ -460,6 +576,7 @@ describe('publish gate — seven-ward publish (Step5 integration)', () => {
     const { data } = buildSeed(repoRoot, SUPPORTED);
     const violations = findGateViolations({
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: data.references,
     });
     expect(violations).toEqual([]);
@@ -496,6 +613,7 @@ describe('publish gate — Nerima (13120) / Itabashi (13119) after human review 
     const data = loadPublishData(repoRoot, SUPPORTED);
     const violations = findGateViolations({
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: data.references,
     });
     expect(violations).toEqual([]);
@@ -566,6 +684,7 @@ describe('publish gate — nine-ward publish (Batch6-A integration)', () => {
     const { data } = buildSeed(repoRoot, SUPPORTED);
     const violations = findGateViolations({
       approvedSourceIds: data.approvedSourceIds,
+      sourceMunicipalities: data.sourceMunicipalities,
       references: data.references,
     });
     expect(violations).toEqual([]);
