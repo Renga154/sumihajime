@@ -16,9 +16,19 @@ export {
   isOfficialUrl,
 } from './official-host.js';
 export {
-  findUntrustedAnswerUrls,
+  answerScopeHosts,
+  findOutOfScopeAnswerUrls,
   isTrustedAnswerUrl,
   linkifyParts,
   type AnswerPart,
+  type AnswerUrlScope,
 } from './linkify.js';
+export {
+  PERSONAL_INFO_MESSAGE,
+  detectPersonalInfo,
+  findEmailAddresses,
+  findPhoneNumbers,
+  findUngroundedContacts,
+  type PersonalInfoKind,
+} from './personal-info.js';
 export { tokyoToday, daysBetween } from './date.js';

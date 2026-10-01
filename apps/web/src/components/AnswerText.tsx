@@ -11,7 +11,9 @@ import { isTrustedAnswerUrl, linkifyParts } from '@tmn/domain';
  * それでも回答本文は安全ではない(本番で確認済み): 生成回答には質問文に仕込まれたURLが
  * 写り込み得る。よってリンクにするのは isTrustedAnswerUrl を満たすURL(公式ホスト、または
  * trustedUrls=台帳由来の引用URL・選択自治体の公式トップと完全一致)だけにし、それ以外は
- * 文字のまま表示する。判定は @tmn/domain にあり、サーバー側の保留判定と同じ関数を使う。
+ * 文字のまま表示する。URLの分解(linkifyParts)はサーバー側の保留判定と同じ関数を使う。サーバーは
+ * さらに狭く「選択自治体に適用される承認済みホスト」以外のURLを含む生成回答を保留にするので、
+ * ここは表示側の多層防御にあたる。
  *
  * 実装上の制約:
  * - dangerouslySetInnerHTML は使わない。文字列をURLと地の文へ分解し、Reactノードとして組む。
