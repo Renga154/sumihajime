@@ -1,9 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { hasSourceSnapshots } from '@tmn/test-fixtures/source-snapshots';
-import { dirname, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadSources } from './load.js';
 import { buildSeedStatements } from './sql.js';
+import { SnapshotIntegrityError } from './snapshot-files.js';
 import { DEFAULT_PUBLISH_CODES, loadPublishData } from './load.js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -58,5 +62,72 @@ describe('loadSources — snapshotPageUpdatedOn(ADR-014 の比較基準)', () =>
     const data = loadPublishData(repoRoot, DEFAULT_PUBLISH_CODES);
     const insert = buildSeedStatements(data).find((s) => s.startsWith('INSERT INTO sources ('));
     expect(insert).toContain('snapshot_page_updated_on');
+  });
+});
+
+/**
+ * なぜ: publish は原文スナップショットから巡回の基準日(snapshot_page_updated_on)を作り、台帳の
+ * content_hash と一緒に D1 へ載せる。原文が承認後に差し替わっていたら、その値は承認した原文の
+ * ものではない。読むたびに SHA-256 を照合して食い違えば止まることを、一時ディレクトリの
+ * 最小台帳で固定する(実データは触らない)。
+ */
+describe('loadSources — スナップショットの改ざん検査(fail closed)', () => {
+  const HEADER =
+    'source_id,source_title,owner_organization,municipality_code,category,source_url,source_type,' +
+    'license,attribution_text,fetch_method,update_frequency,last_fetched_at,last_verified_at,' +
+    'source_last_modified_at,content_hash,effective_from,effective_to,review_status,reviewer,notes';
+  const ID = 'src-13112-resident_registration-001';
+  const APPROVED_HTML = '<html><body><p>更新日：2026年9月17日</p><p>転入届</p></body></html>';
+  let root: string;
+
+  function setup(snapshotBody: string, recordedHash: string): void {
+    mkdirSync(resolve(root, 'docs/data-sources'), { recursive: true });
+    writeFileSync(
+      resolve(root, 'docs/data-sources/registry.csv'),
+      `${HEADER}\n${ID},転入届,世田谷区,13112,resident_registration,` +
+        `https://www.city.setagaya.lg.jp/x.html,html,規約,世田谷区,http_get,as_needed,` +
+        `2026-09-25,2026-09-25,,${recordedHash},,,approved,rev,\n`,
+    );
+    const dir = resolve(root, 'data/sources/13112/snapshots');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(resolve(dir, `${ID}.html`), snapshotBody);
+  }
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'tmn-load-'));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('正常系: ハッシュが一致すれば読み、基準日を抽出する', () => {
+    setup(APPROVED_HTML, createHash('sha256').update(APPROVED_HTML).digest('hex'));
+    const [s] = loadSources(root);
+    expect(s?.snapshotPageUpdatedOn).toBe('2026-09-17');
+  });
+
+  it('攻撃系: 承認後に原文が差し替わっていれば publish を止める', () => {
+    const approvedHash = createHash('sha256').update(APPROVED_HTML).digest('hex');
+    setup(APPROVED_HTML.replace('2026年9月17日', '2030年1月1日'), approvedHash);
+    expect(() => loadSources(root)).toThrow(SnapshotIntegrityError);
+  });
+
+  it('攻撃系: csv の原文も照合する(台帳の content_hash を公開するため)', () => {
+    setup(APPROVED_HTML, createHash('sha256').update(APPROVED_HTML).digest('hex'));
+    const csvId = 'src-13112-facilities-001';
+    writeFileSync(
+      resolve(root, 'docs/data-sources/registry.csv'),
+      `${HEADER}\n${csvId},施設,世田谷区,13112,facilities,https://www.city.setagaya.lg.jp/f.csv,csv,` +
+        `CC BY 4.0,世田谷区,http_get,annual,2026-09-25,2026-09-25,,${'0'.repeat(64)},,,approved,rev,\n`,
+    );
+    writeFileSync(resolve(root, 'data/sources/13112/snapshots', `${csvId}.csv`), 'a,b\n1,2\n');
+    expect(() => loadSources(root)).toThrow(SnapshotIntegrityError);
+  });
+
+  it('スナップショットが無い環境(公開リポジトリ)では従来どおり基準日なしで読む', () => {
+    setup(APPROVED_HTML, 'f'.repeat(64));
+    rmSync(resolve(root, 'data/sources'), { recursive: true, force: true });
+    const [s] = loadSources(root);
+    expect(s?.snapshotPageUpdatedOn).toBeUndefined();
   });
 });

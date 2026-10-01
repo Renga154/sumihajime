@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type {
   Coverage,
@@ -21,10 +21,11 @@ import {
   wasteScheduleSchema,
   wasteSortingItemSchema,
 } from '@tmn/schemas';
-import { extractPageUpdatedOn, pickCurrentSnapshot } from '@tmn/drift';
+import { extractPageUpdatedOn } from '@tmn/drift';
 import { parseCsvRecords } from './csv.js';
 import { MUNICIPALITIES } from './municipalities.js';
 import type { SourceRef } from './gate.js';
+import { readVerifiedSnapshot } from './snapshot-files.js';
 
 /** なぜ: ごみデータセットの自治体単位メタ(C-9のcautionを応答に必ず含めるため)。 */
 export interface WasteDataset {
@@ -102,19 +103,28 @@ function toDateTime(v: string | undefined): string | undefined {
  * 人手記入の source_last_modified_at を使わないのは、本文表記と食い違う行(千代田・江戸川)が
  * あり初回から誤検知するため。HTML 以外・スナップショット不在・表記無しは undefined
  * (推測で埋めない)。
+ *
+ * なぜ全種別のスナップショットを読むか(html 以外も): 原文が台帳の content_hash と一致する
+ * ことを公開の直前に確かめるため(readVerifiedSnapshot。食い違えば例外で publish を止める)。
+ * publish は content_hash をそのまま D1 へ載せ、巡回の比較基準にするので、原文と食い違った
+ * 値を公開しない。スナップショットが無い環境(公開リポジトリ)は従来どおり undefined。
  */
 function snapshotPageUpdatedOn(
   repoRoot: string,
   municipalityCode: string | undefined,
   sourceId: string,
   sourceType: string,
+  contentHash: string | undefined,
 ): string | undefined {
-  if (sourceType !== 'html') return undefined;
-  const dir = resolve(repoRoot, `data/sources/${municipalityCode ?? ''}/snapshots`);
-  if (!existsSync(dir)) return undefined;
-  const file = pickCurrentSnapshot(readdirSync(dir), sourceId, 'html');
-  if (!file) return undefined;
-  return extractPageUpdatedOn(readFileSync(resolve(dir, file), 'utf-8')) ?? undefined;
+  const snapshot = readVerifiedSnapshot(repoRoot, {
+    sourceId,
+    municipalityCode,
+    sourceType,
+    contentHash,
+  });
+  if (snapshot === null || sourceType !== 'html') return undefined;
+  // Buffer の UTF-8 復号は従来の readFileSync(..., 'utf-8') と同じ結果(BOM も残す)。
+  return extractPageUpdatedOn(Buffer.from(snapshot.bytes).toString('utf-8')) ?? undefined;
 }
 
 /** registry.csv → Source[](全件。approvedフィルタは呼び出し側)。 */
@@ -145,6 +155,7 @@ export function loadSources(repoRoot: string): Source[] {
         opt(r.municipality_code),
         r.source_id ?? '',
         r.source_type ?? '',
+        opt(r.content_hash),
       ),
       reviewStatus: r.review_status,
       reviewer: opt(r.reviewer),

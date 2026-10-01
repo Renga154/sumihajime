@@ -8,3 +8,20 @@ export { buildSeedStatements } from './sql.js';
 export { buildSeed } from './seed.js';
 export type { Seed } from './seed.js';
 export { MUNICIPALITIES } from './municipalities.js';
+export {
+  KNOWN_SNAPSHOT_HASH_MISMATCHES,
+  PathContainmentError,
+  SnapshotIntegrityError,
+  assertRealpathInside,
+  findCurrentSnapshot,
+  isInside,
+  readVerifiedSnapshot,
+  resolveInside,
+  sha256Hex as snapshotSha256Hex,
+  snapshotDir,
+  snapshotFileName,
+  sourcesRoot,
+  verifySnapshotBytes,
+  versionedSnapshotPath,
+} from './snapshot-files.js';
+export type { KnownHashMismatch, SnapshotSourceRef } from './snapshot-files.js';
