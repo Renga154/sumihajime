@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ChatResponse } from '@tmn/schemas';
 
 /**
  * なぜ: FR-016〜019 / §11.5。RAG無効時はパネルを描画しない(既存機能の劣化なし)、
@@ -256,5 +257,142 @@ describe('ChatPanel — 失敗したときの再試行', () => {
     expect(postChat).toHaveBeenLastCalledWith(
       expect.objectContaining({ question: '転入届の持ち物は？' }),
     );
+  });
+});
+
+/**
+ * なぜ(2026-10-02 監査・§11.5「ソースが古い: stale警告を表示」): チェックリストは根拠の公式ページに
+ * 巡回が更新・不達を検知すると「再確認中」にするのに、チャットは同じページを引用しても何も示さず、
+ * 古いかもしれない内容を確定した回答のように見せていた。
+ */
+describe('ChatPanel — 引用元の公式ページに更新を検知しているとき', () => {
+  const driftedCitation = {
+    sourceId: 'src-13112-resident_registration-001',
+    title: '世田谷区 転入届',
+    ownerOrganization: '世田谷区',
+    url: 'https://www.city.setagaya.lg.jp/02233/88.html',
+    lastVerifiedAt: '2026-07-21T00:00:00Z',
+    driftDetectedOn: '2026-09-22',
+    driftKind: 'changed' as const,
+  };
+  type Citation = ChatResponse['citations'][number];
+
+  async function askWith(citations: Citation[]) {
+    getChatAvailability.mockResolvedValue({ enabled: true, mode: 'full' });
+    postChat.mockResolvedValue({
+      answer: '転入届は引越し日から14日以内に窓口へ提出してください。',
+      citations,
+      confidence: 'low',
+      abstained: false,
+    });
+    render(<ChatPanel municipalityCode="13112" municipalityName="世田谷区" />);
+    await screen.findByRole('heading', { name: /AIに質問する/ });
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText(/質問を入力/), '転入届はいつまで？');
+    await user.click(screen.getByRole('button', { name: '質問する' }));
+    await screen.findByText(/14日以内に窓口へ提出/);
+  }
+
+  it('要確認バッジと、公式ページで確かめるよう促す警告を出し、公式リンクは残す', async () => {
+    await askWith([driftedCitation]);
+    expect(screen.getByText('要確認')).toBeInTheDocument();
+    const warning = screen.getByRole('note', {
+      name: '根拠の公式ページが更新された可能性があります',
+    });
+    expect(warning).toHaveTextContent('公式ページで最新の内容を必ずご確認ください');
+    // 引用カードにも、チェックリストの根拠カードと同じ文面で検知日を添える。
+    expect(screen.getByText(/公式ページの更新を検知（9月22日）/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /公式ページを開く/ })).toHaveAttribute(
+      'href',
+      driftedCitation.url,
+    );
+  });
+
+  it('到達不能の検知も同じく警告する', async () => {
+    await askWith([{ ...driftedCitation, driftKind: 'unreachable' }]);
+    expect(screen.getByText('要確認')).toBeInTheDocument();
+    expect(screen.getByText(/公式ページに接続できない状態を検知（9月22日）/)).toBeInTheDocument();
+  });
+
+  it('(正常系)検知の無い引用だけなら警告もバッジも出さない', async () => {
+    const plain: Citation = {
+      sourceId: driftedCitation.sourceId,
+      title: driftedCitation.title,
+      ownerOrganization: driftedCitation.ownerOrganization,
+      url: driftedCitation.url,
+      lastVerifiedAt: driftedCitation.lastVerifiedAt,
+    };
+    await askWith([plain]);
+    expect(screen.queryByText('要確認')).toBeNull();
+    expect(screen.queryByText('根拠の公式ページが更新された可能性があります')).toBeNull();
+  });
+});
+
+/**
+ * なぜ(原則6・2026-10-02 監査): 注意文を読まずに書かれた電話番号・メール・マイナンバーは、
+ * そのままサーバーと外部AIへ送られていた。送る前に同じ判定(@tmn/domain)で止め、入力欄の
+ * すぐ下で次の行動(削除して送り直す)を伝える。入力欄の文面は消さない(利用者が直せるように)。
+ */
+describe('ChatPanel — 個人情報を含む質問は送信しない', () => {
+  it.each([
+    ['電話番号', '090-1234-5678 に連絡ください。転入届は？'],
+    ['メールアドレス', 'taro@example.com に結果を送って'],
+    ['マイナンバー', '1234 5678 9012 で手続きできますか'],
+  ])('%s を含むと送信せず、入力欄の下に理由を表示する', async (_label, q) => {
+    getChatAvailability.mockResolvedValue({ enabled: true, mode: 'full' });
+    render(<ChatPanel municipalityCode="13112" municipalityName="世田谷区" />);
+    await screen.findByRole('heading', { name: /AIに質問する/ });
+
+    const user = userEvent.setup();
+    const input = screen.getByLabelText(/質問を入力/);
+    await user.type(input, q);
+    await user.click(screen.getByRole('button', { name: '質問する' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('個人情報が含まれている可能性があるため、送信を止めました');
+    expect(alert).toHaveTextContent('削除してから、もう一度送信してください');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(input).toHaveValue(q);
+    expect(postChat).not.toHaveBeenCalled();
+  });
+
+  it('(正常系)日付・郵便番号・金額を含む質問は送信し、警告は入力を直すと消える', async () => {
+    getChatAvailability.mockResolvedValue({ enabled: true, mode: 'full' });
+    postChat.mockResolvedValue({
+      answer: '転入届は14日以内です。',
+      citations: [],
+      confidence: 'unknown',
+      abstained: true,
+    });
+    render(<ChatPanel municipalityCode="13112" municipalityName="世田谷区" />);
+    await screen.findByRole('heading', { name: /AIに質問する/ });
+
+    const user = userEvent.setup();
+    const input = screen.getByLabelText(/質問を入力/);
+    await user.type(input, '090-1234-5678');
+    await user.click(screen.getByRole('button', { name: '質問する' }));
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+
+    await user.clear(input);
+    await user.type(input, '2026年4月1日に〒154-0017へ転入。15,000円かかる？');
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(input).not.toHaveAttribute('aria-invalid');
+    await user.click(screen.getByRole('button', { name: '質問する' }));
+    await waitFor(() => expect(postChat).toHaveBeenCalledTimes(1));
+  });
+});
+
+/**
+ * なぜ(2026-10-02 監査): 注意文は「サーバーへ送信」とだけ書き、送信先が外部(OpenAI 社・米国)で
+ * あることを伝えていなかった。送信の事実と保存しないことを正確に書く。
+ */
+describe('ChatPanel — 送信先の開示', () => {
+  it('質問文が OpenAI 社(米国)へ送られること、当サービスは保存・記録しないことを示す', async () => {
+    getChatAvailability.mockResolvedValue({ enabled: true, mode: 'full' });
+    render(<ChatPanel municipalityCode="13112" municipalityName="世田谷区" />);
+    await screen.findByRole('heading', { name: /AIに質問する/ });
+    const notice = screen.getByText(/OpenAI社（米国）/);
+    expect(notice).toHaveTextContent('公式情報の検索と回答文の作成');
+    expect(notice).toHaveTextContent('保存もログ記録もしません');
   });
 });

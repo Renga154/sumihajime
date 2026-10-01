@@ -52,6 +52,22 @@ describe('プライバシーポリシー', () => {
   });
 
   /**
+   * なぜ(2026-10-02 監査): 3節は「回答の生成のため」とだけ書き、検索のための送信(埋め込み)と
+   * 送信先の国が抜けていた。またモデル名(gpt-4o-mini)を固定で書いており、設定を変えると
+   * 黙って事実と食い違う。送信の目的2つ・送信先の国・保存しないことを正確に書く。
+   */
+  it('AIチャットの質問文は検索と回答作成の両方のため OpenAI 社(米国)へ送ると明記し、モデル名を固定で書かない', () => {
+    renderPage(<PrivacyPage />);
+    const server = screen.getByText(/AIチャットをお使いの場合/);
+    expect(server).toHaveTextContent('OpenAI 社（米国）');
+    expect(server).toHaveTextContent('検索');
+    expect(server).toHaveTextContent('回答文の作成');
+    expect(server).toHaveTextContent('保存もログ記録もしません');
+    expect(screen.queryByText(/gpt-4o-mini/)).toBeNull();
+    expect(screen.getByText(/AIチャットの質問文 —/)).toHaveTextContent('米国');
+  });
+
+  /**
    * なぜ: 「サイトデータを削除」しか案内していなかったが、ボタン1つでこのアプリの
    * 保存内容だけを消せるようになった(§2消去操作)。文面とボタンの両方が実装と一致することを
    * 固定する。改定にあわせて最終改定日も進んでいること(規約の日付は変えない)も固定する。
@@ -66,7 +82,7 @@ describe('プライバシーポリシー', () => {
 
   it('プライバシーポリシーの最終改定日だけが進み、利用規約の日付は変わらない', () => {
     const { unmount } = renderPage(<PrivacyPage />);
-    expect(screen.getByText('最終改定日: 2026年9月29日')).toBeInTheDocument();
+    expect(screen.getByText('最終改定日: 2026年10月2日')).toBeInTheDocument();
     unmount();
 
     renderPage(<TermsPage />);
