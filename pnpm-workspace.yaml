@@ -3,3 +3,6 @@ packages:
   - 'packages/*'
   - 'scripts/*'
   - 'tests/*'
+
+# 公開直後の版（乗っ取られた版は短時間で撤回されることが多い）を1日待ってから取り込む。単位は分。
+minimumReleaseAge: 1440
