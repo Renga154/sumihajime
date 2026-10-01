@@ -25,3 +25,11 @@ export {
   versionedSnapshotPath,
 } from './snapshot-files.js';
 export type { KnownHashMismatch, SnapshotSourceRef } from './snapshot-files.js';
+export {
+  CliArgError,
+  RAG_CHUNK_ID,
+  VECTORIZE_INDEX_NAME,
+  WRANGLER_ENV_NAME,
+  assertCliValue,
+  flagValue,
+} from './cli-args.js';
