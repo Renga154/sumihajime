@@ -22,10 +22,12 @@
     "not_found_handling": "none",
     // Worker を先に通すパス。/api/* に加え、robots.txt / sitemap.xml は Worker が
     // ルート表から生成する(静的ファイルを置かずに済ませ、内容のズレを防ぐ)。
+    // security.txt(RFC 9116)も Canonical 行を環境ごとのオリジンから作るため Worker が返す。
     "run_worker_first": [
       "/api/*",
       "/robots.txt",
       "/sitemap.xml",
+      "/.well-known/security.txt",
       // 画面(SPA_ROUTES)も Worker が先に受ける。旧URL・www の画面を独自ドメインへ 301 で送るため
       // (canonical-host.ts)。ハッシュ付きの JS/CSS や画像は従来どおり静的配信のまま。
       "/",
@@ -89,6 +91,33 @@
     { "pattern": "sumihajime.com", "custom_domain": true },
     { "pattern": "www.sumihajime.com", "custom_domain": true },
   ],
+  // 流量制限(Workers Rate Limiting。src/rate-limit.ts)。キーは CF-Connecting-IP(IPv6 は /64)。
+  // 数え方は Cloudflare の拠点(colo)単位・期間は 10 か 60 秒のみ。バインディングが無い環境
+  // (単体テスト・ローカル)では制限しない。namespace_id はアカウント内で一意な整数文字列。
+  //  - API_RATE_LIMITER: /api/* の読み取り等(/api/health を除く)。120回/60秒。画面1枚の読み込みは
+  //    数回、ごみ分別の検索は入力停止ごとに1回(300ms のデバウンス)で、人の操作では届かない量。
+  //  - CHAT_RATE_LIMITER: POST /api/chat(OpenAI の課金を伴う)。10回/60秒。isolate ごとの
+  //    in-memory 制限(10回/分)と同じ値を、拠点単位で確実に効かせる。評価スクリプト(7秒間隔)を
+  //    止めない値でもある。総量は別に D1 の1日上限(CHAT_DAILY_LIMIT)が守る。
+  "ratelimits": [
+    {
+      "name": "API_RATE_LIMITER",
+      "namespace_id": "17001",
+      "simple": { "limit": 120, "period": 60 },
+    },
+    {
+      "name": "CHAT_RATE_LIMITER",
+      "namespace_id": "17002",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
+  // ローカル開発(wrangler dev)で要求URLのホストを localhost にする。既定では routes の先頭
+  // (sumihajime.com)になり、POST の送信元検査(src/request-guards.ts)が「画面のオリジン
+  // (http://localhost:5173 等)と要求先が違う」と判断して手元のチャット・チェックリストを 403 にする。
+  // robots.txt / sitemap.xml がローカルで本番のURLを載せる問題も同時に無くなる。デプロイには影響しない。
+  "dev": {
+    "host": "localhost",
+  },
   // ADR-014: 公式ソースの定期巡回(src/drift.ts scheduled)。毎時0分。Free の Cron 上限は5本。
   // triggers は env に継承される鍵だが、bindings/vars と同じく env.odh にも明示して読みやすくする。
   "triggers": {
@@ -109,6 +138,7 @@
           "/api/*",
           "/robots.txt",
           "/sitemap.xml",
+          "/.well-known/security.txt",
           // 画面(SPA_ROUTES)も Worker が先に受ける。旧URL・www の画面を独自ドメインへ 301 で送るため
           // (canonical-host.ts)。ハッシュ付きの JS/CSS や画像は従来どおり静的配信のまま。
           "/",
@@ -152,6 +182,20 @@
         // ミラーは転送しない(ハッカソンの提供環境として、このURLのまま見られるようにする)。
         "CANONICAL_ORIGIN": "",
       },
+      // 流量制限は env に継承されないため明示する(値の理由は上の正典側)。namespace_id は
+      // アカウントごとに独立なので、正典と同じ番号でも数え方は混ざらない。
+      "ratelimits": [
+        {
+          "name": "API_RATE_LIMITER",
+          "namespace_id": "17001",
+          "simple": { "limit": 120, "period": 60 },
+        },
+        {
+          "name": "CHAT_RATE_LIMITER",
+          "namespace_id": "17002",
+          "simple": { "limit": 10, "period": 60 },
+        },
+      ],
       // ミラーは独自ドメインを持たない(ゾーンは正典のアカウントにある)。継承されないよう空にする。
       "routes": [],
       // ADR-014: 正典と同じ毎時巡回(ミラーでも source_drift は環境ごとの D1 に独立して持つ)。

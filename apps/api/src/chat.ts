@@ -8,6 +8,7 @@ import {
 import {
   ABSTAIN_ANSWER,
   RateLimiter,
+  rateLimitKeyForIp,
   buildMessages,
   chatComplete,
   confidenceFromScore,
@@ -285,9 +286,8 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
     return c.json({ disabled: true } as const, 503);
   }
 
-  // 2) レート制限(IP単位)。
-  const ip = c.req.header('CF-Connecting-IP') ?? 'unknown';
-  if (!limiter.allow(ip)) {
+  // 2) レート制限(IP単位。IPv6 は /64 単位 — アドレスの付け替えで抜けられないように)。
+  if (!limiter.allow(rateLimitKeyForIp(c.req.header('CF-Connecting-IP')))) {
     return fail(
       c,
       429,

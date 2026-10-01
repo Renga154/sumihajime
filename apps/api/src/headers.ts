@@ -8,7 +8,8 @@ import { BROWSER_EXTERNAL_ORIGINS } from '@tmn/domain';
  *   1. 静的アセット(index.html / JS / CSS / フォント / 画像)… Cloudflare の Assets が直接返す。
  *      Worker のコードを一切通らないため、ミドルウェアでは付けられない。Cloudflare 標準の
  *      `_headers`(apps/web/public/_headers)で付ける。
- *   2. Worker が自分で作る応答(/api/* のJSON、SPAフォールバックのHTML、robots.txt、sitemap.xml)
+ *   2. Worker が自分で作る応答(/api/* のJSON、SPAフォールバックのHTML、robots.txt、sitemap.xml、
+ *      security.txt、転送)
  *      … `_headers` は適用されないため、ここの定数をコード側で付ける。
  * `_headers` とこのファイルの値がズレると「トップだけCSPが効いていない」等の見つけにくい穴が
  * できるため、headers.test.ts が `_headers` を読んで文字列一致を検査する(二重管理の防止)。
@@ -77,10 +78,17 @@ const PERMISSIONS_POLICY = [
 const REFERRER_POLICY = 'strict-origin-when-cross-origin';
 
 /**
- * なぜ HSTS: workers.dev は https で配信されるが、利用者が http:// で打ち込んだ初回や、
- * 公共Wi-Fi等での http への格下げ(SSL stripping)を防ぐには、ブラウザに「今後は https のみ」と
- * 覚えさせる必要がある。1年・サブドメイン込み。preload は付けない(登録は取り消しが難しく、
- * workers.dev の親ドメインを私たちは管理していない)。http://localhost ではブラウザが無視する。
+ * なぜ HSTS: 本番(sumihajime.com)・旧URL(workers.dev)とも https で配信しているが、利用者が
+ * http:// で打ち込んだ初回や、公共Wi-Fi等での http への格下げ(SSL stripping)を防ぐには、
+ * ブラウザに「今後は https のみ」と覚えさせる必要がある。1年・サブドメイン込み。
+ * 平文HTTPで届いた要求は Worker 側でも https へ 301 する(canonical-host.ts)。HTTPS 応答の
+ * HSTS は「2回目以降」、301 は「初回」を受け持つ(http の応答に付けた HSTS はブラウザが無視する)。
+ *
+ * preload は付けない(2026-10-02 判断): preload リストへの登録は sumihajime.com の全サブドメインを
+ * 恒久的に https 専用にする約束で、取り消してもブラウザの配布サイクル分(数か月)残る。
+ * ドメインを取得したばかりで、今後サブドメインをどう使うか(メール・検証用など)が決まって
+ * いない段階では、戻せない約束をしない。workers.dev はそもそも親ドメインを私たちが管理しておらず
+ * 登録できない。http://localhost ではブラウザが HSTS を無視するため、ローカル開発は妨げない。
  */
 const STRICT_TRANSPORT_SECURITY = 'max-age=31536000; includeSubDomains';
 
@@ -121,6 +129,20 @@ export const API_SECURITY_HEADERS: Readonly<Record<string, string>> = {
   'X-Frame-Options': 'DENY',
   'Strict-Transport-Security': STRICT_TRANSPORT_SECURITY,
   ...CROSS_ORIGIN_ISOLATION_HEADERS,
+};
+
+/**
+ * 転送(301)応答へ付ける最小限のヘッダ。
+ *
+ * なぜ別に持つか: 転送応答は本文を描画しないので CSP / Permissions-Policy は意味を持たないが、
+ * 「https を覚えさせる(HSTS)」「MIME 推測をさせない(nosniff)」「転送元のパスやクエリを
+ * Referer で外へ漏らさない(Referrer-Policy)」は転送にも効く。共通ミドルウェアから漏れやすい
+ * 応答種別なので、index.ts の共通ミドルウェアがこの定数で付ける。
+ */
+export const REDIRECT_SECURITY_HEADERS: Readonly<Record<string, string>> = {
+  'Strict-Transport-Security': STRICT_TRANSPORT_SECURITY,
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': REFERRER_POLICY,
 };
 
 /**

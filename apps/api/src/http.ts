@@ -13,7 +13,7 @@ import { logEvent, type LogEventName } from './log.js';
 export type ApiVariables = { requestId: string };
 export type ApiEnv = { Bindings: Bindings; Variables: ApiVariables };
 
-export type FailStatus = 400 | 404 | 409 | 413 | 415 | 422 | 429 | 500 | 503;
+export type FailStatus = 400 | 403 | 404 | 405 | 409 | 413 | 415 | 422 | 429 | 500 | 503;
 
 export interface FailExtra {
   municipalityCode?: string;
@@ -24,6 +24,11 @@ export interface FailExtra {
    */
   event?: LogEventName;
   latencyMs?: number;
+  /**
+   * 応答へ足すヘッダ(405 の Allow、429 の Retry-After など)。プロトコル上その応答に必須の
+   * ものだけを渡す。セキュリティヘッダと Cache-Control は index.ts の共通ミドルウェアが付ける。
+   */
+  headers?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -55,6 +60,7 @@ export function fail(
       },
     },
     status,
+    extra?.headers,
   );
 }
 

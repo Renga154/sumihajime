@@ -61,6 +61,12 @@ export interface Bindings {
    * 301 でここへ送る(canonical-host.ts)。ミラーでは設定しない。
    */
   CANONICAL_ORIGIN?: string;
+  /**
+   * Workers Rate Limiting(wrangler.jsonc の ratelimits)。/api/* の読み取り等と POST /api/chat の
+   * 流量制限(rate-limit.ts)。単体テスト・ローカルではバインドされないため optional(無ければ制限しない)。
+   */
+  API_RATE_LIMITER?: RateLimit;
+  CHAT_RATE_LIMITER?: RateLimit;
 }
 
 type Row = Record<string, unknown>;
