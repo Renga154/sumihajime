@@ -48,6 +48,92 @@ function decodeEntities(s: string): string {
   return out;
 }
 
+/** 中身を持たない要素(開始タグだけを除けばよい)。 */
+const VOID_ELEMENTS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+]);
+
+const START_OR_END_TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9-]*)\b([^>]*)>/g;
+const ATTRIBUTE = /([^\s"'>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+const HIDING_STYLE =
+  /(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden)\s*(?:!\s*important\s*)?(?:;|$)/i;
+
+/**
+ * 開始タグの属性から「画面に表示されない要素」かを判定する。CSS ファイルは読まないので、
+ * 属性だけで分かるもの(hidden / aria-hidden="true" / インラインの display:none・visibility:hidden)に限る。
+ */
+function isHiddenStartTag(attrs: string): boolean {
+  ATTRIBUTE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = ATTRIBUTE.exec(attrs)) !== null) {
+    const name = m[1]!.toLowerCase();
+    const value = m[2] ?? m[3] ?? m[4];
+    if (name === 'hidden') return true;
+    if (name === 'aria-hidden' && value?.trim().toLowerCase() === 'true') return true;
+    if (name === 'style' && value !== undefined && HIDING_STYLE.test(value)) return true;
+  }
+  return false;
+}
+
+/** from 以降で、name 要素の対応する閉じタグの直後の位置。入れ子を数える。無ければ null。 */
+function findMatchingClose(s: string, name: string, from: number): number | null {
+  const re = new RegExp(`<(/?)${name}\\b([^>]*)>`, 'gi');
+  re.lastIndex = from;
+  let depth = 1;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s)) !== null) {
+    if (m[1] === '/') {
+      depth -= 1;
+      if (depth === 0) return re.lastIndex;
+    } else if (!/\/\s*$/.test(m[2] ?? '')) {
+      depth += 1;
+    }
+  }
+  return null;
+}
+
+/**
+ * 画面に表示されない要素を中身ごと除く。
+ *
+ * なぜ: REQUIREMENTS §11.6(RAG の本文からスクリプト・フォーム・ナビ・広告を除く)。表示されない
+ * 要素の文字は利用者にも、承認時に原文を見たレビュアにも見えないのに、索引に入るとチャットの
+ * 回答根拠になる。公式ページが改ざんされたときの間接プロンプトインジェクションの経路なので除く。
+ * 入れ子の同名要素は数えて対応する閉じタグまで除く。閉じタグが見つからない(<p> の省略など)
+ * ときは開始タグだけを除く(後続の表示される本文まで消さないため)。
+ */
+export function stripHiddenElements(html: string): string {
+  let out = '';
+  let last = 0;
+  START_OR_END_TAG.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = START_OR_END_TAG.exec(html)) !== null) {
+    if (m[1] === '/' || !isHiddenStartTag(m[3] ?? '')) continue;
+    const name = m[2]!.toLowerCase();
+    let end = START_OR_END_TAG.lastIndex;
+    if (!VOID_ELEMENTS.has(name)) {
+      const close = findMatchingClose(html, name, end);
+      if (close !== null) end = close;
+    }
+    out += html.slice(last, m.index);
+    last = end;
+    START_OR_END_TAG.lastIndex = end;
+  }
+  return out + html.slice(last);
+}
+
 /** HTML → 本文テキスト行の配列(空行除去・trim済み)。 */
 export function extractTextLines(html: string): string[] {
   let s = html;
@@ -57,6 +143,8 @@ export function extractTextLines(html: string): string[] {
   for (const tag of STRIP_BLOCKS) {
     s = s.replace(new RegExp(`<${tag}\\b[\\s\\S]*?</${tag}>`, 'gi'), '');
   }
+  // 表示されない要素を中身ごと除去(間接プロンプトインジェクション対策)。
+  s = stripHiddenElements(s);
   // ブロック境界を改行に(段落・見出し・li・tr・div・br 等)。
   s = s.replace(/<\/(p|div|li|tr|h[1-6]|section|article|table|ul|ol|dl|dd|dt)>/gi, '\n');
   s = s.replace(/<br\s*\/?>/gi, '\n');
