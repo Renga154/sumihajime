@@ -81,6 +81,12 @@ export function isOfficialHost(host: string): boolean {
 /**
  * URL 文字列が https かつ公式ホストか。例外を投げずに真偽で返す(巡回はソース単位で
  * 記録して先へ進むため、例外ではなく判定値が欲しい)。不正な URL は false。
+ *
+ * なぜポートと userinfo を拒むか(2026-10-02 監査): hostname だけを見ると
+ * `https://x.lg.jp:8443/`(公式ホスト上の別サービス)や `https://user:pass@x.lg.jp/`
+ * (見た目の偽装・資格情報つきURL)も公式として通る。承認済み台帳の URL はどちらの形も
+ * 持たないため、公式導線として扱う理由がない。既定ポート(:443)は WHATWG URL が
+ * 正規化で落とす(port が空になる)ので、省略形と同じ宛先として通る。
  */
 export function isOfficialUrl(url: string): boolean {
   let parsed: URL;
@@ -89,5 +95,7 @@ export function isOfficialUrl(url: string): boolean {
   } catch {
     return false;
   }
-  return parsed.protocol === 'https:' && isOfficialHost(parsed.hostname);
+  if (parsed.protocol !== 'https:') return false;
+  if (parsed.port !== '' || parsed.username !== '' || parsed.password !== '') return false;
+  return isOfficialHost(parsed.hostname);
 }
