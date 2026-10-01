@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSeed } from './seed.js';
 import { MUNICIPALITIES } from './municipalities.js';
+import { WRANGLER_ENV_NAME, assertCliValue, flagValue } from './cli-args.js';
 
 /**
  * なぜ: D1へ承認済みデータを投入する publish CLI(T-006/T-011)。
@@ -30,10 +31,12 @@ function main(): void {
   const dryRun = process.argv.includes('--dry-run');
   const remote = process.argv.includes('--remote');
   const targetFlag = remote ? '--remote' : '--local';
-  // --env <name> があれば wrangler にそのまま透過する(ミラー環境への投入。既定は従来通り)。
-  const envIdx = process.argv.indexOf('--env');
-  const envName = envIdx >= 0 ? process.argv[envIdx + 1] : undefined;
-  const envArgs: string[] = envName ? ['--env', envName] : [];
+  // --env <name> があれば wrangler へ渡す(ミラー環境への投入。既定は従来通り)。
+  // なぜ検証するか: 以前は直後の値をそのまま渡しており、`--env --remote` のように次のフラグを
+  // 環境名として wrangler へ渡せた(オプション注入)。値の欠落・「-」始まり・形の違いは拒否する。
+  const envName = flagValue(process.argv, '--env');
+  const envArgs: string[] =
+    envName !== undefined ? ['--env', assertCliValue('--env', envName, WRANGLER_ENV_NAME)] : [];
 
   // なぜ: CLIは supported な全自治体を公開対象にする。承認ゲート(buildSeed内)が
   // 未承認ソース(江東=pending/candidate 等)を参照する自治体を拒否し、publishを止める。

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { PROMPT_VERSION } from '@tmn/rag';
 import { chatResponseSchema } from '@tmn/schemas';
 import { tokyoToday } from '@tmn/domain';
+import { flagValue } from '@tmn/publish';
 import { RAG_MUNICIPALITIES, buildChunkManifest, loadApprovedHtmlSources } from '@tmn/rag-index';
 import { assertDatasetShape, parseDataset } from './cases.js';
 import { scoreCase } from './scoring.js';
@@ -47,20 +48,24 @@ interface Args {
 }
 
 function parseArgs(argv: string[]): Args {
-  const get = (flag: string): string | undefined => {
-    const idx = argv.indexOf(flag);
-    return idx >= 0 ? argv[idx + 1] : undefined;
-  };
+  // 値の欠落・「-」始まり(次のフラグを値として飲み込んだ)は拒否する(flagValue)。
+  const get = (flag: string): string | undefined => flagValue(argv, flag);
+  const out = get('--out');
+  const outJson = get('--out-json');
   return {
     endpoint: get('--endpoint') ?? process.env.EVAL_ENDPOINT ?? DEFAULT_ENDPOINT,
     spacingMs: Number(get('--spacing') ?? process.env.EVAL_SPACING_MS ?? DEFAULT_SPACING_MS),
     dry: argv.includes('--dry-run'),
+    // なぜ絶対パスにするか: 出力先は後で prettier(子プロセス)へ引数として渡す。絶対パスは
+    // 「/」で始まるので、prettier がオプションとして解釈することがない。
     outMd:
-      get('--out') ??
-      freshPath(resolve(repoRoot, 'docs/research'), `rag-eval-${REPORT_DATE}`, '.md'),
+      out !== undefined
+        ? resolve(out)
+        : freshPath(resolve(repoRoot, 'docs/research'), `rag-eval-${REPORT_DATE}`, '.md'),
     outJson:
-      get('--out-json') ??
-      freshPath(resolve(repoRoot, 'docs/research'), `rag-eval-${REPORT_DATE}`, '.result.json'),
+      outJson !== undefined
+        ? resolve(outJson)
+        : freshPath(resolve(repoRoot, 'docs/research'), `rag-eval-${REPORT_DATE}`, '.result.json'),
   };
 }
 
@@ -73,7 +78,8 @@ function formatOutputs(paths: string[]): void {
   const bin = resolve(repoRoot, 'node_modules/.bin/prettier');
   if (!existsSync(bin)) return;
   try {
-    execFileSync(bin, ['--write', ...paths], { stdio: 'ignore' });
+    // 念のため `--` でオプションの終わりを明示する(paths は parseArgs で絶対パス化済み)。
+    execFileSync(bin, ['--write', '--', ...paths], { stdio: 'ignore' });
   } catch (err) {
     console.warn(`  prettier整形をスキップ(手動で pnpm format を実行してください): ${String(err)}`);
   }
