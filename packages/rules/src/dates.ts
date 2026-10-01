@@ -7,13 +7,27 @@ import type { DueRule, OffsetDaysDueRule } from '@tmn/schemas';
  * 「暦日 + オフセット日数」という純粋なカレンダー演算であり、実行環境のローカル
  * タイムゾーンとは無関係でなければならない。
  *
- * 実装方針: 文字列を自前でY/M/Dに分解し、Date.UTC / getUTC*系のみを使う。
- * Date.UTC・getUTCFullYear等はprocess.env.TZ(実行環境のローカルタイムゾーン)に一切
+ * 実装方針: 文字列を自前でY/M/Dに分解し、setUTCFullYear / getUTC*系のみを使う。
+ * これらはprocess.env.TZ(実行環境のローカルタイムゾーン)に一切
  * 依存しない(常にUTC)。これによりローカルタイムゾーンが東京と異なる環境で実行しても
  * 結果が変わらないことを構造的に保証する(テストでTZ切り替えにより証明する)。
  */
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * 暦日(年・月・日)→ UTC のエポックミリ秒。
+ *
+ * なぜ Date.UTC を直接使わないか: Date.UTC は年が 0〜99 のとき 1900〜1999 年として解釈する
+ * (ECMAScript の仕様)。0001-01-01 が 1901 年になり、下の往復チェックで「存在しない日付」として
+ * 例外になっていた(API の 500。2026-10-02 監査)。setUTCFullYear は年をそのまま受け取る。
+ */
+function utcMsOf(year: number, monthIndex: number, day: number): number {
+  const date = new Date(0);
+  date.setUTCFullYear(year, monthIndex, day);
+  date.setUTCHours(0, 0, 0, 0);
+  return date.getTime();
+}
 
 /** なぜ: 不正な暦日文字列を早期に検出し、無効な日付が静かに繰り上がるのを防ぐ。 */
 function parseIsoDate(iso: string): { year: number; month: number; day: number } {
@@ -24,9 +38,8 @@ function parseIsoDate(iso: string): { year: number; month: number; day: number }
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
-  const utcMs = Date.UTC(year, month - 1, day);
-  const check = new Date(utcMs);
-  // なぜ: Date.UTCは2月30日のような不正日付をロールオーバーして受理してしまうため、
+  const check = new Date(utcMsOf(year, month - 1, day));
+  // なぜ: 2月30日のような不正日付もロールオーバーして受理されてしまうため、
   // 往復チェックで構造的に弾く(暦日の整合性を保証する)。
   if (
     check.getUTCFullYear() !== year ||
@@ -38,22 +51,30 @@ function parseIsoDate(iso: string): { year: number; month: number; day: number }
   return { year, month, day };
 }
 
+/**
+ * なぜ範囲外で例外にするか: 9999-12-31 に加算すると5桁の年になり、"10000-01-14" のような
+ * YYYY-MM-DD ではない文字列を期日として返していた。黙って壊れた値を返すより、計算できないことを
+ * 呼び出し元に知らせる(API は受付範囲外の日付を入口で 422 にするため、通常ここへは来ない)。
+ */
 function toIsoDate(utcMs: number): string {
   const date = new Date(utcMs);
-  const year = String(date.getUTCFullYear()).padStart(4, '0');
+  const yearNumber = date.getUTCFullYear();
+  if (!Number.isFinite(yearNumber) || yearNumber < 0 || yearNumber > 9999) {
+    throw new RangeError('calendar date out of the 4-digit year range (0000-9999)');
+  }
+  const year = String(yearNumber).padStart(4, '0');
   const month = String(date.getUTCMonth() + 1).padStart(2, '0');
   const day = String(date.getUTCDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
 /**
- * なぜ: 期限計算の中核。月末・年跨ぎ・うるう年をDate.UTCのロールオーバーに委ねることで
+ * なぜ: 期限計算の中核。月末・年跨ぎ・うるう年をDateのロールオーバーに委ねることで
  * 自前の暦計算バグ(2月の日数分岐など)を避けつつ、UTC固定によりローカルTZ非依存を保つ。
  */
 export function addCalendarDays(iso: string, days: number): string {
   const { year, month, day } = parseIsoDate(iso);
-  const utcMs = Date.UTC(year, month - 1, day + days);
-  return toIsoDate(utcMs);
+  return toIsoDate(utcMsOf(year, month - 1, day + days));
 }
 
 /** なぜ: 評価器(evaluate.ts)からDueRuleを解決するための唯一の窓口。純関数。 */

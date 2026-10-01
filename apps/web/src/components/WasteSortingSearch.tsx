@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react';
-import type { WasteSortingItem } from '@tmn/schemas';
+import { WASTE_SORTING_QUERY_MAX_LENGTH, type WasteSortingItem } from '@tmn/schemas';
 import { ApiError, getWasteSortingSummary, searchWasteSorting } from '../api/client';
 import { useAsync } from '../lib/useAsync';
 import { Badge } from './Badge';
@@ -94,6 +94,9 @@ export function WasteSortingSearch({ municipalityCode, municipalityName, officia
               type="text"
               inputMode="text"
               autoComplete="off"
+              // サーバー(GET /api/waste-sorting)と同じ上限。超える語は API が 400 で断るため、
+              // 画面で先に止めて「入力できたのにエラー」にしない(最長の品目名46字に余裕を持たせた値)。
+              maxLength={WASTE_SORTING_QUERY_MAX_LENGTH}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="例：ペットボトル、乾電池、傘"

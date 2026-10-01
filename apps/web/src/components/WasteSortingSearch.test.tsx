@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { WasteSortingItem } from '@tmn/schemas';
+import { WASTE_SORTING_QUERY_MAX_LENGTH, type WasteSortingItem } from '@tmn/schemas';
 
 /**
  * なぜ: 分別検索UIの主要分岐(サマリー→検索→0件→未整備)を、APIをモックして固定する。
@@ -121,6 +121,15 @@ describe('WasteSortingSearch', () => {
     expect(
       screen.getByRole('link', { name: /世田谷区の公式サイトで分別を調べる/ }),
     ).toBeInTheDocument();
+  });
+
+  it('検索欄の文字数上限はサーバーの検証と同じ定数(画面では入れられるのに API が 400、を防ぐ)', async () => {
+    renderSearch();
+    await screen.findByText('可燃ごみ');
+    expect(screen.getByLabelText('品目名で調べる')).toHaveAttribute(
+      'maxLength',
+      String(WASTE_SORTING_QUERY_MAX_LENGTH),
+    );
   });
 
   it('データ未整備(404)は公式サイト導線で誠実に表示する', async () => {

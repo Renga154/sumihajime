@@ -95,3 +95,69 @@ export class RateLimiter {
     }
   }
 }
+
+/**
+ * レート制限のキー(CF-Connecting-IP の値 → 数える単位)。
+ *
+ * なぜ IPv6 を /64 にまとめるのか: IPv6 では1契約(1家庭・1端末)に /64 がまるごと割り当てられる
+ * のが普通で、末尾64ビットは利用者側で自由に変えられる(プライバシー拡張で自動的にも変わる)。
+ * アドレス単位で数えると、同じ相手がアドレスを替えるだけで制限を素通りできる。/64 より広く
+ * まとめると、同じ事業者の別の契約者まで巻き込む。
+ * IPv4 は従来どおりアドレス単位(CGNAT で複数人が1アドレスを共有し得るが、それは /64 化と無関係)。
+ *
+ * 値はキーとしてだけ使い、ログ・応答には出さない(IP は個人に紐づき得る。原則7)。
+ * 解釈できない値は落とさずに原文(小文字)をキーにする: CF-Connecting-IP は Cloudflare が付ける
+ * ヘッダで利用者は書き換えられないため、形が崩れていても「制限を外す」方向には倒さない。
+ */
+export function rateLimitKeyForIp(raw: string | undefined | null): string {
+  const ip = (raw ?? '').trim().toLowerCase();
+  if (ip.length === 0) return 'unknown';
+  if (!ip.includes(':')) return ip;
+  const hextets = expandIpv6(ip);
+  if (!hextets) return ip;
+  // ::ffff:a.b.c.d(IPv4 射影)は IPv4 の利用者なので、IPv4 と同じキーにする。
+  if (hextets.slice(0, 5).every((h) => h === 0) && hextets[5] === 0xffff) {
+    const hi = hextets[6] ?? 0;
+    const lo = hextets[7] ?? 0;
+    return [hi >> 8, hi & 255, lo >> 8, lo & 255].join('.');
+  }
+  return `${hextets
+    .slice(0, 4)
+    .map((h) => h.toString(16))
+    .join(':')}::/64`;
+}
+
+/** IPv6 文字列 → 16ビット×8。"::" の省略・末尾の埋め込み IPv4・ゾーンID(%eth0)を扱う。 */
+function expandIpv6(ip: string): number[] | null {
+  let text = ip.split('%')[0] ?? '';
+  const tail: number[] = [];
+  const v4 = /(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(text);
+  if (v4) {
+    const [a, b, c, d] = v4.slice(1, 5).map(Number) as [number, number, number, number];
+    if ([a, b, c, d].some((o) => o > 255)) return null;
+    tail.push((a << 8) | b, (c << 8) | d);
+    text = text.slice(0, v4.index);
+    // "::ffff:1.2.3.4" は末尾に ":" が1つ残る("::1.2.3.4" の "::" は省略記号なので残す)。
+    if (text.endsWith(':') && !text.endsWith('::')) text = text.slice(0, -1);
+  }
+  const parts = text.split('::');
+  if (parts.length > 2) return null;
+  const parse = (s: string): number[] | null => {
+    if (s.length === 0) return [];
+    const out: number[] = [];
+    for (const h of s.split(':')) {
+      if (!/^[0-9a-f]{1,4}$/.test(h)) return null;
+      out.push(parseInt(h, 16));
+    }
+    return out;
+  };
+  const head = parse(parts[0] ?? '');
+  const rest = parts.length === 2 ? parse(parts[1] ?? '') : [];
+  if (!head || !rest) return null;
+  const known = head.length + rest.length + tail.length;
+  if (parts.length === 2) {
+    if (known > 7) return null;
+    return [...head, ...new Array<number>(8 - known).fill(0), ...rest, ...tail];
+  }
+  return known === 8 ? [...head, ...tail] : null;
+}
