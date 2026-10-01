@@ -3,8 +3,16 @@
 export { detectEncoding, decodeBuffer } from './encoding.js';
 export type { DetectedEncoding, EncodingDetection, DecodeResult } from './encoding.js';
 export { sha256Hex } from './hash.js';
-export { fetchOfficial, isOfficialHost, assertOfficialUrl, DisallowedHostError } from './http.js';
-export type { FetchResult, FetchOptions } from './http.js';
+export {
+  fetchOfficial,
+  isOfficialHost,
+  assertOfficialUrl,
+  DisallowedHostError,
+  FetchPolicyError,
+  MAX_BODY_BYTES,
+  MAX_REDIRECT_HOPS,
+} from './http.js';
+export type { FetchResult, FetchOptions, FetchPolicyReason } from './http.js';
 export { extractTextLines, summarizeLineDiff } from './html.js';
 export type { LineDiffSummary } from './html.js';
 export { classify, applyUpdate } from './classify.js';
