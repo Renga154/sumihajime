@@ -89,7 +89,7 @@ function env(overrides: Record<string, unknown> = {}) {
     VECTORIZE: vectorize,
     RAG_ENABLED: 'true',
     OPENAI_API_KEY: 'test-key',
-    OPENAI_BASE_URL: 'https://api.openai.test/v1',
+    OPENAI_BASE_URL: 'https://api.openai.com/v1',
     CHAT_DAILY_LIMIT: '2',
     ...overrides,
   };
