@@ -40,7 +40,8 @@ function formatOutput(path: string): void {
   const bin = resolve(repoRoot, 'node_modules/.bin/prettier');
   if (!existsSync(bin)) return;
   try {
-    execFileSync(bin, ['--write', path], { stdio: 'ignore' });
+    // path は parseArgs で絶対パス化済み。念のため `--` でオプションの終わりを明示する。
+    execFileSync(bin, ['--write', '--', path], { stdio: 'ignore' });
   } catch (err) {
     console.warn(`  prettier整形をスキップ(手動で pnpm format を実行してください): ${String(err)}`);
   }
