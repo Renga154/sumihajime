@@ -217,6 +217,52 @@ export const checklistResponseSchema = z.strictObject({
 export type ChecklistResponse = z.infer<typeof checklistResponseSchema>;
 
 /**
+ * ---- クエリ文字列の検証(GET の入力)。画面の入力欄と同じ定数を使う。 ----
+ */
+
+/**
+ * GET /api/waste-sorting の検索語 q の最大長(UTF-16 単位=HTML の maxLength と同じ数え方)。
+ *
+ * なぜ 64: 公開データ(6区・6128品目、2026-10-02 時点)で最も長い品目名は46字、読み仮名は32字。
+ * 検索は品目名・読みへの部分一致なので、それより長い語は何にも一致し得ない。上限を設けないと
+ * 2000字の語でも受け付けて D1 の LIKE に渡し、応答にもそのまま反射していた。将来の長い品目名にも
+ * 余裕を持たせて 64 とする(apps/api の input-validation テストが公開データとの関係を検査する)。
+ */
+export const WASTE_SORTING_QUERY_MAX_LENGTH = 64;
+export const wasteSortingQuerySchema = z.string().max(WASTE_SORTING_QUERY_MAX_LENGTH);
+
+/**
+ * GET /api/facilities の category に指定できる値(公開データの窓口区分そのもの)。
+ *
+ * なぜ許可リストか: 区分は有限の語彙で、それ以外の値は「該当なし」ではなく入力の誤り。
+ * 自由な文字列を受けると、任意の長さの値が D1 の検索とエッジキャッシュのキーへそのまま入る。
+ * 区を追加して新しい区分が増えたら、ここへ足す(apps/api の input-validation テストが、公開データの
+ * 全区分がこの一覧に含まれることを検査するので、足し忘れは CI で止まる)。
+ */
+export const FACILITY_CATEGORIES = [
+  '本庁舎',
+  '区役所',
+  '区役所本庁舎',
+  '区役所・分庁舎',
+  '市役所本庁舎',
+  'その他庁舎',
+  '地域庁舎',
+  '総合支所',
+  '総合支所(分室)',
+  '総合支所くみん窓口',
+  '出張所',
+  '特別出張所',
+  '出張所・区民サービスセンター',
+  '区民事務所',
+  '区民事務所分室',
+  '地域センター',
+  '地区サービス事務所',
+  '地域事務所',
+  '事務所',
+] as const;
+export const facilityCategoryQuerySchema = z.enum(FACILITY_CATEGORIES);
+
+/**
  * なぜ: REQUIREMENTS §11.3 検索スコープ「municipalityCode / procedureId or
  * category / language / reviewStatus=approved / effectiveFrom-To」を
  * クライアントから受け取る最小項目に絞る(reviewStatus等はサーバー側で強制するため
@@ -227,7 +273,8 @@ export type ChecklistResponse = z.infer<typeof checklistResponseSchema>;
 export const chatRequestSchema = z.strictObject({
   municipalityCode: municipalityCodeSchema,
   // なぜ: 質問は最大500字(T-013。過大入力・コスト・インジェクション面を抑える)。
-  question: z.string().min(1).max(500),
+  // trim してから数える: 空白だけの質問は中身が無いのに検索・生成(課金)まで進んでいた(2026-10-02)。
+  question: z.string().trim().min(1).max(500),
   // なぜ上限100字: 識別子(例: procedure_resident_registration)は40字程度。自由文を詰め込める
   // 長さにしない(サーバーは現状これらを検索に使わないが、受け取る以上は形を絞る)。
   procedureId: z.string().min(1).max(100).optional(),

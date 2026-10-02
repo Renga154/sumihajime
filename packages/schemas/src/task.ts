@@ -10,6 +10,18 @@ import { prioritySchema, applicabilitySchema } from './rule.js';
  * 別の軽量な表示用形状として定義する。
  */
 
+/**
+ * 手続きID・タスクIDの形(英小文字・数字・_・-、先頭は英小文字か数字、最大80字)。
+ *
+ * なぜ形を絞るか(2026-10-02 監査): GET /api/procedures/:id のパス引数は任意の文字列を取れ、
+ * 以前は日本語の文やURLを含む値もそのまま D1 の検索に渡していた。IDは公開データ側で採番する
+ * 識別子(例 procedure_resident_registration、最長35字。タスクは task_ + 手続きID)で、自由文を
+ * 受け取る理由が無い。'-' は既存のテストデータ(has-due 等)が使うため許す。
+ * 公開データの全 procedureId がこの形に合うことは apps/api の input-validation テストが検査する。
+ */
+export const PROCEDURE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,79}$/;
+export const procedureIdSchema = z.string().regex(PROCEDURE_ID_PATTERN);
+
 /** なぜ: §14.2 sources[]の埋め込み形状(sourceId/title/url/lastVerifiedAt)。 */
 /**
  * ADR-014: 定期巡回が検知した「根拠の揺らぎ」の種類。changed=公式ページの更新日が変わった、
@@ -35,8 +47,8 @@ export type TaskSourceRef = z.infer<typeof taskSourceRefSchema>;
  * 「生成時のProcedureVersionとRuleVersionを保持する」(§13.2)ため必須とする。
  */
 export const generatedTaskSchema = z.strictObject({
-  id: z.string().min(1),
-  procedureId: z.string().min(1),
+  id: procedureIdSchema,
+  procedureId: procedureIdSchema,
   title: z.string().min(1),
   category: z.string().min(1),
   priority: prioritySchema,

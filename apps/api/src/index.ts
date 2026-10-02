@@ -5,13 +5,16 @@ import {
   checklistRequestSchema,
   checklistResponseSchema,
   facilitiesResponseSchema,
+  facilityCategoryQuerySchema,
   municipalitiesResponseSchema,
   municipalityCodeSchema,
   procedureDetailResponseSchema,
+  procedureIdSchema,
   serviceStatsSchema,
   sourcesResponseSchema,
   wasteSchedulesResponseSchema,
   wardDifferencesResponseSchema,
+  wasteSortingQuerySchema,
   wasteSortingSearchResponseSchema,
   wasteSortingSummaryResponseSchema,
   type Source,
@@ -26,7 +29,11 @@ import {
   type WardDifferenceSourceRef,
 } from '@tmn/rules';
 import { isKnownSpaPath, sitemapPaths } from '@tmn/domain';
-import { API_SECURITY_HEADERS, withDocumentSecurityHeaders } from './headers.js';
+import {
+  API_SECURITY_HEADERS,
+  REDIRECT_SECURITY_HEADERS,
+  withDocumentSecurityHeaders,
+} from './headers.js';
 import { logEvent } from './log.js';
 import { buildTasks } from './checklist.js';
 import { handleChat, handleChatAvailability } from './chat.js';
@@ -34,7 +41,11 @@ import { scheduled } from './drift.js';
 import { assessHealth } from './health.js';
 import { JSON_BODY_LIMIT_BYTES, fail, requireJsonContentType, type ApiEnv } from './http.js';
 import { API_VERSION } from './version.js';
-import { canonicalRedirectTarget } from './canonical-host.js';
+import { entryDecision } from './canonical-host.js';
+import { enforceApiMethods, rejectCrossSiteWrites } from './request-guards.js';
+import { apiRateLimit } from './rate-limit.js';
+import { edgeCache } from './edge-cache.js';
+import { buildSecurityTxt } from './security-txt.js';
 import type { Bindings, DriftMark } from './db.js';
 import {
   getActiveDriftMarks,
@@ -73,17 +84,65 @@ type Env = ApiEnv;
 
 export const app = new Hono<Env>();
 
-/** 旧URL(workers.dev)と www の画面を独自ドメインへ一本化する(canonical-host.ts)。 */
-app.use('*', async (c, next) => {
-  const target = canonicalRedirectTarget(new URL(c.req.url), c.req.method, c.env?.CANONICAL_ORIGIN);
-  if (!target) return next();
-  return c.redirect(target, 301);
-});
+/**
+ * ■ 入口の順序(上から順に通る。順序そのものが仕様なので、変えるときは理由を残す)
+ *  1. requestId の採番 … 以降のどの段で断っても、標準エラーに requestId を載せられるように最初に置く。
+ *  2. 応答ヘッダの付与 … 後段のすべて(転送・405・403・429・413・415・404・500)の応答に
+ *     セキュリティヘッダと Cache-Control を付けるため、next() の外側を包む位置に置く。
+ *     以前は本文の検査(413/415)より後ろに登録していたため、それらの応答に CSP・nosniff・HSTS が
+ *     付いていなかった(2026-10-02 監査)。
+ *  3. 入口の一本化 … 平文HTTP → https、旧URL・www → 独自ドメイン(canonical-host.ts)。
+ *  4. /api/* のメソッド制限(405)→ 送信元の検査(403)→ 流量制限(429)→ 本文の検査(413/415)
+ *     … 安い検査から順に。本文を読むのは最後。
+ *  5. エッジキャッシュ(公開の読み取り API のみ。edge-cache.ts)→ 各ハンドラ。
+ * どのルートもこの段を素通りできないことは routes.test.ts が固定する。
+ */
 
 /** リクエストIDを採番(ログ相関用。PIIではない)。 */
-app.use('/api/*', async (c, next) => {
+app.use('*', async (c, next) => {
   c.set('requestId', crypto.randomUUID());
   await next();
+});
+
+/**
+ * 応答ヘッダの一括付与(REQUIREMENTS §16.3)。
+ *  - /api/* と、JSON のエラー応答(画面のパスへの 405 等)… API_SECURITY_HEADERS
+ *  - 転送(3xx)… REDIRECT_SECURITY_HEADERS(HSTS・nosniff・Referrer-Policy)
+ *  - 画面・robots.txt 等の文書 … 各ハンドラが withDocumentSecurityHeaders で付け済み
+ * 静的アセット側は apps/web/public/_headers が同等の値を付ける(理由は headers.ts のコメント)。
+ *
+ * Cache-Control: no-store を付けるもの: POST 等の応答(世帯属性や質問への回答を含む)と、
+ * すべてのエラー応答(requestId を含み、共有キャッシュや端末に残す理由が無い)。
+ */
+app.use('*', async (c, next) => {
+  await next();
+  const isApi = new URL(c.req.url).pathname.startsWith('/api/');
+  const isJson = (c.res.headers.get('Content-Type') ?? '').startsWith('application/json');
+  const status = c.res.status;
+  if (isApi || isJson) {
+    for (const [name, value] of Object.entries(API_SECURITY_HEADERS)) {
+      c.res.headers.set(name, value);
+    }
+    const unsafeMethod = c.req.method !== 'GET' && c.req.method !== 'HEAD';
+    if (unsafeMethod || status >= 400) c.res.headers.set('Cache-Control', 'no-store');
+  } else if (status >= 300 && status < 400) {
+    for (const [name, value] of Object.entries(REDIRECT_SECURITY_HEADERS)) {
+      c.res.headers.set(name, value);
+    }
+  }
+});
+
+/** 平文HTTP → https、旧URL(workers.dev)と www の画面 → 独自ドメイン(canonical-host.ts)。 */
+app.use('*', async (c, next) => {
+  const decision = entryDecision(new URL(c.req.url), c.req.method, c.env?.CANONICAL_ORIGIN);
+  if (!decision) return next();
+  if (decision.kind === 'redirect') return c.redirect(decision.location, 301);
+  return fail(
+    c,
+    403,
+    'https_required',
+    '暗号化されていない接続(http)では送信できません。https:// で始まるアドレスから開き直してください。',
+  );
 });
 
 /**
@@ -96,7 +155,7 @@ app.use('/api/*', async (c, next) => {
  * スタック・リクエスト本文は出さない。上流の応答断片や入力値が混ざり得るため)。
  */
 app.onError((_err, c) => {
-  // requestId は /api/* のミドルウェアより前で落ちた場合にも必ず持たせる。
+  // requestId は採番のミドルウェアより前で落ちた場合にも必ず持たせる。
   if (!c.get('requestId')) c.set('requestId', crypto.randomUUID());
   return fail(
     c,
@@ -125,19 +184,19 @@ const jsonBodyGuards = [
   }),
   requireJsonContentType(),
 ] as const;
+/** 405: 登録済みの API パスに対する想定外のメソッド(ルート表は Hono の登録内容から引く)。 */
+app.use(
+  '/api/*',
+  enforceApiMethods(() => app.routes),
+);
+/** 403: 状態を変える API へのクロスサイト送信(request-guards.ts)。 */
+app.use('/api/*', rejectCrossSiteWrites());
+/** 429: 流量制限(Workers Rate Limiting。rate-limit.ts)。 */
+app.use('/api/*', apiRateLimit());
 app.use('/api/chat', ...jsonBodyGuards);
 app.use('/api/checklists', ...jsonBodyGuards);
-
-/**
- * /api/* のJSON応答へセキュリティヘッダを付ける(REQUIREMENTS §16.3)。
- * 静的アセット側は apps/web/public/_headers が同等の値を付ける(理由は headers.ts のコメント)。
- */
-app.use('/api/*', async (c, next) => {
-  await next();
-  for (const [name, value] of Object.entries(API_SECURITY_HEADERS)) {
-    c.res.headers.set(name, value);
-  }
-});
+/** 公開の読み取り API のエッジキャッシュ(独自ドメインの GET 200 のみ。edge-cache.ts)。 */
+app.use('/api/*', edgeCache());
 
 /** ADR-014: 巡回マークを根拠カードの2項目へ写す(未検知なら空オブジェクト=項目を出さない)。 */
 function driftFields(mark: DriftMark | undefined) {
@@ -342,8 +401,13 @@ app.get('/api/procedures/:id', async (c) => {
       'municipality クエリ(5桁の自治体コード)を指定してください。',
     );
   }
-  const procedureId = c.req.param('id');
-  const procedure = await getProcedureVersion(c.env.DB, code, procedureId);
+  // 手続きIDの形(英小文字・数字・_・-)に合わない値は D1 へ渡さずに断る(task.ts procedureIdSchema)。
+  // 400 ではなく「見つからない」と同じ 404 にする: 画面から見れば、手で書き換えたURLも存在しない
+  // 手続きも同じ「その手続きは無い」で、案内(手続き一覧へ戻る)も同じため。
+  const parsedId = procedureIdSchema.safeParse(c.req.param('id'));
+  const procedure = parsedId.success
+    ? await getProcedureVersion(c.env.DB, code, parsedId.data)
+    : null;
   if (!procedure) {
     // なぜ手続きIDを文面に入れないか: パス引数は任意の文字列を取れる。応答へ反射すると、細工した
     // リンク(/procedures/<任意の文>)でサービスの案内文を装った文言を表示させる足場になる。
@@ -397,8 +461,20 @@ app.get('/api/facilities', async (c) => {
       'municipality クエリ(5桁の自治体コード)を指定してください。',
     );
   }
-  const category = c.req.query('category');
-  const facilities = await getFacilities(c.env.DB, code, category);
+  // category は公開データの窓口区分の許可リスト(api.ts FACILITY_CATEGORIES)。未指定なら全件。
+  const rawCategory = c.req.query('category');
+  const category =
+    rawCategory === undefined ? undefined : facilityCategoryQuerySchema.safeParse(rawCategory);
+  if (category && !category.success) {
+    return fail(
+      c,
+      400,
+      'invalid_category',
+      '窓口の種類の指定が正しくありません。窓口一覧の画面からお選びください。',
+      { municipalityCode: code },
+    );
+  }
+  const facilities = await getFacilities(c.env.DB, code, category?.data);
   const body = facilitiesResponseSchema.parse(facilities);
   logEvent({
     requestId,
@@ -638,6 +714,19 @@ app.get('/api/waste-sorting', async (c) => {
     );
   }
 
+  // 検索語の長さは D1 に触れる前に確かめる(上限は画面の入力欄と同じ定数。api.ts)。
+  // 文面に検索語を入れない(入力を反射しない)。
+  const q = c.req.query('q');
+  if (q !== undefined && !wasteSortingQuerySchema.safeParse(q).success) {
+    return fail(
+      c,
+      400,
+      'invalid_query',
+      '検索語が長すぎます。品目名を短くしてから、もう一度お試しください。',
+      { municipalityCode: code },
+    );
+  }
+
   const hasData = await hasWasteSortingData(c.env.DB, code);
   if (!hasData) {
     return fail(
@@ -649,7 +738,6 @@ app.get('/api/waste-sorting', async (c) => {
     );
   }
 
-  const q = c.req.query('q');
   if (!q || q.trim().length === 0) {
     const categories = await getWasteSortingCategorySummary(c.env.DB, code);
     const total = categories.reduce((n, cat) => n + cat.count, 0);
@@ -723,6 +811,35 @@ app.get('/sitemap.xml', (c) => {
 });
 
 /**
+ * GET /.well-known/security.txt : 脆弱性の連絡先(RFC 9116。本文と各項目の理由は security-txt.ts)。
+ * Worker が返すのは、Canonical 行を環境ごとの CANONICAL_ORIGIN から作るため(robots.txt と同じ理由)。
+ */
+app.get('/.well-known/security.txt', (c) =>
+  withDocumentSecurityHeaders(
+    new Response(buildSecurityTxt(c.env?.CANONICAL_ORIGIN), {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    }),
+  ),
+);
+
+/**
+ * 未定義の /api/* は標準のエラー形(JSON)で返す。
+ * なぜ: 以前は Hono 既定の text/plain "404 Not Found" で、画面の errorResponseSchema が読めず、
+ * requestId も無かった。API は常に API の形で失敗する。画面のパスはここへ来ない(下の受け皿が返す)。
+ */
+app.notFound((c) => {
+  if (new URL(c.req.url).pathname.startsWith('/api/')) {
+    return fail(
+      c,
+      404,
+      'not_found',
+      '指定のAPIは見つかりませんでした。画面を再読み込みしてから、もう一度お試しください。',
+    );
+  }
+  return c.text('Not Found', 404);
+});
+
+/**
  * 静的アセットで解決しなかった全リクエストの受け皿(SPAフォールバック)。
  *
  * 目的(独立点検): 未定義URLが 200 を返す「ソフト404」をなくす。画面はどちらも同じ index.html
@@ -736,6 +853,18 @@ app.all('*', async (c) => {
 
   // /api/* の未定義パスへHTMLを返さない(APIは常にAPIとして振る舞う)。
   if (url.pathname.startsWith('/api/')) return c.notFound();
+
+  // 画面・robots.txt 等は読むだけのもの。以前は DELETE / にも 200 で index.html を返していた
+  // (副作用は無いが、「何でも受け付ける」応答は検査ツール・中間装置の判断を誤らせる)。
+  if (c.req.method !== 'GET' && c.req.method !== 'HEAD') {
+    return fail(
+      c,
+      405,
+      'method_not_allowed',
+      'この操作には対応していません。ページを開き直してください。',
+      { headers: { Allow: 'GET, HEAD' } },
+    );
+  }
 
   const assets = c.env.ASSETS;
   // ASSETSバインディング未設定(単体テスト等)では本文を作れないため、状態だけ正しく返す。

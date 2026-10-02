@@ -43,6 +43,29 @@ describe('addCalendarDays', () => {
   });
 });
 
+/**
+ * 2026-10-02 監査: Date.UTC は 0〜99 年を 1900〜1999 年と解釈するため、0001-01-01 は「存在しない
+ * 日付」として例外になり、API が 500 を返していた。また 9999-12-31 に加算すると5桁の年になり、
+ * ISO 暦日でない文字列を返していた(応答の検証で 500)。API は範囲外の日付を 422 で先に断るが、
+ * 純関数としても暦の計算を正しく・壊れた値を返さないようにしておく。
+ */
+describe('addCalendarDays — 4桁の年の両端', () => {
+  it('0〜99 年を 1900 年代と取り違えない', () => {
+    expect(addCalendarDays('0001-01-01', 1)).toBe('0001-01-02');
+    expect(addCalendarDays('0099-12-31', 1)).toBe('0100-01-01');
+    expect(addCalendarDays('0004-02-28', 1)).toBe('0004-02-29');
+  });
+
+  it('5桁の年になる計算は不正な文字列を返さずに例外にする', () => {
+    expect(() => addCalendarDays('9999-12-31', 1)).toThrow(RangeError);
+    expect(addCalendarDays('9999-12-30', 1)).toBe('9999-12-31');
+  });
+
+  it('0年より前になる計算も例外にする', () => {
+    expect(() => addCalendarDays('0000-01-01', -1)).toThrow(RangeError);
+  });
+});
+
 describe('addCalendarDays — local timezone independence', () => {
   const originalTz = process.env.TZ;
 

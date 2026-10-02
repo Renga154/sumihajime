@@ -83,6 +83,31 @@ export const flagsSchema = z.strictObject({
 export type Flags = z.infer<typeof flagsSchema>;
 
 /**
+ * 引越し日・転出予定日として受け付ける暦日の範囲(両端を含む)。
+ *
+ * なぜ範囲を持つか(2026-10-02 監査): 以前は形式(YYYY-MM-DD)だけを見ていたため、9999-12-31 は
+ * 期限計算で1万年に繰り上がって応答の検証に落ち、0001-01-01 は JavaScript の Date が 0〜99 年を
+ * 1900 年代と解釈する仕様に当たって、どちらも 500 になっていた。入力の誤りは 422 で返すべきで、
+ * 「サーバーの不具合」に見せない。
+ *
+ * なぜこの広さか: 画面(WizardPage)の受付範囲は「今日の前後1年」で、ここより常に狭い。
+ * プロフィールは端末(localStorage)に保存され、読み込むたびにこのスキーマで検証し直す
+ * (apps/web/src/lib/storage.ts)。範囲を画面と同じ「今日基準」にすると、1年前に保存した控えが
+ * ある日突然読めなくなるため、固定の広い範囲にする。下限はサービス開始(2026年)より十分前、
+ * 上限は期限計算(最大でも数百日の加算)が4桁の年に収まる値。
+ * 引越し日と転出予定日の前後関係は強制しない(転出予定日はどちらにもなり得る。画面も強制していない)。
+ */
+export const PROFILE_DATE_MIN = '2000-01-01';
+export const PROFILE_DATE_MAX = '2100-12-31';
+
+/** ISO 暦日(存在する日付)かつ受付範囲内。YYYY-MM-DD は文字列の大小が日付の前後と一致する。 */
+export const profileDateSchema = z.iso
+  .date()
+  .refine((d) => d >= PROFILE_DATE_MIN && d <= PROFILE_DATE_MAX, {
+    message: `date must be between ${PROFILE_DATE_MIN} and ${PROFILE_DATE_MAX}`,
+  });
+
+/**
  * なぜ: §14.1のチェックリスト生成入力例、§9.2 ルール入力の全項目に対応する
  * トップレベルのプロフィールDTO。moveDateはISO日付文字列のまま保持し(CLAUDE.md §7:
  * 日付・期限計算はタイムゾーンを明示してテストする方針をpackages/rulesへ委譲するため)、
@@ -90,7 +115,7 @@ export type Flags = z.infer<typeof flagsSchema>;
  */
 export const profileSchema = z.strictObject({
   destination: destinationSchema,
-  moveDate: z.iso.date(),
+  moveDate: profileDateSchema,
   /**
    * なぜ任意項目か: 児童手当の15日特例は多くの区が「前住所地の転出予定日の翌日から15日以内」と
    * 明記しており(例: 板橋区「出生日・転入日(前住所地の転出予定日)等の事由発生日の翌日から起算して
@@ -106,7 +131,7 @@ export const profileSchema = z.strictObject({
    *
    * 後方互換: optional のため、この項目を持たない既存の保存済みプロフィールもそのまま parse できる。
    */
-  moveOutScheduledDate: z.iso.date().optional(),
+  moveOutScheduledDate: profileDateSchema.optional(),
   originType: originTypeSchema,
   household: householdSchema,
   flags: flagsSchema,
