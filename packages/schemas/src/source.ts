@@ -27,11 +27,26 @@ export const reviewStatusSchema = z.enum(['candidate', 'pending', 'approved', 'r
 export type ReviewStatus = z.infer<typeof reviewStatusSchema>;
 
 /**
+ * なぜ: sourceId は台帳の主キーであると同時に、ファイルパス(data/sources/<code>/snapshots/
+ * <id>.<YYYYMMDD>.<ext>)・wrangler の引数・ICS の UID・SQL 文字列へそのまま流れる。
+ * `min(1)` だけだと `../`・`/`・先頭の `-`(オプション注入)・改行・引用符まで通ってしまうため、
+ * 台帳の全388件(2026-10-02 時点)が従う `src-<5桁の自治体コード>-<カテゴリ>-<3桁の連番>` だけを許す。
+ * カテゴリは英小文字始まりの [a-z0-9_] に限り、長さは既存最長(25字)に余裕を持たせて48字まで。
+ * 形を変えるときは台帳全件と、この ID をパスに使う scripts(ingest / reaudit / publish / rag)を
+ * あわせて見直すこと。
+ */
+export const SOURCE_ID_PATTERN = /^src-\d{5}-[a-z][a-z0-9_]{0,47}-\d{3}$/;
+export const sourceIdSchema = z
+  .string()
+  .regex(SOURCE_ID_PATTERN, 'sourceId must look like src-<5-digit code>-<category>-<3-digit seq>');
+export type SourceId = z.infer<typeof sourceIdSchema>;
+
+/**
  * なぜ: §12.3 データソース台帳の全項目を1:1で表現する。municipalityCodeは
  * 都道府県・国レベルソース等で自治体に紐付かない場合もあるためoptionalとする。
  */
 export const sourceSchema = z.strictObject({
-  sourceId: z.string().min(1),
+  sourceId: sourceIdSchema,
   sourceTitle: z.string().min(1),
   ownerOrganization: z.string().min(1),
   municipalityCode: municipalityCodeSchema.optional(),
@@ -66,7 +81,7 @@ export type Source = z.infer<typeof sourceSchema>;
  */
 export const sourceSnapshotSchema = z.strictObject({
   id: z.string().min(1),
-  sourceId: z.string().min(1),
+  sourceId: sourceIdSchema,
   storageKey: z.string().min(1),
   contentHash: z.string().min(1),
   fetchedAt: z.iso.datetime(),

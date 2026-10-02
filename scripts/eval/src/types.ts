@@ -52,6 +52,8 @@ export interface ApiOutcome {
   response?: ChatResponse;
   errorCode?: string;
   networkError?: string;
+  /** 応答が名乗った回答モデル(API が返したときだけ。model.ts の extractModel)。 */
+  model?: string | null;
 }
 
 export interface CheckResults {
@@ -90,6 +92,8 @@ export interface CaseResult {
   reviewFlags: string[];
   status: CaseStatus;
   failReasons: string[];
+  /** 回答したモデル(API が返したときだけ。返さなければ null)。古い結果 JSON には無い。 */
+  model?: string | null;
 }
 
 export interface RunMeta {
@@ -104,6 +108,11 @@ export interface RunMeta {
   indexedVectorCount: number | null;
   ruleVersion: string | null;
   promptVersion: string | null;
+  /**
+   * 実行中に API の応答が名乗った回答モデル(重複なし)。空なら API が model を返していない。
+   * なぜ: モデルの差し替え・既定値の変更(モデルドリフト)で結果が動いたときに切り分けるため。
+   */
+  models?: string[];
 }
 
 export interface EvalReportData {

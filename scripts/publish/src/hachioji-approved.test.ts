@@ -31,6 +31,7 @@ describe('publish — 八王子市(13201)は承認後に公開される', () => 
     expect(
       findGateViolations({
         approvedSourceIds: data.approvedSourceIds,
+        sourceMunicipalities: data.sourceMunicipalities,
         references: data.references,
       }),
     ).toEqual([]);

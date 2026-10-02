@@ -113,6 +113,15 @@ export function renderReport(data: EvalReportData): string {
   lines.push(
     `- ruleVersion: ${meta.ruleVersion ?? 'N/A'} / promptVersion: ${meta.promptVersion ?? 'SYSTEM_PROMPT(apps/api経由・固定)'}`,
   );
+  // なぜ: モデルの差し替え・既定値の変更で結果が動いたときに切り分けるため。値は API の応答が
+  // 名乗ったもの(model.ts で形を確かめ済み)。返さない API では「不明」と正直に書く。
+  lines.push(
+    `- 回答モデル(API 応答の model): ${
+      meta.models && meta.models.length > 0
+        ? meta.models.join(' / ')
+        : '不明(API が model を返さない)'
+    }`,
+  );
   lines.push(
     `- retrieval スコープ: Vectorize \`$eq municipalityCode\` + D1 \`rag_chunks.municipality_code\` の二重強制(§11.3)`,
   );

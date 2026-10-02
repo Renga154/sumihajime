@@ -7,21 +7,60 @@ import type { PublishData } from './load.js';
  * スキーマ(テーブル)の作成は migrations 側の責務。ここは冪等な DELETE→INSERT のみ。
  */
 
-function str(v: string): string {
+/**
+ * なぜ: D1 の `--file` 実行はバインド変数を使えないので、値は文字列リテラルとして埋め込む。
+ * SQLite の文字列リテラルは `'` を `''` にするだけでよく、`\` は特別扱いしない(MySQL と違う)。
+ * そのうえで、SQL ファイルを壊したり読み手を欺いたりし得る値は黙って埋め込まずに例外にする:
+ * - NUL を含む C0 制御文字と DEL(改行・タブ・CR は説明文の正当な一部なので許す)
+ * - 孤立サロゲート(UTF-8 で書き出すと U+FFFD に化けて、別の値として保存される)
+ * - NaN / Infinity(String() すると SQL では列名や構文エラーとして解釈される)
+ * 現データ(公開シード・RAG チャンク)には該当が無いことを確認済み(2026-10-02)。
+ */
+export class SqlLiteralError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SqlLiteralError';
+  }
+}
+
+// eslint-disable-next-line no-control-regex
+const FORBIDDEN_CONTROL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
+const LONE_SURROGATE = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
+
+export function sqlString(v: string): string {
+  if (typeof v !== 'string') throw new SqlLiteralError(`expected a string, got ${typeof v}`);
+  const ctrl = FORBIDDEN_CONTROL.exec(v);
+  if (ctrl) {
+    const code = ctrl[0].charCodeAt(0).toString(16).padStart(4, '0');
+    throw new SqlLiteralError(`control character U+${code} in SQL string literal`);
+  }
+  if (LONE_SURROGATE.test(v)) {
+    throw new SqlLiteralError('lone surrogate in SQL string literal');
+  }
   return `'${v.replace(/'/g, "''")}'`;
 }
 
-function nstr(v: string | undefined | null): string {
-  return v === undefined || v === null ? 'NULL' : str(v);
+export function sqlNullableString(v: string | undefined | null): string {
+  return v === undefined || v === null ? 'NULL' : sqlString(v);
 }
 
-function num(v: number | undefined | null): string {
-  return v === undefined || v === null ? 'NULL' : String(v);
+export function sqlNumber(v: number | undefined | null): string {
+  if (v === undefined || v === null) return 'NULL';
+  if (typeof v !== 'number' || !Number.isFinite(v)) {
+    throw new SqlLiteralError(`non-finite number in SQL: ${String(v)}`);
+  }
+  return String(v);
 }
 
-function json(v: unknown): string {
-  return str(JSON.stringify(v));
+/** JSON.stringify は制御文字を \uXXXX に直すので、JSON 列は制御文字の検査に掛からない。 */
+export function sqlJson(v: unknown): string {
+  return sqlString(JSON.stringify(v));
 }
+
+const str = sqlString;
+const nstr = sqlNullableString;
+const num = sqlNumber;
+const json = sqlJson;
 
 /** 公開対象テーブル(DELETE順=INSERT順)。冪等な再publishのため先に全消去。 */
 const TABLES = [

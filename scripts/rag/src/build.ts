@@ -9,6 +9,7 @@ import {
   buildRagChunksSql,
   toVectorLine,
 } from './manifest.js';
+import { DEFAULT_INDEX_NAME, parseBuildTarget, partitionOrphanIds } from './cli.js';
 
 /**
  * なぜ: RAG索引構築CLI(T-013)。
@@ -34,7 +35,8 @@ const wranglerBin = resolve(apiDir, 'node_modules/.bin/wrangler');
 // binding名 "DB" は全環境で共通のため、環境非依存にD1を特定できる(ADR-008)。
 const DB_NAME = 'DB';
 // --env/--index で上書き可能(ミラー環境向け)。既定は個人アカウントの本番索引。
-let INDEX_NAME = 'tokyo-move-navi-rag';
+// 値は main で parseBuildTarget が検証する(wrangler へのオプション注入を防ぐ)。
+let INDEX_NAME = DEFAULT_INDEX_NAME;
 let ENV_ARGS: string[] = [];
 // なぜ: Vectorize の upsert は非同期に処理される。処理完了前にクエリすると新チャンクがヒットせず
 // 保留・誤答になる(本番でこの取りこぼしが発生)。upsert 前後で info の processedUpToMutation の変化と
@@ -150,7 +152,15 @@ function currentChunkIds(dbTarget: string): string[] {
 }
 
 /** 新しい一覧に無いIDを索引から消す(削除は非同期。ID は1回100件ずつ渡す)。 */
-function deleteOrphanVectors(orphans: readonly string[]): void {
+function deleteOrphanVectors(candidates: readonly string[]): void {
+  // D1 から読み戻した値も wrangler の引数になる。チャンクIDの形のものだけを渡す。
+  const { deletable: orphans, rejected } = partitionOrphanIds(candidates);
+  if (rejected.length > 0) {
+    console.warn(
+      `[rag-index] skipped ${rejected.length} chunk_id(s) in D1 that do not look like chunk ids ` +
+        '(not passed to wrangler). Inspect rag_chunks manually.',
+    );
+  }
   if (orphans.length === 0) {
     console.log('[rag-index] no orphan vectors.');
     return;
@@ -194,15 +204,10 @@ async function main(): Promise<void> {
   const dryRun = process.argv.includes('--dry-run');
   const remote = process.argv.includes('--remote');
   const dbTarget = remote ? '--remote' : '--local';
-  const envIdx = process.argv.indexOf('--env');
-  if (envIdx >= 0 && process.argv[envIdx + 1]) {
-    ENV_ARGS = ['--env', process.argv[envIdx + 1]!];
-  }
-  const indexIdx = process.argv.indexOf('--index');
-  if (indexIdx >= 0 && process.argv[indexIdx + 1]) {
-    INDEX_NAME = process.argv[indexIdx + 1]!;
-  }
-  if (ENV_ARGS.length > 0 || INDEX_NAME !== 'tokyo-move-navi-rag') {
+  const target = parseBuildTarget(process.argv);
+  ENV_ARGS = target.envArgs;
+  INDEX_NAME = target.indexName;
+  if (ENV_ARGS.length > 0 || INDEX_NAME !== DEFAULT_INDEX_NAME) {
     console.log(`[rag-index] target: index=${INDEX_NAME} env=${ENV_ARGS[1] ?? '(default)'}`);
   }
 

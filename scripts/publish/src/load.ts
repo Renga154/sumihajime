@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type {
   Coverage,
@@ -21,10 +21,11 @@ import {
   wasteScheduleSchema,
   wasteSortingItemSchema,
 } from '@tmn/schemas';
-import { extractPageUpdatedOn, pickCurrentSnapshot } from '@tmn/drift';
+import { extractPageUpdatedOn } from '@tmn/drift';
 import { parseCsvRecords } from './csv.js';
 import { MUNICIPALITIES } from './municipalities.js';
 import type { SourceRef } from './gate.js';
+import { readVerifiedSnapshot } from './snapshot-files.js';
 
 /** なぜ: ごみデータセットの自治体単位メタ(C-9のcautionを応答に必ず含めるため)。 */
 export interface WasteDataset {
@@ -43,6 +44,11 @@ export interface PublishData {
   approvedSources: Source[];
   /** approved の source_id 集合(ゲート判定用。全台帳から算出)。 */
   approvedSourceIds: Set<string>;
+  /**
+   * source_id → 台帳の municipality_code(全台帳)。ゲートが「自治体Xの公開物が別の区市町村の
+   * ソースを引いていないか」(CLAUDE.md原則4)を判定するのに使う。
+   */
+  sourceMunicipalities: Map<string, string | undefined>;
   procedures: ProcedureVersion[];
   ruleSets: RuleSet[];
   facilities: Facility[];
@@ -102,19 +108,28 @@ function toDateTime(v: string | undefined): string | undefined {
  * 人手記入の source_last_modified_at を使わないのは、本文表記と食い違う行(千代田・江戸川)が
  * あり初回から誤検知するため。HTML 以外・スナップショット不在・表記無しは undefined
  * (推測で埋めない)。
+ *
+ * なぜ全種別のスナップショットを読むか(html 以外も): 原文が台帳の content_hash と一致する
+ * ことを公開の直前に確かめるため(readVerifiedSnapshot。食い違えば例外で publish を止める)。
+ * publish は content_hash をそのまま D1 へ載せ、巡回の比較基準にするので、原文と食い違った
+ * 値を公開しない。スナップショットが無い環境(公開リポジトリ)は従来どおり undefined。
  */
 function snapshotPageUpdatedOn(
   repoRoot: string,
   municipalityCode: string | undefined,
   sourceId: string,
   sourceType: string,
+  contentHash: string | undefined,
 ): string | undefined {
-  if (sourceType !== 'html') return undefined;
-  const dir = resolve(repoRoot, `data/sources/${municipalityCode ?? ''}/snapshots`);
-  if (!existsSync(dir)) return undefined;
-  const file = pickCurrentSnapshot(readdirSync(dir), sourceId, 'html');
-  if (!file) return undefined;
-  return extractPageUpdatedOn(readFileSync(resolve(dir, file), 'utf-8')) ?? undefined;
+  const snapshot = readVerifiedSnapshot(repoRoot, {
+    sourceId,
+    municipalityCode,
+    sourceType,
+    contentHash,
+  });
+  if (snapshot === null || sourceType !== 'html') return undefined;
+  // Buffer の UTF-8 復号は従来の readFileSync(..., 'utf-8') と同じ結果(BOM も残す)。
+  return extractPageUpdatedOn(Buffer.from(snapshot.bytes).toString('utf-8')) ?? undefined;
 }
 
 /** registry.csv → Source[](全件。approvedフィルタは呼び出し側)。 */
@@ -145,6 +160,7 @@ export function loadSources(repoRoot: string): Source[] {
         opt(r.municipality_code),
         r.source_id ?? '',
         r.source_type ?? '',
+        opt(r.content_hash),
       ),
       reviewStatus: r.review_status,
       reviewer: opt(r.reviewer),
@@ -309,6 +325,44 @@ export function loadWasteSortingFor(repoRoot: string, code: string): WasteSortin
 }
 
 /**
+ * 自治体ごとのファイル(data/normalized/<code>/… と packages/rules/data/<code>/rules.json)の中身が、
+ * 自分の自治体コードを名乗っているか確かめる。
+ * なぜ: ゲートは「公開物の自治体」を読み込んだディレクトリのコードで判定する。ファイルの中身が
+ * 別の自治体を名乗っていると、その自治体の画面に出るのに、根拠の自治体検査は読み込み元のコードで
+ * 行われてしまう(CLAUDE.md原則4)。食い違いは推測で直さず止める。
+ */
+export function assertOwnMunicipality(
+  code: string,
+  procedures: readonly ProcedureVersion[],
+  ruleSet: RuleSet,
+  facilities: readonly Facility[],
+  wasteDataset: WasteDataset | null,
+  sortingItems: readonly WasteSortingItem[],
+): void {
+  const wrong: string[] = [];
+  for (const p of procedures) {
+    if (p.municipalityCode !== code) wrong.push(`procedure ${p.id} (${p.municipalityCode})`);
+  }
+  if (ruleSet.municipalityCode !== code) wrong.push(`rules.json (${ruleSet.municipalityCode})`);
+  for (const f of facilities) {
+    if (f.municipalityCode !== code) wrong.push(`facility ${f.name} (${f.municipalityCode})`);
+  }
+  if (wasteDataset !== null && wasteDataset.municipalityCode !== code) {
+    wrong.push(`waste.json (${wasteDataset.municipalityCode})`);
+  }
+  for (const i of sortingItems) {
+    if (i.municipalityCode !== code)
+      wrong.push(`waste sorting ${i.itemId} (${i.municipalityCode})`);
+  }
+  if (wrong.length > 0) {
+    throw new Error(
+      `data for municipality ${code} declares another municipality: ${wrong.slice(0, 10).join(', ')}` +
+        (wrong.length > 10 ? ` …and ${wrong.length - 10} more` : ''),
+    );
+  }
+}
+
+/**
  * すべての公開データを読み込み・スキーマ検証し、ゲート入力(references)まで組み立てる。
  * SQL生成やゲート判定はここでは行わない(呼び出し側が assertPublishGate → buildSeedStatements)。
  *
@@ -326,6 +380,7 @@ export function loadPublishData(
   const sources = loadSources(repoRoot);
   const approvedSources = sources.filter((s) => s.reviewStatus === 'approved');
   const approvedSourceIds = new Set(approvedSources.map((s) => s.sourceId));
+  const sourceMunicipalities = new Map(sources.map((s) => [s.sourceId, s.municipalityCode]));
 
   // なぜ: municipalities.ts の静的 supported は「MVP整備対象」という product意図を表す。
   // ただし API/DB で実際に supported として公開するのは「承認済みソースを1件以上持つ
@@ -361,6 +416,7 @@ export function loadPublishData(
     const facs = loadFacilitiesFor(repoRoot, code);
     const waste = loadWasteFor(repoRoot, code);
     const sortingItems = loadWasteSortingFor(repoRoot, code);
+    assertOwnMunicipality(code, allProcs, fullRuleSet, facs, waste.dataset, sortingItems);
 
     // ADR-007: 公開単位 = dataStatus==='verified' の手続きのみ。partial/stale(人手レビュー
     // 未了の staging データ)は seed(公開)から除外し、対応するルールも RuleSet から間引く。
@@ -421,27 +477,44 @@ export function loadPublishData(
     wasteSortingItems.push(...publishedSorting);
 
     for (const p of procs) {
-      references.push({ owner: `procedure_version ${p.id}@${p.version}`, sourceIds: p.sourceIds });
+      references.push({
+        owner: `procedure_version ${p.id}@${p.version}`,
+        municipalityCode: code,
+        sourceIds: p.sourceIds,
+      });
     }
     for (const rule of publishedRules) {
       references.push({
         owner: `rule ${ruleSet.municipalityCode}/${rule.procedureId}`,
+        municipalityCode: code,
         sourceIds: rule.sourceIds,
       });
     }
     // 施設・ごみも公開物なので参照ソースをゲート対象に含める(公開対象=approvedソースのみ。distinctで冗長回避)。
     const facilitySourceIds = [...new Set(publishedFacs.map((f) => f.sourceId))];
     if (facilitySourceIds.length > 0) {
-      references.push({ owner: `facilities (${code})`, sourceIds: facilitySourceIds });
+      references.push({
+        owner: `facilities (${code})`,
+        municipalityCode: code,
+        sourceIds: facilitySourceIds,
+      });
     }
     if (wasteApproved && waste.dataset) {
-      references.push({ owner: `waste dataset (${code})`, sourceIds: [waste.dataset.sourceId] });
+      references.push({
+        owner: `waste dataset (${code})`,
+        municipalityCode: code,
+        sourceIds: [waste.dataset.sourceId],
+      });
     }
     // なぜ: ごみ分別辞書は未整備・未承認の自治体もあるため、その場合は参照0件
     // (=ゲート対象なし)で自然にスキップされる。
     const sortingSourceIds = [...new Set(publishedSorting.map((i) => i.sourceId))];
     if (sortingSourceIds.length > 0) {
-      references.push({ owner: `waste sorting (${code})`, sourceIds: sortingSourceIds });
+      references.push({
+        owner: `waste sorting (${code})`,
+        municipalityCode: code,
+        sourceIds: sortingSourceIds,
+      });
     }
   }
 
@@ -450,6 +523,7 @@ export function loadPublishData(
     coverage: loadCoverage(repoRoot),
     approvedSources,
     approvedSourceIds,
+    sourceMunicipalities,
     procedures,
     ruleSets,
     facilities,

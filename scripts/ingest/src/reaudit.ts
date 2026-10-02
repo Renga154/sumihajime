@@ -2,7 +2,9 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { extractPageUpdatedOn, pickCurrentSnapshot } from '@tmn/drift';
+import { extractPageUpdatedOn } from '@tmn/drift';
+import { findCurrentSnapshot, resolveInside, snapshotFileName } from '@tmn/publish';
+import { parseIdList, parseReauditArgs, planApply } from './reaudit-apply.js';
 import { decodeBuffer } from './encoding.js';
 import { fetchOfficial } from './http.js';
 import { extractTextLines } from './html.js';
@@ -44,6 +46,8 @@ interface SourceResult {
   fetched: boolean;
   error?: string;
   status?: number;
+  /** 転送を辿った後に本文を読んだ URL(台帳の URL と違えば、人が転送先を確かめる材料)。 */
+  finalUrl?: string;
   newFile?: string;
   newSha256?: string;
   oldPageUpdatedOn?: string | null;
@@ -54,15 +58,6 @@ interface SourceResult {
   facts: FactPresence[];
   citedBy: string[];
   suggestion: 'unchanged' | 'date-only' | 'no-fact-loss' | 'fact-lost' | 'fetch-failed';
-}
-
-function parseArgs(argv: string[]): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i]!;
-    if (a.startsWith('--')) out[a.slice(2)] = argv[i + 1] ?? '';
-  }
-  return out;
 }
 
 interface Citation {
@@ -108,9 +103,9 @@ function collectCitations(sourceId: string): Citation[] {
 }
 
 async function report(args: Record<string, string>): Promise<void> {
-  const ids = (args.ids ?? '').split(',').filter(Boolean);
-  const outDir = resolve(args.out ?? '');
-  if (ids.length === 0 || !args.out) throw new Error('report: --ids と --out が必要です');
+  if (!args.out) throw new Error('report: --ids と --out が必要です');
+  const ids = parseIdList(args.ids);
+  const outDir = resolve(args.out);
   mkdirSync(outDir, { recursive: true });
   const records = new Map(
     tableToRecords(readRegistryTable(repoRoot)).map((r) => [r.source_id!, r]),
@@ -137,13 +132,10 @@ async function report(args: Record<string, string>): Promise<void> {
       suggestion: 'fetch-failed',
     };
 
-    const snapDir = resolve(repoRoot, 'data/sources', muni, 'snapshots');
-    const oldName = existsSync(snapDir)
-      ? pickCurrentSnapshot(readdirSync(snapDir), sourceId, type)
-      : null;
-    const oldBytes = oldName
-      ? new Uint8Array(readFileSync(resolve(snapDir, oldName)))
-      : new Uint8Array();
+    // 台帳の自治体コード・種別・ID からパスを組み立てる(値の形と基準ディレクトリ内に
+    // 収まることを snapshot-files が確かめる)。
+    const oldPath = findCurrentSnapshot(repoRoot, muni, sourceId, type);
+    const oldBytes = oldPath ? new Uint8Array(readFileSync(oldPath)) : new Uint8Array();
 
     let res;
     try {
@@ -156,7 +148,7 @@ async function report(args: Record<string, string>): Promise<void> {
       results.push({ ...base, status: res.status, error: `HTTP ${res.status}` });
       continue;
     }
-    const newFile = resolve(outDir, `${sourceId}.${type}`);
+    const newFile = resolveInside(outDir, snapshotFileName(sourceId, type));
     writeFileSync(newFile, res.bytes);
     const sha = createHash('sha256').update(res.bytes).digest('hex');
 
@@ -191,6 +183,7 @@ async function report(args: Record<string, string>): Promise<void> {
       ...base,
       fetched: true,
       status: res.status,
+      finalUrl: res.finalUrl,
       newFile,
       newSha256: sha,
       oldPageUpdatedOn: type === 'html' ? extractPageUpdatedOn(oldText) : null,
@@ -233,6 +226,7 @@ function renderReport(results: SourceResult[]): string {
       `## ${r.sourceId}`,
       '',
       `- URL: ${r.url}`,
+      ...(r.finalUrl && r.finalUrl !== r.url ? [`- 転送後のURL: ${r.finalUrl}`] : []),
       `- 引用: ${r.citedBy.join(', ') || '(なし)'}`,
     );
     if (!r.fetched) {
@@ -261,46 +255,51 @@ function renderReport(results: SourceResult[]): string {
 }
 
 function apply(args: Record<string, string>): void {
-  const ids = new Set((args.ids ?? '').split(',').filter(Boolean));
-  if (ids.size === 0 || !args.result || !args.approval) {
+  if (!args.result || !args.approval) {
     throw new Error('apply: --result と --ids と --approval(承認の出どころ)が必要です');
   }
-  const results = JSON.parse(readFileSync(resolve(args.result), 'utf-8')) as SourceResult[];
+  // 承認の出どころは台帳の notes(1セル)へ書く。改行・制御文字で行や列を崩させない。
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f]/.test(args.approval)) {
+    throw new Error('apply: --approval に改行・制御文字は使えません');
+  }
+  const ids = parseIdList(args.ids);
   const today = tokyoToday();
   const stamp = today.replace(/-/g, '');
   const table = readRegistryTable(repoRoot);
   const col = (n: string) => columnIndex(table, n);
 
-  for (const r of results) {
-    if (!ids.has(r.sourceId)) continue;
-    if (!r.fetched || !r.newFile || !r.newSha256)
-      throw new Error(`${r.sourceId}: 取得できていないので apply できない`);
-    const bytes = readFileSync(r.newFile);
-    // レビューしたバイト列と同一であることを確かめる(途中で差し替わっていないか)。
-    if (createHash('sha256').update(bytes).digest('hex') !== r.newSha256) {
-      throw new Error(`${r.sourceId}: 取得後にファイルが変わっている`);
+  // 全件を検証してから書く(途中で失敗して一部だけ取り込まれた状態を作らない)。
+  const plan = planApply({ repoRoot, resultPath: args.result, ids, registry: table, stamp });
+  for (const item of plan) {
+    if (existsSync(item.outPath)) {
+      throw new Error(`${item.outPath} は既にある(スナップショットは上書きしない)`);
     }
-    const snapDir = resolve(repoRoot, 'data/sources', r.municipalityCode, 'snapshots');
-    const out = resolve(snapDir, `${r.sourceId}.${stamp}.${r.sourceType}`);
-    if (existsSync(out)) throw new Error(`${out} は既にある(スナップショットは上書きしない)`);
-    writeFileSync(out, bytes);
+  }
 
-    const row = table.rows.find((row) => rowToRecord(table.header, row).source_id === r.sourceId);
-    if (!row) throw new Error(`registry に無い: ${r.sourceId}`);
-    row[col('content_hash')] = r.newSha256;
+  for (const item of plan) {
+    mkdirSync(dirname(item.outPath), { recursive: true });
+    // 'wx': 既存なら失敗(上書きしない)。O_EXCL なので、置かれた symlink を辿って外へ書くこともない。
+    writeFileSync(item.outPath, item.bytes, { flag: 'wx' });
+
+    const row = table.rows.find(
+      (row) => rowToRecord(table.header, row).source_id === item.sourceId,
+    );
+    if (!row) throw new Error(`registry に無い: ${item.sourceId}`);
+    row[col('content_hash')] = item.newSha256;
     row[col('last_fetched_at')] = today;
     row[col('last_verified_at')] = today;
-    if (r.newPageUpdatedOn) row[col('source_last_modified_at')] = r.newPageUpdatedOn;
+    if (item.newPageUpdatedOn) row[col('source_last_modified_at')] = item.newPageUpdatedOn;
     const note = `${today} 再監査(公式ソースの定期巡回が検知): ${args.approval}`;
     const prev = row[col('notes')] ?? '';
     row[col('notes')] = prev ? `${prev} ${note}` : note;
-    console.log(`[reaudit] applied ${r.sourceId} → ${out.replace(repoRoot + '/', '')}`);
+    console.log(`[reaudit] applied ${item.sourceId} → ${item.outPath.replace(repoRoot + '/', '')}`);
   }
   writeRegistryTable(repoRoot, table);
 }
 
 const [cmd, ...rest] = process.argv.slice(2);
-const args = parseArgs(rest);
+const args = parseReauditArgs(rest);
 if (cmd === 'report') {
   await report(args);
 } else if (cmd === 'apply') {

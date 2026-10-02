@@ -1,5 +1,6 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { pickCurrentSnapshot } from '@tmn/drift';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { findCurrentSnapshot, versionedSnapshotPath } from '@tmn/publish';
+import { municipalityCodeSchema } from '@tmn/schemas';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decodeBuffer } from './encoding.js';
@@ -47,10 +48,19 @@ function parseArgs(argv: string[]): Args {
     const a = argv[i];
     if (a === '--municipality' || a === '-m') {
       args.municipality = argv[++i] ?? '';
+      // 自治体コードはスナップショットの保存先パスになる。5桁以外(`../..` 等)はここで止める。
+      if (!municipalityCodeSchema.safeParse(args.municipality).success) {
+        throw new Error(
+          `--municipality must be a 5-digit code (got ${JSON.stringify(args.municipality)})`,
+        );
+      }
     } else if (a === '--update') {
       args.update = true;
     } else if (a === '--timeout') {
       args.timeoutMs = Number(argv[++i] ?? '20000');
+      if (!Number.isFinite(args.timeoutMs) || args.timeoutMs <= 0) {
+        throw new Error('--timeout must be a positive number of milliseconds');
+      }
     } else if (a === '--help' || a === '-h') {
       args.help = true;
     }
@@ -73,21 +83,20 @@ Options:
 
 Default is fully READ-ONLY: it fetches and prints a classification report but writes nothing.`;
 
-const SNAP_EXT: Record<string, string> = { html: 'html', csv: 'csv', json: 'json', pdf: 'pdf' };
-
 /**
  * 現行スナップショットの中身を返す(diff用)。無ければ undefined。
  * 版はファイル名の日付で選ぶ(@tmn/drift pickCurrentSnapshot)。以前は mtime で選んでいたが、
  * mtime は git checkout で変わるため環境によって別の版を「最新」と見なしていた。
+ * パスは台帳の自治体コード・ID・種別から組み立て、基準ディレクトリ内に収まることを確かめる
+ * (findCurrentSnapshot)。
  */
 function readLatestSnapshot(
-  snapDir: string,
+  municipalityCode: string,
   sourceId: string,
   ext: string,
 ): Uint8Array | undefined {
-  if (!existsSync(snapDir)) return undefined;
-  const file = pickCurrentSnapshot(readdirSync(snapDir), sourceId, ext);
-  return file ? new Uint8Array(readFileSync(resolve(snapDir, file))) : undefined;
+  const path = findCurrentSnapshot(repoRoot, municipalityCode, sourceId, ext);
+  return path ? new Uint8Array(readFileSync(path)) : undefined;
 }
 
 interface RowReport {
@@ -135,8 +144,7 @@ async function processRow(
     if (contentType) report.encoding = `${report.encoding} · ${contentType}`;
 
     if (classification === 'changed' && rec.source_type === 'html') {
-      const snapDir = resolve(repoRoot, 'data/sources', rec.municipality_code ?? '', 'snapshots');
-      const prev = readLatestSnapshot(snapDir, sourceId, SNAP_EXT[rec.source_type] ?? 'bin');
+      const prev = readLatestSnapshot(rec.municipality_code ?? '', sourceId, 'html');
       if (prev) {
         const diff = summarizeLineDiff(decodeBuffer(prev).text, decoded.text);
         report.addedLines = diff.addedCount;
@@ -233,14 +241,21 @@ async function main(): Promise<void> {
     if (report.classification !== 'changed' || !newBytes) continue;
     const rec = table.rows.find((r) => rowToRecord(table.header, r).source_id === report.sourceId);
     const muni = rec ? rowToRecord(table.header, rec).municipality_code : '';
-    const ext = SNAP_EXT[report.sourceType] ?? 'bin';
-    const snapDir = resolve(repoRoot, 'data/sources', muni ?? '', 'snapshots');
-    mkdirSync(snapDir, { recursive: true });
-    const outPath = resolve(snapDir, `${report.sourceId}.${today.replace(/-/g, '')}.${ext}`);
+    // 自治体コード・ID・種別を検証し、data/sources/<code>/snapshots の内側に収まるパスだけを作る
+    // (台帳の値がパス要素として解釈されて外へ書くのを防ぐ)。
+    const outPath = versionedSnapshotPath(
+      repoRoot,
+      muni ?? '',
+      report.sourceId,
+      report.sourceType,
+      today.replace(/-/g, ''),
+    );
+    mkdirSync(dirname(outPath), { recursive: true });
     if (existsSync(outPath)) {
       console.log(`[ingest] snapshot exists, not overwriting: ${outPath}`);
     } else {
-      writeFileSync(outPath, newBytes);
+      // 'wx': 既存なら失敗(上書きしない)。O_EXCL なので置かれた symlink を辿って外へ書かない。
+      writeFileSync(outPath, newBytes, { flag: 'wx' });
       console.log(`[ingest] saved snapshot: ${outPath}`);
     }
   }

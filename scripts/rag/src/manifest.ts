@@ -1,8 +1,13 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { readRegistryTable, tableToRecords, extractTextLines } from '@tmn/ingest';
-import { pickCurrentSnapshot } from '@tmn/drift';
-import { MUNICIPALITIES } from '@tmn/publish';
+import {
+  MUNICIPALITIES,
+  readVerifiedSnapshot,
+  sqlNullableString,
+  sqlNumber,
+  sqlString,
+} from '@tmn/publish';
 import {
   buildSourceChunks,
   type ChunkOptions,
@@ -51,6 +56,8 @@ export interface ApprovedHtmlSource {
   title: string;
   url: string;
   lastVerifiedAt: string;
+  /** 台帳の content_hash。原文を読むたびに照合する(readApprovedSnapshotHtml)。 */
+  contentHash: string;
 }
 
 /** registry.csv → 承認済み(approved)かつ html かつ対象自治体のソースのみ。 */
@@ -70,7 +77,33 @@ export function loadApprovedHtmlSources(repoRoot: string): ApprovedHtmlSource[] 
       title: r.source_title!,
       url: r.source_url!,
       lastVerifiedAt: toDateTime(r.last_verified_at!),
+      contentHash: r.content_hash ?? '',
     }));
+}
+
+/**
+ * 承認済みソースの現行スナップショット(再監査で版付きが増えていればその最新)を、台帳の
+ * content_hash と照合してから HTML 文字列で返す。
+ *
+ * なぜ照合するか: 索引の本文はチャットの回答根拠になる。承認後に原文ファイルが差し替わって
+ * いれば、人が承認していない文(プロンプトインジェクションを含み得る)が根拠として索引に入る。
+ * 食い違えば SnapshotIntegrityError で索引の構築ごと止める(fail closed)。
+ * スナップショットが無いのは承認済みソースとして異常なので従来どおり例外。
+ */
+export function readApprovedSnapshotHtml(repoRoot: string, s: ApprovedHtmlSource): string {
+  const snapshot = readVerifiedSnapshot(repoRoot, {
+    sourceId: s.sourceId,
+    municipalityCode: s.municipalityCode,
+    sourceType: 'html',
+    contentHash: s.contentHash,
+  });
+  if (snapshot === null) {
+    throw new Error(
+      `no snapshot for ${s.sourceId} in data/sources/${s.municipalityCode}/snapshots`,
+    );
+  }
+  // Buffer の UTF-8 復号は従来の readFileSync(..., 'utf-8') と同じ結果(チャンクの本文を変えない)。
+  return Buffer.from(snapshot.bytes).toString('utf-8');
 }
 
 /** canonicalType(=category) → procedureId(対応する手続きがあれば)。 */
@@ -103,11 +136,8 @@ export function buildChunkManifest(repoRoot: string, opts?: ChunkOptions): Chunk
   const chunks: RagChunk[] = [];
 
   for (const s of sources) {
-    // 現行スナップショット(再監査で版付きが増えていればその最新)を読む。無ければ従来どおり例外。
-    const snapDir = resolve(repoRoot, `data/sources/${s.municipalityCode}/snapshots`);
-    const snapFile = pickCurrentSnapshot(readdirSync(snapDir), s.sourceId, 'html');
-    if (!snapFile) throw new Error(`no snapshot for ${s.sourceId} in ${snapDir}`);
-    const html = readFileSync(resolve(snapDir, snapFile), 'utf-8');
+    // 現行スナップショットを台帳のハッシュと照合してから読む。無ければ・食い違えば例外。
+    const html = readApprovedSnapshotHtml(repoRoot, s);
     const lines = extractTextLines(html);
     const metadata: RagChunkMetadata = {
       municipalityCode: s.municipalityCode,
@@ -132,12 +162,10 @@ export function buildChunkManifest(repoRoot: string, opts?: ChunkOptions): Chunk
 
 /* ---- SQL / NDJSON シリアライズ ---- */
 
-function str(v: string): string {
-  return `'${v.replace(/'/g, "''")}'`;
-}
-function nstr(v: string | undefined): string {
-  return v === undefined ? 'NULL' : str(v);
-}
+// publish のシード SQL と同じリテラル化を使う(`'` の二重化に加え、NUL などの制御文字・
+// 孤立サロゲート・NaN/Infinity を黙って埋め込まずに拒否する。scripts/publish/src/sql.ts)。
+const str = sqlString;
+const nstr = sqlNullableString;
 
 /**
  * D1 rag_chunks への冪等シードSQL。対象sourceを一度DELETEしてから INSERT(sourceId単位で差し替え)。
@@ -154,7 +182,7 @@ export function buildRagChunksSql(chunks: RagChunk[]): string[] {
       `INSERT INTO rag_chunks (chunk_id, municipality_code, source_id, procedure_id, category, ` +
         `title, url, last_verified_at, seq, text) VALUES (` +
         `${str(c.id)}, ${str(m.municipalityCode)}, ${str(m.sourceId)}, ${nstr(m.procedureId)}, ` +
-        `${str(m.category)}, ${str(m.title)}, ${str(m.url)}, ${str(m.lastVerifiedAt)}, ${c.seq}, ` +
+        `${str(m.category)}, ${str(m.title)}, ${str(m.url)}, ${str(m.lastVerifiedAt)}, ${sqlNumber(c.seq)}, ` +
         `${str(c.text)})`,
     );
   }

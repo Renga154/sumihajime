@@ -57,11 +57,11 @@ const TODAY = '2026-07-22';
 
 describe('runValidations — offline registry & published-data checks', () => {
   it('passes on a clean dataset with no references', () => {
-    const table = makeTable([{ source_id: 'src-a' }, { source_id: 'src-b' }]);
+    const table = makeTable([{ source_id: 'src-13112-a-001' }, { source_id: 'src-13112-b-001' }]);
     const result = runValidations({
       rows: validateRegistryRows(table),
       references: [],
-      approvedSourceIds: new Set(['src-a', 'src-b']),
+      approvedSourceIds: new Set(['src-13112-a-001', 'src-13112-b-001']),
       today: TODAY,
     });
     expect(result.ok).toBe(true);
@@ -70,12 +70,12 @@ describe('runValidations — offline registry & published-data checks', () => {
 
   it('FAILS on expired effective_to (§12.5 stale detection) and exits non-zero', () => {
     const table = makeTable([
-      { source_id: 'src-old', effective_to: '2025-03-31', category: 'waste_schedule' },
+      { source_id: 'src-13112-old-001', effective_to: '2025-03-31', category: 'waste_schedule' },
     ]);
     const result = runValidations({
       rows: validateRegistryRows(table),
       references: [],
-      approvedSourceIds: new Set(['src-old']),
+      approvedSourceIds: new Set(['src-13112-old-001']),
       today: TODAY,
     });
     expect(result.ok).toBe(false);
@@ -85,12 +85,12 @@ describe('runValidations — offline registry & published-data checks', () => {
 
   it('warns (but passes) when effective_to is within 30 days', () => {
     const table = makeTable([
-      { source_id: 'src-soon', effective_to: '2026-08-10', category: 'waste_schedule' },
+      { source_id: 'src-13112-soon-001', effective_to: '2026-08-10', category: 'waste_schedule' },
     ]);
     const result = runValidations({
       rows: validateRegistryRows(table),
       references: [],
-      approvedSourceIds: new Set(['src-soon']),
+      approvedSourceIds: new Set(['src-13112-soon-001']),
       today: TODAY,
     });
     expect(result.ok).toBe(true);
@@ -99,28 +99,47 @@ describe('runValidations — offline registry & published-data checks', () => {
   });
 
   it('FAILS when a published reference points to a non-existent sourceId', () => {
-    const table = makeTable([{ source_id: 'src-a' }]);
-    const references: SourceRef[] = [{ owner: 'procedure_p', sourceIds: ['src-ghost'] }];
+    const table = makeTable([{ source_id: 'src-13112-a-001' }]);
+    const references: SourceRef[] = [
+      { owner: 'procedure_p', municipalityCode: '13112', sourceIds: ['src-13112-ghost-001'] },
+    ];
     const result = runValidations({
       rows: validateRegistryRows(table),
       references,
-      approvedSourceIds: new Set(['src-a']),
+      approvedSourceIds: new Set(['src-13112-a-001']),
       today: TODAY,
     });
     expect(result.ok).toBe(false);
     expect(result.errors.join('\n')).toMatch(/does NOT exist in registry/);
   });
 
-  it('FAILS when a published reference points to a non-approved (existing) sourceId', () => {
-    const table = makeTable([
-      { source_id: 'src-a' },
-      { source_id: 'src-cand', review_status: 'candidate' },
-    ]);
-    const references: SourceRef[] = [{ owner: 'procedure_p', sourceIds: ['src-cand'] }];
+  it('FAILS when a municipality cites another municipality’s source (principle 4)', () => {
+    const table = makeTable([{ source_id: 'src-13112-a-001' }]);
+    const references: SourceRef[] = [
+      { owner: 'procedure_p', municipalityCode: '13108', sourceIds: ['src-13112-a-001'] },
+    ];
     const result = runValidations({
       rows: validateRegistryRows(table),
       references,
-      approvedSourceIds: new Set(['src-a']), // src-cand is NOT approved
+      approvedSourceIds: new Set(['src-13112-a-001']),
+      today: TODAY,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.join('\n')).toMatch(/another municipality \(13112\)/);
+  });
+
+  it('FAILS when a published reference points to a non-approved (existing) sourceId', () => {
+    const table = makeTable([
+      { source_id: 'src-13112-a-001' },
+      { source_id: 'src-13112-cand-001', review_status: 'candidate' },
+    ]);
+    const references: SourceRef[] = [
+      { owner: 'procedure_p', municipalityCode: '13112', sourceIds: ['src-13112-cand-001'] },
+    ];
+    const result = runValidations({
+      rows: validateRegistryRows(table),
+      references,
+      approvedSourceIds: new Set(['src-13112-a-001']), // src-cand is NOT approved
       today: TODAY,
     });
     expect(result.ok).toBe(false);
@@ -128,11 +147,11 @@ describe('runValidations — offline registry & published-data checks', () => {
   });
 
   it('FAILS when last_verified_at is missing', () => {
-    const table = makeTable([{ source_id: 'src-a', last_verified_at: '' }]);
+    const table = makeTable([{ source_id: 'src-13112-a-001', last_verified_at: '' }]);
     const result = runValidations({
       rows: validateRegistryRows(table),
       references: [],
-      approvedSourceIds: new Set(['src-a']),
+      approvedSourceIds: new Set(['src-13112-a-001']),
       today: TODAY,
     });
     expect(result.ok).toBe(false);
@@ -141,11 +160,11 @@ describe('runValidations — offline registry & published-data checks', () => {
   });
 
   it('reports registry schema violations (bad url)', () => {
-    const table = makeTable([{ source_id: 'src-a', source_url: 'not-a-url' }]);
+    const table = makeTable([{ source_id: 'src-13112-a-001', source_url: 'not-a-url' }]);
     const result = runValidations({
       rows: validateRegistryRows(table),
       references: [],
-      approvedSourceIds: new Set(['src-a']),
+      approvedSourceIds: new Set(['src-13112-a-001']),
       today: TODAY,
     });
     expect(result.ok).toBe(false);
