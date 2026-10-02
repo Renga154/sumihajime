@@ -17,15 +17,15 @@
     "@tmn/rag": "workspace:*",
     "@tmn/rules": "workspace:*",
     "@tmn/schemas": "workspace:*",
-    "hono": "^4.13.5"
+    "hono": "^4.13.11"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250109.0",
     "@tmn/publish": "workspace:*",
     "@tmn/test-fixtures": "workspace:*",
     "@types/node": "^22.10.5",
-    "miniflare": "^4.20250906.0",
+    "miniflare": "^4.20260730.0",
     "vitest": "^3.2.0",
-    "wrangler": "^4.40.0"
+    "wrangler": "^4.143.1"
   }
 }
