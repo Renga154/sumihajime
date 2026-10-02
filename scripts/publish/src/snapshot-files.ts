@@ -151,22 +151,10 @@ export interface KnownHashMismatch {
  * 続けられるよう、**記録値と実値の組がこのとおりのときだけ**通す。どちらかが変われば
  * (原文の差し替え・台帳の書き換え)通常どおり止まる。
  *
- * - src-13101-resident_registration-001(千代田区 転入届): 追加コミット 057870d(2026-07-25)の
- *   時点から台帳のハッシュとファイルが一致しない(CRLF 化・末尾改行の有無では説明できない)。
- *   取得時のバイト列と保存したファイルが別物だった可能性が高い。2026-10-02 のスナップショット
- *   照合の導入で見つかった。再監査(reaudit)で取り直すか、台帳のハッシュを現ファイルに合わせるかは
- *   人が決める。決まったらこの項目を消す。
+ * 現在は無し。2026-10-02 に見つかった千代田区の転入届(追加時から台帳のハッシュと原文が
+ * 一致しなかった)は、2026-10-03 の再監査で取り直して台帳を揃えた(人手承認)。
  */
-export const KNOWN_SNAPSHOT_HASH_MISMATCHES: ReadonlyMap<string, KnownHashMismatch> = new Map([
-  [
-    'src-13101-resident_registration-001',
-    {
-      recorded: 'b2be540ed3a591fd9055b7af7e38e3ade5a0bfff828d6eff31cc414f64aa1fc3',
-      actual: '0f18593e929c64bd6d521c1c6f5bdf718abee8900ef5f28788d6d6aa995ee302',
-      why: 'registry hash has not matched the committed snapshot since 057870d; pending human decision',
-    },
-  ],
-]);
+export const KNOWN_SNAPSHOT_HASH_MISMATCHES: ReadonlyMap<string, KnownHashMismatch> = new Map();
 
 const SHA256_HEX = /^[0-9a-f]{64}$/;
 

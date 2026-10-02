@@ -163,6 +163,20 @@ export const REAUDITS: readonly {
       ],
     },
   },
+  {
+    // 2026-10-03: 巡回が検知した19ソースと、台帳のハッシュが追加時から一致しなかった1ソースの再監査
+    // (人手承認)。保育の案内が令和9年度版へ替わって消えた年度名、犬の鑑札の手数料から消えた
+    // 「現金のみ」を直し、公式ページに増えた注意(年末年始の窓口・公金受取口座・在勤在学の同意書)を
+    // 足した。根拠ページの課名と食い違っていた窓口名も公式の表記へ直した。
+    date: '2026-10-03',
+    procedures: {
+      '13106': ['procedure_child_allowance', 'procedure_child_medical'],
+      '13111': ['procedure_child_allowance'],
+      '13115': ['procedure_childcare_application'],
+      '13117': ['procedure_dog_registration_transfer'],
+      '13119': ['procedure_child_allowance'],
+    },
+  },
 ];
 
 /** その手続きが再監査で進んだ日付(無ければ undefined = 承認日のまま)。 */

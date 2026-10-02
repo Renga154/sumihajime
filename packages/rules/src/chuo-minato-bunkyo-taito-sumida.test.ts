@@ -61,13 +61,20 @@ const REVISED_RULE_VERSION = '2026-08-09.1';
  * 失効しない最終日はその前日。以前は失効日そのものを期限として表示していた。
  */
 const CORRECTED_RULE_VERSION = '2026-08-09.2';
+/**
+ * 2026-10-03: 台東区の児童手当の案内文にある窓口名を、根拠の公式ページの表記
+ * (子育て支援課 給付担当)へ直した再監査(人手承認)。判定の内容は変わらない。
+ */
+const TAITO_REAUDITED_RULE_VERSION = '2026-10-03.1';
 const REVISED_WARDS: readonly string[] = [CHUO, MINATO, BUNKYO, SUMIDA];
 const ruleVersionOf = (code: string) =>
   code === CHUO
     ? CORRECTED_RULE_VERSION
-    : REVISED_WARDS.includes(code)
-      ? REVISED_RULE_VERSION
-      : RULE_VERSION;
+    : code === TAITO
+      ? TAITO_REAUDITED_RULE_VERSION
+      : REVISED_WARDS.includes(code)
+        ? REVISED_RULE_VERSION
+        : RULE_VERSION;
 const LAST_VERIFIED = '2026-08-07T00:00:00Z';
 
 /** なぜ: (g) 他区名の混入検出に使う23区の名称表。自区名は当然許可する。 */
