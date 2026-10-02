@@ -144,6 +144,8 @@ SHA-256 を台帳に記録しており、整形するとハッシュが変わり
 - 要件: [`REQUIREMENTS.md`](REQUIREMENTS.md) ／ 実装計画: [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) ／ ロードマップ: [`docs/ROADMAP.md`](docs/ROADMAP.md)
 - 設計判断の記録: [`docs/adr/`](docs/adr/)
 - 運用: [巡回](docs/ops/drift-check.md)・[再監査](docs/ops/reaudit.md)・[外形監視](docs/ops/monitoring.md)
+- セキュリティ: [全体像と確認方法](docs/security/README.md) ／ [脆弱性の報告窓口](SECURITY.md) ／ [判断の記録](docs/adr/ADR-018-security-hardening.md)。
+  ログインも個人情報の保存も無い設計で、公式根拠・可用性・OpenAI の費用・質問に混じる個人情報を守る。
 - データの監査記録: [`docs/research/`](docs/research/)
 
 ## ライセンス
