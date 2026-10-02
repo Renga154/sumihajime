@@ -23,7 +23,7 @@
     "@cloudflare/workers-types": "^4.20250109.0",
     "@tmn/publish": "workspace:*",
     "@tmn/test-fixtures": "workspace:*",
-    "@types/node": "^22.10.5",
+    "@types/node": "^26.6.3",
     "miniflare": "^4.20250906.0",
     "vitest": "^3.2.0",
     "wrangler": "^4.40.0"
