@@ -154,15 +154,18 @@ app.use('*', async (c, next) => {
  * 標準のエラー形で返し、allowlist ログへ error.unhandled として記録する(例外のメッセージ・
  * スタック・リクエスト本文は出さない。上流の応答断片や入力値が混ざり得るため)。
  */
-app.onError((_err, c) => {
+app.onError((err, c) => {
   // requestId は採番のミドルウェアより前で落ちた場合にも必ず持たせる。
   if (!c.get('requestId')) c.set('requestId', crypto.randomUUID());
+  // 例外の種類だけを残す(理由は log.ts の errorName)。書式外の名前は値を写さない。
+  const errorName =
+    err instanceof Error && /^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(err.name) ? err.name : 'unknown';
   return fail(
     c,
     500,
     'internal_error',
     'サーバーで問題が発生しました。時間をおいて再度お試しください（チェックリストの控えと各手続きの公式ページは引き続きご利用いただけます）。',
-    { event: 'error.unhandled' },
+    { event: 'error.unhandled', errorName },
   );
 });
 

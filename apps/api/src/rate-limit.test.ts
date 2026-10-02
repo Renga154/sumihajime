@@ -61,6 +61,28 @@ describe('読み取り API の流量制限(API_RATE_LIMITER)', () => {
     expect(body.error.requestId).toBeTruthy();
   });
 
+  it('正常: CF-Connecting-IP が無い・ループバックの要求(ローカル・E2E)は数えない', async () => {
+    captureLogs();
+    const { binding } = fakeLimiter(1);
+    const env = { DB: throwingDb, API_RATE_LIMITER: binding };
+    // 本番では Cloudflare の入口が必ず実際の送信元を付けるため、無い・ループバックなのは
+    // 手元の実行だけ。並列の E2E が自分自身を 429 にしないよう制限しない(本処理へ進み 500)。
+    for (const headers of [
+      undefined,
+      { 'CF-Connecting-IP': '127.0.0.1' },
+      { 'CF-Connecting-IP': '::1' },
+      { 'CF-Connecting-IP': '::ffff:127.0.0.1' },
+    ]) {
+      expect((await app.request('/api/municipalities', { headers }, env)).status).toBe(500);
+      expect((await app.request('/api/municipalities', { headers }, env)).status).toBe(500);
+    }
+    expect(binding.limit).not.toHaveBeenCalled();
+    // ループバックに似た別アドレスは数える(128.0.0.1 など)。
+    const near = { 'CF-Connecting-IP': '128.0.0.1' };
+    expect((await app.request('/api/municipalities', { headers: near }, env)).status).toBe(500);
+    expect((await app.request('/api/municipalities', { headers: near }, env)).status).toBe(429);
+  });
+
   it('攻撃: IPv6 の末尾を替えても同じ /64 として数える', async () => {
     captureLogs();
     const { binding, keys } = fakeLimiter(1);

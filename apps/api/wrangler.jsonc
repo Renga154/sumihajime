@@ -70,7 +70,7 @@
   "vars": {
     "RAG_ENABLED": "true",
     "OPENAI_BASE_URL": "https://api.openai.com/v1",
-    "OPENAI_CHAT_MODEL": "gpt-4o-mini",
+    "OPENAI_CHAT_MODEL": "gpt-4o-mini-2024-07-18",
     "OPENAI_EMBED_MODEL": "text-embedding-3-small",
     "RAG_MIN_SCORE": "0.30",
     // ADR-014: 定期巡回1回あたりに再取得する承認済みソース件数。Workers Free は1回の実行で
@@ -94,7 +94,8 @@
   // 流量制限(Workers Rate Limiting。src/rate-limit.ts)。キーは CF-Connecting-IP(IPv6 は /64)。
   // 数え方は Cloudflare の拠点(colo)単位・期間は 10 か 60 秒のみ。バインディングが無い環境
   // (単体テスト・ローカル)では制限しない。namespace_id はアカウント内で一意な整数文字列。
-  //  - API_RATE_LIMITER: /api/* の読み取り等(/api/health を除く)。120回/60秒。画面1枚の読み込みは
+  //  - API_RATE_LIMITER: /api/* の読み取り等(/api/health を除く)。300回/60秒(当初120。携帯回線の
+  //    共有IP・会場の共用Wi-Fiで複数人が同じ鍵になるため、1人の操作の数倍の余裕を持たせる)。画面1枚の読み込みは
   //    数回、ごみ分別の検索は入力停止ごとに1回(300ms のデバウンス)で、人の操作では届かない量。
   //  - CHAT_RATE_LIMITER: POST /api/chat(OpenAI の課金を伴う)。10回/60秒。isolate ごとの
   //    in-memory 制限(10回/分)と同じ値を、拠点単位で確実に効かせる。評価スクリプト(7秒間隔)を
@@ -103,7 +104,7 @@
     {
       "name": "API_RATE_LIMITER",
       "namespace_id": "17001",
-      "simple": { "limit": 120, "period": 60 },
+      "simple": { "limit": 300, "period": 60 },
     },
     {
       "name": "CHAT_RATE_LIMITER",
@@ -118,6 +119,15 @@
   "dev": {
     "host": "localhost",
   },
+  // ログ(Workers Logs)。新しい Worker では既定で有効になり、各リクエストのURL・ヘッダ等を自動で
+  // 記録する「invocation logs」も付く。プライバシーポリシー(§4・§5)は「許可リストの項目だけを記録し、
+  // IPアドレスは記録しない」と約束しているため、自動記録は止め、src/log.ts が出す許可リストの行だけを
+  // 残す(保存は最大7日)。設定を省くと既定値に戻るため、明示して固定する。
+  "observability": {
+    "enabled": true,
+    "logs": { "invocation_logs": false },
+    "traces": { "enabled": false },
+  },
   // ADR-014: 公式ソースの定期巡回(src/drift.ts scheduled)。毎時0分。Free の Cron 上限は5本。
   // triggers は env に継承される鍵だが、bindings/vars と同じく env.odh にも明示して読みやすくする。
   "triggers": {
@@ -129,6 +139,12 @@
   "env": {
     "odh": {
       "name": "sumihajime",
+      // ログ設定はトップレベルと同じ(理由は上の observability のコメント)。
+      "observability": {
+        "enabled": true,
+        "logs": { "invocation_logs": false },
+        "traces": { "enabled": false },
+      },
       "account_id": "<ACCOUNT_ID>",
       "assets": {
         "directory": "../web/dist",
@@ -172,7 +188,7 @@
       "vars": {
         "RAG_ENABLED": "true",
         "OPENAI_BASE_URL": "https://api.openai.com/v1",
-        "OPENAI_CHAT_MODEL": "gpt-4o-mini",
+        "OPENAI_CHAT_MODEL": "gpt-4o-mini-2024-07-18",
         "OPENAI_EMBED_MODEL": "text-embedding-3-small",
         "RAG_MIN_SCORE": "0.30",
         // ADR-014: 正典と同じ値(Free の枠: サブリクエスト50・CPU 10ms)。
@@ -188,7 +204,7 @@
         {
           "name": "API_RATE_LIMITER",
           "namespace_id": "17001",
-          "simple": { "limit": 120, "period": 60 },
+          "simple": { "limit": 300, "period": 60 },
         },
         {
           "name": "CHAT_RATE_LIMITER",

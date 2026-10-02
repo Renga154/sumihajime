@@ -24,6 +24,8 @@ export interface FailExtra {
    */
   event?: LogEventName;
   latencyMs?: number;
+  /** 想定外の例外の種類(log.ts の errorName。onError だけが渡す)。 */
+  errorName?: string;
   /**
    * 応答へ足すヘッダ(405 の Allow、429 の Retry-After など)。プロトコル上その応答に必須の
    * ものだけを渡す。セキュリティヘッダと Cache-Control は index.ts の共通ミドルウェアが付ける。
@@ -49,6 +51,7 @@ export function fail(
     status,
     municipalityCode: extra?.municipalityCode,
     latencyMs: extra?.latencyMs,
+    errorName: extra?.errorName,
   });
   return c.json(
     {

@@ -360,7 +360,7 @@ export async function handleChat(c: Context<Env>): Promise<Response> {
       c,
       422,
       'invalid_chat_request',
-      '質問の形式に誤りがあります(質問は500文字以内で入力してください)。',
+      '質問の形式に誤りがあります。質問は1〜500文字で入力してください。',
     );
   }
   const { municipalityCode: code, question } = parsed.data;

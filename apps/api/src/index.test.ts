@@ -65,6 +65,8 @@ describe('想定外の例外(app.onError)', () => {
     expect(JSON.stringify(body)).not.toContain('secret_column');
     const joined = logs.join('\n');
     expect(joined).toContain('"event":"error.unhandled"');
+    // 例外の種類だけは残す(原因の切り分け用)。メッセージは下で出ていないことを確かめる。
+    expect(joined).toContain('"errorName":"Error"');
     expect(joined).toContain(body.error.requestId);
     expect(joined).not.toContain('secret_column');
     // セキュリティヘッダも付く。

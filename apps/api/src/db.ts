@@ -482,7 +482,12 @@ export async function getSourcesByIds(db: D1Database, ids: string[]): Promise<Ma
   if (unique.length === 0) return map;
   const placeholders = unique.map(() => '?').join(',');
   const res = await db
-    .prepare(`SELECT * FROM sources WHERE source_id IN (${placeholders})`)
+    // 承認済みに限る(2026-10-02): publish は承認済みの行しか入れないため今は結果が変わらないが、
+    // チェックリスト・手続き詳細の根拠カードも /api/sources・チャットと同じ条件で二重に担保する
+    // (承認を外した行が D1 に残っても、根拠として出さない)。
+    .prepare(
+      `SELECT * FROM sources WHERE review_status = 'approved' AND source_id IN (${placeholders})`,
+    )
     .bind(...unique)
     .all<Row>();
   for (const row of res.results) {
@@ -839,6 +844,55 @@ function matchRank(normalizedField: string, needle: string): number {
  * 並び順は「一致の近さ → item_id」。item_id を最後の鍵に残すのは、同順位の並びを
  * 決定論的に保つため(同じ検索語なら常に同じ順序で返る)。
  */
+/**
+ * 品目一覧の isolate 内キャッシュ(2026-10-02)。
+ *
+ * なぜ: 検索は1回ごとに自治体の全品目(最大千件強)を D1 から読んでいた。検索語を毎回変えれば
+ * エッジのキャッシュ(edge-cache.ts。URL単位)も素通りするため、1人の連続リクエストで D1 Free の
+ * 1日の読み取り枠(500万行)を短時間に消費させられた(流量制限だけでは数十分で届く計算)。
+ * 品目は publish のときしか変わらないので、同じ isolate の中では一覧を5分だけ使い回す
+ * (エッジのキャッシュと同じ鮮度の約束。データ更新の反映が最大5分遅れる)。
+ * 鍵は D1 バインディングのオブジェクト(WeakMap): 別の DB(テストごとの DB など)と混ざらず、
+ * バインディングが要求ごとに別オブジェクトでも、使い回されないだけで誤った結果にはならない。
+ * 正規化済みの文字列も持ち、検索ごとの正規化(CPU)も省く。
+ */
+const WASTE_ITEMS_TTL_MS = 5 * 60 * 1000;
+interface IndexedWasteItem {
+  item: WasteSortingItem;
+  name: string;
+  reading: string;
+}
+const wasteItemsCache = new WeakMap<
+  D1Database,
+  Map<string, { expiresAt: number; items: IndexedWasteItem[] }>
+>();
+
+async function loadIndexedWasteItems(db: D1Database, code: string): Promise<IndexedWasteItem[]> {
+  const now = Date.now();
+  let byCode = wasteItemsCache.get(db);
+  const hit = byCode?.get(code);
+  if (hit && hit.expiresAt > now) return hit.items;
+
+  const res = await db
+    .prepare('SELECT * FROM waste_sorting_items WHERE municipality_code = ? ORDER BY item_id')
+    .bind(code)
+    .all<Row>();
+  const items = res.results.map((row) => {
+    const item = rowToWasteSortingItem(row);
+    return {
+      item,
+      name: normalizeForWasteSortingSearch(item.name),
+      reading: item.reading ? normalizeForWasteSortingSearch(item.reading) : '',
+    };
+  });
+  if (!byCode) {
+    byCode = new Map();
+    wasteItemsCache.set(db, byCode);
+  }
+  byCode.set(code, { expiresAt: now + WASTE_ITEMS_TTL_MS, items });
+  return items;
+}
+
 export async function searchWasteSortingItems(
   db: D1Database,
   code: string,
@@ -855,15 +909,9 @@ export async function searchWasteSortingItems(
     return { items: [], total: 0 };
   }
 
-  const res = await db
-    .prepare('SELECT * FROM waste_sorting_items WHERE municipality_code = ? ORDER BY item_id')
-    .bind(code)
-    .all<Row>();
+  const indexed = await loadIndexedWasteItems(db, code);
   const matched: { item: WasteSortingItem; rank: number }[] = [];
-  for (const row of res.results) {
-    const item = rowToWasteSortingItem(row);
-    const name = normalizeForWasteSortingSearch(item.name);
-    const reading = item.reading ? normalizeForWasteSortingSearch(item.reading) : '';
+  for (const { item, name, reading } of indexed) {
     const hitsName = name.includes(needle);
     const hitsReading = reading.length > 0 && reading.includes(needle);
     if (!hitsName && !hitsReading) continue;

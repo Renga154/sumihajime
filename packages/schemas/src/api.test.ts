@@ -117,19 +117,31 @@ describe('chatRequestSchema (§11.3 scope)', () => {
     expect(chatRequestSchema.safeParse({ question: 'x' }).success).toBe(false);
   });
 
-  it('bounds question (500) and the optional identifiers (100)', () => {
+  it('bounds question (1-500 after trim) and the optional identifiers by format', () => {
     const base = { municipalityCode: '13112', question: 'x' };
     expect(chatRequestSchema.safeParse({ ...base, question: 'あ'.repeat(500) }).success).toBe(true);
     expect(chatRequestSchema.safeParse({ ...base, question: 'あ'.repeat(501) }).success).toBe(
       false,
     );
-    expect(chatRequestSchema.safeParse({ ...base, procedureId: 'p'.repeat(100) }).success).toBe(
+    expect(chatRequestSchema.safeParse({ ...base, question: ' \u3000 ' }).success).toBe(false);
+    // 手続きIDは procedureIdSchema(80字まで)、区分は台帳の区分名の書式(48字まで)。
+    expect(
+      chatRequestSchema.safeParse({ ...base, procedureId: 'resident_registration' }).success,
+    ).toBe(true);
+    expect(chatRequestSchema.safeParse({ ...base, procedureId: 'p'.repeat(80) }).success).toBe(
       true,
     );
-    expect(chatRequestSchema.safeParse({ ...base, procedureId: 'p'.repeat(101) }).success).toBe(
+    expect(chatRequestSchema.safeParse({ ...base, procedureId: 'p'.repeat(81) }).success).toBe(
       false,
     );
-    expect(chatRequestSchema.safeParse({ ...base, category: 'c'.repeat(101) }).success).toBe(false);
+    expect(chatRequestSchema.safeParse({ ...base, procedureId: '転入届を教えて' }).success).toBe(
+      false,
+    );
+    expect(chatRequestSchema.safeParse({ ...base, category: 'child_benefits' }).success).toBe(true);
+    expect(chatRequestSchema.safeParse({ ...base, category: 'c'.repeat(49) }).success).toBe(false);
+    expect(chatRequestSchema.safeParse({ ...base, category: 'Child Benefits' }).success).toBe(
+      false,
+    );
   });
 });
 

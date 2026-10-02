@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { httpsUrlSchema } from './url.js';
 import { profileSchema } from './profile.js';
-import { driftKindSchema, generatedTaskSchema, taskSourceRefSchema } from './task.js';
+import {
+  driftKindSchema,
+  generatedTaskSchema,
+  procedureIdSchema,
+  taskSourceRefSchema,
+} from './task.js';
 import { municipalityCodeSchema, municipalitySchema, coverageSchema } from './municipality.js';
 import { procedureVersionSchema } from './procedure.js';
 import { sourceSchema } from './source.js';
@@ -275,10 +280,14 @@ export const chatRequestSchema = z.strictObject({
   // なぜ: 質問は最大500字(T-013。過大入力・コスト・インジェクション面を抑える)。
   // trim してから数える: 空白だけの質問は中身が無いのに検索・生成(課金)まで進んでいた(2026-10-02)。
   question: z.string().trim().min(1).max(500),
-  // なぜ上限100字: 識別子(例: procedure_resident_registration)は40字程度。自由文を詰め込める
-  // 長さにしない(サーバーは現状これらを検索に使わないが、受け取る以上は形を絞る)。
-  procedureId: z.string().min(1).max(100).optional(),
-  category: z.string().min(1).max(100).optional(),
+  // なぜ形まで絞るか: 識別子(例: resident_registration)に自由文を詰め込めないようにする
+  // (サーバーは現状これらを検索に使わないが、受け取る以上は形を絞る。2026-10-02 に長さだけの
+  // 制限から、手続きIDの書式と台帳の区分名の書式(source.ts の sourceId の区分部分と同じ)へ)。
+  procedureId: procedureIdSchema.optional(),
+  category: z
+    .string()
+    .regex(/^[a-z][a-z0-9_]{0,47}$/)
+    .optional(),
 });
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 

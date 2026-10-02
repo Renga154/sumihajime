@@ -69,6 +69,13 @@ export interface LogEvent {
   driftSourceIds?: string[];
   /** ADR-014 定期巡回: 今回 changed/unreachable と判定した件数。 */
   driftFlagged?: number;
+  /**
+   * 想定外の例外の種類(error.unhandled のときだけ。例: TypeError)。
+   * なぜ名前だけか: 以前は何も残らず、500 の原因が D1 か実装の誤りかも切り分けられなかった。
+   * メッセージとスタックは上流の応答断片や入力値を含み得るため出さない。名前も書式を絞り、
+   * 外れたら 'unknown' に置き換える(index.ts の onError)。
+   */
+  errorName?: string;
 }
 
 const ALLOWED_KEYS: (keyof LogEvent)[] = [
@@ -82,6 +89,7 @@ const ALLOWED_KEYS: (keyof LogEvent)[] = [
   'reason',
   'driftSourceIds',
   'driftFlagged',
+  'errorName',
 ];
 
 /**

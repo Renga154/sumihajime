@@ -27,6 +27,12 @@ export const RATE_LIMIT_PERIOD_SECONDS = 60;
 /** 流量の制限を掛けないパス。外形監視が数十秒おきに叩くため(止めると監視が誤報する)。 */
 const EXEMPT_PATHS = new Set(['/api/health']);
 
+/** ループバック(127.0.0.0/8・::1・IPv4射影の ::ffff:127.x)か。 */
+function isLoopback(ip: string): boolean {
+  const v = ip.trim().toLowerCase();
+  return v === '::1' || /^(::ffff:)?127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(v);
+}
+
 async function allowed(limiter: RateLimit | undefined, key: string): Promise<boolean> {
   if (!limiter) return true;
   try {
@@ -42,7 +48,12 @@ export function apiRateLimit(): MiddlewareHandler<ApiEnv> {
     const pathname = new URL(c.req.url).pathname;
     if (EXEMPT_PATHS.has(pathname)) return next();
 
-    const key = rateLimitKeyForIp(c.req.header('CF-Connecting-IP'));
+    // CF-Connecting-IP は Cloudflare の入口が必ず付ける(利用者が消したり偽ったりはできない)。
+    // 本番で無い・ループバックになることはない。そうなるのはローカル(wrangler dev は自分の
+    // アドレスを入れる)と単体テストだけで、数えると並列の E2E が自分自身を 429 にしてしまう。
+    const ip = c.req.header('CF-Connecting-IP');
+    if (!ip || isLoopback(ip)) return next();
+    const key = rateLimitKeyForIp(ip);
     const isChat = pathname === '/api/chat' && c.req.method === 'POST';
     // チャットは費用を伴うので専用の厳しい枠だけで数え、読み取り用の枠は消費させない
     // (チャットを数回使っただけで画面の読み込みが 429 にならないように)。
