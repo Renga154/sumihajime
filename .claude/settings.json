@@ -1,8 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm --filter api exec wrangler *)",
-      "Bash(pnpm --filter @tmn/publish exec tsx src/publish.ts *)"
+      "Bash(pnpm --filter api exec wrangler dev *)",
+      "Bash(pnpm --filter api exec wrangler d1 execute * --local *)",
+      "Bash(pnpm --filter api exec wrangler d1 migrations apply * --local *)",
+      "Bash(pnpm --filter api exec wrangler deploy --dry-run *)",
+      "Bash(pnpm --filter @tmn/publish exec tsx src/publish.ts --dry-run *)",
+      "Bash(pnpm --filter @tmn/publish exec tsx src/publish.ts)"
+    ],
+    "ask": [
+      "Bash(* --remote *)",
+      "Bash(* --remote)",
+      "Bash(pnpm --filter api exec wrangler deploy)",
+      "Bash(pnpm --filter api exec wrangler deploy --env *)",
+      "Bash(pnpm --filter api exec wrangler secret *)",
+      "Bash(pnpm --filter api exec wrangler rollback *)",
+      "Bash(pnpm --filter api exec wrangler delete *)"
     ]
   }
 }
