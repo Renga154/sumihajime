@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { findUntrustedAnswerUrls, isTrustedAnswerUrl } from './linkify.js';
+import {
+  answerScopeHosts,
+  findOutOfScopeAnswerUrls,
+  isTrustedAnswerUrl,
+  type AnswerUrlScope,
+} from './linkify.js';
 
 /**
  * なぜ: 本番で、質問文に書いた攻撃者のURLが生成回答へ写り、公式根拠カードの隣でクリック可能な
@@ -28,25 +33,75 @@ describe('isTrustedAnswerUrl', () => {
   });
 });
 
-describe('findUntrustedAnswerUrls', () => {
-  it('公式URL・引用URLだけの回答は空を返す', () => {
-    const answer =
-      '転入届は14日以内です(https://www.city.setagaya.lg.jp/02233/88.html)。詳細は https://www.town.hachijo.tokyo.jp/ へ。';
-    expect(findUntrustedAnswerUrls(answer, ['https://www.town.hachijo.tokyo.jp/'])).toEqual([]);
+/**
+ * なぜ(2026-10-02 監査・原則4): サーバーの保留判定は以前 isOfficialUrl(.lg.jp / .go.jp の接尾辞)で
+ * URLを信頼していたため、**別の区の公式URL**(例: 世田谷区の回答に目黒区のページ)が保留されずに
+ * 回答へ残り、リンクとして並んだ。「公式かどうか」ではなく「選択自治体に適用される承認済みソースの
+ * ホストかどうか」で判定する。
+ */
+const SETAGAYA_SCOPE: AnswerUrlScope = {
+  hosts: answerScopeHosts([
+    'https://www.city.setagaya.lg.jp/02233/88.html',
+    'https://www.metro.tokyo.lg.jp/tosei/index.html',
+    'https://www.digital.go.jp/policies/mynumber',
+  ]),
+  urls: ['https://www.nenkin.go.jp/service/kokunen.html'],
+};
+
+describe('findOutOfScopeAnswerUrls — 選択自治体に適用されるホストだけを許す', () => {
+  it('選択自治体・都・国の承認済みホスト、抜粋に現れたURLは許す', () => {
+    const answer = [
+      '転入届は14日以内です(https://www.city.setagaya.lg.jp/02233/88.html)。',
+      '区のトップ https://www.city.setagaya.lg.jp/ 、都 https://www.metro.tokyo.lg.jp/x 、',
+      'マイナンバー https://www.digital.go.jp/ 、年金 https://www.nenkin.go.jp/service/kokunen.html',
+    ].join('\n');
+    expect(findOutOfScopeAnswerUrls(answer, SETAGAYA_SCOPE)).toEqual([]);
   });
 
-  it('混入した非公式URLだけを出現順に返す', () => {
-    const answer = [
-      '転入届は14日以内に提出してください。',
-      '詳しくは https://evil.example/a と https://www.city.setagaya.lg.jp/ と http://phish.test/b を参照。',
-    ].join('\n');
-    expect(findUntrustedAnswerUrls(answer, [])).toEqual([
-      'https://evil.example/a',
-      'http://phish.test/b',
+  it('別の区の公式URLは .lg.jp / .tokyo.jp でも範囲外として返す(越境混入)', () => {
+    const answer =
+      '目黒区は https://www.city.meguro.tokyo.jp/x.html 、新宿区は https://www.city.shinjuku.lg.jp/ です。';
+    expect(findOutOfScopeAnswerUrls(answer, SETAGAYA_SCOPE)).toEqual([
+      'https://www.city.meguro.tokyo.jp/x.html',
+      'https://www.city.shinjuku.lg.jp/',
     ]);
   });
 
-  it('URLが無い回答は空を返す', () => {
-    expect(findUntrustedAnswerUrls('本人確認書類が必要です。', [])).toEqual([]);
+  it('範囲内ホストでも http・明示ポート・userinfo は範囲外', () => {
+    const answer = [
+      'http://www.city.setagaya.lg.jp/a',
+      'https://www.city.setagaya.lg.jp:8443/a',
+      'https://u:p@www.city.setagaya.lg.jp/a',
+    ].join(' ');
+    expect(findOutOfScopeAnswerUrls(answer, SETAGAYA_SCOPE)).toHaveLength(3);
+  });
+
+  it('範囲外の国のホストは、抜粋に同じURLが無ければ範囲外(.go.jp を接尾辞で信頼しない)', () => {
+    expect(
+      findOutOfScopeAnswerUrls('詳しくは https://www.nenkin.go.jp/other.html', SETAGAYA_SCOPE),
+    ).toEqual(['https://www.nenkin.go.jp/other.html']);
+  });
+
+  it('混入した非公式URLを出現順に返し、URLが無い回答は空', () => {
+    const answer = '詳しくは https://evil.example/a と http://phish.test/b を参照。';
+    expect(findOutOfScopeAnswerUrls(answer, SETAGAYA_SCOPE)).toEqual([
+      'https://evil.example/a',
+      'http://phish.test/b',
+    ]);
+    expect(findOutOfScopeAnswerUrls('本人確認書類が必要です。', SETAGAYA_SCOPE)).toEqual([]);
+  });
+});
+
+describe('answerScopeHosts', () => {
+  it('https のホスト名だけを小文字・重複なしで集め、不正URL・http・ポート付きは捨てる', () => {
+    expect(
+      answerScopeHosts([
+        'https://WWW.CITY.SETAGAYA.LG.JP/a',
+        'https://www.city.setagaya.lg.jp/b',
+        'http://insecure.lg.jp/',
+        'https://www.city.setagaya.lg.jp:8443/',
+        'not a url',
+      ]),
+    ).toEqual(['www.city.setagaya.lg.jp']);
   });
 });

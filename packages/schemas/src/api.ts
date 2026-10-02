@@ -297,6 +297,11 @@ export const chatCitationSchema = z.strictObject({
   ownerOrganization: z.string().min(1),
   url: httpsUrlSchema,
   lastVerifiedAt: z.iso.datetime(),
+  // ADR-014 / §11.5「ソースが古い: stale警告を表示」: 巡回がこの出典の公式ページの更新・不達を
+  // 検知していれば、検知日(YYYY-MM-DD)と種類を添える。チェックリストの根拠カード
+  // (taskSourceRefSchema)と同じ2項目・同じ意味。未検知なら両方とも無い(後方互換な追加的optional)。
+  driftDetectedOn: z.iso.date().optional(),
+  driftKind: driftKindSchema.optional(),
 });
 export type ChatCitation = z.infer<typeof chatCitationSchema>;
 

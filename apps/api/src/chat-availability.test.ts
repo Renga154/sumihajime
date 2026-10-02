@@ -39,6 +39,27 @@ describe('chatAvailability — 依存の有無から判定する(純関数)', ()
     });
   });
 
+  it('OPENAI_BASE_URL が許可外の宛先なら、鍵があっても検証済みの持ち物・書類だけに縮退する', () => {
+    // なぜ(2026-10-02 監査): 許可外の宛先へは鍵を送らない(送信時に 503)。送信前に分かることは
+    // 送信前に伝える(入力欄の案内を documents_only にする)。
+    for (const url of ['https://evil.example/v1', 'http://api.openai.com/v1', 'not a url']) {
+      expect(chatAvailability(env({ OPENAI_BASE_URL: url }))).toEqual({
+        enabled: true,
+        mode: 'documents_only',
+      });
+    }
+    // 未設定(既定の本体)と AI Gateway は全機能のまま。
+    expect(chatAvailability(env({ OPENAI_BASE_URL: undefined }))).toEqual({
+      enabled: true,
+      mode: 'full',
+    });
+    expect(
+      chatAvailability(
+        env({ OPENAI_BASE_URL: 'https://gateway.ai.cloudflare.com/v1/acct/gw/openai' }),
+      ),
+    ).toEqual({ enabled: true, mode: 'full' });
+  });
+
   it('APIキーが無い/空なら、検証済みの持ち物・書類だけに縮退する', () => {
     for (const key of [undefined, '', '   ']) {
       expect(chatAvailability(env({ OPENAI_API_KEY: key }))).toEqual({

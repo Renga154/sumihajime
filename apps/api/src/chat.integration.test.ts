@@ -112,7 +112,7 @@ function baseEnv(overrides: Partial<ChatEnv> = {}): ChatEnv {
     DB: db,
     RAG_ENABLED: 'true',
     OPENAI_API_KEY: 'test-key',
-    OPENAI_BASE_URL: 'https://api.openai.test/v1',
+    OPENAI_BASE_URL: 'https://api.openai.com/v1',
     OPENAI_CHAT_MODEL: 'gpt-4o-mini',
     OPENAI_EMBED_MODEL: 'text-embedding-3-small',
     RAG_MIN_SCORE: '0.3',

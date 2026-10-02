@@ -90,11 +90,21 @@ export interface RagChunkRow {
 /**
  * なぜ: Vectorizeが返した chunk_id 群の本文を D1 から取得する。municipality_code を SQL 側でも
  * 強制フィルタし、スコープ外のチャンク(万一の混入)を構造的に排除する(§11.3 重大障害の二重防御)。
+ *
+ * なぜ台帳(sources)と結合するか(2026-10-02 監査): rag_chunks は publish の DELETE→INSERT 対象外で、
+ * 索引の再構築(scripts/rag)も「いま承認済みのソース」の行しか差し替えない。ソースが承認を外れて
+ * 台帳から消えても(または review_status が approved でなくなっても)、そのチャンクは D1 と索引に
+ * 残り、検索で当たれば生成の根拠に使われていた。チェックリストが根拠にできるのは台帳にある承認済み
+ * ソースだけなので、チャットも同じ条件(review_status='approved')で絞る。あわせて §11.3 の検索
+ * スコープ(effectiveFrom / effectiveTo)と、ソース自体が同じ自治体のものであることも確かめる。
+ *
+ * @param today 有効期間の判定に使う日付(日本時間の YYYY-MM-DD)。テストで固定できるよう引数にする。
  */
 export async function getRagChunks(
   db: D1Database,
   code: string,
   chunkIds: string[],
+  today: string = tokyoDate(new Date()),
 ): Promise<Map<string, RagChunkRow>> {
   const map = new Map<string, RagChunkRow>();
   const unique = [...new Set(chunkIds)];
@@ -102,11 +112,15 @@ export async function getRagChunks(
   const placeholders = unique.map(() => '?').join(',');
   const res = await db
     .prepare(
-      `SELECT chunk_id, municipality_code, source_id, procedure_id, category, title, url, ` +
-        `last_verified_at, seq, text FROM rag_chunks ` +
-        `WHERE municipality_code = ? AND chunk_id IN (${placeholders})`,
+      `SELECT rc.chunk_id, rc.municipality_code, rc.source_id, rc.procedure_id, rc.category, ` +
+        `rc.title, rc.url, rc.last_verified_at, rc.seq, rc.text FROM rag_chunks rc ` +
+        `JOIN sources s ON s.source_id = rc.source_id ` +
+        `AND s.review_status = 'approved' AND s.municipality_code = rc.municipality_code ` +
+        `AND (s.effective_from IS NULL OR s.effective_from <= ?) ` +
+        `AND (s.effective_to IS NULL OR s.effective_to >= ?) ` +
+        `WHERE rc.municipality_code = ? AND rc.chunk_id IN (${placeholders})`,
     )
-    .bind(code, ...unique)
+    .bind(today, today, code, ...unique)
     .all<Row>();
   for (const row of res.results) {
     map.set(asString(row.chunk_id), {
@@ -123,6 +137,30 @@ export async function getRagChunks(
     });
   }
   return map;
+}
+
+/**
+ * 生成回答に書かれたURLを許す範囲の材料: 選択自治体に適用される承認済みソースのURL。
+ * - その自治体自身のソース(municipality_code = code)
+ * - その自治体の**現行版**の手続きが根拠にしている都・国などのソース(procedure_versions.source_ids)
+ *
+ * なぜ(2026-10-02 監査・原則4): 以前は .lg.jp / .go.jp の接尾辞で信頼していたため、別の区の
+ * 公式ページが世田谷区の回答に残っていた。「公式か」ではなく「この自治体の根拠として承認されたか」
+ * で範囲を決める。読むのは台帳のURL列だけで、他自治体の手続き内容は読まない。
+ */
+export async function getApplicableSourceUrls(db: D1Database, code: string): Promise<string[]> {
+  const res = await db
+    .prepare(
+      "SELECT DISTINCT source_url FROM sources WHERE review_status = 'approved' AND (" +
+        'municipality_code = ? OR source_id IN (' +
+        'SELECT j.value FROM procedure_versions pv ' +
+        'JOIN procedures p ON p.procedure_id = pv.procedure_id ' +
+        'AND p.municipality_code = pv.municipality_code AND p.current_version = pv.version, ' +
+        'json_each(pv.source_ids) j WHERE pv.municipality_code = ?))',
+    )
+    .bind(code, code)
+    .all<Row>();
+  return res.results.map((row) => asString(row.source_url)).filter((u) => u.length > 0);
 }
 
 function asString(v: unknown): string {
@@ -283,12 +321,27 @@ function rowToProcedureVersion(row: Row): ProcedureVersion {
   });
 }
 
+/**
+ * 現行版(procedures.current_version)だけに絞る結合。
+ *
+ * なぜ(2026-10-02 監査): procedure_versions は版ごとに行を持てる(PK に version を含む)のに、
+ * 自治体スコープの読み出しは版を見ていなかった。publish は全行を消して入れ直すため通常は1版だけだが、
+ * 途中失敗や手作業の投入で旧版が残ると、Map の上書き順・索引の走査順しだいで旧版がチェックリスト・
+ * 詳細・チャットへ出る(比較ページ用の getProcedureVersionsForIds だけは結合していた)。
+ * 公開中の版を決めるのは procedures 側のポインタなので、どの読み出しもそれに従う。
+ */
+const CURRENT_VERSION_JOIN =
+  'JOIN procedures p ON p.procedure_id = pv.procedure_id ' +
+  'AND p.municipality_code = pv.municipality_code AND p.current_version = pv.version ';
+
 export async function getProcedureVersions(
   db: D1Database,
   code: string,
 ): Promise<Map<string, ProcedureVersion>> {
   const res = await db
-    .prepare('SELECT * FROM procedure_versions WHERE municipality_code = ?')
+    .prepare(
+      `SELECT pv.* FROM procedure_versions pv ${CURRENT_VERSION_JOIN}WHERE pv.municipality_code = ?`,
+    )
     .bind(code)
     .all<Row>();
   const map = new Map<string, ProcedureVersion>();
@@ -313,9 +366,7 @@ export async function getProcedureVersionsForIds(
   const placeholders = unique.map(() => '?').join(',');
   const res = await db
     .prepare(
-      'SELECT pv.* FROM procedure_versions pv ' +
-        'JOIN procedures p ON p.procedure_id = pv.procedure_id ' +
-        'AND p.municipality_code = pv.municipality_code AND p.current_version = pv.version ' +
+      `SELECT pv.* FROM procedure_versions pv ${CURRENT_VERSION_JOIN}` +
         `WHERE pv.procedure_id IN (${placeholders}) ` +
         'ORDER BY pv.municipality_code, pv.procedure_id',
     )
@@ -330,7 +381,10 @@ export async function getProcedureVersion(
   procedureId: string,
 ): Promise<ProcedureVersion | null> {
   const row = await db
-    .prepare('SELECT * FROM procedure_versions WHERE municipality_code = ? AND procedure_id = ?')
+    .prepare(
+      `SELECT pv.* FROM procedure_versions pv ${CURRENT_VERSION_JOIN}` +
+        'WHERE pv.municipality_code = ? AND pv.procedure_id = ?',
+    )
     .bind(code, procedureId)
     .first<Row>();
   return row ? rowToProcedureVersion(row) : null;

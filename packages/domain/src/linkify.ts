@@ -10,7 +10,7 @@ import { isOfficialUrl } from './official-host.js';
  * 分解と描画を分けるのは、括弧・句読点の食い込みという厄介な境界条件を、DOMなしで直接テスト
  * できるようにするため。
  *
- * なぜ @tmn/domain に置くか: 「回答のどこがURLか」の判定を web(リンク化)と api(非公式URLを
+ * なぜ @tmn/domain に置くか: 「回答のどこがURLか」の判定を web(リンク化)と api(範囲外のURLを
  * 含む生成回答の保留)で**同じ関数**にするため。判定が2つあると、サーバーが見逃した形のURLを
  * web だけがリンクにする、という食い違いが起こり得る。
  */
@@ -115,6 +115,11 @@ function normalizeUrl(url: string): string | null {
  *   - サーバーが台帳から解決したURL(引用カードのURL、選択自治体の公式トップURL)と完全一致
  * それ以外のURLは文字として残す(消さない=回答の文面は改変しない)。
  *
+ * これは web のリンク化(表示側の多層防御)の判定。サーバーは生成回答をより狭い
+ * findOutOfScopeAnswerUrls(選択自治体に適用される承認済みホストのみ)で検査して保留するため、
+ * 生成回答で別の区の公式URLがここまで届くことはない。web 側は自治体ごとのホスト一覧を
+ * 持たないので、公式ホスト+完全一致の判定に留める。
+ *
  * @param trustedUrls 台帳由来で得たURL(引用URL・選択自治体の officialUrl など)
  */
 export function isTrustedAnswerUrl(url: string, trustedUrls: readonly string[]): boolean {
@@ -125,11 +130,60 @@ export function isTrustedAnswerUrl(url: string, trustedUrls: readonly string[]):
 }
 
 /**
- * 回答本文に含まれるURLのうち、isTrustedAnswerUrl を満たさないものを出現順に返す(純関数)。
- * サーバーはこれが空でない生成回答を保留へ差し替える(web のリンク化と同じ分解・同じ判定)。
+ * サーバーが生成回答のURLを許す範囲(選択自治体ごとに組み立てる)。
+ * - hosts: 選択自治体に適用される承認済みソースのホスト(自区のソース、自区の手続きが根拠にする
+ *   都・国のソース、選択自治体の公式トップ)。answerScopeHosts で作る。
+ * - urls: ホストが範囲外でも、そのURLそのものが根拠にある場合(生成に渡した抜粋の本文に書かれていた
+ *   URL)。完全一致(正規化後)でだけ許す。
  */
-export function findUntrustedAnswerUrls(text: string, trustedUrls: readonly string[]): string[] {
+export interface AnswerUrlScope {
+  hosts: readonly string[];
+  urls: readonly string[];
+}
+
+/** ポート・userinfo を持たない https のURLなら小文字のホスト名、そうでなければ null。 */
+function plainHttpsHost(url: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:') return null;
+  if (parsed.port !== '' || parsed.username !== '' || parsed.password !== '') return null;
+  return parsed.hostname.toLowerCase();
+}
+
+/** 台帳のURL群 → 範囲として許すホスト名(小文字・重複なし・出現順)。不正・http・ポート付きは捨てる。 */
+export function answerScopeHosts(urls: readonly string[]): string[] {
+  const hosts = new Set<string>();
+  for (const url of urls) {
+    const host = plainHttpsHost(url);
+    if (host !== null) hosts.add(host);
+  }
+  return [...hosts];
+}
+
+/**
+ * 回答本文のURLのうち、選択自治体の範囲(scope)に入らないものを出現順に返す(純関数)。
+ * サーバーはこれが空でない生成回答を保留へ差し替える。
+ *
+ * なぜ isOfficialUrl(公式ホストの接尾辞)で判定しないか(2026-10-02 監査・原則4): .lg.jp は
+ * 全国の自治体が持つため、世田谷区の回答に目黒区・新宿区の公式ページが入っても「公式」として
+ * 通っていた。公式かどうかではなく、**この自治体の根拠として承認されたホストか**で判定する。
+ * 分解は web のリンク化と同じ linkifyParts を使う(サーバーが見逃した形を web だけがリンクに
+ * する食い違いを作らない)。
+ */
+export function findOutOfScopeAnswerUrls(text: string, scope: AnswerUrlScope): string[] {
+  const hosts = new Set(scope.hosts.map((h) => h.toLowerCase()));
+  const urls = new Set(scope.urls.map(normalizeUrl).filter((u): u is string => u !== null));
   return linkifyParts(text)
-    .filter((part) => part.kind === 'url' && !isTrustedAnswerUrl(part.value, trustedUrls))
+    .filter((part) => {
+      if (part.kind !== 'url') return false;
+      const host = plainHttpsHost(part.value);
+      if (host !== null && hosts.has(host)) return false;
+      const normalized = normalizeUrl(part.value);
+      return normalized === null || !urls.has(normalized);
+    })
     .map((part) => part.value);
 }

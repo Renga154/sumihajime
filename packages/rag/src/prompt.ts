@@ -9,8 +9,11 @@ import type { ChatMessage } from './openai.js';
  * - (版番号なし): 2026-07〜09 の評価レポートは "SYSTEM_PROMPT (fixed)" と記録している。
  * - 2026-09-29.1: 質問を区切り記号で囲い(規則11)、質問内の文章で出力形式・規則を変えられない
  *   こと、回答へ抜粋に無いURLを書かないことを明記(本番で確認された質問経由のURL注入への対策)。
+ * - 2026-10-02.1: 区切りの無害化を不動点まで繰り返す(入れ子で区切りが組み上がる穴を塞ぐ)。
+ *   抜粋の本文・タイトルにも同じ無害化を掛け、タイトルの改行を1行へ畳む。規則の文面は不変。
+ *   通常の公式ページ本文・質問は区切りの字面を含まないため、組み上がるプロンプトは従来と同一。
  */
-export const PROMPT_VERSION = '2026-09-29.1';
+export const PROMPT_VERSION = '2026-10-02.1';
 
 /**
  * 利用者の質問を囲う区切り。質問の中身と地の文(指示)を機械的に分けるために使う。
@@ -71,16 +74,53 @@ export const SYSTEM_PROMPT = [
 ].join('\n');
 
 /**
+ * 抜粋を囲う区切り。抜粋本文がこの字面を含むと、抜粋の外(=指示の地の文)へ出られてしまう。
+ */
+export const EXCERPT_FENCE = '"""';
+
+/** プロンプトの構造を作る区切りの字面(質問用・抜粋用)。外部由来の文字列からは必ず取り除く。 */
+const DELIMITERS = [QUESTION_OPEN, QUESTION_CLOSE, EXCERPT_FENCE] as const;
+
+/**
+ * 外部由来の文字列(質問・抜粋本文・タイトル)から区切りの字面を取り除く(純関数)。
+ *
+ * なぜ不動点まで繰り返すか(2026-10-02 監査で再現): 1回の除去では、区切りの中に区切りを
+ * 埋め込んだ入れ子(`<<<質問こ` + 閉じ区切り + `こまで>>>`)の内側を消した結果、外側が
+ * 新しい閉じ区切りとして**組み上がる**。除去しても文字列が変わらなくなるまで繰り返せば、
+ * 出力に区切りの字面は1つも残らない(変化するたびに文字数が減るので必ず止まる)。
+ *
+ * なぜ乱数の区切りにしないか: 区切りを要求ごとに変えるとプロンプトが毎回変わり、評価
+ * (scripts/eval)の再現性と PROMPT_VERSION による追跡が崩れる。字面を残さない方式なら
+ * 区切りは固定のまま、外部の文字列が区切りを作る経路だけを塞げる。
+ *
+ * 区切りは緩和策であって境界ではない(本当の境界はサーバー側の出力検証=引用・URL・連絡先の
+ * 照合と保留)。ここで塞ぐのは「区切りの外に出た文章が指示に見える」ことだけ。
+ */
+export function neutralizeDelimiters(text: string): string {
+  let out = text;
+  for (;;) {
+    let next = out;
+    for (const marker of DELIMITERS) next = next.split(marker).join('');
+    if (next === out) return out;
+    out = next;
+  }
+}
+
+/**
  * 質問文から区切り記号を取り除く(純関数)。
  * なぜ: 質問の中に閉じ区切りを書かれると、その後ろの文章が「区切りの外=指示」に見えてしまう。
  * 区切りの字面を無害化してから囲うことで、質問が区切りの外へ出る経路を塞ぐ。
  */
 export function neutralizeQuestion(question: string): string {
-  let out = question;
-  for (const marker of [QUESTION_OPEN, QUESTION_CLOSE]) {
-    out = out.split(marker).join('');
-  }
-  return out;
+  return neutralizeDelimiters(question);
+}
+
+/**
+ * 抜粋タイトルを1行の無害な文字列にする。なぜ改行を畳むか: タイトルは見出し行
+ * (`[抜粋N] sourceId=… / タイトル=…`)の中に入るため、改行を含むと次の行に偽の見出しを作れる。
+ */
+function neutralizeTitle(title: string): string {
+  return neutralizeDelimiters(title).replace(/\s+/gu, ' ').trim();
 }
 
 /** §11.5: 根拠が見つからない/出力検証に失敗したときの保留応答文。 */
@@ -104,7 +144,11 @@ export function buildMessages(
 ): ChatMessage[] {
   const excerpts = chunks
     .map(
-      (c, i) => `[抜粋${i + 1}] sourceId=${c.sourceId} / タイトル=${c.title}\n"""\n${c.text}\n"""`,
+      // なぜ本文とタイトルも無害化するか: 抜粋は公式ページ由来でも、ページ側の文言(引用符の連続や
+      // 区切りに似た記号)次第で囲みを閉じ、外側の指示に見える位置へ文章を置ける(間接インジェクション)。
+      (c, i) =>
+        `[抜粋${i + 1}] sourceId=${c.sourceId} / タイトル=${neutralizeTitle(c.title)}\n` +
+        `${EXCERPT_FENCE}\n${neutralizeDelimiters(c.text)}\n${EXCERPT_FENCE}`,
     )
     .join('\n\n');
 

@@ -2,6 +2,28 @@ import type { ReactNode } from 'react';
 import { ApiError } from '../api/client';
 
 /**
+ * 外部リンクの href として使ってよい URL ならその文字列、そうでなければ null(純関数)。
+ *
+ * なぜ https だけか(2026-10-02 監査): 台帳・API 応答の URL は境界のスキーマ(httpsUrlSchema)で
+ * 検証済みのはずだが、href に入れる直前は検証していなかった。前提が崩れたとき(スキーマ変更・別経路の値)
+ * `javascript:` や `data:` が href になればクリックでスクリプトが動く。公式ページへの導線は
+ * すべて https なので、表示側でも https 以外はリンクにしない(多層防御)。文字列の前方一致ではなく
+ * URL として解析して判定する(大文字混じり・前置空白・相対URLの取りこぼしを防ぐため)。
+ */
+export function safeHttpsHref(url: string): string | null {
+  let parsed: URL;
+  try {
+    // 基準URLを渡さない: 相対URL・プロトコル相対(//host)は例外になり、リンクにしない側へ倒れる。
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  // 返すのは元の文字列(正規化した href ではない): 判定だけをここで行い、表示・遷移先の見た目
+  // (末尾スラッシュの有無など)は従来どおりデータの値に揃える。
+  return parsed.protocol === 'https:' ? url : null;
+}
+
+/**
  * なぜ: 読み込み中・エラー・空状態の表示を全ページで統一する小さな部品群。エラーは
  * ApiError.message(次の行動が分かる文面)をそのまま出し、officialUrl があれば
  * 公式サイトへの導線(FR-021)を添える。
@@ -86,7 +108,8 @@ export function ErrorMessage({
     error instanceof Error
       ? error.message
       : '予期しないエラーが発生しました。時間をおいて再度お試しください。';
-  const officialUrl = error instanceof ApiError ? error.officialUrl : undefined;
+  const officialUrl =
+    error instanceof ApiError && error.officialUrl ? safeHttpsHref(error.officialUrl) : null;
   return (
     <div
       role="alert"
@@ -198,9 +221,12 @@ export function ExternalLink({
   children: ReactNode;
   ariaLabel?: string;
 }) {
+  const safeHref = safeHttpsHref(href);
+  // https でなければリンクにせず文字だけを出す(リンク先が無い=押せないことを見た目でも示す)。
+  if (safeHref === null) return <span className="text-slate-700">{children}</span>;
   return (
     <a
-      href={href}
+      href={safeHref}
       target="_blank"
       rel="noreferrer noopener"
       aria-label={ariaLabel ? `${ariaLabel}（別タブで開きます）` : undefined}

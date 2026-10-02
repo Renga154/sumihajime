@@ -28,7 +28,37 @@ export interface ChatMessage {
   content: string;
 }
 
+/**
+ * APIキーを送ってよい宛先ホスト(完全一致)。
+ * - api.openai.com: OpenAI 本体
+ * - gateway.ai.cloudflare.com: Cloudflare AI Gateway(D-2。https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/openai)
+ *
+ * なぜ許可リストか(2026-10-02 監査): baseURL は環境変数(OPENAI_BASE_URL)から来て、検証なしで
+ * fetch の宛先になり Authorization: Bearer <キー> が付いていた。設定の誤りやすり替え(http・別ホスト・
+ * `https://api.openai.com@evil/` のような userinfo の偽装)で鍵が第三者へ渡る。宛先を固定の2ホストに
+ * 限り、それ以外は送る前に失敗させる(閉じる側に倒す)。宛先を増やすときはここへ足す。
+ */
+export const ALLOWED_OPENAI_HOSTS = ['api.openai.com', 'gateway.ai.cloudflare.com'] as const;
+
+/** baseURL が鍵を送ってよい宛先か(https・許可ホストの完全一致・ポート/userinfo なし)。純関数。 */
+export function isAllowedOpenAIBaseUrl(baseURL: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(baseURL);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== 'https:') return false;
+  if (parsed.port !== '' || parsed.username !== '' || parsed.password !== '') return false;
+  return (ALLOWED_OPENAI_HOSTS as readonly string[]).includes(parsed.hostname.toLowerCase());
+}
+
 function endpoint(baseURL: string, path: string): string {
+  // なぜここでも検証するか: 呼び出し側(apps/api・scripts/rag)が検証を忘れても、鍵を載せた
+  // リクエストが許可外へ出ないようにする最後の関門。例外文に URL もキーも含めない。
+  if (!isAllowedOpenAIBaseUrl(baseURL)) {
+    throw new OpenAIError('baseURL is not an allowed OpenAI endpoint');
+  }
   return `${baseURL.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
 }
 
@@ -43,9 +73,11 @@ function authHeaders(cfg: OpenAIConfig): Record<string, string> {
 /** テキスト1件 → 埋め込みベクトル。 */
 export async function embedText(text: string, model: string, cfg: OpenAIConfig): Promise<number[]> {
   const f = cfg.fetchImpl ?? (fetch as unknown as FetchLike);
+  // 宛先の検証は try の外で行う(許可外なら fetch に到達する前に、そのままの理由で失敗させる)。
+  const url = endpoint(cfg.baseURL, 'embeddings');
   let res: Response;
   try {
-    res = await f(endpoint(cfg.baseURL, 'embeddings'), {
+    res = await f(url, {
       method: 'POST',
       headers: authHeaders(cfg),
       body: JSON.stringify({ model, input: text }),
@@ -76,9 +108,11 @@ export async function chatComplete(
   cfg: OpenAIConfig,
 ): Promise<string> {
   const f = cfg.fetchImpl ?? (fetch as unknown as FetchLike);
+  // 宛先の検証は try の外で行う(許可外なら fetch に到達する前に、そのままの理由で失敗させる)。
+  const url = endpoint(cfg.baseURL, 'chat/completions');
   let res: Response;
   try {
-    res = await f(endpoint(cfg.baseURL, 'chat/completions'), {
+    res = await f(url, {
       method: 'POST',
       headers: authHeaders(cfg),
       body: JSON.stringify({ model, messages, temperature: 0, max_tokens: CHAT_MAX_TOKENS }),

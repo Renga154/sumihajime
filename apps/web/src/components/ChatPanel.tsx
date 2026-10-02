@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { PERSONAL_INFO_MESSAGE, detectPersonalInfo } from '@tmn/domain';
 import type { ChatCitation, ChatResponse } from '@tmn/schemas';
 import {
   ChatDisabledError,
@@ -9,6 +10,7 @@ import {
 } from '../api/client';
 import { formatDateFromDateTime } from '../lib/format';
 import { AnswerText } from './AnswerText';
+import { DriftNotice } from './DriftNotice';
 import { Card, ErrorMessage, ExternalLink, Loading } from './ui';
 
 /**
@@ -67,6 +69,39 @@ function CitationCard({ citation }: { citation: ChatCitation }) {
       </dl>
       <p className="mt-2">
         <ExternalLink href={citation.url}>公式ページを開く</ExternalLink>
+      </p>
+      {/* ADR-014 / §11.5: チェックリストの根拠カードと同じ1行を、公式リンクの直下に添える。 */}
+      <DriftNotice
+        kind={citation.driftKind}
+        detectedOn={citation.driftDetectedOn}
+        className="mt-2"
+      />
+    </div>
+  );
+}
+
+/**
+ * 根拠の公式ページに巡回が更新・不達を検知している回答への警告(§11.5「ソースが古い: stale警告を表示」)。
+ *
+ * なぜ回答の直上に置くのか: 引用カードの1行(DriftNotice)だけでは、回答本文を読み終えて満足した
+ * 利用者が見落とす。回答の内容が公式ページの最新と食い違っている可能性は、本文より先に知るべき
+ * 事実なので、本文の前に置く。断定はしない(内容が変わったかは人が再監査するまで分からない=原則3)。
+ *
+ * role="note" + aria-label: チェックリスト画面には既に live region があり、role="status"/"alert" を
+ * 重ねると読み上げが競合する(この画面の他の注意書きと同じ判断)。名前付きの note にして辿れるようにする。
+ */
+function DriftWarning({ count }: { count: number }) {
+  const title = '根拠の公式ページが更新された可能性があります';
+  return (
+    <div
+      role="note"
+      aria-label={title}
+      className="rounded-lg border border-orange-300 bg-orange-50 p-3 text-sm text-orange-950"
+    >
+      <p className="font-semibold">{title}</p>
+      <p className="mt-1">
+        この回答の根拠にした公式ページのうち{count}
+        件で、当サービスが内容を確認した日より後に、ページの更新または接続できない状態を検知しています。回答の内容が古くなっているおそれがあるため、下の「公式ページを開く」から、公式ページで最新の内容を必ずご確認ください。
       </p>
     </div>
   );
@@ -138,6 +173,8 @@ export function ChatPanel({
   const [error, setError] = useState<unknown>(null);
   // 直近に送った質問。再試行のとき、入力欄が編集されていても「失敗したその操作」をやり直す。
   const [lastAsked, setLastAsked] = useState<string | null>(null);
+  // 送信前の個人情報チェックで止めたか(原則6)。入力を直したら消す。
+  const [personalInfoBlocked, setPersonalInfoBlocked] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -193,12 +230,23 @@ export function ChatPanel({
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    void ask(question.trim());
+    const q = question.trim();
+    // 原則6: 電話番号・メールアドレス・マイナンバーを含む質問は、サーバーへも外部AIへも送らない。
+    // 判定は API の 422 と同じ純関数(@tmn/domain)。ここで止めるのは、送ってから断られるより先に、
+    // 入力欄のすぐ下で直し方を伝えるため(送信そのものを起こさない)。入力欄の文面は消さない。
+    if (detectPersonalInfo(q).length > 0) {
+      setPersonalInfoBlocked(true);
+      return;
+    }
+    void ask(q);
   }
 
   // 判定中・無効時は何も描画しない(既存UIの劣化なし)。
   if (availability?.enabled !== true) return null;
   const documentsOnly = availability.mode === 'documents_only';
+  const driftedCount = result
+    ? result.citations.filter((cite) => cite.driftKind !== undefined).length
+    : 0;
 
   return (
     <section aria-labelledby="chat-heading" className="space-y-3">
@@ -254,8 +302,14 @@ export function ChatPanel({
             ログに残さない設計だが、送信される事実そのものが画面に書かれていなかった。
             誠実な実装を説明不足で損なわないよう、送信と保存の扱いを明示する。
           */}
+          {/*
+            2026-10-02: 送信先が外部(OpenAI 社・米国)であること、検索(埋め込み)と回答の作成の
+            両方に使うことを明記した。以前の「AIモデルで処理」では、国外の事業者へ送ることが
+            読み取れなかった。保存・記録しないのは「このサービスでは」であり、OpenAI 社での
+            取り扱いは同社の条件による(断定できない保持期間などは書かない)。
+          */}
           <li>
-            ご質問の文章はこのサービスのサーバーへ送信され、AIモデルで処理されます。質問文と回答は保存もログ記録もしていません。
+            ご質問の文章は、回答に使う公式情報の検索と回答文の作成のため、OpenAI社（米国）のAPIへ送信されます。このサービスでは、質問文と回答を保存もログ記録もしません。
           </li>
         </ul>
       </div>
@@ -267,12 +321,28 @@ export function ChatPanel({
         <textarea
           id="chat-input"
           value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+          onChange={(e) => {
+            setQuestion(e.target.value);
+            setPersonalInfoBlocked(false);
+          }}
+          aria-invalid={personalInfoBlocked || undefined}
+          aria-describedby={personalInfoBlocked ? 'chat-input-personal-info' : undefined}
           maxLength={MAX_LEN}
           rows={3}
           className="w-full rounded-lg border border-slate-300 p-2 text-sm"
           placeholder="この自治体の手続きについて質問できます"
         />
+        {personalInfoBlocked && (
+          // role="alert": 送信ボタンを押した直後の、その操作に対する結果を即座に読み上げる。
+          // 入力値は引用しない(個人情報を画面へ複製しない)。
+          <p
+            id="chat-input-personal-info"
+            role="alert"
+            className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900"
+          >
+            {PERSONAL_INFO_MESSAGE}
+          </p>
+        )}
         <div className="flex items-center justify-between">
           <span className="text-xs text-slate-500">
             {question.length}/{MAX_LEN}
@@ -306,7 +376,8 @@ export function ChatPanel({
 
       {result && !loading && (
         <Card className="space-y-3">
-          {result.abstained && (
+          {/* 要確認: 保留したとき、または根拠の公式ページに巡回が更新・不達を検知しているとき。 */}
+          {(result.abstained || driftedCount > 0) && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900 ring-1 ring-inset ring-amber-300">
                 要確認
@@ -320,6 +391,7 @@ export function ChatPanel({
             生成回答には質問文から写り込んだURLが混ざり得るため、それ以外は文字のまま出す。
             ここへ渡すのは API 由来の result.answer のみで、質問欄の入力は通さない。
           */}
+          {driftedCount > 0 && <DriftWarning count={driftedCount} />}
           <AnswerText
             text={result.answer}
             trustedUrls={[

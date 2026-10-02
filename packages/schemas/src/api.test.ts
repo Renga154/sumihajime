@@ -153,6 +153,41 @@ describe('chatResponseSchema (§11.4/§11.5)', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  // §11.5「ソースが古い: stale警告を表示」: 引用は巡回の検知日・種類を任意で持てる。
+  // 種類は changed / unreachable のみ、検知日は日付(時刻なし)。web は応答をこの形で検証する。
+  const citation = {
+    sourceId: 'src-13112-resident_registration-001',
+    title: '世田谷区 転入届',
+    ownerOrganization: '世田谷区',
+    url: 'https://www.city.setagaya.lg.jp/02233/88.html',
+    lastVerifiedAt: '2026-07-21T00:00:00Z',
+  };
+  const withCitation = (c: Record<string, unknown>) =>
+    chatResponseSchema.safeParse({
+      answer: 'x',
+      citations: [c],
+      confidence: 'low',
+      abstained: false,
+    });
+
+  it('accepts citations with or without drift fields', () => {
+    expect(withCitation(citation).success).toBe(true);
+    expect(
+      withCitation({ ...citation, driftDetectedOn: '2026-09-22', driftKind: 'changed' }).success,
+    ).toBe(true);
+    expect(
+      withCitation({ ...citation, driftDetectedOn: '2026-09-22', driftKind: 'unreachable' })
+        .success,
+    ).toBe(true);
+  });
+
+  it('rejects unknown drift kinds and non-date detection values', () => {
+    expect(withCitation({ ...citation, driftKind: 'ok' }).success).toBe(false);
+    expect(withCitation({ ...citation, driftDetectedOn: '2026-09-22T03:00:00Z' }).success).toBe(
+      false,
+    );
+  });
 });
 
 describe('errorResponseSchema', () => {
