@@ -34,3 +34,13 @@ git push origin main                             # fast-forward になるはず
 - push の前に、公開版で `pnpm install --frozen-lockfile && pnpm typecheck && pnpm test && pnpm lint && pnpm format:check`
   が通ることを確かめる（公開側の CI も同じことをする）。
 - 初回（2026-09-29）: 205 コミット、約 6.6MB。gitleaks で漏えいなし。
+
+## 公開側の main の保護と Dependabot（2026-10-03）
+
+- 公開側の main は保護してある: CI（`verify`）の成功が必須、強制 push と削除は禁止、履歴は直線のみ
+  （持ち主の承認 2026-10-02）。管理者の書き出しの push は従来どおり通る（fast-forward のみ）。
+  **force push が要る変更（書き出しの設定の変更）は、保護を一時的に外す判断が要る**。
+- Dependabot（`.github/dependabot.yml`）は公開側でだけ動く（非公開側は GitHub に置いていない）。
+  **公開側で PR をマージしない**: マージすると公開側が書き出しと食い違い、次の fast-forward が通らなくなる。
+  PR は「更新の知らせ」として読み、同じ更新を非公開側で入れてテスト → 書き出し → push する。
+  main に同じ更新が入ると、Dependabot は自分の PR を自動で閉じる。
